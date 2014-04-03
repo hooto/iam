@@ -4,21 +4,23 @@
 body {
   margin: 0 auto;
   position: relative;
+  font-size: 13px;
+  font-family: Arial, sans-serif;
 }
 
-#ids-login-ctn {
-  width: 320px;
+#ids-login-box {
+  width: 360px;
   position: absolute;
   left: 50%;
   top: 20%;
-  margin-left: -160px;
+  margin-left: -180px;
   color: #555;
 }
 
 #ids-login-form {
   background-color: #f7f7f7;
   border-radius: 4px;
-  padding: 40px;
+  padding: 20px 30px 20px 30px;
   box-shadow: 0px 2px 2px 0px #999;
 }
 
@@ -83,7 +85,7 @@ body {
   border: 1px solid transparent;
   border-radius: 3px;
   color: #fff;
-  background-color: #428bca;
+  background-color: #427fed;
   border-color: #357ebd;
 }
 
@@ -93,52 +95,104 @@ body {
   border-color: #285e8e;
 }
 
-#ids-login-ctn .il-footer {
-  text-align: center;
+#ids-login-form .ilf-checkbox {
+  display: inline-block;
+  min-height: 20px;
+  font-weight: normal;
+  color: #555;
+}
+#ids-login-form .ilf-checkbox input[type="checkbox"] {
+  float: left;
+  margin: 3px 5px 0 0;
+  padding: 0;
+  border: 1px solid #c6c6c6;
+  cursor: pointer;
+  width: 14px;
+  height: 14px;
+  box-sizing: border-box;
+  line-height: normal;
+}
+
+#ids-login-form .ilf-help {
+  display: inline-block;
+  float: right;
+}
+#ids-login-form .ilf-help a {
+  color: #427fed;
+}
+
+#ids-login-box .ilb-signup {
   margin: 10px 0;
+  text-align: center;
+  font-size: 15px;
+}
+#ids-login-box .ilb-signup a {
+  color: #427fed;
+}
+
+#ids-login-box .ilb-footer {
+  text-align: center;
+  margin: 20px 0;
   font-size: 14px;
 }
-#ids-login-ctn .il-footer img {
+#ids-login-box .ilb-footer a {
+  color: #555;
+}
+#ids-login-box .ilb-footer img {
   width: 16px;
   height: 16px;
 }
 </style>
 
-<div id="ids-login-ctn">
+<div id="ids-login-box">
 
-    <div class="ids-login-msg01">{{T . "Sign in with your Account"}}</div>
+  <div class="ids-login-msg01">{{T . "Sign in with your Account"}}</div>
 
-    <form id="ids-login-form" class="" action="#">
+  <form id="ids-login-form" class="" action="#">
 
-      <img class="ids-user-ico-default"  src="/ids/static/img/user-default.png">
+    <img class="ids-user-ico-default"  src="/ids/static/img/user-default.png">
 
-      <div class="alert alert-info hide"></div>
+    <div class="alert alert-info hide"></div>
 
-      <div class="ilf-group">
-        <input type="text" class="ilf-input" name="userid" placeholder="{{T . "Username"}}">
-      </div>
-
-      <div class="ilf-group">
-        <input type="password" class="ilf-input" name="passwd" placeholder="{{T . "Password"}}">
-      </div>
-
-      <div class="">
-        <button type="submit" class="ilf-btn">{{T . "Sign in"}}</button>
-      </div>
-    </form>
-
-    <div class="il-footer">
-      <img src="/ids/static/img/ids-s1-32.png"> 
-      <a href="http://www.lesscompute.com" target="_blank">less Identity Server</a>
+    <div class="ilf-group">
+      <input type="text" class="ilf-input" name="userid" placeholder="{{T . "Username"}}">
     </div>
+
+    <div class="ilf-group">
+      <input type="password" class="ilf-input" name="passwd" placeholder="{{T . "Password"}}">
+    </div>
+
+    <div class="ilf-group">
+      <button type="submit" class="ilf-btn">{{T . "Sign in"}}</button>
+    </div>
+
+    <div>
+      <div class="ilf-checkbox">
+        <input name="persistentCookie" type="checkbox"> Stay signed in
+      </div>
+      <div class="ilf-help">
+        <a href="/ids/help/" target="_blank">Need help?</a>
+      </div>
+    </div>
+  </form>
+
+  <div class="ilb-signup">
+    <a href="/ids/service/signup" target="_blank">Create an account</a>
+  </div>
+
+  <div class="ilb-footer">
+    <img src="/ids/static/img/ids-s2-32.png"> 
+    <a href="http://www.lesscompute.com" target="_blank">less Identity Server</a>
+  </div>
+
 </div>
 
 <script>
 
 
-var ids_eh = $("#ids-login-ctn").height();
-$("#ids-login-ctn").css({
-    "top": "45%",
+var ids_eh = $("#ids-login-box").height();
+$("#ids-login-box").css({
+    "top": "50%",
     "margin-top": - (ids_eh / 2) + "px" 
 });
 

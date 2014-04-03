@@ -1,0 +1,8 @@
+
+/ids/service/login
+    text/html
+    
+/ids/service/auth
+    text/json
+
+
