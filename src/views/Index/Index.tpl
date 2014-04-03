@@ -3,7 +3,7 @@
 
 <head>
   <meta charset="utf-8">
-  <title>less Identity Service</title>
+  <title>Identity Service</title>
   <script src="/ids/~/lessui/master/js/sea.js"></script>
   <script src="/ids/static/js/main.js"></script>
   <script type="text/javascript">

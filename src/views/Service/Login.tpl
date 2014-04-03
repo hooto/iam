@@ -93,6 +93,15 @@ body {
   border-color: #285e8e;
 }
 
+#ids-login-ctn .il-footer {
+  text-align: center;
+  margin: 10px 0;
+  font-size: 14px;
+}
+#ids-login-ctn .il-footer img {
+  width: 16px;
+  height: 16px;
+}
 </style>
 
 <div id="ids-login-ctn">
@@ -118,6 +127,10 @@ body {
       </div>
     </form>
 
+    <div class="il-footer">
+      <img src="/ids/static/img/ids-s1-32.png"> 
+      <a href="http://www.lesscompute.com" target="_blank">less Identity Server</a>
+    </div>
 </div>
 
 <script>
