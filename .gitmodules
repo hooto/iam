@@ -1,0 +1,3 @@
+[submodule "deps/lessgo"]
+	path = deps/lessgo
+	url = git@github.com:eryx/lessgo.git

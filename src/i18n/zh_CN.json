@@ -1,0 +1,14 @@
+{
+  "locale": "zh_CN",
+  "lang": "简体中文",
+  "data": [
+    {
+      "key": "browser-reject-desc",
+      "val": "当前的应用无法完美支持您的浏览器或版本"
+    },
+    {
+      "key": "browser-reject-advice-desc",
+      "val": "请下载如下浏览器之一，安装或升级到最新版本"
+    }
+  ]
+}

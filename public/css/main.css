@@ -1,0 +1,18 @@
+body {
+    min-width: 600px;
+}
+
+#lf-content {
+	min-width: 400px;
+}
+
+.lf-nav-logo {
+    display: inline-block;
+    position: relative;
+    top: 35%; left: 10px;
+    width: 32px; height: 32px;
+    margin: -16px 10px 0 -16px;
+    background-repeat: no-repeat;
+    background-position: 0 0;
+    background-image: url("/lessfly/static/img/creator-32.png");
+}
