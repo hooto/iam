@@ -8,41 +8,33 @@ body {
   font-family: Arial, sans-serif;
 }
 
-#ids-login-box {
-  width: 360px;
+#ids-signup-box {
+  width: 500px;
   position: absolute;
   left: 50%;
   top: 20%;
-  margin-left: -180px;
+  margin-left: -250px;
   color: #555;
 }
 
-#ids-login-form {
+#ids-signup-form {
   background-color: #f7f7f7;
   border-radius: 4px;
-  padding: 20px 30px 20px 30px;
+  padding: 30px 30px 20px 30px;
   box-shadow: 0px 2px 2px 0px #999;
 }
 
-.ids-login-msg01 {
+.ids-signup-msg01 {
   font-size: 20px;
   margin: 20px 0;
   text-align: center;
 }
 
-.ids-user-ico-default {
-  width: 80px;
-  height: 80px;
-  position: relative;
-  left: 50%;
-  margin: 0 0 30px -40px;
-}
-
-#ids-login-form .ilf-group {
+#ids-signup-form .ilf-group {
   padding: 0 0 10px 0; 
 }
 
-#ids-login-form .ilf-input {
+#ids-signup-form .ilf-input {
   display: block;
   width: 100%;
   height: 40px;
@@ -58,13 +50,13 @@ body {
   transition: border-color ease-in-out .15s, box-shadow ease-in-out .15s;
 }
 
-#ids-login-form .ilf-input:focus {
+#ids-signup-form .ilf-input:focus {
   border-color: #66afe9;
   outline: 0;
   box-shadow: inset 0 1px 1px rgba(0,0,0,.075), 0 0 8px rgba(102, 175, 233, .6);
 }
 
-#ids-login-form .ilf-btn {
+#ids-signup-form .ilf-btn {
   width: 100%;
   height: 40px;
   display: inline-block;
@@ -89,75 +81,51 @@ body {
   border-color: #357ebd;
 }
 
-#ids-login-form .ilf-btn:hover {
+#ids-signup-form .ilf-btn:hover {
   color: #fff;
   background-color: #3276b1;
   border-color: #285e8e;
 }
 
-#ids-login-form .ilf-checkbox {
-  display: inline-block;
-  min-height: 20px;
-  font-weight: normal;
-  color: #555;
-}
-#ids-login-form .ilf-checkbox input[type="checkbox"] {
-  float: left;
-  margin: 3px 5px 0 0;
-  padding: 0;
-  border: 1px solid #c6c6c6;
-  cursor: pointer;
-  width: 14px;
-  height: 14px;
-  box-sizing: border-box;
-  line-height: normal;
-}
-
-#ids-login-form .ilf-help {
-  display: inline-block;
-  float: right;
-}
-#ids-login-form .ilf-help a {
-  color: #427fed;
-}
-
-#ids-login-box .ilb-signup {
+#ids-signup-box .ilb-signup {
   margin: 10px 0;
   text-align: center;
   font-size: 15px;
 }
-#ids-login-box .ilb-signup a {
+#ids-signup-box .ilb-signup a {
   color: #427fed;
 }
 
-#ids-login-box .ilb-footer {
+#ids-signup-box .ilb-footer {
   text-align: center;
   margin: 20px 0;
   font-size: 14px;
 }
-#ids-login-box .ilb-footer a {
+#ids-signup-box .ilb-footer a {
   color: #777;
 }
-#ids-login-box .ilb-footer img {
+#ids-signup-box .ilb-footer img {
   width: 16px;
   height: 16px;
 }
 </style>
 
-<div id="ids-login-box">
+<div id="ids-signup-box">
 
-  <div class="ids-login-msg01">{{T . "Sign in with your Account"}}</div>
+  <div class="ids-signup-msg01">{{T . "Create your Account"}}</div>
 
-  <form id="ids-login-form" action="#">
+  <form id="ids-signup-form" action="#">
 
     <input type="hidden" name="continue" value="{{.continue}}">
 
-    <img class="ids-user-ico-default"  src="/ids/static/img/user-default.png">
-
-    <div id="ids-login-form-alert" class="alert hide ilf-group"></div>
+    <div id="ids-signup-form-alert" class="alert hide ilf-group"></div>
 
     <div class="ilf-group">
-      <input type="text" class="ilf-input" name="userid" value="{{.userid}}" placeholder="{{T . "Username"}}">
+      <input type="text" class="ilf-input" name="name" value="{{.name}}" placeholder="{{T . "Nickname"}}">
+    </div>
+
+    <div class="ilf-group">
+      <input type="text" class="ilf-input" name="email" placeholder="{{T . "Email"}}">
     </div>
 
     <div class="ilf-group">
@@ -165,21 +133,13 @@ body {
     </div>
 
     <div class="ilf-group">
-      <button type="submit" class="ilf-btn">{{T . "Sign in"}}</button>
+      <button type="submit" class="ilf-btn">{{T . "Create Account"}}</button>
     </div>
 
-    <div>
-      <div class="ilf-checkbox">
-        <input name="persistent" type="checkbox" value="1" checked="{{.persistentChecked}}"> Stay signed in
-      </div>
-      <div class="ilf-help">
-        <a href="/ids/help/" target="_blank">Need help?</a>
-      </div>
-    </div>
   </form>
 
   <div class="ilb-signup">
-    <a href="/ids/reg/sign-up?continue={{.continue}}">Create an account</a>
+    <a href="/ids/service/login?continue={{.continue}}">Sign in with your Account</a>
   </div>
 
   <div class="ilb-footer">
@@ -195,29 +155,29 @@ body {
 $("input[name=userid]").focus();
 
 //
-var ids_eh = $("#ids-login-box").height();
-$("#ids-login-box").css({
+var ids_eh = $("#ids-signup-box").height();
+$("#ids-signup-box").css({
     "top": "50%",
     "margin-top": - (ids_eh / 2) + "px" 
 });
 
 //
-$("#ids-login-form").submit(function(event) {
+$("#ids-signup-form").submit(function(event) {
 
     event.preventDefault();
 
     /* var req = {
         data: {
-            "userid": $("input[name=userid]").val(),
+            "name": $("input[name=name]").val(),
+            "email": $("input[name=email]").val(),
             "passwd": $("input[name=passwd]").val(),
             "continue": $("input[name=continue]").val(),
-            "persistent": $("input[name=persistent]").val(),
         }
     } */
 
     $.ajax({
         type    : "POST",
-        url     : "/ids/service/login-auth",
+        url     : "/ids/reg/sign-up-reg",
         data    : $(this).serialize(),//JSON.stringify(req),
         timeout : 3000,
         //contentType: "application/json; charset=utf-8",
@@ -227,14 +187,20 @@ $("#ids-login-form").submit(function(event) {
             //console.log(rsp);
 
             if (rsj.status == 200) {
-                lessCookie.Set("access_token", rsj.data.access_token, 7200);
-                window.location = rsj.data.continue;
+                
+                lessAlert("#ids-signup-form-alert", 'alert-success', "Successfully registration. Page redirecting");
+                $(".ilf-group").hide(600);
+
+                window.setTimeout(function(){
+                    window.location = "/ids/service/login?continue={{.continue}}";
+                }, 1500);
+
             } else {
-                lessAlert("#ids-login-form-alert", 'alert-danger', rsj.message);
+                lessAlert("#ids-signup-form-alert", 'alert-danger', rsj.message);
             }
         },
         error: function(xhr, textStatus, error) {
-            lessAlert("#ids-login-form-alert", 'alert-danger', '{{T . "Internal Server Error"}}');
+            lessAlert("#ids-signup-form-alert", 'alert-danger', '{{T . "Internal Server Error"}}');
         }
     });
 });

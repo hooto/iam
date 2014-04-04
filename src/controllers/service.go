@@ -1,12 +1,12 @@
 package controllers
 
 import (
+    "../../deps/lessgo/data/rdc"
     "../../deps/lessgo/pagelet"
     "../../deps/lessgo/pass"
     "../../deps/lessgo/utils"
-    "../../deps/lessgo/data/rdc"
-    "strings"
     "io"
+    "strings"
 )
 
 type Service struct {
@@ -31,9 +31,9 @@ func (c Service) LoginAuthAction() {
     var rsp struct {
         ResponseJson
         Data struct {
-            Continue string `json:"continue"`
+            Continue    string `json:"continue"`
             AccessToken string `json:"access_token"`
-        } `json:"data"`
+        }   `json:"data"`
     }
     rsp.ApiVersion = apiVersion
     rsp.Status = 400
@@ -65,7 +65,7 @@ func (c Service) LoginAuthAction() {
         rsp.Message = "User ID or Password can not match"
         return
     }
-    
+
     if pass.Check(c.Params.Get("passwd"), rsu[0]["pass"].(string)) {
         rsp.Message = "User ID or Password can not match"
         return

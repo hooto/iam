@@ -59,6 +59,7 @@ func main() {
     pagelet.RegisterController("default", (*ctrl_def.Index)(nil))
     pagelet.RegisterController("default", (*ctrl_def.Error)(nil))
     pagelet.RegisterController("default", (*ctrl_def.Service)(nil))
+    pagelet.RegisterController("default", (*ctrl_def.Reg)(nil))
 
     //
     pagelet.Run()
