@@ -25,8 +25,8 @@ body {
 }
 
 .ids-login-msg01 {
-  font-size: 18px;
-  padding: 10px 0;
+  font-size: 20px;
+  margin: 20px 0;
   text-align: center;
 }
 
@@ -136,7 +136,7 @@ body {
   font-size: 14px;
 }
 #ids-login-box .ilb-footer a {
-  color: #555;
+  color: #777;
 }
 #ids-login-box .ilb-footer img {
   width: 16px;
@@ -148,14 +148,16 @@ body {
 
   <div class="ids-login-msg01">{{T . "Sign in with your Account"}}</div>
 
-  <form id="ids-login-form" class="" action="#">
+  <form id="ids-login-form" action="#">
+
+    <input type="hidden" name="continue" value="{{.continue}}">
 
     <img class="ids-user-ico-default"  src="/ids/static/img/user-default.png">
 
-    <div class="alert alert-info hide"></div>
+    <div id="ids-login-form-alert" class="alert hide ilf-group"></div>
 
     <div class="ilf-group">
-      <input type="text" class="ilf-input" name="userid" placeholder="{{T . "Username"}}">
+      <input type="text" class="ilf-input" name="userid" value="{{.userid}}" placeholder="{{T . "Username"}}">
     </div>
 
     <div class="ilf-group">
@@ -168,7 +170,7 @@ body {
 
     <div>
       <div class="ilf-checkbox">
-        <input name="persistentCookie" type="checkbox"> Stay signed in
+        <input name="persistent" type="checkbox" value="1" checked="{{.persistentChecked}}"> Stay signed in
       </div>
       <div class="ilf-help">
         <a href="/ids/help/" target="_blank">Need help?</a>
@@ -189,53 +191,54 @@ body {
 
 <script>
 
+//
+$("input[name=userid]").focus();
 
+//
 var ids_eh = $("#ids-login-box").height();
 $("#ids-login-box").css({
     "top": "50%",
     "margin-top": - (ids_eh / 2) + "px" 
 });
 
-$("input[name=userid]").focus();
-
-$("#gbfg5g").submit(function(event) {
+//
+$("#ids-login-form").submit(function(event) {
 
     event.preventDefault();
 
-    var req = {
-      data: {
-        "userid": $("input[name=userid]").val(),
-        "passwd": $("input[name=passwd]").val(),
-      }
-    }
-
-    //console.log(JSON.stringify(req));
+    /* var req = {
+        data: {
+            "userid": $("input[name=userid]").val(),
+            "passwd": $("input[name=passwd]").val(),
+            "continue": $("input[name=continue]").val(),
+            "persistent": $("input[name=persistent]").val(),
+        }
+    } */
 
     $.ajax({
         type    : "POST",
-        url     : "/ids/service/auth",
-        data    : JSON.stringify(req),
+        url     : "/ids/service/login-auth",
+        data    : $(this).serialize(),//JSON.stringify(req),
         timeout : 3000,
-        contentType: "application/json; charset=utf-8",
+        //contentType: "application/json; charset=utf-8",
         success : function(rsp) {
 
             var rsj = JSON.parse(rsp);
             //console.log(rsp);
 
             if (rsj.status == 200) {
-                lessCookie.Set("access_token_lessfly", rsj.access_token, 7200);
-                $('#body-content').load('/lessfly/index/well');
-                //saComLoader('index/index');
+                lessCookie.Set("access_token", rsj.data.access_token, 7200);
+                window.location = rsj.data.continue;
             } else {
-                alert(rsj.message);
+                lessAlert("#ids-login-form-alert", 'alert-danger', rsj.message);
             }
         },
         error: function(xhr, textStatus, error) {
-            alert('{{T . "Internal Server Error"}}');
+            lessAlert("#ids-login-form-alert", 'alert-danger', '{{T . "Internal Server Error"}}');
         }
     });
 });
 
-
 </script>
+
 {{template "Common/HtmlFooter.tpl" .}}
