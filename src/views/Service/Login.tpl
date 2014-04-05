@@ -33,9 +33,12 @@ body {
 .ids-user-ico-default {
   width: 80px;
   height: 80px;
+  padding: 2px;
   position: relative;
   left: 50%;
   margin: 0 0 30px -40px;
+  border-radius: 50%;
+  background-color: #dfdfdf;
 }
 
 #ids-login-form .ilf-group {
