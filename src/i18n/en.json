@@ -9,6 +9,10 @@
     {
       "key": "browser-reject-advice-desc",
       "val": "Please download one the following browsers. Install or Upgrade to the latest version"
+    },
+    {
+      "key": "x-is-not-valid",
+      "val": "`%s` is not valid"
     }
   ]
 }

@@ -5,13 +5,10 @@ import (
     "../../deps/lessgo/pagelet"
     "../../deps/lessgo/pass"
     "../../deps/lessgo/utils"
+    "../reg/signup"
     "io"
-    "regexp"
-    "strings"
     "time"
 )
-
-var emailPattern = regexp.MustCompile("^[\\w!#$%&'*+/=?^_`{|}~-]+(?:\\.[\\w!#$%&'*+/=?^_`{|}~-]+)*@(?:[\\w](?:[\\w-]*[\\w])?\\.)+[a-zA-Z0-9](?:[\\w-]*[\\w])?$")
 
 type Reg struct {
     *pagelet.Controller
@@ -47,22 +44,19 @@ func (c Reg) SignUpRegAction() {
         }
     }()
 
+    if err := signup.Validate(c.Params); err != nil {
+        rsp.Message = err.Error()
+        return
+    }
+
     dcn, err := rdc.InstancePull("def")
     if err != nil {
         rsp.Message = "Internal Server Error"
         return
     }
 
-    if c.Params.Get("name") == "" ||
-        c.Params.Get("email") == "" ||
-        c.Params.Get("passwd") == "" {
-        return
-    }
-
-    email := strings.ToLower(c.Params.Get("email"))
-
     q := rdc.NewQuerySet().From("ids_login").Limit(1)
-    q.Where.And("email", email)
+    q.Where.And("email", c.Params.Get("email"))
     rsu, err := dcn.Query(q)
     if err == nil && len(rsu) == 1 {
         rsp.Message = "The `Email` already exists, please choose another one"
@@ -77,7 +71,7 @@ func (c Reg) SignUpRegAction() {
 
     item := map[string]interface{}{
         "uname":   uname,
-        "email":   email,
+        "email":   c.Params.Get("email"),
         "pass":    pass,
         "name":    c.Params.Get("name"),
         "status":  1,

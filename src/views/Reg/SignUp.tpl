@@ -9,11 +9,11 @@ body {
 }
 
 #ids-signup-box {
-  width: 500px;
+  width: 400px;
   position: absolute;
   left: 50%;
   top: 20%;
-  margin-left: -250px;
+  margin-left: -200px;
   color: #555;
 }
 
@@ -174,11 +174,12 @@ $("#ids-signup-form").submit(function(event) {
             "continue": $("input[name=continue]").val(),
         }
     } */
-
+    console.log($("#ids-signup-form").serialize());
+    
     $.ajax({
         type    : "POST",
         url     : "/ids/reg/sign-up-reg",
-        data    : $(this).serialize(),//JSON.stringify(req),
+        data    : $("#ids-signup-form").serialize(),//JSON.stringify(req),
         timeout : 3000,
         //contentType: "application/json; charset=utf-8",
         success : function(rsp) {
