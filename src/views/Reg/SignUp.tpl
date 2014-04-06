@@ -152,7 +152,7 @@ body {
 <script>
 
 //
-$("input[name=userid]").focus();
+$("input[name=name]").focus();
 
 //
 var ids_eh = $("#ids-signup-box").height();
