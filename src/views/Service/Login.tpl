@@ -159,8 +159,9 @@ body {
 
     <div id="ids-login-form-alert" class="alert hide ilf-group"></div>
 
+    <div id="ilf-grp-input">
     <div class="ilf-group">
-      <input type="text" class="ilf-input" name="userid" value="{{.userid}}" placeholder="{{T . "Username"}}">
+      <input type="text" class="ilf-input" name="email" value="{{.email}}" placeholder="{{T . "Email"}}">
     </div>
 
     <div class="ilf-group">
@@ -179,6 +180,7 @@ body {
         <a href="/ids/help/" target="_blank">Need help?</a>
       </div>
     </div>
+    </div>
   </form>
 
   <div class="ilb-signup">
@@ -195,7 +197,7 @@ body {
 <script>
 
 //
-$("input[name=userid]").focus();
+$("input[name=email]").focus();
 
 //
 var ids_eh = $("#ids-login-box").height();
@@ -211,7 +213,7 @@ $("#ids-login-form").submit(function(event) {
 
     /* var req = {
         data: {
-            "userid": $("input[name=userid]").val(),
+            "email": $("input[name=email]").val(),
             "passwd": $("input[name=passwd]").val(),
             "continue": $("input[name=continue]").val(),
             "persistent": $("input[name=persistent]").val(),
@@ -229,12 +231,19 @@ $("#ids-login-form").submit(function(event) {
             var rsj = JSON.parse(rsp);
             //console.log(rsp);
 
-            if (rsj.status == 200) {
-                lessCookie.Set("access_token", rsj.data.access_token, 7200);
-                window.location = rsj.data.continue;
-            } else {
+            if (rsj.status != 200) {
                 lessAlert("#ids-login-form-alert", 'alert-danger', rsj.message);
+                return;
             }
+
+            lessAlert("#ids-login-form-alert", 'alert-success', "Successfully Sign-on. Page redirecting");
+            $("#ilf-grp-input").hide(200);
+            
+            lessCookie.Set("access_token", rsj.data.access_token, 7200);
+
+            window.setTimeout(function(){    
+                window.location = rsj.data.continue;
+            }, 1500);
         },
         error: function(xhr, textStatus, error) {
             lessAlert("#ids-login-form-alert", 'alert-danger', '{{T . "Internal Server Error"}}');

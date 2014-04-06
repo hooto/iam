@@ -7,6 +7,7 @@ import (
     "../../deps/lessgo/utils"
     "io"
     "strings"
+    "time"
 )
 
 type Service struct {
@@ -52,28 +53,54 @@ func (c Service) LoginAuthAction() {
         return
     }
 
-    if c.Params.Get("userid") == "" || c.Params.Get("passwd") == "" {
+    if c.Params.Get("email") == "" || c.Params.Get("passwd") == "" {
         return
     }
 
-    userid := strings.ToLower(c.Params.Get("userid"))
+    email := strings.ToLower(c.Params.Get("email"))
 
     q := rdc.NewQuerySet().From("ids_login").Limit(1)
-    q.Where.And("uid", userid)
+    q.Where.And("email", email)
     rsu, err := dcn.Query(q)
     if err == nil && len(rsu) == 0 {
-        rsp.Message = "User ID or Password can not match"
+        rsp.Message = "Email or Password can not match 1"
         return
     }
 
-    if pass.Check(c.Params.Get("passwd"), rsu[0]["pass"].(string)) {
-        rsp.Message = "User ID or Password can not match"
+    if !pass.Check(c.Params.Get("passwd"), rsu[0]["pass"].(string)) {
+        rsp.Message = "Email or Password can not match"
         return
     }
 
-    rsp.Data.AccessToken = utils.StringNewRand(32)
+    rsp.Data.AccessToken = utils.StringNewRand36(24)
 
-    //session.Set(rsp.AccessToken, userid, "7200")
+    addr := "0.0.0.0"
+    if addridx := strings.Index(c.Request.RemoteAddr, ":"); addridx > 0 {
+        addr = c.Request.RemoteAddr[:addridx]
+    }
+
+    session := map[string]interface{}{
+        "token":   rsp.Data.AccessToken,
+        "status":  1,
+        "uid":     rsu[0]["uid"],
+        "uname":   rsu[0]["uname"],
+        "source":  addr,
+        "created": time.Now().Format("2006-01-02 15:04:05"), // TODO
+        "timeout": 10 * 24 * 3600,
+    }
+    if err := dcn.Insert("ids_sessions", session); err != nil {
+        rsp.Status = 500
+        rsp.Message = "Can not write to database"
+        return
+    }
+
+    if len(c.Params.Get("continue")) > 0 {
+        rsp.Data.Continue = c.Params.Get("continue")
+    }
+    if strings.Index(rsp.Data.Continue, "?") == -1 {
+        rsp.Data.Continue += "?"
+    }
+    rsp.Data.Continue += "&access_token=" + rsp.Data.AccessToken
 
     rsp.Status = 200
     rsp.Message = ""

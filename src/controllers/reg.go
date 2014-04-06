@@ -63,7 +63,7 @@ func (c Reg) SignUpRegAction() {
         return
     }
 
-    uname := utils.StringNewRand(8)
+    uname := utils.StringNewRand36(8)
     pass, err := pass.HashDefault(c.Params.Get("passwd"))
     if err != nil {
         return

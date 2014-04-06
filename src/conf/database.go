@@ -65,14 +65,14 @@ func (c *Config) DatabaseInstance() (*rdc.Conn, error) {
     tbl_ses := setup.NewTable("ids_sessions")
     tbl_ses.FieldAdd("token", "pk-string", 24, 0)
     tbl_ses.FieldAdd("refresh", "string", 24, 0)
-    tbl_ses.FieldAdd("status", "int16", 0, 0)
-    tbl_ses.FieldAdd("uid", "uint32", 0, 0)
+    tbl_ses.FieldAdd("status", "int16", 0, setup.FieldIndexIndex)
+    tbl_ses.FieldAdd("uid", "uint32", 0, setup.FieldIndexIndex)
     tbl_ses.FieldAdd("uname", "string", 30, 0)
     tbl_ses.FieldAdd("source", "string", 20, 0)
     tbl_ses.FieldAdd("data", "string-text", 0, 0)
     tbl_ses.FieldAdd("permission", "int8", 0, 0)
     tbl_ses.FieldAdd("created", "datetime", 0, 0)
-    tbl_ses.FieldAdd("timeout", "datetime", 0, setup.FieldIndexIndex)
+    tbl_ses.FieldAdd("timeout", "uint32", 0, 0)
 
     //
     tbl_mes := setup.NewTable("ids_menus")
