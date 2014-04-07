@@ -79,14 +79,15 @@ func (c Service) LoginAuthAction() {
         addr = c.Request.RemoteAddr[:addridx]
     }
 
+    taf, _ := time.ParseDuration("+864000s")
     session := map[string]interface{}{
         "token":   rsp.Data.AccessToken,
         "status":  1,
         "uid":     rsu[0]["uid"],
         "uname":   rsu[0]["uname"],
         "source":  addr,
-        "created": time.Now().Format("2006-01-02 15:04:05"), // TODO
-        "timeout": 10 * 24 * 3600,
+        "created": time.Now().Format("2006-01-02 15:04:05"),          // TODO
+        "expired": time.Now().Add(taf).Format("2006-01-02 15:04:05"), // TODO
     }
     if err := dcn.Insert("ids_sessions", session); err != nil {
         rsp.Status = 500

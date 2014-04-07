@@ -9,5 +9,5 @@ type Index struct {
 }
 
 func (c Index) IndexAction() {
-
+    c.RenderRedirect("/ids/user/index")
 }

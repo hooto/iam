@@ -72,7 +72,7 @@ func (c *Config) DatabaseInstance() (*rdc.Conn, error) {
     tbl_ses.FieldAdd("data", "string-text", 0, 0)
     tbl_ses.FieldAdd("permission", "int8", 0, 0)
     tbl_ses.FieldAdd("created", "datetime", 0, 0)
-    tbl_ses.FieldAdd("timeout", "uint32", 0, 0)
+    tbl_ses.FieldAdd("expired", "datetime", 0, 0)
 
     //
     tbl_mes := setup.NewTable("ids_menus")
