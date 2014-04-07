@@ -4,3 +4,5 @@ deps/fsnotify
 var
 spm
 doc
+*.php
+

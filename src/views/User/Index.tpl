@@ -26,9 +26,9 @@
   <div class="iup-title">{{T . "Profile"}}</div>
   <img class="iup-photo" src="/ids/static/img/user-default.png" />
   <ul class="iup-info">
-    <li>{{T . "Name"}}: <strong>{{.name}}</strong></li>
-    <li><a class="" href="#profile-set">{{T . "Change Profile"}}</a></li>
-    <li><a class="" href="#photo-set">{{T . "Change Photo"}}</a></li>
+    <li>{{T . "Name"}}: <strong>{{.login_name}}</strong></li>
+    <li><a class="ids-useridx-click" href="#profile-set">{{T . "Change Profile"}}</a></li>
+    <li><a class="ids-useridx-click" href="#photo-set">{{T . "Change Photo"}}</a></li>
   </ul>
 </div>
 
@@ -47,13 +47,13 @@
           <li><a class="ids-user-pro_cli" href="#pass-set">{{T . "Change Password"}}</a></li>
         </ul>
       </td> 
-    </tr> 
+    </tr>
 
     <tr> 
       <td class="iup-subtitle">{{T . "Email"}}</td> 
       <td>
         <ul> 
-          <li>{{.email}}</li> 
+          <li>{{.login_email}}</li> 
           <li><a class="ids-user-pro_cli" href="#email-set">{{T . "Change"}}</a></li> 
         </ul>
       </td>
@@ -71,59 +71,24 @@
 
 <script>
 
-//
-$("input[name=email]").focus();
+$(".ids-useridx-click").click(function(){
+    var uri = $(this).attr("href").substr(1);
 
-//
-var ids_eh = $("#ids-login-box").height();
-$("#ids-login-box").css({
-    "top": "50%",
-    "margin-top": - (ids_eh / 2) + "px" 
-});
-
-//
-$("#ids-login-form").submit(function(event) {
-
-    event.preventDefault();
-
-    /* var req = {
-        data: {
-            "email": $("input[name=email]").val(),
-            "passwd": $("input[name=passwd]").val(),
-            "continue": $("input[name=continue]").val(),
-            "persistent": $("input[name=persistent]").val(),
-        }
-    } */
-
-    $.ajax({
-        type    : "POST",
-        url     : "/ids/service/login-auth",
-        data    : $(this).serialize(),//JSON.stringify(req),
-        timeout : 3000,
-        //contentType: "application/json; charset=utf-8",
-        success : function(rsp) {
-
-            var rsj = JSON.parse(rsp);
-            //console.log(rsp);
-
-            if (rsj.status != 200) {
-                lessAlert("#ids-login-form-alert", 'alert-danger', rsj.message);
-                return;
-            }
-
-            lessAlert("#ids-login-form-alert", 'alert-success', "Successfully Sign-on. Page redirecting");
-            $("#ilf-grp-input").hide(200);
-            
-            lessCookie.Set("access_token", rsj.data.access_token, 7200);
-
-            window.setTimeout(function(){    
-                window.location = rsj.data.continue;
-            }, 1500);
-        },
-        error: function(xhr, textStatus, error) {
-            lessAlert("#ids-login-form-alert", 'alert-danger', '{{T . "Internal Server Error"}}');
-        }
-    });
+    switch (uri) {
+    case "pass-set":
+        lessModalOpen("/user/"+ uri, 1, 500, 300, "{{T . "Change Password"}}", null);
+        break;
+    case "email-set":
+        lessModalOpen("/user/"+ uri, 1, 500, 300, "{{T . "Change Email"}}", null);
+        break;
+    case "profile-set":
+        lessModalOpen("/ids/user/"+ uri, 1, 700, 450, "{{T . "Change Profile"}}", null);
+        break;
+    case "photo-set":
+        lessModalOpen("/user/"+ uri, 1, 600, 400, "{{T . "Change Photo"}}", null);
+        break;
+    }
+    
 });
 
 </script>

@@ -31,7 +31,7 @@ func IsLogin(r *pagelet.Request) bool {
 
 func GetSession(r *pagelet.Request) (sess Session) {
 
-    cookie, err := r.Request.Cookie("access_token")
+    token, err := r.Request.Cookie("access_token")
     if err != nil {
         return
     }
@@ -42,7 +42,7 @@ func GetSession(r *pagelet.Request) (sess Session) {
     }
 
     q := rdc.NewQuerySet().From("ids_sessions").Limit(1)
-    q.Where.And("token", cookie.Value)
+    q.Where.And("token", token.Value)
     rsu, err := dcn.Query(q)
     if err == nil && len(rsu) == 0 {
         return
@@ -50,7 +50,6 @@ func GetSession(r *pagelet.Request) (sess Session) {
 
     sess.Expired = rsu[0]["expired"].(time.Time)
     if sess.Expired.Before(time.Now()) {
-        fmt.Println("Expired")
         return
     }
 
@@ -59,7 +58,6 @@ func GetSession(r *pagelet.Request) (sess Session) {
         addr = r.RemoteAddr[:addridx]
     }
     if addr != rsu[0]["source"].(string) {
-        fmt.Println("source")
         return
     }
 
