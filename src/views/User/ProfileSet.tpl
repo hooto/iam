@@ -25,7 +25,7 @@
     <tr>
       <td valign="top"><strong>{{T . "About me"}}</strong></td>
       <td>
-        <textarea name="aboutme" class="form-control" rows="6">{{.profile_aboutme}}</textarea>
+        <textarea name="aboutme" class="form-control" rows="5">{{.profile_aboutme}}</textarea>
       </td>
     </tr>
   </table>

@@ -6,9 +6,11 @@ import (
     "../../deps/lessgo/utils"
     "../models/profile"
     "../models/session"
+    "encoding/base64"
     "fmt"
     "html"
     "io"
+    "strings"
     "time"
 )
 
@@ -23,7 +25,6 @@ func (c User) IndexAction() {
         c.RenderRedirect("/ids/service/login")
         return
     }
-    fmt.Println("Login", s)
 
     dcn, err := rdc.InstancePull("def")
     if err != nil {
@@ -38,6 +39,7 @@ func (c User) IndexAction() {
         c.RenderRedirect("/ids/service/login")
         return
     }
+    c.ViewData["login_uid"] = fmt.Sprintf("%v", rslogin[0]["uid"])
     c.ViewData["login_name"] = rslogin[0]["name"].(string)
     c.ViewData["login_email"] = rslogin[0]["email"].(string)
 
@@ -145,4 +147,87 @@ func (c User) ProfilePutAction() {
 
     rsp.Status = 200
     rsp.Message = "Successfully Updated"
+}
+
+func (c User) PhotoSetAction() {
+
+    s := session.GetSession(c.Request)
+    if s.Uid == 0 {
+        return
+    }
+
+    c.ViewData["login_uid"] = s.Uid
+}
+
+func (c User) PhotoPutAction() {
+
+    c.AutoRender = false
+
+    var rsp ResponseJson
+
+    rsp.ApiVersion = apiVersion
+    rsp.Status = 400
+    rsp.Message = "Bad Request"
+
+    defer func() {
+        if rspj, err := utils.JsonEncode(rsp); err == nil {
+            io.WriteString(c.Response.Out, rspj)
+        }
+    }()
+
+    s := session.GetSession(c.Request)
+    if s.Uid == 0 {
+        rsp.Message = "E02"
+        return
+    }
+
+    body := c.Request.RawBodyString()
+    if body == "" {
+        rsp.Message = "E0"
+        return
+    }
+
+    var req struct {
+        //AccessToken string `json:"access_token"`
+        Data struct {
+            Name string `json:"name"`
+            Size int64  `json:"size"`
+            Data string `json:"data"`
+        } `json:"data"`
+    }
+    err := utils.JsonDecode(body, &req)
+    if err != nil {
+        rsp.Message = err.Error()
+        return
+    }
+
+    body64 := strings.SplitAfter(req.Data.Data, ";base64,")
+    if len(body64) != 2 {
+        rsp.Message = "E1"
+        return
+    }
+    _, err = base64.StdEncoding.DecodeString(body64[1])
+    if err != nil {
+        rsp.Message = err.Error()
+        rsp.Message = "E2"
+        return
+    }
+
+    dcn, err := rdc.InstancePull("def")
+    if err != nil {
+        rsp.Status = 500
+        rsp.Message = "Can not pull database instance"
+        return
+    }
+
+    itemprofile := map[string]interface{}{
+        "photo":   req.Data.Data,
+        "updated": time.Now().Format("2006-01-02 15:04:05"),
+    }
+    ft := rdc.NewFilter()
+    ft.And("uid", s.Uid)
+    dcn.Update("ids_profile", itemprofile, ft)
+
+    rsp.Status = 200
+    rsp.Message = "Successfully changed, Page redirecting"
 }

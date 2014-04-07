@@ -24,7 +24,7 @@
 
 <div class="ids-user-panel ids-user-profile">
   <div class="iup-title">{{T . "Profile"}}</div>
-  <img class="iup-photo" src="/ids/static/img/user-default.png" />
+  <img class="iup-photo" src="/ids/service/photo/{{.login_uid}}" />
   <ul class="iup-info">
     <li>{{T . "Name"}}: <strong>{{.login_name}}</strong></li>
     <li><a class="ids-useridx-click" href="#profile-set">{{T . "Change Profile"}}</a></li>
@@ -82,10 +82,10 @@ $(".ids-useridx-click").click(function(){
         lessModalOpen("/user/"+ uri, 1, 500, 300, "{{T . "Change Email"}}", null);
         break;
     case "profile-set":
-        lessModalOpen("/ids/user/"+ uri, 1, 700, 450, "{{T . "Change Profile"}}", null);
+        lessModalOpen("/ids/user/"+ uri, 1, 700, 400, "{{T . "Change Profile"}}", null);
         break;
     case "photo-set":
-        lessModalOpen("/user/"+ uri, 1, 600, 400, "{{T . "Change Photo"}}", null);
+        lessModalOpen("/ids/user/"+ uri, 1, 600, 400, "{{T . "Change Photo"}}", null);
         break;
     }
     
