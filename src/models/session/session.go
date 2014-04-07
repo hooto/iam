@@ -1,51 +1,71 @@
 package session
 
 import (
-    "../../../../deps/lessgo/pagelet"
+    "../../../deps/lessgo/data/rdc"
+    "../../../deps/lessgo/pagelet"
+    "fmt"
+    "strconv"
+    "strings"
     "sync"
     "time"
 )
 
 var (
-    session Session = map[string]SessionItem{}
-    locker  sync.Mutex
+    locker sync.Mutex
 )
 
-type SessionItem struct {
-    UserID string
-    Expire time.Time
-}
-
-// A signed cookie (and thus limited to 4kb in size).
-// Restriction: Keys may not have a colon in them.
-type Session map[string]SessionItem
-
-func Set(key, userid, expire string) {
-
-    locker.Lock()
-    defer locker.Unlock()
-
-    if _, ok := session[key]; ok {
-        return
-    }
-
-    taf, _ := time.ParseDuration("+" + expire + "s")
-    item := SessionItem{
-        UserID: userid,
-        Expire: time.Now().Add(taf),
-    }
-
-    session[key] = item
+type Session struct {
+    Uid     uint32
+    Uname   string
+    Expired time.Time
 }
 
 func IsLogin(r *pagelet.Request) bool {
 
-    if cookie, err := r.Request.Cookie("access_token_lessfly"); err == nil {
+    sess := GetSession(r)
+    if sess.Uid > 0 {
+        return true
+    }
+    return false
+}
 
-        if _, ok := session[cookie.Value]; ok {
-            return true
-        }
+func GetSession(r *pagelet.Request) (sess Session) {
+
+    cookie, err := r.Request.Cookie("access_token")
+    if err != nil {
+        return
     }
 
-    return false
+    dcn, err := rdc.InstancePull("def")
+    if err != nil {
+        return
+    }
+
+    q := rdc.NewQuerySet().From("ids_sessions").Limit(1)
+    q.Where.And("token", cookie.Value)
+    rsu, err := dcn.Query(q)
+    if err == nil && len(rsu) == 0 {
+        return
+    }
+
+    sess.Expired = rsu[0]["expired"].(time.Time)
+    if sess.Expired.Before(time.Now()) {
+        fmt.Println("Expired")
+        return
+    }
+
+    addr := "0.0.0.0"
+    if addridx := strings.Index(r.RemoteAddr, ":"); addridx > 0 {
+        addr = r.RemoteAddr[:addridx]
+    }
+    if addr != rsu[0]["source"].(string) {
+        fmt.Println("source")
+        return
+    }
+
+    uid, _ := strconv.Atoi(fmt.Sprintf("%v", rsu[0]["uid"]))
+    sess.Uid = uint32(uid)
+    sess.Uname = rsu[0]["uname"].(string)
+
+    return
 }
