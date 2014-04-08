@@ -7,7 +7,7 @@
 <div id="in3v8z" class="alert hide"></div>
 
 <form id="qj3mr0" action="#pass-set" method="post" >
-  <table class="box" width="100%">
+  <table width="100%">
     <tr>
       <td width="200px" >{{T . "Current password"}}</td>
       <td ><input name="passwd_current" class="form-control" type="password"></td>
