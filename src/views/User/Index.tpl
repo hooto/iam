@@ -1,4 +1,5 @@
 {{template "Common/HtmlHeader.tpl" .}}
+
 <div class="ids-container" style="padding:20px 0;">
 <table id="ids-user-header">
   <tr>
@@ -16,6 +17,17 @@
   </tr>
 </table>
 </div>
+
+<script type="text/javascript">
+$(".ids-userbox-signout").click(function(){
+    lessCookie.Del("access_token");
+    window.setTimeout(function(){    
+        window.location = "/ids/service/login";
+    }, 500);
+
+});
+</script>
+
 
 <div class="ids-container">
 <table width="100%">
