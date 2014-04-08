@@ -6,6 +6,7 @@ body {
   position: relative;
   font-size: 13px;
   font-family: Arial, sans-serif;
+  background-color: #fff;
 }
 
 #ids-login-box {

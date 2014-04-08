@@ -3,7 +3,9 @@ package controllers
 import (
     "../../deps/lessgo/data/rdc"
     "../../deps/lessgo/pagelet"
+    "../../deps/lessgo/pass"
     "../../deps/lessgo/utils"
+    "../models/login"
     "../models/profile"
     "../models/session"
     "encoding/base64"
@@ -177,13 +179,11 @@ func (c User) PhotoPutAction() {
 
     s := session.GetSession(c.Request)
     if s.Uid == 0 {
-        rsp.Message = "E02"
         return
     }
 
     body := c.Request.RawBodyString()
     if body == "" {
-        rsp.Message = "E0"
         return
     }
 
@@ -203,13 +203,11 @@ func (c User) PhotoPutAction() {
 
     body64 := strings.SplitAfter(req.Data.Data, ";base64,")
     if len(body64) != 2 {
-        rsp.Message = "E1"
         return
     }
     _, err = base64.StdEncoding.DecodeString(body64[1])
     if err != nil {
         rsp.Message = err.Error()
-        rsp.Message = "E2"
         return
     }
 
@@ -230,4 +228,68 @@ func (c User) PhotoPutAction() {
 
     rsp.Status = 200
     rsp.Message = "Successfully changed, Page redirecting"
+}
+
+func (c User) PassSetAction() {
+}
+
+func (c User) PassPutAction() {
+
+    c.AutoRender = false
+
+    var rsp ResponseJson
+
+    rsp.ApiVersion = apiVersion
+    rsp.Status = 400
+    rsp.Message = "Bad Request"
+
+    defer func() {
+        if rspj, err := utils.JsonEncode(rsp); err == nil {
+            io.WriteString(c.Response.Out, rspj)
+        }
+    }()
+
+    if err := login.PassSetValidate(c.Params); err != nil {
+        rsp.Message = err.Error()
+        return
+    }
+
+    s := session.GetSession(c.Request)
+    if s.Uid == 0 {
+        return
+    }
+
+    dcn, err := rdc.InstancePull("def")
+    if err != nil {
+        return
+    }
+
+    q := rdc.NewQuerySet().From("ids_login").Limit(1)
+    q.Where.And("uid", s.Uid)
+    rsu, err := dcn.Query(q)
+    if err == nil && len(rsu) == 0 {
+        rsp.Message = "User can not found"
+        return
+    }
+
+    if !pass.Check(c.Params.Get("passwd_current"), rsu[0]["pass"].(string)) {
+        rsp.Message = "Current Password can not match"
+        return
+    }
+
+    pass, err := pass.HashDefault(c.Params.Get("passwd"))
+    if err != nil {
+        return
+    }
+
+    itemlogin := map[string]interface{}{
+        "pass":    pass,
+        "updated": time.Now().Format("2006-01-02 15:04:05"),
+    }
+    ft := rdc.NewFilter()
+    ft.And("uid", s.Uid)
+    dcn.Update("ids_login", itemlogin, ft)
+
+    rsp.Status = 200
+    rsp.Message = "Successfully Updated"
 }

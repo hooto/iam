@@ -44,7 +44,7 @@
       <td class="iup-subtitle">{{T . "Security"}}</td> 
       <td> 
         <ul> 
-          <li><a class="ids-user-pro_cli" href="#pass-set">{{T . "Change Password"}}</a></li>
+          <li><a class="ids-useridx-click" href="#pass-set">{{T . "Change Password"}}</a></li>
         </ul>
       </td> 
     </tr>
@@ -54,7 +54,7 @@
       <td>
         <ul> 
           <li>{{.login_email}}</li> 
-          <li><a class="ids-user-pro_cli" href="#email-set">{{T . "Change"}}</a></li> 
+          <li><a class="ids-useridx-click" href="#email-set">{{T . "Change"}}</a></li> 
         </ul>
       </td>
     </tr> 
@@ -76,10 +76,10 @@ $(".ids-useridx-click").click(function(){
 
     switch (uri) {
     case "pass-set":
-        lessModalOpen("/user/"+ uri, 1, 500, 300, "{{T . "Change Password"}}", null);
+        lessModalOpen("/ids/user/"+ uri, 1, 500, 350, "{{T . "Change Password"}}", null);
         break;
     case "email-set":
-        lessModalOpen("/user/"+ uri, 1, 500, 300, "{{T . "Change Email"}}", null);
+        lessModalOpen("/ids/user/"+ uri, 1, 500, 300, "{{T . "Change Email"}}", null);
         break;
     case "profile-set":
         lessModalOpen("/ids/user/"+ uri, 1, 700, 400, "{{T . "Change Profile"}}", null);
