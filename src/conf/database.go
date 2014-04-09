@@ -90,8 +90,15 @@ func (c *Config) DatabaseInstance() (*rdc.Conn, error) {
     tbl_mes.FieldAdd("updated", "datetime", 0, 0)
 
     //
+    tbl_rst := setup.NewTable("ids_resetpass")
+    tbl_rst.FieldAdd("id", "pk-string", 24, 0)
+    tbl_mes.FieldAdd("status", "int16", 0, 0)
+    tbl_rst.FieldAdd("email", "string", 100, 0)
+    tbl_rst.FieldAdd("expired", "datetime", 0, setup.FieldIndexIndex)
+
+    //
     ds := setup.NewDataSet()
-    ds.Version = 1
+    ds.Version = 2
     ds.TableAdd(tbl_lgn)
     ds.TableAdd(tbl_prf)
     ds.TableAdd(tbl_app)
@@ -99,6 +106,7 @@ func (c *Config) DatabaseInstance() (*rdc.Conn, error) {
     ds.TableAdd(tbl_pem)
     ds.TableAdd(tbl_ses)
     ds.TableAdd(tbl_mes)
+    ds.TableAdd(tbl_rst)
 
     //
     _ = cn.Setup("", ds)

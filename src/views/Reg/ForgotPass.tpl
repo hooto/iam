@@ -9,7 +9,7 @@ body {
   background-color: #fff;
 }
 
-#ids-signup-box {
+#ids-resetpass-box {
   width: 400px;
   position: absolute;
   left: 50%;
@@ -18,24 +18,24 @@ body {
   color: #555;
 }
 
-#ids-signup-form {
+#ids-resetpass-form {
   background-color: #f7f7f7;
   border-radius: 4px;
   padding: 30px 30px 20px 30px;
   box-shadow: 0px 2px 2px 0px #999;
 }
 
-.ids-signup-msg01 {
+.ids-resetpass-msg01 {
   font-size: 20px;
   margin: 20px 0;
   text-align: center;
 }
 
-#ids-signup-form .ilf-group {
+#ids-resetpass-form .ilf-group {
   padding: 0 0 10px 0; 
 }
 
-#ids-signup-form .ilf-input {
+#ids-resetpass-form .ilf-input {
   display: block;
   width: 100%;
   height: 40px;
@@ -51,13 +51,13 @@ body {
   transition: border-color ease-in-out .15s, box-shadow ease-in-out .15s;
 }
 
-#ids-signup-form .ilf-input:focus {
+#ids-resetpass-form .ilf-input:focus {
   border-color: #66afe9;
   outline: 0;
   box-shadow: inset 0 1px 1px rgba(0,0,0,.075), 0 0 8px rgba(102, 175, 233, .6);
 }
 
-#ids-signup-form .ilf-btn {
+#ids-resetpass-form .ilf-btn {
   width: 100%;
   height: 40px;
   display: inline-block;
@@ -82,47 +82,45 @@ body {
   border-color: #357ebd;
 }
 
-#ids-signup-form .ilf-btn:hover {
+#ids-resetpass-form .ilf-btn:hover {
   color: #fff;
   background-color: #3276b1;
   border-color: #285e8e;
 }
 
-#ids-signup-box .ilb-signup {
+#ids-resetpass-box .ilb-resetpass {
   margin: 10px 0;
   text-align: center;
   font-size: 15px;
 }
-#ids-signup-box .ilb-signup a {
+#ids-resetpass-box .ilb-resetpass a {
   color: #427fed;
 }
 
-#ids-signup-box .ilb-footer {
+#ids-resetpass-box .ilb-footer {
   text-align: center;
   margin: 20px 0;
   font-size: 14px;
 }
-#ids-signup-box .ilb-footer a {
+#ids-resetpass-box .ilb-footer a {
   color: #777;
 }
-#ids-signup-box .ilb-footer img {
+#ids-resetpass-box .ilb-footer img {
   width: 16px;
   height: 16px;
 }
 </style>
 
-<div id="ids-signup-box">
+<div id="ids-resetpass-box">
 
-  <div class="ids-signup-msg01">{{T . "Create your Account"}}</div>
+  <div class="ids-resetpass-msg01">{{T . "Reset your password"}}</div>
 
-  <form id="ids-signup-form" action="#">
+  <form id="ids-resetpass-form" action="#forgot-pass">
 
     <input type="hidden" name="continue" value="{{.continue}}">
 
-    <div id="ids-signup-form-alert" class="alert hide ilf-group"></div>
-
-    <div class="ilf-group">
-      <input type="text" class="ilf-input" name="name" value="{{.name}}" placeholder="{{T . "Nickname"}}">
+    <div id="ids-resetpass-form-alert" class="alert alert-info ilf-groups">
+    Enter the email address you use to sign in, the System will sent a URL to your email to reset the password.
     </div>
 
     <div class="ilf-group">
@@ -130,16 +128,12 @@ body {
     </div>
 
     <div class="ilf-group">
-      <input type="password" class="ilf-input" name="passwd" placeholder="{{T . "Password"}}">
-    </div>
-
-    <div class="ilf-group">
-      <button type="submit" class="ilf-btn">{{T . "Create Account"}}</button>
+      <button type="submit" class="ilf-btn">{{T . "Next"}}</button>
     </div>
 
   </form>
 
-  <div class="ilb-signup">
+  <div class="ilb-resetpass">
     <a href="/ids/service/login?continue={{.continue}}">Sign in with your Account</a>
   </div>
 
@@ -156,31 +150,21 @@ body {
 $("input[name=name]").focus();
 
 //
-var ids_eh = $("#ids-signup-box").height();
-$("#ids-signup-box").css({
+var ids_eh = $("#ids-resetpass-box").height();
+$("#ids-resetpass-box").css({
     "top": "50%",
     "margin-top": - (ids_eh / 2) + "px" 
 });
 
 //
-$("#ids-signup-form").submit(function(event) {
+$("#ids-resetpass-form").submit(function(event) {
 
     event.preventDefault();
 
-    /* var req = {
-        data: {
-            "name": $("input[name=name]").val(),
-            "email": $("input[name=email]").val(),
-            "passwd": $("input[name=passwd]").val(),
-            "continue": $("input[name=continue]").val(),
-        }
-    } */
-    console.log($("#ids-signup-form").serialize());
-    
     $.ajax({
         type    : "POST",
-        url     : "/ids/reg/sign-up-reg",
-        data    : $("#ids-signup-form").serialize(),//JSON.stringify(req),
+        url     : "/ids/reg/forgot-pass-put",
+        data    : $("#ids-resetpass-form").serialize(),
         timeout : 3000,
         //contentType: "application/json; charset=utf-8",
         success : function(rsp) {
@@ -190,19 +174,20 @@ $("#ids-signup-form").submit(function(event) {
 
             if (rsj.status == 200) {
                 
-                lessAlert("#ids-signup-form-alert", 'alert-success', "Successfully registration. Page redirecting");
                 $(".ilf-group").hide(600);
 
+                lessAlert("#ids-resetpass-form-alert", 'alert-success', "The reset URL has been sent to your mailbox, please check your email");
+                
                 window.setTimeout(function(){
-                    window.location = "/ids/service/login?continue={{.continue}}";
-                }, 1500);
+                    //window.location = "/ids/service/login?continue={{.continue}}";
+                }, 10000);
 
             } else {
-                lessAlert("#ids-signup-form-alert", 'alert-danger', rsj.message);
+                lessAlert("#ids-resetpass-form-alert", 'alert-danger', rsj.message);
             }
         },
         error: function(xhr, textStatus, error) {
-            lessAlert("#ids-signup-form-alert", 'alert-danger', '{{T . "Internal Server Error"}}');
+            lessAlert("#ids-resetpass-form-alert", 'alert-danger', '{{T . "Internal Server Error"}}');
         }
     });
 });
