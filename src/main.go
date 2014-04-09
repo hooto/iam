@@ -2,6 +2,7 @@ package main
 
 import (
     "../deps/lessgo/data/rdc"
+    "../deps/lessgo/net/email"
     "../deps/lessgo/pagelet"
     "./conf"
     ctrl_def "./controllers"
@@ -39,6 +40,10 @@ func main() {
         rdc.InstanceRegister("def", cn)
     } else {
         log.Fatal(err)
+    }
+
+    if cfg.MailerHost != "" && cfg.MailerUser != "" {
+        email.MailerRegister("def", cfg.MailerHost, cfg.MailerUser, cfg.MailerPass)
     }
 
     //

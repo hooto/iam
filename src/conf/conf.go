@@ -11,12 +11,18 @@ import (
     "strings"
 )
 
+var cfg Config
+
 type Config struct {
+    ServiceName  string `json:"service_name"`
+    Port         int    `json:"port"`
+    DomainDef    string `json:"domaindef"`
+    MailerHost   string `json:"mailer_host"`
+    MailerUser   string `json:"mailer_user"`
+    MailerPass   string `json:"mailer_pass"`
     Version      string
     Prefix       string
-    Port         int
     KeeperAgent  string
-    DomainDef    string
     WebServer    string
     WebPort      string
     WebDaemon    string
@@ -26,7 +32,6 @@ type Config struct {
 
 func NewConfig(prefix string) (Config, error) {
 
-    var cfg Config
     var err error
 
     if prefix == "" {
@@ -39,6 +44,9 @@ func NewConfig(prefix string) (Config, error) {
     cfg.Prefix = "/" + strings.Trim(reg.ReplaceAllString(prefix, "/"), "/")
 
     file := cfg.Prefix + "/etc/lessids.json"
+    if _, err := os.Stat(file); err != nil && os.IsNotExist(err) {
+        file = cfg.Prefix + "/etc/lessids.json.dev"
+    }
     if _, err := os.Stat(file); err != nil && os.IsNotExist(err) {
         return cfg, errors.New("Error: config file is not exists")
     }
@@ -59,9 +67,17 @@ func NewConfig(prefix string) (Config, error) {
             "config file invalid. (%s)", err.Error()))
     }
 
+    if cfg.ServiceName == "" {
+        cfg.ServiceName = "less Identity"
+    }
+
     if cfg.DatabasePath == "" {
         cfg.DatabasePath = cfg.Prefix + "/var/lessids.sqlite"
     }
 
     return cfg, nil
+}
+
+func ConfigFetch() *Config {
+    return &cfg
 }

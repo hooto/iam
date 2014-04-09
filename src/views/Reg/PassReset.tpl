@@ -1,6 +1,7 @@
 {{template "Common/HtmlHeader.tpl" .}}
 
-<style>
+
+<style type="text/css">
 body {
   margin: 0 auto;
   position: relative;
@@ -9,33 +10,34 @@ body {
   background-color: #fff;
 }
 
-#ids-resetpass-box {
-  width: 400px;
+
+#ids-reg-passreset-box {
+  width: 480px;
   position: absolute;
   left: 50%;
   top: 20%;
-  margin-left: -200px;
+  margin-left: -240px;
   color: #555;
 }
 
-#ids-resetpass-form {
+#ids-reg-passreset-form {
   background-color: #f7f7f7;
   border-radius: 4px;
   padding: 30px 30px 20px 30px;
   box-shadow: 0px 2px 2px 0px #999;
 }
 
-.ids-resetpass-msg01 {
+.ids-reg-passreset-msg01 {
   font-size: 20px;
   margin: 20px 0;
   text-align: center;
 }
 
-#ids-resetpass-form .ilf-group {
+#ids-reg-passreset-form .ilf-group {
   padding: 0 0 10px 0; 
 }
 
-#ids-resetpass-form .ilf-input {
+#ids-reg-passreset-form .ilf-input {
   display: block;
   width: 100%;
   height: 40px;
@@ -51,13 +53,13 @@ body {
   transition: border-color ease-in-out .15s, box-shadow ease-in-out .15s;
 }
 
-#ids-resetpass-form .ilf-input:focus {
+#ids-reg-passreset-form .ilf-input:focus {
   border-color: #66afe9;
   outline: 0;
   box-shadow: inset 0 1px 1px rgba(0,0,0,.075), 0 0 8px rgba(102, 175, 233, .6);
 }
 
-#ids-resetpass-form .ilf-btn {
+#ids-reg-passreset-form .ilf-btn {
   width: 100%;
   height: 40px;
   display: inline-block;
@@ -82,58 +84,89 @@ body {
   border-color: #357ebd;
 }
 
-#ids-resetpass-form .ilf-btn:hover {
+#ids-reg-passreset-form .ilf-btn:hover {
   color: #fff;
   background-color: #3276b1;
   border-color: #285e8e;
 }
 
-#ids-resetpass-box .ilb-resetpass {
+#ids-reg-passreset-form .ilf-key {
+  font-family: monospace;
+  font-size: 16px;
+  font-weight: bold;
+  padding:10px 5px;
+  background-color: #555;
+  color: #fff;
+  width: 100%;
+  display: inline-block;
+  border-radius: 3px;
+  text-align: center;
+}
+
+#ids-reg-passreset-box .ilb-reg-passreset {
   margin: 10px 0;
   text-align: center;
   font-size: 15px;
 }
-#ids-resetpass-box .ilb-resetpass a {
+#ids-reg-passreset-box .ilb-reg-passreset a {
   color: #427fed;
 }
 
-#ids-resetpass-box .ilb-footer {
+#ids-reg-passreset-box .ilb-footer {
   text-align: center;
   margin: 20px 0;
   font-size: 14px;
 }
-#ids-resetpass-box .ilb-footer a {
+#ids-reg-passreset-box .ilb-footer a {
   color: #777;
 }
-#ids-resetpass-box .ilb-footer img {
+#ids-reg-passreset-box .ilb-footer img {
   width: 16px;
   height: 16px;
 }
 </style>
 
-<div id="ids-resetpass-box">
 
-  <div class="ids-resetpass-msg01">{{T . "Reset your password"}}</div>
+<div id="ids-reg-passreset-box">
 
-  <form id="ids-resetpass-form" action="#forgot-pass">
+  <div class="ids-reg-passreset-msg01">{{T . "Reset your password"}}</div>
 
-    <input type="hidden" name="continue" value="{{.continue}}">
+  {{if .pass_reset_id}}
+  <form id="ids-reg-passreset-form" action="#forgot-pass">
 
-    <div id="ids-resetpass-form-alert" class="alert alert-info ilf-groups">
-    Enter the email address you use to sign in, the System will sent a URL to your email to reset the password.
+    <div id="ids-reg-passreset-form-alert" class="alert hide"></div>
+
+    <div class="ilf-group">
+      <input type="hidden" name="id" value="{{.pass_reset_id}}">
+      <span class="ilf-key">{{.pass_reset_id}}</span>
     </div>
 
     <div class="ilf-group">
-      <input type="text" class="ilf-input" name="email" placeholder="{{T . "Email"}}">
+      <input type="text" class="ilf-input" name="email" placeholder="{{T . "Confirm your Email"}}">
     </div>
+
+    <div class="ilf-group">
+      <input type="text" class="ilf-input" name="birthday" placeholder="{{T . "Confirm your birthday. Example: 1970-01-01"}}">
+    </div>
+
+    <div class="ilf-group">
+      <input type="password" class="ilf-input" name="passwd" placeholder="{{T . "Your new password"}}">
+    </div>
+
+    <div class="ilf-group">
+      <input type="password" class="ilf-input" name="passwd_confirm" placeholder="{{T . "Confirm your new password"}}">
+    </div>    
 
     <div class="ilf-group">
       <button type="submit" class="ilf-btn">{{T . "Next"}}</button>
     </div>
 
   </form>
+  {{else}}
+    <div class="alert alert-danger">The Token is not valid or Expired</div>
+  {{end}}
 
-  <div class="ilb-resetpass">
+  <div class="ilb-reg-passreset">
     <a href="/ids/service/login?continue={{.continue}}">Sign in with your Account</a>
   </div>
 
@@ -144,56 +177,57 @@ body {
 
 </div>
 
+
 <script>
 
-//
 $("input[name=name]").focus();
 
 //
-var ids_eh = $("#ids-resetpass-box").height();
-$("#ids-resetpass-box").css({
+var ids_eh = $("#ids-reg-passreset-box").height();
+$("#ids-reg-passreset-box").css({
     "top": "50%",
     "margin-top": - (ids_eh / 2) + "px" 
 });
 
 //
-$("#ids-resetpass-form").submit(function(event) {
+$("#ids-reg-passreset-form").submit(function(event) {
 
     event.preventDefault();
 
-    lessAlert("#ids-resetpass-form-alert", 'alert-info', "Pending");
+    lessAlert("#ids-reg-passreset-form-alert", 'alert-info', "Pending");
 
     $.ajax({
         type    : "POST",
-        url     : "/ids/reg/forgot-pass-put",
-        data    : $("#ids-resetpass-form").serialize(),
+        url     : "/ids/reg/pass-reset-put",
+        data    : $("#ids-reg-passreset-form").serialize(),
         timeout : 3000,
         //contentType: "application/json; charset=utf-8",
         success : function(rsp) {
 
             var rsj = JSON.parse(rsp);
-            //console.log(rsp);
+            console.log(rsp);
 
             if (rsj.status == 200) {
                 
                 $(".ilf-group").hide(600);
 
-                lessAlert("#ids-resetpass-form-alert", 'alert-success', "The reset URL has been sent to your mailbox, please check your email");
+                lessAlert("#ids-reg-passreset-form-alert", 'alert-success', "Successfully Updated");
                 
                 window.setTimeout(function(){
-                    window.location = "/ids/service/login?continue={{.continue}}";
-                }, 10000);
+                    window.location = "/ids/service/login";
+                }, 5000);
 
             } else {
-                lessAlert("#ids-resetpass-form-alert", 'alert-danger', rsj.message);
+                lessAlert("#ids-reg-passreset-form-alert", 'alert-danger', rsj.message);
             }
         },
         error: function(xhr, textStatus, error) {
-            lessAlert("#ids-resetpass-form-alert", 'alert-danger', '{{T . "Internal Server Error"}}');
+            lessAlert("#ids-reg-passreset-form-alert", 'alert-danger', '{{T . "Internal Server Error"}}');
         }
     });
 });
 
 </script>
+
 
 {{template "Common/HtmlFooter.tpl" .}}

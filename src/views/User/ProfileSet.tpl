@@ -12,7 +12,7 @@
     <tr>
       <td width="120px"><strong>{{T . "Nickname"}}</strong></td>
       <td>
-        <input name="name" type="text" class="form-control" value="{{.login_name}}">
+        <input name="id" type="text" class="form-control" value="{{.login_name}}" readonly="readonly">
       </td>
     </tr>
     <tr>
