@@ -1,0 +1,99 @@
+#!/usr/bin/php
+
+<?php
+
+$opt = getopt("r:");
+$rel = isset($opt['r']) ? intval($opt['r']) : '1';
+$osn = null;
+$osv = null;
+
+$arch = trim(shell_exec("arch"));
+if ($arch != "x86_64") {
+    die("The architecture of the operating system does not support: $arch");
+}
+
+$lsb = trim(shell_exec("lsb_release -a"));
+$pats = array(
+    "/Distributor ID:\ +(.*?)\n/",
+    "/Release:\ +(.*?)\n/",
+);
+
+if (preg_match("/Distributor ID:(.*)\n/", $lsb, $mats)) {
+    $osn = trim($mats[1]);
+}
+if (preg_match("/Release:(.*)\n/", $lsb, $mats)) {
+    $osv = trim($mats[1]);
+}
+if ($osn == "Debian") {
+    $osn = "d";
+} else {
+    die("Debian Only");
+}
+
+$basedir = realpath(__DIR__.'/../..');
+
+$verctn = file_get_contents($basedir."/src/main.go");
+if (!preg_match("/VERSION\ +string\ +\=\ +\"(.*)\"/", $verctn, $mat)) {
+    die("Can not get VERSION");
+}
+$ver = $mat[1];
+
+
+$ctrl = file_get_contents($basedir."/misc/debian/control");
+$mat = array(
+    "/Version:\ +(.*?)\n/",
+    "/Architecture:\ +(.*?)\n/",
+);
+$rep = array(
+    "Version: {$ver}-{$rel}\n",
+    "Architecture: amd64\n",
+);
+$ctrl = preg_replace($mat, $rep, $ctrl);
+
+$pkgname = "lessids";
+
+$cmd = "
+rm -rf /tmp/{$pkgname}
+
+mkdir -p /tmp/{$pkgname}/opt/lessids/etc
+mkdir -p /tmp/{$pkgname}/opt/lessids/bin
+mkdir -p /tmp/{$pkgname}/opt/lessids/var
+mkdir -p /tmp/{$pkgname}/opt/lessids/static
+
+rm -f $basedir/bin/lessids*
+go build -ldflags \"-s -w\" -o $basedir/bin/lessids $basedir/src/main.go
+
+cp $basedir/bin/lessids /tmp/{$pkgname}/opt/lessids/bin/
+chmod +rx /tmp/{$pkgname}/opt/lessids/bin/lessids
+
+mkdir -p /tmp/{$pkgname}/DEBIAN
+echo '$ctrl'>/tmp/{$pkgname}/DEBIAN/control
+
+cp $basedir/misc/debian/postinst /tmp/{$pkgname}/DEBIAN/postinst
+cp $basedir/misc/debian/postrm /tmp/{$pkgname}/DEBIAN/postrm
+cp $basedir/misc/debian/prerm /tmp/{$pkgname}/DEBIAN/prerm
+
+mkdir -p /tmp/{$pkgname}/etc/init.d
+cp $basedir/misc/debian/init.d-scripts /tmp/{$pkgname}/etc/init.d/lessids
+chmod +rx /tmp/{$pkgname}/etc/init.d/lessids
+
+cp -rp $basedir/misc /tmp/{$pkgname}/opt/lessids/
+cp -rp $basedir/static/jquery /tmp/{$pkgname}/opt/lessids/static/
+cp -rp $basedir/static/ids /tmp/{$pkgname}/opt/lessids/static/
+cp -rp $basedir/static/twitter-bootstrap /tmp/{$pkgname}/opt/lessids/static/
+
+mkdir -p /tmp/{$pkgname}/opt/lessids/static/lessui/master
+cp -rp $basedir/static/lessui/master/img /tmp/{$pkgname}/opt/lessids/static/lessui/master/
+cp -rp $basedir/static/lessui/master/css /tmp/{$pkgname}/opt/lessids/static/lessui/master/
+cp -rp $basedir/static/lessui/master/js /tmp/{$pkgname}/opt/lessids/static/lessui/master/
+
+mkdir -p /tmp/{$pkgname}/opt/lessids/etc
+cp $basedir/etc/lessids.json.dist /tmp/{$pkgname}/opt/lessids/etc/lessids.json
+
+dpkg -b /tmp/{$pkgname}/ ~/{$pkgname}_{$ver}-{$rel}_d6_amd64.deb
+
+rm -rf /tmp/{$pkgname}";
+
+shell_exec($cmd);
+
+exit(0);

@@ -1,3 +1,6 @@
 [submodule "deps/lessgo"]
 	path = deps/lessgo
 	url = git@github.com:eryx/lessgo.git
+[submodule "static/lessui/master"]
+	path = static/lessui/master
+	url = git@github.com:eryx/lessui.git

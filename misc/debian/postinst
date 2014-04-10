@@ -1,0 +1,21 @@
+#!/bin/sh
+
+set -eu
+
+USER="lessids"
+GROUP="$USER"
+
+chown -R $USER:$GROUP /opt/lessids
+
+chmod +x /opt/lessids/bin/lessids
+
+chown root:root /etc/init.d/lessids
+chmod +x /etc/init.d/lessids
+
+# Automatically added by dh_installinit
+if [ -x "/etc/init.d/lessids" ]; then
+	update-rc.d lessids defaults >/dev/null
+	invoke-rc.d lessids start || exit $?
+fi
+# End automatically added section
+
