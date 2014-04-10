@@ -4,14 +4,14 @@
 <table id="ids-user-header">
   <tr>
     <td>
-      <img class="ids-header-logo" src="/ids/static/img/ids-s2-32.png"> 
+      <img class="ids-header-logo" src="/ids/~/ids/img/ids-s2-32.png"> 
       <span class="ids-header-title">Account Settings</span>
     </td>
     
     <td align="right">
       <div id="ids-userbox">
         <span class="btn btn-default ids-userbox-signout">Sign Out</span>
-        <img class="ids-userbox-ico" src="/ids/static/img/user-default.png">
+        <img class="ids-userbox-ico" src="/ids/~/ids/img/user-default.png">
       </div>
     </td>
   </tr>

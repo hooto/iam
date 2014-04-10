@@ -15,7 +15,7 @@ import (
 )
 
 const (
-    VERSION string = "0.1.0-dev"
+    VERSION string = "0.1.0dev"
 )
 
 var cfg conf.Config
@@ -56,8 +56,7 @@ func main() {
     pagelet.Config.I18n(cfg.Prefix + "/src/i18n/en.json")
     pagelet.Config.I18n(cfg.Prefix + "/src/i18n/zh_CN.json")
     //
-    pagelet.Config.RouteStaticAppend("default", "/~", cfg.Prefix+"/spm")
-    pagelet.Config.RouteStaticAppend("default", "/static", cfg.Prefix+"/public")
+    pagelet.Config.RouteStaticAppend("default", "/~", cfg.Prefix+"/static")
     pagelet.Config.RouteAppend("default", "/:controller/:action")
 
     //

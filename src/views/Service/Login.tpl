@@ -156,7 +156,7 @@ body {
 
     <input type="hidden" name="continue" value="{{.continue}}">
 
-    <img class="ids-user-ico-default"  src="/ids/static/img/user-default.png">
+    <img class="ids-user-ico-default"  src="/ids/~/ids/img/user-default.png">
 
     <div id="ids-login-form-alert" class="alert hide ilf-group"></div>
 
@@ -189,7 +189,7 @@ body {
   </div>
 
   <div class="ilb-footer">
-    <img src="/ids/static/img/ids-s2-32.png"> 
+    <img src="/ids/~/ids/img/ids-s2-32.png"> 
     <a href="http://www.lesscompute.com" target="_blank">less Identity Server</a>
   </div>
 

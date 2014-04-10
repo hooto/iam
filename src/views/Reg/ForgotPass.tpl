@@ -138,7 +138,7 @@ body {
   </div>
 
   <div class="ilb-footer">
-    <img src="/ids/static/img/ids-s2-32.png"> 
+    <img src="/ids/~/ids/img/ids-s2-32.png"> 
     <a href="http://www.lesscompute.com" target="_blank">less Identity Server</a>
   </div>
 

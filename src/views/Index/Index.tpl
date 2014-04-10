@@ -5,7 +5,7 @@
   <meta charset="utf-8">
   <title>Identity Service</title>
   <script src="/ids/~/lessui/master/js/sea.js"></script>
-  <script src="/ids/static/js/main.js"></script>
+  <script src="/ids/~/ids/js/main.js"></script>
   <script type="text/javascript">
     window.onload = lfBoot;
   </script>
