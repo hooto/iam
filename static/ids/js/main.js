@@ -7,7 +7,7 @@ function lfBoot()
 
     var rqs = [
         "~/twitter-bootstrap/3.1.1/css/bootstrap.min.css",
-        "~/jquery/1.10.1/jquery.min.js",
+        "~/jquery/1.10.2/jquery.min.js",
         "~/lessui/master/js/BrowserDetect.js",
     ];
     seajs.use(rqs, function() {
