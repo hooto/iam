@@ -87,6 +87,9 @@ cp -rp $basedir/static/lessui/master/img /tmp/{$pkgname}/opt/lessids/static/less
 cp -rp $basedir/static/lessui/master/css /tmp/{$pkgname}/opt/lessids/static/lessui/master/
 cp -rp $basedir/static/lessui/master/js /tmp/{$pkgname}/opt/lessids/static/lessui/master/
 
+mkdir -p /tmp/{$pkgname}/opt/lessids/src
+cp -rp $basedir/src/views /tmp/{$pkgname}/opt/lessids/src/
+
 mkdir -p /tmp/{$pkgname}/opt/lessids/etc
 cp $basedir/etc/lessids.json.dist /tmp/{$pkgname}/opt/lessids/etc/lessids.json
 

@@ -28,9 +28,11 @@ rm -rf %{buildroot}
 install -d %{buildroot}%{app_home}/bin
 install -d %{buildroot}%{app_home}/etc
 install -d %{buildroot}%{app_home}/var
+install -d %{buildroot}%{app_home}/src
 
 cp -rp ./misc %{buildroot}%{app_home}/
 cp -rp ./static %{buildroot}%{app_home}/
+cp -rp ./src/views %{buildroot}%{app_home}/src/
 
 install -m 0755 -p bin/lessids %{buildroot}%{app_home}/bin/lessids
 install -m 0755 -p etc/lessids.json %{buildroot}%{app_home}/etc/lessids.json

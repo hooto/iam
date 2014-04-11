@@ -48,6 +48,9 @@ cp -rp $basedir/static/lessui/master/img /tmp/SOURCES/{$pkgname}-{$ver}/static/l
 cp -rp $basedir/static/lessui/master/css /tmp/SOURCES/{$pkgname}-{$ver}/static/lessui/master/
 cp -rp $basedir/static/lessui/master/js /tmp/SOURCES/{$pkgname}-{$ver}/static/lessui/master/
 
+mkdir -p /tmp/SOURCES/{$pkgname}-{$ver}/src
+cp -rp $basedir/src/views /tmp/SOURCES/{$pkgname}-{$ver}/src/
+
 cp -rp $basedir/LICENSE /tmp/SOURCES/{$pkgname}-{$ver}/
 cp -rp $basedir/README.md /tmp/SOURCES/{$pkgname}-{$ver}/
 
