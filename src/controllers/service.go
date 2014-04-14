@@ -6,7 +6,9 @@ import (
     "../../deps/lessgo/pass"
     "../../deps/lessgo/utils"
     "encoding/base64"
+    "fmt"
     "io"
+    "strconv"
     "strings"
     "time"
 )
@@ -64,7 +66,7 @@ func (c Service) LoginAuthAction() {
     q.Where.And("email", email)
     rsu, err := dcn.Query(q)
     if err == nil && len(rsu) == 0 {
-        rsp.Message = "Email or Password can not match 1"
+        rsp.Message = "Email or Password can not match"
         return
     }
 
@@ -83,9 +85,11 @@ func (c Service) LoginAuthAction() {
     taf, _ := time.ParseDuration("+864000s")
     session := map[string]interface{}{
         "token":   rsp.Data.AccessToken,
+        "refresh": utils.StringNewRand36(24),
         "status":  1,
         "uid":     rsu[0]["uid"],
         "uname":   rsu[0]["uname"],
+        "name":    rsu[0]["name"],
         "source":  addr,
         "created": time.Now().Format("2006-01-02 15:04:05"),          // TODO
         "expired": time.Now().Add(taf).Format("2006-01-02 15:04:05"), // TODO
@@ -98,11 +102,76 @@ func (c Service) LoginAuthAction() {
 
     if len(c.Params.Get("continue")) > 0 {
         rsp.Data.Continue = c.Params.Get("continue")
+        if strings.Index(rsp.Data.Continue, "?") == -1 {
+            rsp.Data.Continue += "?"
+        } else {
+            rsp.Data.Continue += "&"
+        }
+        rsp.Data.Continue += "access_token=" + rsp.Data.AccessToken
     }
-    if strings.Index(rsp.Data.Continue, "?") == -1 {
-        rsp.Data.Continue += "?"
+
+    rsp.Status = 200
+    rsp.Message = ""
+}
+
+func (c Service) AuthAction() {
+
+    c.AutoRender = false
+
+    var rsp struct {
+        ResponseJson
+        Data ResponseSession `json:"data"`
     }
-    rsp.Data.Continue += "&access_token=" + rsp.Data.AccessToken
+    rsp.ApiVersion = apiVersion
+    rsp.Status = 401
+    rsp.Message = "Unauthorized"
+
+    defer func() {
+        if rspj, err := utils.JsonEncode(rsp); err == nil {
+            io.WriteString(c.Response.Out, rspj)
+        }
+    }()
+
+    dcn, err := rdc.InstancePull("def")
+    if err != nil {
+        rsp.Message = "Internal Server Error"
+        return
+    }
+
+    if c.Params.Get("access_token") == "" {
+        return
+    }
+
+    q := rdc.NewQuerySet().From("ids_sessions").Limit(1)
+    q.Where.And("token", c.Params.Get("access_token"))
+    rsu, err := dcn.Query(q)
+    if err == nil && len(rsu) == 0 {
+        return
+    }
+
+    //
+    expired := rsu[0]["expired"].(time.Time)
+    if expired.Before(time.Now()) {
+        return
+    }
+
+    //
+    addr := "0.0.0.0"
+    if addridx := strings.Index(c.Request.RemoteAddr, ":"); addridx > 0 {
+        addr = c.Request.RemoteAddr[:addridx]
+    }
+    if addr != rsu[0]["source"].(string) {
+        return
+    }
+
+    //
+    uid, _ := strconv.Atoi(fmt.Sprintf("%v", rsu[0]["uid"]))
+    rsp.Data.Uid = uint32(uid)
+    rsp.Data.Uname = rsu[0]["uname"].(string)
+    rsp.Data.Name = rsu[0]["name"].(string)
+    rsp.Data.AccessToken = rsu[0]["token"].(string)
+    rsp.Data.RefreshToken = rsu[0]["refresh"].(string)
+    rsp.Data.Expired = expired.Format(time.RFC3339)
 
     rsp.Status = 200
     rsp.Message = ""

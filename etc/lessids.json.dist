@@ -1,4 +1,4 @@
 {
-    "port": 7777,
+    "port": 9526,
     "domaindef": "app.example.com"
 }

@@ -67,6 +67,7 @@ func (c *Config) DatabaseInstance() (*rdc.Conn, error) {
     tbl_ses.FieldAdd("refresh", "string", 24, 0)
     tbl_ses.FieldAdd("status", "int16", 0, setup.FieldIndexIndex)
     tbl_ses.FieldAdd("uid", "uint32", 0, setup.FieldIndexIndex)
+    tbl_ses.FieldAdd("name", "string", 50, 0)
     tbl_ses.FieldAdd("uname", "string", 30, 0)
     tbl_ses.FieldAdd("source", "string", 20, 0)
     tbl_ses.FieldAdd("data", "string-text", 0, 0)

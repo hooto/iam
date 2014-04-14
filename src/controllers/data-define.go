@@ -11,3 +11,13 @@ type ResponseJson struct {
     Message    string `json:"message"`
     ApiVersion string `json:"apiVersion"`
 }
+
+type ResponseSession struct {
+    AccessToken  string `json:"access_token"`
+    RefreshToken string `json:"refresh_token"`
+    Uid          uint32 `json:"uid"`
+    Uname        string `json:"uname"`
+    Name         string `json:"name"`
+    Data         string `json:"data"`
+    Expired      string `json:"expired"`
+}

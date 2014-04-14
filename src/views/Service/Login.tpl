@@ -242,7 +242,7 @@ $("#ids-login-form").submit(function(event) {
             
             lessCookie.Set("access_token", rsj.data.access_token, 864000);
 
-            window.setTimeout(function(){    
+            window.setTimeout(function(){
                 window.location = rsj.data.continue;
             }, 1500);
         },
