@@ -18,6 +18,7 @@ done
 rm -f ./bin/lessids
 
 go build -ldflags "" -o ./bin/lessids ./src/main.go 
+go build -ldflags "" -o ./bin/lessids-cli ./src/cli.go 
 
 
 prefix=`pwd`
