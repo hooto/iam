@@ -1,9 +1,9 @@
 package main
 
 import (
+    "../deps/lessgo/data/rdc"
     "../deps/lessgo/pass"
     "../deps/lessgo/utils"
-    "../deps/lessgo/data/rdc"
     "./conf"
     "bufio"
     "flag"
@@ -22,8 +22,21 @@ var cfg conf.Config
 var emailPattern = regexp.MustCompile("^[_a-z0-9-]+(\\.[_a-z0-9-]+)*@[a-z0-9-]+(\\.[a-z0-9-]+)*(\\.[a-z]{2,10})$")
 
 var flagPrefix = flag.String("prefix", "", "the prefix folder path")
-var flagUserSet = flag.String("userset", "", "the username")
+var flagUserSet = flag.Bool("userset", false, "Create a System Administrator")
 var flagUserDel = flag.String("userdel", "", "the username")
+
+const (
+    //CMDC_DEFAULT   = "\033[m"
+    //CMDC_BLACK     = "\033[30m"
+    CMDC_RED   = "\033[31m"
+    CMDC_GREEN = "\033[32m"
+    CMDC_BROWN = "\033[33m"
+    //CMDC_BLUE      = "\033[34m"
+    //CMDC_MAGANTA   = "\033[35m"
+    //CMDC_CYAN      = "\033[36m"
+    //CMDC_LIGHTGRAY = "\033[37m"
+    CMDC_CLOSE = "\033[0m"
+)
 
 func main() {
 
@@ -44,7 +57,7 @@ func main() {
         log.Fatal(err)
     }
 
-    if *flagUserSet != "" {
+    if *flagUserSet {
         cmdUserSet()
     } else if *flagUserDel != "" {
         //cmdUserDel()
@@ -56,61 +69,76 @@ func main() {
 func cmdUserSet() {
 
     defer func() {
+        if r := recover(); r != nil {
+            fmt.Println("Panic:", r)
+        }
         exec.Command("stty", "-F", "/dev/tty", "-cbreak").Run()
     }()
 
     // disable input buffering
     exec.Command("stty", "-F", "/dev/tty", "cbreak").Run()
-    // do not display entered characters on the screen
-    //exec.Command("stty", "-F", "/dev/tty", "-echo").Run()
 
-    //
-    if *flagUserSet == "" {
-        fmt.Println("Email can not be null")
-        os.Exit(1)
-    }
-    email := strings.ToLower(strings.TrimSpace(*flagUserSet))
-    if matched := emailPattern.MatchString(email); !matched {
-        fmt.Println("Email is not valid")
-        os.Exit(1)
-    }
-
-    //
-    prompt := "\rEnter new password: "
-    fmt.Printf("Setting password for %s\n%s", email, prompt)
-    reader := bufio.NewReaderSize(os.Stdin, 1)
-    passwd := ""
-    for {
-
-        c, _ := reader.ReadByte()
-        if c == '\n' {
-            break
-        }
-
-        passwd += string(c)
-
-        prompt += "*"
-        fmt.Print(prompt)
-    }
-    if len(passwd) < 12 || len(passwd) > 30 {
-        fmt.Println("Password must be between 12 and 30 characters long")
-        os.Exit(1)
-    }
-    hash, _ := pass.HashDefault(passwd)
-    //fmt.Println(hash)
+    fmt.Println(CMDC_GREEN + "This wizard will guide you to create a System Administrator." + CMDC_CLOSE)
 
     dcn, err := rdc.InstancePull("def")
     if err != nil {
-        log.Fatal("Internal Server Error")
-    }
-
-    q := rdc.NewQuerySet().From("ids_login").Limit(1)
-    q.Where.And("email", email)
-    rsu, err := dcn.Query(q)
-    if err == nil && len(rsu) == 1 {
-        fmt.Println("The `Email` already exists, please choose another one")
+        fmt.Println("Internal Server Error: Can not connect to database")
         os.Exit(1)
     }
+
+    var email string
+    for {
+
+        email = ""
+
+        fmt.Printf(CMDC_BROWN + "\nEnter a Email to login: " + CMDC_CLOSE)
+        fmt.Scanf("%s", &email)
+
+        email = strings.ToLower(strings.TrimSpace(email))
+        if matched := emailPattern.MatchString(email); !matched {
+            fmt.Printf(CMDC_RED + "Email is not valid, Please choose another one" + CMDC_CLOSE)
+            continue
+        }
+
+        q := rdc.NewQuerySet().From("ids_login").Limit(1)
+        q.Where.And("email", email)
+
+        rsu, err := dcn.Query(q)
+        if err == nil && len(rsu) == 1 {
+            fmt.Printf(CMDC_RED + "The Email already exists, please choose another one" + CMDC_CLOSE)
+            continue
+        }
+
+        break
+    }
+
+    //
+    passwd := ""
+    for {
+
+        prompt := CMDC_BROWN + "\rEnter new password: " + CMDC_CLOSE
+        reader := bufio.NewReaderSize(os.Stdin, 1)
+        fmt.Printf(prompt)
+        for {
+
+            c, _ := reader.ReadByte()
+            if c == '\n' {
+                break
+            }
+
+            passwd += string(c)
+
+            prompt += "*"
+            fmt.Printf(prompt)
+        }
+
+        if len(passwd) >= 12 && len(passwd) <= 50 {
+            break
+        }
+
+        fmt.Println(CMDC_RED + "Password must be between 12 and 50 characters long. Please choose another one" + CMDC_CLOSE)
+    }
+    hash, _ := pass.HashDefault(passwd)
 
     uname := utils.StringNewRand36(8)
     item := map[string]interface{}{
@@ -128,7 +156,7 @@ func cmdUserSet() {
     }
 
     //
-    fmt.Println("Password updated successfully")
+    fmt.Println(CMDC_GREEN + "Successfully created" + CMDC_CLOSE)
 }
 
 /*

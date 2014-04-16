@@ -15,12 +15,8 @@ for dir in $dirs; do
     gofmt -tabwidth=4 -tabs=false -w=true ${dir}/*.go
 done
 
-rm -f ./bin/lessids
+go build -ldflags "-w -s" -o ./bin/lessids-cli ./src/cli.go 
+go build -ldflags "" -o ./bin/lessids-server ./src/main.go 
 
-go build -ldflags "" -o ./bin/lessids ./src/main.go 
-go build -ldflags "" -o ./bin/lessids-cli ./src/cli.go 
-
-
-prefix=`pwd`
-./bin/lessids --prefix=${prefix}
+./bin/lessids-server
 
