@@ -12,6 +12,7 @@ import (
 )
 
 const (
+    Version       = "0.1.0dev"
     GroupMember   = 100
     GroupSysAdmin = 1
 )
@@ -38,6 +39,8 @@ type Config struct {
 func NewConfig(prefix string) (Config, error) {
 
     var err error
+
+    cfg.Version = Version
 
     if prefix == "" {
         prefix, err = filepath.Abs(filepath.Dir(os.Args[0]) + "/..")

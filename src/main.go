@@ -14,10 +14,6 @@ import (
     "time"
 )
 
-const (
-    VERSION string = "0.1.0dev"
-)
-
 var cfg conf.Config
 
 var flagPrefix = flag.String("prefix", "", "the prefix folder path")
@@ -34,7 +30,6 @@ func main() {
         fmt.Println(err)
         os.Exit(1)
     }
-    cfg.Version = VERSION
 
     if cn, err := cfg.DatabaseInstance(); err == nil {
         rdc.InstanceRegister("def", cn)
@@ -65,6 +60,7 @@ func main() {
     pagelet.RegisterController("default", (*ctrl_def.Service)(nil))
     pagelet.RegisterController("default", (*ctrl_def.Reg)(nil))
     pagelet.RegisterController("default", (*ctrl_def.User)(nil))
+    pagelet.RegisterController("default", (*ctrl_def.UserAdmin)(nil))
 
     //
     pagelet.Run()
