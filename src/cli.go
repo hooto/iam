@@ -69,7 +69,7 @@ func main() {
     if *flagUserSet {
         cmdUserSet()
     } else if *flagUserDel {
-        //cmdUserDel()
+        cmdUserDel()
     } else if *flagHelp {
         fmt.Println(helpMessage)
     } else {
@@ -187,17 +187,54 @@ func cmdUserSet() {
     fmt.Println(CMDC_GREEN + "Successfully created" + CMDC_CLOSE)
 }
 
-/*
 func cmdUserDel() {
 
-    //
-    if *flagUserDel == "" {
-        log.Fatal("Username can not be null")
+    fmt.Println(CMDC_GREEN + "This wizard will guide you to delete a System Administrator." + CMDC_CLOSE)
+
+    dcn, err := rdc.InstancePull("def")
+    if err != nil {
+        fmt.Println("Internal Server Error: Can not connect to database")
+        os.Exit(1)
     }
-    email := strings.ToLower(*flagUserDel)
 
+    var email string
+    for {
 
+        email = ""
 
-    fmt.Println("User deleted successfully")
+        fmt.Printf(CMDC_BROWN + "\nEnter a Email to login: " + CMDC_CLOSE)
+        fmt.Scanf("%s", &email)
+
+        email = strings.ToLower(strings.TrimSpace(email))
+        if matched := emailPattern.MatchString(email); !matched {
+            fmt.Printf(CMDC_RED + "Email is not valid, Please choose another one" + CMDC_CLOSE)
+            continue
+        }
+
+        q := rdc.NewQuerySet().From("ids_login").Limit(1)
+        q.Where.And("email", email)
+
+        rsu, err := dcn.Query(q)
+        if err != nil || len(rsu) != 1 {
+            fmt.Printf(CMDC_RED + "The Email can not found, please choose another one" + CMDC_CLOSE)
+            continue
+        }
+
+        break
+    }
+
+    frupd := rdc.NewFilter()
+    frupd.And("email", email)
+    item := map[string]interface{}{
+        "status":  0,
+        "updated": time.Now().Format(time.RFC3339), // TODO
+    }
+    _, err = dcn.Update("ids_login", item, frupd)
+    if err != nil {
+        fmt.Println("Internal Server Error: Can not write to database 2", err)
+        os.Exit(1)
+    }
+
+    //
+    fmt.Println(CMDC_GREEN + "User deleted successfully" + CMDC_CLOSE)
 }
-*/
