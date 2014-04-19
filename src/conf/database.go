@@ -23,6 +23,7 @@ func (c *Config) DatabaseInstance() (*rdc.Conn, error) {
     tbl_lgn.FieldAdd("name", "string", 50, 0)
     tbl_lgn.FieldAdd("pass", "string", 100, 0)
     tbl_lgn.FieldAdd("group", "string", 200, 0)
+    tbl_lgn.FieldAdd("roles", "string", 200, 0)
     tbl_lgn.FieldAdd("status", "int16", 0, setup.FieldIndexIndex)
     tbl_lgn.FieldAdd("created", "datetime", 0, setup.FieldIndexIndex)
     tbl_lgn.FieldAdd("updated", "datetime", 0, setup.FieldIndexIndex)
@@ -47,63 +48,75 @@ func (c *Config) DatabaseInstance() (*rdc.Conn, error) {
     tbl_rst.FieldAdd("expired", "datetime", 0, setup.FieldIndexIndex)
 
     // group
-    tbl_grp := setup.NewTable("ids_group")
-    tbl_grp.FieldAdd("gid", "auto", 0, 0)
-    tbl_grp.FieldAdd("pid", "int32", 0, setup.FieldIndexIndex)
-    tbl_grp.FieldAdd("name", "string", 50, 0)
-    tbl_grp.FieldAdd("summary", "string", 100, 0)
-    tbl_grp.FieldAdd("status", "int16", 0, setup.FieldIndexIndex)
-    tbl_grp.FieldAdd("created", "datetime", 0, 0)
-    tbl_grp.FieldAdd("updated", "datetime", 0, 0)
+    /*
+       tbl_grp := setup.NewTable("ids_group")
+       tbl_grp.FieldAdd("gid", "auto", 0, 0)
+       tbl_grp.FieldAdd("pid", "int32", 0, setup.FieldIndexIndex)
+       tbl_grp.FieldAdd("name", "string", 50, 0)
+       tbl_grp.FieldAdd("summary", "string", 100, 0)
+       tbl_grp.FieldAdd("status", "int16", 0, setup.FieldIndexIndex)
+       tbl_grp.FieldAdd("created", "datetime", 0, 0)
+       tbl_grp.FieldAdd("updated", "datetime", 0, 0)
 
-    // group_users
-    tbl_gpu := setup.NewTable("ids_group_users")
-    tbl_gpu.FieldAdd("gukey", "pk-string", 20, 0)
-    tbl_gpu.FieldAdd("created", "datetime", 0, 0)
-
+       // group_users
+       tbl_gpu := setup.NewTable("ids_group_users")
+       tbl_gpu.FieldAdd("gukey", "pk-string", 20, 0)
+       tbl_gpu.FieldAdd("created", "datetime", 0, 0)
+    */
     //
-    tbl_app := setup.NewTable("ids_apps")
-    tbl_app.FieldAdd("id", "auto", 0, 0)
-    tbl_app.FieldAdd("title", "string", 50, 0)
-    tbl_app.FieldAdd("created", "datetime", 0, 0)
-    tbl_app.FieldAdd("updated", "datetime", 0, 0)
-
+    /*
+       tbl_app := setup.NewTable("ids_apps")
+       tbl_app.FieldAdd("id", "auto", 0, 0)
+       tbl_app.FieldAdd("title", "string", 50, 0)
+       tbl_app.FieldAdd("created", "datetime", 0, 0)
+       tbl_app.FieldAdd("updated", "datetime", 0, 0)
+    */
     //
-    tbl_ins := setup.NewTable("ids_instances")
+    tbl_ins := setup.NewTable("ids_instance")
     tbl_ins.FieldAdd("id", "pk-string", 8, 0)
-    tbl_ins.FieldAdd("appid", "string", 50, setup.FieldIndexIndex)
+    tbl_ins.FieldAdd("uid", "uint32", 10, setup.FieldIndexIndex)
+    tbl_ins.FieldAdd("app_id", "string", 50, setup.FieldIndexIndex)
+    tbl_ins.FieldAdd("app_title", "string", 50, 0)
     tbl_ins.FieldAdd("version", "string", 50, 0)
-    tbl_ins.FieldAdd("uid", "uint32", 10, 0)
+    tbl_ins.FieldAdd("data", "string-text", 0, 0)
     tbl_ins.FieldAdd("created", "datetime", 0, 0)
     tbl_ins.FieldAdd("updated", "datetime", 0, 0)
 
     //
-    tbl_rol := setup.NewTable("ids_roles")
-    tbl_rol.FieldAdd("id", "auto", 0, 0)
+    tbl_rol := setup.NewTable("ids_role")
+    tbl_rol.FieldAdd("rid", "auto", 0, 0)
+    tbl_rol.FieldAdd("uid", "uint32", 0, setup.FieldIndexIndex)
+    tbl_rol.FieldAdd("status", "int16", 0, setup.FieldIndexIndex)
     tbl_rol.FieldAdd("name", "string", 30, 0)
-    tbl_rol.FieldAdd("weight", "int32", 0, 0)
+    tbl_rol.FieldAdd("desc", "string", 100, 0)
+    tbl_rol.FieldAdd("privileges", "string-text", 0, 0)
+    tbl_rol.FieldAdd("created", "datetime", 0, 0)
+    tbl_rol.FieldAdd("updated", "datetime", 0, 0)
 
     //
-    tbl_pem := setup.NewTable("ids_perms")
-    tbl_pem.FieldAdd("id", "auto", 0, 0)
-    tbl_pem.FieldAdd("rid", "uint32", 0, setup.FieldIndexIndex)
-    tbl_pem.FieldAdd("instance", "string", 30, setup.FieldIndexIndex)
-    tbl_pem.FieldAdd("permission", "string", 100, 0)
+    tbl_pri := setup.NewTable("ids_privilege")
+    tbl_pri.FieldAdd("pid", "auto", 0, 0)
+    tbl_pri.FieldAdd("instance", "string", 30, setup.FieldIndexIndex)
+    tbl_pri.FieldAdd("privilege", "string", 100, 0)
+    tbl_pri.FieldAdd("data", "string-text", 0, 0)
+    tbl_pri.FieldAdd("created", "datetime", 0, 0)
 
     //
-    tbl_mes := setup.NewTable("ids_menus")
-    tbl_mes.FieldAdd("id", "auto", 0, 0)
-    tbl_mes.FieldAdd("pid", "uint32", 0, 0)
-    tbl_mes.FieldAdd("type", "uint16", 0, setup.FieldIndexIndex)
-    tbl_mes.FieldAdd("status", "int16", 0, 0)
-    tbl_mes.FieldAdd("instance", "string", 50, setup.FieldIndexIndex)
-    tbl_mes.FieldAdd("uid", "uint32", 0, setup.FieldIndexIndex)
-    tbl_mes.FieldAdd("title", "string", 100, 0)
-    tbl_mes.FieldAdd("link", "string", 100, 0)
-    tbl_mes.FieldAdd("weight", "int8", 0, 0)
-    tbl_mes.FieldAdd("permission", "string", 50, 0)
-    tbl_mes.FieldAdd("created", "datetime", 0, 0)
-    tbl_mes.FieldAdd("updated", "datetime", 0, 0)
+    /*
+       tbl_mes := setup.NewTable("ids_menus")
+       tbl_mes.FieldAdd("id", "auto", 0, 0)
+       tbl_mes.FieldAdd("pid", "uint32", 0, 0)
+       tbl_mes.FieldAdd("type", "uint16", 0, setup.FieldIndexIndex)
+       tbl_mes.FieldAdd("status", "int16", 0, 0)
+       tbl_mes.FieldAdd("instance", "string", 50, setup.FieldIndexIndex)
+       tbl_mes.FieldAdd("uid", "uint32", 0, setup.FieldIndexIndex)
+       tbl_mes.FieldAdd("title", "string", 100, 0)
+       tbl_mes.FieldAdd("link", "string", 100, 0)
+       tbl_mes.FieldAdd("weight", "int8", 0, 0)
+       tbl_mes.FieldAdd("permission", "string", 50, 0)
+       tbl_mes.FieldAdd("created", "datetime", 0, 0)
+       tbl_mes.FieldAdd("updated", "datetime", 0, 0)
+    */
 
     //
     tbl_ses := setup.NewTable("ids_sessions")
@@ -121,21 +134,21 @@ func (c *Config) DatabaseInstance() (*rdc.Conn, error) {
 
     //
     ds := setup.NewDataSet()
-    ds.Version = 7
+    ds.Version = 1
     // accounts
     ds.TableAdd(tbl_lgn)
     ds.TableAdd(tbl_prf)
     ds.TableAdd(tbl_rst)
     // group
-    ds.TableAdd(tbl_grp)
-    ds.TableAdd(tbl_gpu)
+    //ds.TableAdd(tbl_grp)
+    //ds.TableAdd(tbl_gpu)
     // applications
-    ds.TableAdd(tbl_app)
+    //ds.TableAdd(tbl_app)
     ds.TableAdd(tbl_ins)
     // roles
     ds.TableAdd(tbl_rol)
-    ds.TableAdd(tbl_pem)
-    ds.TableAdd(tbl_mes)
+    ds.TableAdd(tbl_pri)
+    //ds.TableAdd(tbl_mes)
     // session
     ds.TableAdd(tbl_ses)
 
@@ -143,11 +156,37 @@ func (c *Config) DatabaseInstance() (*rdc.Conn, error) {
     _ = cn.Setup("", ds)
 
     timenow := time.Now().Format(time.RFC3339)
-    _, err := cn.ExecRaw("INSERT OR IGNORE INTO `ids_group` "+
-        "(gid,pid,name,summary,status,created,updated) "+
-        "VALUES (1,0,\"Administrator\",\"Root System Administrator\",1,?,?),"+
-        "(100,0,\"Member\",\"Universal Member\",1,?,?)",
-        timenow, timenow, timenow, timenow)
+    /* _, err := cn.ExecRaw("INSERT OR IGNORE INTO `ids_group` "+
+           "(gid,pid,name,summary,status,created,updated) "+
+           "VALUES (1,0,\"Administrator\",\"Root System Administrator\",1,?,?),"+
+           "(100,0,\"Member\",\"Universal Member\",1,?,?)",
+           timenow, timenow, timenow, timenow)
+       if err != nil {
+           return cn, err
+       } */
+
+    _, err := cn.ExecRaw("INSERT OR IGNORE INTO `ids_role` "+
+        "(rid,uid,status,name,desc,privileges,created,updated) "+
+        "VALUES (1,0,1,\"Administrator\",\"Root System Administrator\",?,?,?),"+
+        "(100,0,1,\"Member\",\"Universal Member\",?,?,?),"+
+        "(101,0,1,\"Anonymous\",\"Anonymous Member\",?,?,?)",
+        "1", timenow, timenow, "", timenow, timenow, "", timenow, timenow)
+    if err != nil {
+        return cn, err
+    }
+
+    _, err = cn.ExecRaw("INSERT OR IGNORE INTO `ids_instance` "+
+        "(id,uid,app_id,app_title,version,created,updated) "+
+        "VALUES (\"lessids\",0,\"lessids\",\"less Identity Server\",?,?,?)",
+        c.Version, timenow, timenow)
+    if err != nil {
+        return cn, err
+    }
+
+    _, err = cn.ExecRaw("INSERT OR IGNORE INTO `ids_privilege` "+
+        "(pid,instance,privilege,created) "+
+        "VALUES (\"1\",\"lessids\",\"user.admin\",?)",
+        timenow)
     if err != nil {
         return cn, err
     }
