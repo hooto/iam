@@ -87,9 +87,6 @@ func cmdUserSet() {
         exec.Command("stty", "-F", "/dev/tty", "-cbreak").Run()
     }()
 
-    // disable input buffering
-    exec.Command("stty", "-F", "/dev/tty", "cbreak").Run()
-
     fmt.Println(CMDC_GREEN + "This wizard will guide you to create a System Administrator." + CMDC_CLOSE)
 
     dcn, err := rdc.InstancePull("def")
@@ -125,6 +122,8 @@ func cmdUserSet() {
     }
 
     //
+    // disable input buffering
+    exec.Command("stty", "-F", "/dev/tty", "cbreak").Run()
     passwd := ""
     for {
 
