@@ -17,13 +17,14 @@ import (
     "time"
 )
 
-var err error
-var cfg conf.Config
-var emailPattern = regexp.MustCompile("^[_a-z0-9-]+(\\.[_a-z0-9-]+)*@[a-z0-9-]+(\\.[a-z0-9-]+)*(\\.[a-z]{2,10})$")
-
-var flagPrefix = flag.String("prefix", "", "the prefix folder path")
-var flagUserSet = flag.Bool("userset", false, "Create a System Administrator")
-var flagUserDel = flag.String("userdel", "", "the username")
+var (
+    err          error
+    cfg          conf.Config
+    flagPrefix   = flag.String("prefix", "", "the prefix folder path")
+    flagUserSet  = flag.Bool("userset", false, "Create a System Administrator")
+    flagUserDel  = flag.Bool("userdel", false, "Delete a System Administrator")
+    emailPattern = regexp.MustCompile("^[_a-z0-9-]+(\\.[_a-z0-9-]+)*@[a-z0-9-]+(\\.[a-z0-9-]+)*(\\.[a-z]{2,10})$")
+)
 
 const (
     //CMDC_DEFAULT   = "\033[m"
@@ -59,10 +60,10 @@ func main() {
 
     if *flagUserSet {
         cmdUserSet()
-    } else if *flagUserDel != "" {
+    } else if *flagUserDel {
         //cmdUserDel()
     } else {
-        fmt.Println("No Command Found")
+        fmt.Println(CMDC_RED + "No Command Found" + CMDC_CLOSE)
     }
 }
 
@@ -147,11 +148,24 @@ func cmdUserSet() {
         "pass":    hash,
         "name":    uname,
         "status":  1,
+        "group":   "1",
         "created": time.Now().Format(time.RFC3339), // TODO
         "updated": time.Now().Format(time.RFC3339), // TODO
     }
-    if err := dcn.Insert("ids_login", item); err != nil {
-        fmt.Println("Internal Server Error: Can not write to database")
+    rs, err := dcn.Insert("ids_login", item)
+    if err != nil {
+        fmt.Println("Internal Server Error: Can not write to database 2", err)
+        os.Exit(1)
+    }
+
+    lastid, _ := rs.LastInsertId()
+    itemgu := map[string]interface{}{
+        "gukey":   fmt.Sprintf("%v.%v", lastid, 1),
+        "created": time.Now().Format(time.RFC3339),
+    }
+    rs, err = dcn.Insert("ids_group_users", itemgu)
+    if err != nil {
+        fmt.Println("Internal Server Error: Can not write to database 3")
         os.Exit(1)
     }
 

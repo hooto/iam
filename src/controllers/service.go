@@ -94,7 +94,7 @@ func (c Service) LoginAuthAction() {
         "created": time.Now().Format("2006-01-02 15:04:05"),          // TODO
         "expired": time.Now().Add(taf).Format("2006-01-02 15:04:05"), // TODO
     }
-    if err := dcn.Insert("ids_sessions", session); err != nil {
+    if _, err := dcn.Insert("ids_sessions", session); err != nil {
         rsp.Status = 500
         rsp.Message = "Can not write to database"
         return

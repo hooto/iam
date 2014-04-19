@@ -39,7 +39,7 @@ func main() {
     if cn, err := cfg.DatabaseInstance(); err == nil {
         rdc.InstanceRegister("def", cn)
     } else {
-        log.Fatal(err)
+        log.Fatal("Database Error:", err)
     }
 
     if cfg.MailerHost != "" && cfg.MailerUser != "" {

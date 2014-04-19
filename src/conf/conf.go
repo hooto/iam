@@ -11,6 +11,11 @@ import (
     "strings"
 )
 
+const (
+    GroupMember   = 100
+    GroupSysAdmin = 1
+)
+
 var cfg Config
 
 type Config struct {

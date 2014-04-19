@@ -82,7 +82,7 @@ func (c Reg) SignUpRegAction() {
         "created": time.Now().Format("2006-01-02 15:04:05"), // TODO
         "updated": time.Now().Format("2006-01-02 15:04:05"), // TODO
     }
-    if err := dcn.Insert("ids_login", item); err != nil {
+    if _, err := dcn.Insert("ids_login", item); err != nil {
         rsp.Status = 500
         rsp.Message = "Can not write to database"
         return
@@ -143,7 +143,7 @@ func (c Reg) ForgotPassPutAction() {
         "email":   c.Params.Get("email"),                             // TODO
         "expired": time.Now().Add(taf).Format("2006-01-02 15:04:05"), // TODO
     }
-    if err := dcn.Insert("ids_resetpass", item); err != nil {
+    if _, err := dcn.Insert("ids_resetpass", item); err != nil {
         rsp.Status = 500
         rsp.Message = "Can not write to database"
         return
