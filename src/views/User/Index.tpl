@@ -105,4 +105,5 @@ $(".ids-useridx-click").click(function(){
 
 </script>
 
+{{template "Common/Footer.tpl" .}}
 {{template "Common/HtmlFooter.tpl" .}}

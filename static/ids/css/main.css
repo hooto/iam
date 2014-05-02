@@ -116,4 +116,13 @@ body {
 .ids-user-products li img {float:left;}
 .ids-user-products li.more {clear:both; padding-top:.2em; font-weight:normal;}
 
+.ids-footer {
+    margin: 20px auto;
+}
+
+.ids-footer .if-logo {
+  width: 16px;
+  height: 16px;
+}
+
 

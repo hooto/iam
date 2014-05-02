@@ -26,7 +26,7 @@ var (
 func main() {
 
     appname = "bin/lessids-server"
-    apppath = "src"
+    apppath = "."
 
     exts = []string{"go", "tpl", "json", "js", "css"}
 
