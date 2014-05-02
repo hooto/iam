@@ -74,13 +74,15 @@ func (c Reg) SignUpRegAction() {
     }
 
     item := map[string]interface{}{
-        "uname":   uname,
-        "email":   c.Params.Get("email"),
-        "pass":    pass,
-        "name":    c.Params.Get("name"),
-        "status":  1,
-        "created": rdc.TimeNow("datetime"), // TODO
-        "updated": rdc.TimeNow("datetime"), // TODO
+        "uname":    uname,
+        "email":    c.Params.Get("email"),
+        "pass":     pass,
+        "name":     c.Params.Get("name"),
+        "status":   1,
+        "roles":    "100",
+        "timezone": "UTC",                   // TODO
+        "created":  rdc.TimeNow("datetime"), // TODO
+        "updated":  rdc.TimeNow("datetime"), // TODO
     }
     if _, err := dcn.Insert("ids_login", item); err != nil {
         rsp.Status = 500
