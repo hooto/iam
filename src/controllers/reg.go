@@ -79,8 +79,8 @@ func (c Reg) SignUpRegAction() {
         "pass":    pass,
         "name":    c.Params.Get("name"),
         "status":  1,
-        "created": time.Now().Format("2006-01-02 15:04:05"), // TODO
-        "updated": time.Now().Format("2006-01-02 15:04:05"), // TODO
+        "created": rdc.TimeNow("datetime"), // TODO
+        "updated": rdc.TimeNow("datetime"), // TODO
     }
     if _, err := dcn.Insert("ids_login", item); err != nil {
         rsp.Status = 500
@@ -136,12 +136,11 @@ func (c Reg) ForgotPassPutAction() {
     }
 
     id := utils.StringNewRand36(24)
-    taf, _ := time.ParseDuration("+3600s")
     item := map[string]interface{}{
         "id":      id,
         "status":  0,
-        "email":   c.Params.Get("email"),                             // TODO
-        "expired": time.Now().Add(taf).Format("2006-01-02 15:04:05"), // TODO
+        "email":   c.Params.Get("email"),                // TODO
+        "expired": rdc.TimeNowAdd("datetime", "+3600s"), // TODO
     }
     if _, err := dcn.Insert("ids_resetpass", item); err != nil {
         rsp.Status = 500
@@ -172,7 +171,7 @@ func (c Reg) ForgotPassPutAction() {
 <div>********************************************************</div>
 <div>Please do not reply to this message. Mail sent to this address cannot be answered.</div>
 </body>
-</html>`, cfg.ServiceName, c.Request.Host, id, time.Now().Format("2006-01-02 15:04:05"), cfg.ServiceName)
+</html>`, cfg.ServiceName, c.Request.Host, id, rdc.TimeNow("datetime"), cfg.ServiceName)
 
     err = mr.SendMail(c.Params.Get("email"), c.T("Reset your password"), body)
 
@@ -283,7 +282,7 @@ func (c Reg) PassResetPutAction() {
 
     itemlogin := map[string]interface{}{
         "pass":    pass,
-        "updated": time.Now().Format("2006-01-02 15:04:05"),
+        "updated": rdc.TimeNow("datetime"),
     }
     ft := rdc.NewFilter()
     ft.And("uid", rsl[0]["uid"])

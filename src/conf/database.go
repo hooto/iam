@@ -3,7 +3,6 @@ package conf
 import (
     "../../deps/lessgo/data/rdc"
     "../../deps/lessgo/data/rdc/setup"
-    "time"
 )
 
 func (c *Config) DatabaseInstance() (*rdc.Conn, error) {
@@ -24,6 +23,7 @@ func (c *Config) DatabaseInstance() (*rdc.Conn, error) {
     tbl_lgn.FieldAdd("pass", "string", 100, 0)
     tbl_lgn.FieldAdd("group", "string", 200, 0)
     tbl_lgn.FieldAdd("roles", "string", 200, 0)
+    tbl_lgn.FieldAdd("timezone", "string", 40, 0)
     tbl_lgn.FieldAdd("status", "int16", 0, setup.FieldIndexIndex)
     tbl_lgn.FieldAdd("created", "datetime", 0, setup.FieldIndexIndex)
     tbl_lgn.FieldAdd("updated", "datetime", 0, setup.FieldIndexIndex)
@@ -126,6 +126,8 @@ func (c *Config) DatabaseInstance() (*rdc.Conn, error) {
     tbl_ses.FieldAdd("uid", "uint32", 0, setup.FieldIndexIndex)
     tbl_ses.FieldAdd("name", "string", 50, 0)
     tbl_ses.FieldAdd("uname", "string", 30, 0)
+    tbl_ses.FieldAdd("timezone", "string", 40, 0)
+    tbl_ses.FieldAdd("roles", "string", 200, 0)
     tbl_ses.FieldAdd("source", "string", 20, 0)
     tbl_ses.FieldAdd("data", "string-text", 0, 0)
     tbl_ses.FieldAdd("permission", "int8", 0, 0)
@@ -155,7 +157,7 @@ func (c *Config) DatabaseInstance() (*rdc.Conn, error) {
     //
     _ = cn.Setup("", ds)
 
-    timenow := time.Now().Format(time.RFC3339)
+    timenow := rdc.TimeNow("datetime")
     /* _, err := cn.ExecRaw("INSERT OR IGNORE INTO `ids_group` "+
            "(gid,pid,name,summary,status,created,updated) "+
            "VALUES (1,0,\"Administrator\",\"Root System Administrator\",1,?,?),"+

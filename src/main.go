@@ -42,8 +42,10 @@ func main() {
     }
 
     //
+    pagelet.Config.InstanceId = "lessids"
     pagelet.Config.UrlBasePath = "ids"
     pagelet.Config.HttpPort = cfg.Port
+    pagelet.Config.LessIdsServiceUrl = fmt.Sprintf("http://127.0.0.1:%v/ids", cfg.Port)
 
     //
     pagelet.Config.ViewPath("default", cfg.Prefix+"/src/views")

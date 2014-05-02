@@ -19,5 +19,7 @@ type ResponseSession struct {
     Uname        string `json:"uname"`
     Name         string `json:"name"`
     Data         string `json:"data"`
+    Roles        string `json:"roles"`
     Expired      string `json:"expired"`
+    Timezone     string `json:"timezone"`
 }

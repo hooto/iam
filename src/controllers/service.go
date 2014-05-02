@@ -5,6 +5,7 @@ import (
     "../../deps/lessgo/pagelet"
     "../../deps/lessgo/pass"
     "../../deps/lessgo/utils"
+    "../models/role"
     "encoding/base64"
     "fmt"
     "io"
@@ -77,22 +78,24 @@ func (c Service) LoginAuthAction() {
 
     rsp.Data.AccessToken = utils.StringNewRand36(24)
 
-    addr := "0.0.0.0"
+    addr := "127.0.0.1"
     if addridx := strings.Index(c.Request.RemoteAddr, ":"); addridx > 0 {
         addr = c.Request.RemoteAddr[:addridx]
     }
+    //fmt.Println(c.Request.RemoteAddr, addr, c.Request.Request)
 
-    taf, _ := time.ParseDuration("+864000s")
     session := map[string]interface{}{
-        "token":   rsp.Data.AccessToken,
-        "refresh": utils.StringNewRand36(24),
-        "status":  1,
-        "uid":     rsu[0]["uid"],
-        "uname":   rsu[0]["uname"],
-        "name":    rsu[0]["name"],
-        "source":  addr,
-        "created": time.Now().Format("2006-01-02 15:04:05"),          // TODO
-        "expired": time.Now().Add(taf).Format("2006-01-02 15:04:05"), // TODO
+        "token":    rsp.Data.AccessToken,
+        "refresh":  utils.StringNewRand36(24),
+        "status":   1,
+        "uid":      rsu[0]["uid"],
+        "uname":    rsu[0]["uname"],
+        "name":     rsu[0]["name"],
+        "roles":    rsu[0]["roles"],
+        "timezone": rsu[0]["timezone"],
+        "source":   addr,
+        "created":  rdc.TimeNow("datetime"),                // TODO
+        "expired":  rdc.TimeNowAdd("datetime", "+864000s"), // TODO
     }
     if _, err := dcn.Insert("ids_sessions", session); err != nil {
         rsp.Status = 500
@@ -144,13 +147,95 @@ func (c Service) AuthAction() {
 
     q := rdc.NewQuerySet().From("ids_sessions").Limit(1)
     q.Where.And("token", c.Params.Get("access_token"))
-    rsu, err := dcn.Query(q)
-    if err == nil && len(rsu) == 0 {
+    rss, err := dcn.Query(q)
+    if err == nil && len(rss) == 0 {
         return
     }
 
     //
-    expired := rsu[0]["expired"].(time.Time)
+    expired := rss[0]["expired"].(time.Time)
+    if expired.Before(time.Now()) {
+        return
+    }
+    //fmt.Println("expired", expired)
+
+    //
+    addr := "0.0.0.0"
+    if addridx := strings.Index(c.Request.RemoteAddr, ":"); addridx > 0 {
+        addr = c.Request.RemoteAddr[:addridx]
+    }
+    if addr != rss[0]["source"].(string) {
+        return
+    }
+
+    //
+    uid, _ := strconv.Atoi(fmt.Sprintf("%v", rss[0]["uid"]))
+    rsp.Data.Uid = uint32(uid)
+    rsp.Data.Uname = rss[0]["uname"].(string)
+    rsp.Data.Name = rss[0]["name"].(string)
+    rsp.Data.Roles = rss[0]["roles"].(string)
+    rsp.Data.AccessToken = rss[0]["token"].(string)
+    rsp.Data.RefreshToken = rss[0]["refresh"].(string)
+    rsp.Data.Timezone = rss[0]["timezone"].(string)
+    rsp.Data.Expired = rdc.TimeZoneFormat(expired, rsp.Data.Timezone, "atom")
+
+    rsp.Status = 200
+    rsp.Message = ""
+}
+
+func (c Service) AccessAllowedAction() {
+
+    c.AutoRender = false
+
+    var rsp struct {
+        ResponseJson
+    }
+    rsp.ApiVersion = apiVersion
+    rsp.Status = 401
+    rsp.Message = "Unauthorized"
+
+    defer func() {
+        if rspj, err := utils.JsonEncode(rsp); err == nil {
+            io.WriteString(c.Response.Out, rspj)
+        }
+    }()
+
+    body := c.Request.RawBodyString()
+    if body == "" {
+        return
+    }
+
+    var req struct {
+        AccessToken string `json:"access_token"`
+        Data        struct {
+            InstanceId string `json:"instanceid"`
+            Privilege  string `json:"privilege"`
+        }   `json:"data"`
+    }
+    err := utils.JsonDecode(body, &req)
+    if err != nil {
+        rsp.Message = err.Error()
+        return
+    }
+    if req.AccessToken == "" {
+        return
+    }
+
+    dcn, err := rdc.InstancePull("def")
+    if err != nil {
+        rsp.Message = "Internal Server Error"
+        return
+    }
+
+    q := rdc.NewQuerySet().From("ids_sessions").Limit(1)
+    q.Where.And("token", req.AccessToken)
+    rss, err := dcn.Query(q)
+    if err == nil && len(rss) == 0 {
+        return
+    }
+
+    //
+    expired := rss[0]["expired"].(time.Time)
     if expired.Before(time.Now()) {
         return
     }
@@ -160,18 +245,14 @@ func (c Service) AuthAction() {
     if addridx := strings.Index(c.Request.RemoteAddr, ":"); addridx > 0 {
         addr = c.Request.RemoteAddr[:addridx]
     }
-    if addr != rsu[0]["source"].(string) {
+
+    if addr != rss[0]["source"].(string) {
         return
     }
 
-    //
-    uid, _ := strconv.Atoi(fmt.Sprintf("%v", rsu[0]["uid"]))
-    rsp.Data.Uid = uint32(uid)
-    rsp.Data.Uname = rsu[0]["uname"].(string)
-    rsp.Data.Name = rsu[0]["name"].(string)
-    rsp.Data.AccessToken = rsu[0]["token"].(string)
-    rsp.Data.RefreshToken = rsu[0]["refresh"].(string)
-    rsp.Data.Expired = expired.Format(time.RFC3339)
+    if !role.AccessAllowed(rss[0]["roles"].(string), req.Data.InstanceId, req.Data.Privilege) {
+        return
+    }
 
     rsp.Status = 200
     rsp.Message = ""

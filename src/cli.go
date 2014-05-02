@@ -14,7 +14,6 @@ import (
     "os/user"
     "regexp"
     "strings"
-    "time"
 )
 
 const (
@@ -160,8 +159,8 @@ func cmdUserSet() {
         "status":  1,
         "group":   "",
         "roles":   "1,100",
-        "created": time.Now().Format(time.RFC3339), // TODO
-        "updated": time.Now().Format(time.RFC3339), // TODO
+        "created": rdc.TimeNow("datetime"), // TODO
+        "updated": rdc.TimeNow("datetime"), // TODO
     }
     _, err = dcn.Insert("ids_login", item)
     if err != nil {
@@ -173,7 +172,7 @@ func cmdUserSet() {
        lastid, _ := rs.LastInsertId()
        itemgu := map[string]interface{}{
            "gukey":   fmt.Sprintf("%v.%v", lastid, 1),
-           "created": time.Now().Format(time.RFC3339),
+           "created": rdc.TimeNow("datetime"),
        }
        rs, err = dcn.Insert("ids_group_users", itemgu)
        if err != nil {
@@ -226,7 +225,7 @@ func cmdUserDel() {
     frupd.And("email", email)
     item := map[string]interface{}{
         "status":  0,
-        "updated": time.Now().Format(time.RFC3339), // TODO
+        "updated": rdc.TimeNow("datetime"), // TODO
     }
     _, err = dcn.Update("ids_login", item, frupd)
     if err != nil {

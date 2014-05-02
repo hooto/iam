@@ -13,7 +13,6 @@ import (
     "html"
     "io"
     "strings"
-    "time"
 )
 
 type User struct {
@@ -54,8 +53,8 @@ func (c User) IndexAction() {
         item := map[string]interface{}{
             "uid":     s.Uid,
             "gender":  0,
-            "created": time.Now().Format("2006-01-02 15:04:05"), // TODO
-            "updated": time.Now().Format("2006-01-02 15:04:05"), // TODO
+            "created": rdc.TimeNow("datetime"), // TODO
+            "updated": rdc.TimeNow("datetime"), // TODO
         }
         dcn.Insert("ids_profile", item)
     } else {
@@ -134,7 +133,7 @@ func (c User) ProfilePutAction() {
 
     itemlogin := map[string]interface{}{
         "name":    c.Params.Get("name"),
-        "updated": time.Now().Format("2006-01-02 15:04:05"),
+        "updated": rdc.TimeNow("datetime"),
     }
     ft := rdc.NewFilter()
     ft.And("uid", s.Uid)
@@ -143,7 +142,7 @@ func (c User) ProfilePutAction() {
     itemprofile := map[string]interface{}{
         "birthday": c.Params.Get("birthday"),
         "aboutme":  c.Params.Get("aboutme"),
-        "updated":  time.Now().Format("2006-01-02 15:04:05"), // TODO
+        "updated":  rdc.TimeNow("datetime"), // TODO
     }
     dcn.Update("ids_profile", itemprofile, ft)
 
@@ -220,7 +219,7 @@ func (c User) PhotoPutAction() {
 
     itemprofile := map[string]interface{}{
         "photo":   req.Data.Data,
-        "updated": time.Now().Format("2006-01-02 15:04:05"),
+        "updated": rdc.TimeNow("datetime"),
     }
     ft := rdc.NewFilter()
     ft.And("uid", s.Uid)
@@ -284,7 +283,7 @@ func (c User) PassPutAction() {
 
     itemlogin := map[string]interface{}{
         "pass":    pass,
-        "updated": time.Now().Format("2006-01-02 15:04:05"),
+        "updated": rdc.TimeNow("datetime"),
     }
     ft := rdc.NewFilter()
     ft.And("uid", s.Uid)
@@ -360,7 +359,7 @@ func (c User) EmailPutAction() {
 
     itemlogin := map[string]interface{}{
         "email":   c.Params.Get("email"),
-        "updated": time.Now().Format("2006-01-02 15:04:05"),
+        "updated": rdc.TimeNow("datetime"),
     }
     ft := rdc.NewFilter()
     ft.And("uid", s.Uid)
