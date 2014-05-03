@@ -27,8 +27,34 @@ func (c User) IndexAction() {
         return
     }
 
+    //
+    menus := []map[string]string{
+        {"path": "#user/my", "title": "My Account"},
+    }
+    if c.Session.AccessAllowed("user.admin") {
+        menus = append(menus, map[string]string{
+            "path":  "#user-mgr/index",
+            "title": "User Manage",
+        })
+        menus = append(menus, map[string]string{
+            "path":  "#sys-mgr/index",
+            "title": "System Settings",
+        })
+    }
+    c.ViewData["menus"] = menus
+}
+
+func (c User) MyAction() {
+
+    s := session.GetSession(c.Request)
+    if s.Uid == 0 {
+        c.RenderError(401, "Access Denied")
+        return
+    }
+
     dcn, err := rdc.InstancePull("def")
     if err != nil {
+        c.RenderError(401, "Access Denied")
         return
     }
 
@@ -37,7 +63,7 @@ func (c User) IndexAction() {
     q.Where.And("uid", s.Uid)
     rslogin, err := dcn.Query(q)
     if err != nil || len(rslogin) != 1 {
-        c.RenderRedirect("/ids/service/login")
+        c.RenderError(401, "Access Denied")
         return
     }
     c.ViewData["login_uid"] = fmt.Sprintf("%v", rslogin[0]["uid"])

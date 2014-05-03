@@ -17,20 +17,47 @@ body {
   border-radius: 5px;
 }
 
-.ids-header-logo {
-  width: 24px; height: 24px;
+.iuh-brand {
+  position: relative;
+  height: 50px;
+  display: table;
+}
+.iuh-brand-logo {
+  width: 24px;
+  height: 24px;
   position: absolute;
   top: 50%;
   margin-top: -12px;
   margin-left: 10px;
 }
-.ids-header-title {
-  position: absolute;
-  font-size: 22px;
-  color: #555;
-  top: 50%; 
+.iuh-brand-title {
+  display: table-cell;
+  vertical-align:middle;
+  position: relative;
+  font-size: 18px;
   left: 40px;
-  margin-top: -10px;
+}
+
+.iuh-menu {
+  float: left;
+  position: relative;
+  height: 50px;
+  display: table;
+}
+.iuh-menu a {
+  display: table-cell;
+  vertical-align:middle;
+  font-size: 16px;
+  padding: 0 20px;
+  margin-right: 20px;
+  text-decoration: none;
+  color: #333;
+}
+.iuh-menu a:hover {
+  background-color: rgba(0, 0, 0, 0.05);
+}
+.iuh-menu a.active {
+  background-color: rgba(0, 0, 0, 0.1);
 }
 
 #ids-userbox {
@@ -116,8 +143,18 @@ body {
 .ids-user-products li img {float:left;}
 .ids-user-products li.more {clear:both; padding-top:.2em; font-weight:normal;}
 
+
+.ids-user-mgr-panel {
+  background: #fff;
+  padding: 20px;
+}
+
 .ids-footer {
-    margin: 20px auto;
+  margin: 20px auto;
+}
+.ids-footer a {
+    color: #428bca;
+    font-size: 14px;
 }
 
 .ids-footer .if-logo {

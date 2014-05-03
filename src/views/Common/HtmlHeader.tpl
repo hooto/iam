@@ -10,6 +10,7 @@
   <link rel="stylesheet" href="/ids/~/twitter-bootstrap/3.1.1/css/bootstrap.min.css" type="text/css">
   <link rel="stylesheet" href="/ids/~/lessui/master/css/lessui.min.css" type="text/css">
   <link rel="stylesheet" href="/ids/~/ids/css/main.css" type="text/css">
+  <script src="/ids/~/twitter-bootstrap/3.1.1/js/bootstrap.min.js"></script>
   <link rel="shortcut icon" href="/ids/~/ids/img/favicon.ico" type="image/x-icon">
 </head>
 

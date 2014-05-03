@@ -152,15 +152,16 @@ func cmdUserSet() {
 
     uname := utils.StringNewRand36(8)
     item := map[string]interface{}{
-        "uname":   uname,
-        "email":   email,
-        "pass":    hash,
-        "name":    uname,
-        "status":  1,
-        "group":   "",
-        "roles":   "1,100",
-        "created": rdc.TimeNow("datetime"), // TODO
-        "updated": rdc.TimeNow("datetime"), // TODO
+        "uname":    uname,
+        "email":    email,
+        "pass":     hash,
+        "name":     uname,
+        "status":   1,
+        "group":    "",
+        "roles":    "1,100",
+        "timezone": "UTC",
+        "created":  rdc.TimeNow("datetime"), // TODO
+        "updated":  rdc.TimeNow("datetime"), // TODO
     }
     _, err = dcn.Insert("ids_login", item)
     if err != nil {

@@ -3,11 +3,19 @@
 <div class="ids-container" style="padding:20px 0;">
 <table id="ids-user-header">
   <tr>
-    <td>
-      <img class="ids-header-logo" src="/ids/~/ids/img/ids-s2-32.png"> 
-      <span class="ids-header-title">Account Settings</span>
+    <td align="left" width="220px">
+      <div class="iuh-brand">
+        <img class="iuh-brand-logo" src="/ids/~/ids/img/ids-s2-32.png"> 
+        <span class="iuh-brand-title">Account Settings</span>
+      </div>
     </td>
-    
+    <td>
+      <div class="iuh-menu">
+        {{range .menus}}
+        <a href="{{.path}}">{{.title}}</a>
+        {{end}}
+      </div>
+    </td>
     <td align="right">
       <div id="ids-userbox">
         <span class="btn btn-default ids-userbox-signout">Sign Out</span>
@@ -18,7 +26,37 @@
 </table>
 </div>
 
+
+<div id="com-content" class="ids-container"></div>
+
+
+{{template "Common/Footer.tpl" .}}
+{{template "Common/HtmlFooter.tpl" .}}
+
 <script type="text/javascript">
+
+function _user_menugo(uri)
+{
+    switch (uri) {
+    case "user/my":
+    case "sys-mgr/index":
+    case "user-mgr/index":
+        $(".iuh-menu a.active").removeClass('active');
+        lfComLoader(uri);
+        $(".iuh-menu").find("a[href='#"+uri+"']").addClass("active");
+        break;
+    }
+}
+
+$(".iuh-menu a").click(function(event) {
+    event.preventDefault();
+    var uri = $(this).attr("href").substr(1);
+    _user_menugo(uri);
+});
+
+_user_menugo("user/my");
+
+
 $(".ids-userbox-signout").click(function(){
     lessCookie.Del("access_token");
     window.setTimeout(function(){    
@@ -27,83 +65,3 @@ $(".ids-userbox-signout").click(function(){
 
 });
 </script>
-
-
-<div class="ids-container">
-<table width="100%">
-<tr>
-  <td width="40%">
-
-<div class="ids-user-panel ids-user-profile">
-  <div class="iup-title">{{T . "Profile"}}</div>
-  <img class="iup-photo" src="/ids/service/photo/{{.login_uid}}" />
-  <ul class="iup-info">
-    <li>{{T . "Name"}}: <strong>{{.login_name}}</strong></li>
-    <li><a class="ids-useridx-click" href="#profile-set">{{T . "Change Profile"}}</a></li>
-    <li><a class="ids-useridx-click" href="#photo-set">{{T . "Change Photo"}}</a></li>
-  </ul>
-</div>
-
-  </td>
-  <td width="20px"></td>
-  <td>
-
-<div class="ids-user-panel ids-user-personal">
-  <div class="iup-title">{{T . "Personal Settings"}}</div>
-  <table> 
-
-    <tr> 
-      <td class="iup-subtitle">{{T . "Security"}}</td> 
-      <td> 
-        <ul> 
-          <li><a class="ids-useridx-click" href="#pass-set">{{T . "Change Password"}}</a></li>
-        </ul>
-      </td> 
-    </tr>
-
-    <tr> 
-      <td class="iup-subtitle">{{T . "Email"}}</td> 
-      <td>
-        <ul> 
-          <li>{{.login_email}}</li> 
-          <li><a class="ids-useridx-click" href="#email-set">{{T . "Change"}}</a></li> 
-        </ul>
-      </td>
-    </tr> 
-
-  </table> 
-</div>
-
-  </td>
-</tr>
-</table>
-
-</div>
-
-
-<script>
-
-$(".ids-useridx-click").click(function(){
-    var uri = $(this).attr("href").substr(1);
-
-    switch (uri) {
-    case "pass-set":
-        lessModalOpen("/ids/user/"+ uri, 1, 500, 350, "{{T . "Change Password"}}", null);
-        break;
-    case "email-set":
-        lessModalOpen("/ids/user/"+ uri, 1, 500, 300, "{{T . "Change Email"}}", null);
-        break;
-    case "profile-set":
-        lessModalOpen("/ids/user/"+ uri, 1, 700, 400, "{{T . "Change Profile"}}", null);
-        break;
-    case "photo-set":
-        lessModalOpen("/ids/user/"+ uri, 1, 600, 400, "{{T . "Change Photo"}}", null);
-        break;
-    }
-    
-});
-
-</script>
-
-{{template "Common/Footer.tpl" .}}
-{{template "Common/HtmlFooter.tpl" .}}

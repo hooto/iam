@@ -61,7 +61,8 @@ function lfAjax(obj, url)
         error: function(xhr, textStatus, error) {
 
             if (xhr.status == 401) {
-                lfBodyLoader('user/login');
+                console.log("access denied");
+                //lfBodyLoader('user/login');
             } else {
                 alert("Internal Server Error"); //+ xhr.responseText);
             }

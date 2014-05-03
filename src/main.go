@@ -62,7 +62,7 @@ func main() {
     pagelet.RegisterController("default", (*ctrl_def.Service)(nil))
     pagelet.RegisterController("default", (*ctrl_def.Reg)(nil))
     pagelet.RegisterController("default", (*ctrl_def.User)(nil))
-    pagelet.RegisterController("default", (*ctrl_def.UserAdmin)(nil))
+    pagelet.RegisterController("default", (*ctrl_def.UserMgr)(nil))
 
     //
     pagelet.Run()
