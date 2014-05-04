@@ -23,7 +23,7 @@
     <td align="right">
       <button type="button" 
         class="btn btn-primary btn-sm" 
-        onclick="idsWorkLoader('user-mgr/new')">
+        onclick="idsWorkLoader('user-mgr/edit')">
         New User
       </button>
     </td>
@@ -62,7 +62,7 @@
       <td>{{date .created}}</td>
       <td>{{date .updated}}</td>
       <td>
-        <a class="jdiskq" href="#{{.id}}">Edit</a>
+        <a class="jdiskq" href="#{{.uid}}">Edit</a>
       </td>
     </tr>
     {{end}}
@@ -77,8 +77,8 @@
 <script type="text/javascript">
 
 $(".jdiskq").click(function() {
-    var id = $(this).attr("href").substr(1);
-    lessModalOpen("/ids/user-mgr/edit?id="+id, 1, 600, 400, "User Settings", null);
+    var uid = $(this).attr("href").substr(1);
+    idsWorkLoader("user-mgr/edit?uid="+ uid);
 });
 
 function _usermgr_list_refresh()

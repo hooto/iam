@@ -19,47 +19,48 @@
 </style>
 
 <div class="panel panel-default">
-  <div class="panel-heading">{{T . "New Account"}}</div>
+  <div class="panel-heading">{{.panel_title}}</div>
   <div class="panel-body">
     <div id="ids-usermgr-new-form-alert" class="alert hide"></div>
     <form id="ids-usermgr-new-form" class="form-horizontal" action="#">
+    <input type="hidden" name="uid" value="{{.uid}}">
     
     <label class="ids-form-group-title">Login Information (Required)</label>
 
     <div class="form-group">
       <label class="col-sm-2 control-label">Username</label>
       <div class="col-sm-10">
-        <input type="text" class="form-control" name="uname">
+        <input type="text" class="form-control" name="uname" value="{{.uname}}">
       </div>
     </div>
 
     <div class="form-group">
       <label class="col-sm-2 control-label">Email</label>
       <div class="col-sm-10">
-        <input type="text" class="form-control" name="email">
+        <input type="text" class="form-control" name="email" value="{{.email}}">
       </div>
     </div>
 
     <div class="form-group">
       <label class="col-sm-2 control-label">Password</label>
       <div class="col-sm-10">
-        <input type="text" class="form-control" name="passwd">
+        <input type="text" class="form-control" name="passwd" value="{{.passwd}}">
       </div>
     </div>
 
     <div class="form-group">
       <label class="col-sm-2 control-label">Roles</label>
       <div class="col-sm-10">
-        {{if .roles}}
         {{range .roles}}
           <span class="ids-form-checkbox">
-            {{if eq .rid 100}}
-              <input type="checkbox" name="roles" value="{{.rid}}" sdisabled="sdisabled" checked="checked"> {{.name}}
+            {{if eq .Rid "100"}}
+              <input type="checkbox" name="roles" value="{{.Rid}}" checked="checked" onclick="return false"> {{.Name}}
+            {{else if eq .Checked "1"}}
+              <input type="checkbox" name="roles" value="{{.Rid}}" checked="checked"> {{.Name}}
             {{else}}
-              <input type="checkbox" name="roles" value="{{.rid}}"> {{.name}}
+              <input type="checkbox" name="roles" value="{{.Rid}}"> {{.Name}}
             {{end}}
           </span>
-        {{end}}
         {{end}}
       </div>
     </div>
@@ -69,27 +70,27 @@
     <div class="form-group">
       <label class="col-sm-2 control-label">Nickname</label>
       <div class="col-sm-10">
-        <input type="text" class="form-control" name="name">
+        <input type="text" class="form-control" name="name" value="{{.name}}">
       </div>
     </div>
 
     <div class="form-group">
       <label class="col-sm-2 control-label">{{T . "Birthday"}}</label>
       <div class="col-sm-10">
-        <input type="text" class="form-control" name="birthday" placeholder="{{T . "Example"}} : 1970-01-01">
+        <input type="text" class="form-control" name="birthday" placeholder="{{T . "Example"}} : 1970-01-01" value="{{.birthday}}">
       </div>
     </div>
 
     <div class="form-group">
       <label class="col-sm-2 control-label">About</label>
       <div class="col-sm-10">
-        <textarea class="form-control" rows="3" name="aboutme"></textarea>
+        <textarea class="form-control" rows="3" name="aboutme">{{.aboutme}}</textarea>
       </div>
     </div>
 
     <div class="form-group">
       <div class="col-sm-offset-2 col-sm-10">
-        <button type="submit" class="btn btn-primary">{{T . "Create Account"}}</button>
+        <button type="submit" class="btn btn-primary">{{T . "Submit"}}</button>
       </div>
     </div>
 
@@ -109,7 +110,7 @@ $("#ids-usermgr-new-form").submit(function(event) {
     
     $.ajax({
         type    : "POST",
-        url     : "/ids/user-mgr/new-save",
+        url     : "/ids/user-mgr/save",
         data    : $("#ids-usermgr-new-form").serialize(),
         timeout : 3000,
         success : function(rsp) {
@@ -118,7 +119,7 @@ $("#ids-usermgr-new-form").submit(function(event) {
 
             if (rsj.status == 200) {
                 
-                lessAlert("#ids-usermgr-new-form-alert", 'alert-success', "Successfully created");
+                lessAlert("#ids-usermgr-new-form-alert", 'alert-success', "Successfully saved");
                 
                 window.setTimeout(function(){
                     idsWorkLoader("user-mgr/list");
