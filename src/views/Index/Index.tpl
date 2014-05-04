@@ -7,7 +7,7 @@
   <script src="/ids/~/lessui/master/js/sea.js"></script>
   <script src="/ids/~/ids/js/main.js"></script>
   <script type="text/javascript">
-    window.onload = lfBoot;
+    window.onload = idsBoot;
   </script>
 </head>
 

@@ -1,5 +1,5 @@
 
-function lfBoot()
+function idsBoot()
 {
     seajs.config({
         base: "/ids/",
@@ -31,17 +31,17 @@ function lfBoot()
             "~/lessui/master/js/lessui.js",
         ];
         seajs.use(rqs, function() {
-            lfPageWell();
+            idsPageWell();
         });        
     });
 }
 
-function lfPageWell()
+function idsPageWell()
 {
-    lfBodyLoader("index/well");
+    idsBodyLoader("index/well");
 }
 
-function lfAjax(obj, url)
+function idsAjax(obj, url)
 {
     if (/\?/.test(url)) {
         url += "&_=";
@@ -62,7 +62,7 @@ function lfAjax(obj, url)
 
             if (xhr.status == 401) {
                 console.log("access denied");
-                //lfBodyLoader('user/login');
+                //idsBodyLoader('user/login');
             } else {
                 alert("Internal Server Error"); //+ xhr.responseText);
             }
@@ -80,17 +80,17 @@ function lfAjax(obj, url)
     }*/
 }
 
-function lfBodyLoader(uri)
+function idsBodyLoader(uri)
 {
-    lfAjax("#body-content", uri);
+    idsAjax("#body-content", uri);
 }
 
-function lfComLoader(uri)
+function idsComLoader(uri)
 {
-    lfAjax("#com-content", uri);
+    idsAjax("#com-content", uri);
 }
 
-function lfWorkLoader(uri)
+function idsWorkLoader(uri)
 {
-    lfAjax("#work-content", uri);
+    idsAjax("#work-content", uri);
 }

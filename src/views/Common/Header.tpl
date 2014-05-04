@@ -4,7 +4,7 @@
     
     <div class="navbar-header">
       <a class="navbar-brand" href="#">
-        <i class="lf-nav-logo"></i>
+        <i class="ids-nav-logo"></i>
         <span>lessFly Manager</span>
       </a>
     </div>
@@ -35,7 +35,7 @@ $("#etpntn a").click(function(event) {
     case "lpm/index":
     case "pkg-service/index":
         $(this).parent().addClass("active");
-        lfComLoader(uri);
+        idsComLoader(uri);
         break;
     }
 });

@@ -171,7 +171,7 @@ func (c *Config) DatabaseInstance() (*rdc.Conn, error) {
         "(rid,uid,status,name,desc,privileges,created,updated) "+
         "VALUES (1,0,1,\"Administrator\",\"Root System Administrator\",?,?,?),"+
         "(100,0,1,\"Member\",\"Universal Member\",?,?,?),"+
-        "(101,0,1,\"Anonymous\",\"Anonymous Member\",?,?,?)",
+        "(101,0,0,\"Anonymous\",\"Anonymous Member\",?,?,?)",
         "1", timenow, timenow, "", timenow, timenow, "", timenow, timenow)
     if err != nil {
         return cn, err

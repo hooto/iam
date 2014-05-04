@@ -5,5 +5,5 @@
 {{template "Common/Footer.tpl" .}}
 
 <script type="text/javascript">
-lfComLoader("lpm/index");
+idsComLoader("lpm/index");
 </script>

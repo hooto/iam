@@ -48,6 +48,9 @@ func (c Reg) SignUpRegAction() {
         }
     }()
 
+    uname := utils.StringNewRand36(8)
+    c.Params.Set("uname", uname)
+
     if err := signup.Validate(c.Params); err != nil {
         rsp.Message = err.Error()
         return
@@ -67,7 +70,6 @@ func (c Reg) SignUpRegAction() {
         return
     }
 
-    uname := utils.StringNewRand36(8)
     pass, err := pass.HashDefault(c.Params.Get("passwd"))
     if err != nil {
         return

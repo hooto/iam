@@ -27,11 +27,12 @@ $("#bgi4w4 a").click(function(event) {
     switch (uri) {
     case "user-mgr/list":
     case "user-mgr/new":
+    case "user-mgr/edit":
         $(this).parent().addClass("active");
-        lfWorkLoader(uri);
+        idsWorkLoader(uri);
         break;
     }
 });
 
-lfWorkLoader("user-mgr/list");
+idsWorkLoader("user-mgr/list");
 </script>

@@ -42,7 +42,7 @@ function _user_menugo(uri)
     case "sys-mgr/index":
     case "user-mgr/index":
         $(".iuh-menu a.active").removeClass('active');
-        lfComLoader(uri);
+        idsComLoader(uri);
         $(".iuh-menu").find("a[href='#"+uri+"']").addClass("active");
         break;
     }

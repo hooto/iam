@@ -1,5 +1,5 @@
 
-{{if .list}}
+
 <style type="text/css">
 ._list_query_input {
     padding: 5px 5px 5px 30px;
@@ -23,13 +23,13 @@
     <td align="right">
       <button type="button" 
         class="btn btn-primary btn-sm" 
-        onclick="lfWorkLoader('user-mgr/new')">
+        onclick="idsWorkLoader('user-mgr/new')">
         New User
       </button>
     </td>
   </tr>
 </table>
-
+{{if .list}}
 <table class="table table-hover">
   <thead>
     <tr>
@@ -60,7 +60,7 @@
         {{end}}
       </td>
       <td>{{date .created}}</td>
-      <td>{{datetime .updated}}</td>
+      <td>{{date .updated}}</td>
       <td>
         <a class="jdiskq" href="#{{.id}}">Edit</a>
       </td>
@@ -68,12 +68,11 @@
     {{end}}
   </tbody>
 </table>
-</div>
 {{else}}
-<p>
-  No more results
-</p>
+<div class="alert alert-info" style="margin:20px 0;">Data not found</div>
 {{end}}
+</div>
+
 
 <script type="text/javascript">
 
