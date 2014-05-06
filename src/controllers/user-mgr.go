@@ -19,6 +19,14 @@ const (
     userMgrPageLimit    = 20
 )
 
+var (
+    userMgrStatus = map[string]string{
+        //0: "Deleted",
+        "1": "Active",
+        "2": "Banned",
+    }
+)
+
 type RoleEntry struct {
     Rid, Name, Checked string
 }
@@ -93,6 +101,9 @@ func (c UserMgr) ListAction() {
                 rids[rk] = rname
             }
 
+            if vd, ok := userMgrStatus[fmt.Sprintf("%v", v["status"])]; ok {
+                rsl[k]["status_display"] = vd
+            }
             rsl[k]["roles_display"] = rids
         }
 
@@ -155,6 +166,7 @@ func (c UserMgr) EditAction() {
         c.ViewData["email"] = rslogin[0]["email"]
         c.ViewData["passwd"] = userMgrPasswdHidden
         c.ViewData["name"] = rslogin[0]["name"]
+        c.ViewData["status"] = fmt.Sprintf("%v", rslogin[0]["status"])
 
         q.From("ids_profile")
         rsprofile, err := dcn.Query(q)
@@ -169,9 +181,11 @@ func (c UserMgr) EditAction() {
 
         c.ViewData["panel_title"] = "New Account"
         c.ViewData["uid"] = ""
+        c.ViewData["status"] = "1"
     }
 
     c.ViewData["roles"] = roles
+    c.ViewData["statuses"] = userMgrStatus
 }
 
 func (c UserMgr) SaveAction() {
@@ -259,9 +273,9 @@ func (c UserMgr) SaveAction() {
 
     if isNew {
         loginset["created"] = rdc.TimeNow("datetime")
-        loginset["status"] = 1
         loginset["timezone"] = "UTC"
     }
+    loginset["status"] = c.Params.Get("status")
     loginset["updated"] = rdc.TimeNow("datetime")
     loginset["name"] = c.Params.Get("name")
     loginset["roles"] = strings.Join(c.Params.Values["roles"], ",")

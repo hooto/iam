@@ -56,7 +56,7 @@
       <td>{{.name}}</td>
       <td>{{.email}}</td>
       <td>{{.timezone}}</td>
-      <td>{{.status}}</td>
+      <td>{{.status_display}}</td>
       <td>
         {{if .roles_display}}
         {{range .roles_display}}

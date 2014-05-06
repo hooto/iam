@@ -60,6 +60,17 @@
       </div>
     </div>
 
+    <div class="form-group">
+      <label class="col-sm-2 control-label">Status</label>
+      <div class="col-sm-10">
+        {{range $k, $v := .statuses}}
+          <span class="ids-form-checkbox">
+            <input type="radio" name="status" value="{{$k}}" {{if eq $k $.status}}checked="checked"{{end}}> {{$v}}
+          </span>
+        {{end}}
+      </div>
+    </div>
+
     <label class="ids-form-group-title">Profile Information (Optional)</label>
 
     <div class="form-group">
