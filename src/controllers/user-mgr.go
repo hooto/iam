@@ -9,12 +9,14 @@ import (
     "fmt"
     "io"
     "net/http"
+    "strconv"
     "strings"
     "time"
 )
 
-var (
+const (
     userMgrPasswdHidden = "************"
+    userMgrPageLimit    = 20
 )
 
 type RoleEntry struct {
@@ -49,14 +51,18 @@ func (c UserMgr) ListAction() {
     q := rdc.NewQuerySet().From("ids_role").Limit(100)
     rsr, err := dcn.Query(q)
     if err == nil && len(rsr) > 0 {
-        //c.ViewData["roles"] = rsr
         for _, v := range rsr {
             rdict[fmt.Sprintf("%v", v["rid"])] = v["name"].(string)
         }
     }
 
+    page, err := strconv.Atoi(c.Params.Get("page"))
+    if err != nil {
+        page = 0
+    }
+
     // filter: query_text
-    q = rdc.NewQuerySet().From("ids_login").Limit(20)
+    q = rdc.NewQuerySet().From("ids_login").Limit(userMgrPageLimit)
     if query_text := c.Params.Get("query_text"); query_text != "" {
         q.Where.And("name.like", "%"+query_text+"%").
             Or("uname.like", "%"+query_text+"%").
@@ -64,6 +70,13 @@ func (c UserMgr) ListAction() {
         c.ViewData["query_text"] = query_text
     }
 
+    count, _ := dcn.Count("ids_login", q.Where)
+    pager := pagelet.Pager(page, int(count), userMgrPageLimit, 10)
+    c.ViewData["pager"] = pager
+
+    if pager.CurrentPageNumber > 1 {
+        q.Offset(int64((pager.CurrentPageNumber - 1) * userMgrPageLimit))
+    }
     rsl, err := dcn.Query(q)
     if err == nil && len(rsl) > 0 {
 

@@ -11,17 +11,12 @@
   padding: 5px 0;
 }
 
-.ids-form-checkbox {
-  margin: 0 20px 0 0;
-  padding: 10px 0;
-}
-
 </style>
 
 <div class="panel panel-default">
   <div class="panel-heading">{{.panel_title}}</div>
   <div class="panel-body">
-    <div id="ids-usermgr-new-form-alert" class="alert hide"></div>
+    <div id="o0jg5l" class="alert hide"></div>
     <form id="ids-usermgr-new-form" class="form-horizontal" action="#">
     <input type="hidden" name="uid" value="{{.uid}}">
     
@@ -119,18 +114,18 @@ $("#ids-usermgr-new-form").submit(function(event) {
 
             if (rsj.status == 200) {
                 
-                lessAlert("#ids-usermgr-new-form-alert", 'alert-success', "Successfully saved");
+                lessAlert("#o0jg5l", 'alert-success', "Successfully saved");
                 
                 window.setTimeout(function(){
                     idsWorkLoader("user-mgr/list");
                 }, 1500);
 
             } else {
-                lessAlert("#ids-usermgr-new-form-alert", 'alert-danger', rsj.message);
+                lessAlert("#o0jg5l", 'alert-danger', rsj.message);
             }
         },
         error: function(xhr, textStatus, error) {
-            lessAlert("#ids-usermgr-new-form-alert", 'alert-danger', '{{T . "Internal Server Error"}}');
+            lessAlert("#o0jg5l", 'alert-danger', '{{T . "Internal Server Error"}}');
         }
     });
 });

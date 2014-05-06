@@ -4,7 +4,10 @@
 ._list_query_input {
     padding: 5px 5px 5px 30px;
     background: url(/ids/~/ids/img/search-16.png) no-repeat 8px; 
-    width: 200px;
+    width: 220px;
+}
+.pagination {
+  margin: 10px 0;
 }
 </style>
 
@@ -33,6 +36,7 @@
 <table class="table table-hover">
   <thead>
     <tr>
+      <th>ID</th>
       <th>Username</th>
       <th>Nickname</th>
       <th>Email</th>
@@ -47,6 +51,7 @@
   <tbody>
     {{range .list}}
     <tr>
+      <td>{{.uid}}</td>
       <td>{{.uname}}</td>
       <td>{{.name}}</td>
       <td>{{.email}}</td>
@@ -68,6 +73,21 @@
     {{end}}
   </tbody>
 </table>
+
+<div id="r68f0y">
+<ul class="pagination pagination-sm">
+  {{if .pager.FirstPageNumber}}
+  <li><a href="#{{.pager.FirstPageNumber}}">First</a></li>
+  {{end}}
+  {{range $index, $page := .pager.RangePages}}
+  <li {{if eq $page $.pager.CurrentPageNumber}}class="active"{{end}}><a href="#{{$page}}">{{$page}}</a></li>
+  {{end}}
+  {{if .pager.LastPageNumber}}
+  <li><a href="#{{.pager.LastPageNumber}}">Last</a></li>
+  {{end}}
+</ul>
+</div>
+
 {{else}}
 <div class="alert alert-info" style="margin:20px 0;">Data not found</div>
 {{end}}
@@ -81,9 +101,10 @@ $(".jdiskq").click(function() {
     idsWorkLoader("user-mgr/edit?uid="+ uid);
 });
 
-function _usermgr_list_refresh()
+function _usermgr_list_refresh(page)
 {
     var uri = "query_text="+ $("#query_text").val();
+    uri += "&page="+ page;
 
     $.ajax({
         type    : "POST",
@@ -101,7 +122,12 @@ function _usermgr_list_refresh()
 
 $("#eeobsd").submit(function(event) {
     event.preventDefault();
-    _usermgr_list_refresh();
+    _usermgr_list_refresh(0);
+});
+
+$("#r68f0y a").click(function() {
+    var page = $(this).attr("href").substr(1);
+    _usermgr_list_refresh(page);
 });
 
 </script>

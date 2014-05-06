@@ -15,7 +15,10 @@ body {
   color: #999;
   white-space: pre;
 }
-
+.ids-form-checkbox {
+  margin: 0 20px 0 0;
+  padding: 10px 0;
+}
 
 #ids-user-header {
   height: 50px;
