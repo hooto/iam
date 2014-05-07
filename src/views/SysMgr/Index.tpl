@@ -28,5 +28,5 @@ $("#n66g5e a").click(function(event) {
     }
 });
 
-idsWorkLoader("sys-mgr/gen-set");
+idsWorkLoader("sys-mgr/email-set");
 </script>

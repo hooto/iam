@@ -20,13 +20,17 @@ const (
 
 var cfg Config
 
+type ConfigMailer struct {
+    SmtpHost string `json:"smtp_host"`
+    SmtpPort string `json:"smtp_port"`
+    SmtpUser string `json:"smtp_user"`
+    SmtpPass string `json:"smtp_pass"`
+}
+
 type Config struct {
     ServiceName      string `json:"service_name"`
     Port             int    `json:"port"`
     DomainDef        string `json:"domaindef"`
-    MailerHost       string `json:"mailer_host"`
-    MailerUser       string `json:"mailer_user"`
-    MailerPass       string `json:"mailer_pass"`
     Version          string
     Prefix           string
     KeeperAgent      string
@@ -36,6 +40,7 @@ type Config struct {
     WebConfig        string
     DatabasePath     string
     WebUiBannerTitle string
+    Mailer           ConfigMailer `json:"mailer"`
 }
 
 func NewConfig(prefix string) (Config, error) {

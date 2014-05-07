@@ -37,8 +37,12 @@ func main() {
         log.Fatal("Database Error:", err)
     }
 
-    if cfg.MailerHost != "" && cfg.MailerUser != "" {
-        email.MailerRegister("def", cfg.MailerHost, cfg.MailerUser, cfg.MailerPass)
+    if cfg.Mailer.SmtpHost != "" {
+        email.MailerRegister("def",
+            cfg.Mailer.SmtpHost,
+            cfg.Mailer.SmtpPort,
+            cfg.Mailer.SmtpUser,
+            cfg.Mailer.SmtpPass)
     }
 
     //

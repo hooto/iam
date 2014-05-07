@@ -11,7 +11,7 @@ body {
 
 .ids-form-group-title {
   margin: 15px 0;
-  font-size: 13px;
+  font-size: 16px;
   color: #999;
   white-space: pre;
 }
@@ -19,6 +19,52 @@ body {
   margin: 0 20px 0 0;
   padding: 10px 0;
 }
+
+
+.ids-callout {
+  padding: 10px;
+  border-left: 3px solid #eee;
+}
+.ids-callout h4 {
+  margin-top: 0;
+  margin-bottom: 5px;
+}
+.ids-callout-primary {
+  border-color: #428bca;
+  background-color: #f4f8fa;
+}
+.ids-callout-success {
+  border-color: #5cb85c;
+  background-color: #dff0d8;
+}
+.ids-callout-info {
+  border-color: #5bc0de;
+  background-color: #f4f8fa;
+}
+.ids-callout-warning {
+  border-color: #f0ad4e;
+  background-color: #fcf8f2;
+}
+.ids-callout-danger {
+  border-color: #d9534f;
+  background-color: #fdf7f7;
+}
+.ids-callout-primary h4 {
+  color: #428bca;
+}
+.ids-callout-success h4 {
+  color: #5cb85c;
+}
+.ids-callout-info h4 {
+  color: #5bc0de;
+}
+.ids-callout-warning h4 {
+  color: #f0ad4e;
+}
+.ids-callout-danger h4 {
+  color: #d9534f;
+}
+
 
 #ids-user-header {
   height: 50px;
