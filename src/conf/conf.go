@@ -1,6 +1,7 @@
 package conf
 
 import (
+    "../../deps/lessgo/data/rdc"
     "encoding/json"
     "errors"
     "fmt"
@@ -20,20 +21,21 @@ const (
 var cfg Config
 
 type Config struct {
-    ServiceName  string `json:"service_name"`
-    Port         int    `json:"port"`
-    DomainDef    string `json:"domaindef"`
-    MailerHost   string `json:"mailer_host"`
-    MailerUser   string `json:"mailer_user"`
-    MailerPass   string `json:"mailer_pass"`
-    Version      string
-    Prefix       string
-    KeeperAgent  string
-    WebServer    string
-    WebPort      string
-    WebDaemon    string
-    WebConfig    string
-    DatabasePath string
+    ServiceName      string `json:"service_name"`
+    Port             int    `json:"port"`
+    DomainDef        string `json:"domaindef"`
+    MailerHost       string `json:"mailer_host"`
+    MailerUser       string `json:"mailer_user"`
+    MailerPass       string `json:"mailer_pass"`
+    Version          string
+    Prefix           string
+    KeeperAgent      string
+    WebServer        string
+    WebPort          string
+    WebDaemon        string
+    WebConfig        string
+    DatabasePath     string
+    WebUiBannerTitle string
 }
 
 func NewConfig(prefix string) (Config, error) {
@@ -79,11 +81,42 @@ func NewConfig(prefix string) (Config, error) {
         cfg.ServiceName = "less Identity"
     }
 
+    cfg.WebUiBannerTitle = "Account Center"
+
     if cfg.DatabasePath == "" {
         cfg.DatabasePath = cfg.Prefix + "/var/lessids.sqlite"
     }
 
     return cfg, nil
+}
+
+func (c *Config) Refresh() {
+
+    dcn, err := rdc.InstancePull("def")
+    if err != nil {
+        return
+    }
+
+    q := rdc.NewQuerySet().From("ids_sysconfig").Limit(1000)
+    rs, err := dcn.Query(q)
+    if err != nil || len(rs) < 1 {
+        return
+    }
+
+    for _, v := range rs {
+
+        val := fmt.Sprintf("%v", v["value"])
+        if val == "" {
+            continue
+        }
+
+        switch v["key"].(string) {
+        case "service_name":
+            c.ServiceName = val
+        case "webui_banner_title":
+            c.WebUiBannerTitle = val
+        }
+    }
 }
 
 func ConfigFetch() *Config {

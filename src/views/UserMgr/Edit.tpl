@@ -11,12 +11,18 @@
   padding: 5px 0;
 }
 
+.page-header {
+	margin: 10px 0;
+	font-height: 100%;
+}
 </style>
 
-<div class="panel panel-default">
-  <div class="panel-heading">{{.panel_title}}</div>
-  <div class="panel-body">
+<div class="page-header">
+  <h2>{{.panel_title}} <small></small></h2>
+</div>
+
     <div id="o0jg5l" class="alert hide"></div>
+    
     <form id="ids-usermgr-new-form" class="form-horizontal" action="#">
     <input type="hidden" name="uid" value="{{.uid}}">
     
@@ -101,8 +107,6 @@
     </div>
 
     </form>
-  </div>
-</div>
 
 <script>
 

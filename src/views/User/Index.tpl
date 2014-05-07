@@ -1,12 +1,12 @@
 {{template "Common/HtmlHeader.tpl" .}}
 
-<div class="ids-container" style="padding:20px 0;">
+<div class="ids-container" style="padding:10px 0;">
 <table id="ids-user-header">
   <tr>
     <td align="left" width="220px">
       <div class="iuh-brand">
         <img class="iuh-brand-logo" src="/ids/~/ids/img/ids-s2-32.png"> 
-        <span class="iuh-brand-title">Account Settings</span>
+        <span class="iuh-brand-title">{{.webui_banner_title}}</span>
       </div>
     </td>
     <td>

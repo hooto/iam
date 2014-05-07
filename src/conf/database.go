@@ -134,9 +134,15 @@ func (c *Config) DatabaseInstance() (*rdc.Conn, error) {
     tbl_ses.FieldAdd("created", "datetime", 0, 0)
     tbl_ses.FieldAdd("expired", "datetime", 0, 0)
 
+    tbl_scf := setup.NewTable("ids_sysconfig")
+    tbl_scf.FieldAdd("key", "pk-string", 50, 0)
+    tbl_scf.FieldAdd("value", "string-text", 0, 0)
+    tbl_scf.FieldAdd("created", "datetime", 0, 0)
+    tbl_scf.FieldAdd("updated", "datetime", 0, 0)
+
     //
     ds := setup.NewDataSet()
-    ds.Version = 1
+    ds.Version = 2
     // accounts
     ds.TableAdd(tbl_lgn)
     ds.TableAdd(tbl_prf)
@@ -153,6 +159,9 @@ func (c *Config) DatabaseInstance() (*rdc.Conn, error) {
     //ds.TableAdd(tbl_mes)
     // session
     ds.TableAdd(tbl_ses)
+
+    // sysconfig
+    ds.TableAdd(tbl_scf)
 
     //
     _ = cn.Setup("", ds)
@@ -189,6 +198,15 @@ func (c *Config) DatabaseInstance() (*rdc.Conn, error) {
         "(pid,instance,privilege,created) "+
         "VALUES (\"1\",\"lessids\",\"user.admin\",?)",
         timenow)
+    if err != nil {
+        return cn, err
+    }
+
+    _, err = cn.ExecRaw("INSERT OR IGNORE INTO `ids_sysconfig` "+
+        "(key,value,created,updated) "+
+        "VALUES (\"service_name\",\"less Identity Service\",?,?),"+
+        "(\"webui_banner_title\",\"Account Center\",?,?)",
+        timenow, timenow, timenow, timenow)
     if err != nil {
         return cn, err
     }

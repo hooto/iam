@@ -1,21 +1,16 @@
-<table width="100%">
-<tr>
-  <!-- <td width="200px" valign="top">
-    <div>
+<style type="text/css">
+#bgi4w4 li a {
+  padding: 5px 10px;
+  margin-bottom: 10px;
+}
+</style>
 
-      <ul id="bgi4w4" class="nav nav-pills nav-stacked">
-        <li class="active"><a href="#user-mgr/list">Browse</a></li>
-        <li><a href="#user-mgr/new">New User</a></li>
-      </ul>
+<ul id="bgi4w4" class="nav nav-pills">
+  <li class="active"><a href="#user-mgr/list">Users</a></li>
+  <li><a href="#user-mgr/role">Role Settings</a></li>
+</ul>
 
-    </div>
-  </td>
-  <td width="10px"></td> -->
-  <td valign="top">
-    <div id="work-content"></div>
-  </td>
-</tr>
-</table>
+<div id="work-content" class="ids-user-panel">loading</div>
 
 <script type="text/javascript">
 $("#bgi4w4 a").click(function(event) {

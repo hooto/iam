@@ -11,8 +11,6 @@
 }
 </style>
 
-<div class="ids-user-panel">
-
 <table width="100%">
   <tr>
     <td>
@@ -91,7 +89,7 @@
 {{else}}
 <div class="alert alert-info" style="margin:20px 0;">Data not found</div>
 {{end}}
-</div>
+
 
 
 <script type="text/javascript">

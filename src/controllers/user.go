@@ -5,6 +5,7 @@ import (
     "../../deps/lessgo/pagelet"
     "../../deps/lessgo/pass"
     "../../deps/lessgo/utils"
+    "../conf"
     "../models/login"
     "../models/profile"
     "../models/session"
@@ -42,6 +43,8 @@ func (c User) IndexAction() {
         })
     }
     c.ViewData["menus"] = menus
+
+    c.ViewData["webui_banner_title"] = conf.ConfigFetch().WebUiBannerTitle
 }
 
 func (c User) MyAction() {
