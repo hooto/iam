@@ -30,7 +30,7 @@
       <div class="col-sm-5">
         <div class="ids-callout ids-callout-primary">
           <p>
-            Optional. Defaults to 25 for unencrypted and TLS SMTP, and 465 for SSL SMTP.
+            Defaults to 25 for unencrypted and TLS SMTP,<br>and 465 for SSL SMTP.
           </p>
         </div>
       </div>

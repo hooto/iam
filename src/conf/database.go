@@ -97,8 +97,9 @@ func (c *Config) DatabaseInstance() (*rdc.Conn, error) {
     tbl_pri := setup.NewTable("ids_privilege")
     tbl_pri.FieldAdd("pid", "auto", 0, 0)
     tbl_pri.FieldAdd("instance", "string", 30, setup.FieldIndexIndex)
+    tbl_pri.FieldAdd("uid", "uint32", 0, setup.FieldIndexIndex)
     tbl_pri.FieldAdd("privilege", "string", 100, 0)
-    tbl_pri.FieldAdd("data", "string-text", 0, 0)
+    tbl_pri.FieldAdd("desc", "string", 50, 0)
     tbl_pri.FieldAdd("created", "datetime", 0, 0)
 
     //
@@ -195,9 +196,10 @@ func (c *Config) DatabaseInstance() (*rdc.Conn, error) {
     }
 
     _, err = cn.ExecRaw("INSERT OR IGNORE INTO `ids_privilege` "+
-        "(pid,instance,privilege,created) "+
-        "VALUES (\"1\",\"lessids\",\"user.admin\",?)",
-        timenow)
+        "(pid,instance,uid,privilege,created) "+
+        "VALUES (\"1\",\"lessids\",0,\"user.admin\",?),"+
+        "(\"1\",\"lessids\",0,\"sys.admin\",?)",
+        timenow, timenow)
     if err != nil {
         return cn, err
     }

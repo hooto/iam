@@ -37,6 +37,8 @@ func (c User) IndexAction() {
             "path":  "#user-mgr/index",
             "title": "User Manage",
         })
+    }
+    if c.Session.AccessAllowed("sys.admin") {
         menus = append(menus, map[string]string{
             "path":  "#sys-mgr/index",
             "title": "System Settings",

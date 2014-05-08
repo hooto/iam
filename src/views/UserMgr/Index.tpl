@@ -7,7 +7,7 @@
 
 <ul id="bgi4w4" class="nav nav-pills">
   <li class="active"><a href="#user-mgr/list">Users</a></li>
-  <li><a href="#user-mgr/role">Role Settings</a></li>
+  <li><a href="#user-mgr/role-list">Role Settings</a></li>
 </ul>
 
 <div id="work-content" class="ids-user-panel">loading</div>
@@ -21,8 +21,9 @@ $("#bgi4w4 a").click(function(event) {
 
     switch (uri) {
     case "user-mgr/list":
-    case "user-mgr/new":
-    case "user-mgr/edit":
+    //case "user-mgr/new":
+    //case "user-mgr/edit":
+    case "user-mgr/role-list":
         $(this).parent().addClass("active");
         idsWorkLoader(uri);
         break;

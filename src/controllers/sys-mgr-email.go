@@ -9,7 +9,7 @@ import (
 
 func (c SysMgr) EmailSetAction() {
 
-    if !c.Session.AccessAllowed("user.admin") {
+    if !c.Session.AccessAllowed("sys.admin") {
         c.RenderError(200, "Access Denied")
         return
     }
@@ -38,7 +38,7 @@ func (c SysMgr) EmailSetAction() {
 
 func (c SysMgr) EmailSetSaveAction() {
 
-    if !c.Session.AccessAllowed("user.admin") {
+    if !c.Session.AccessAllowed("sys.admin") {
         c.RenderError(401, "Access Denied")
         return
     }

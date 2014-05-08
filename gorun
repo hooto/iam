@@ -6,6 +6,8 @@ echo "FILEs"
 find ./src -type f  | wc -l
 echo "LINEs"
 find ./src -name "*.go" |xargs cat|grep -v ^$|wc -l
+echo "LINEs TPL"
+find ./src -name "*.tpl" |xargs cat|grep -v ^$|wc -l
 echo "DETAILs"
 find ./src -type f -name "*.go" | xargs wc -l | sort -n
 

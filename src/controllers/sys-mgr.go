@@ -13,7 +13,7 @@ type SysMgr struct {
 
 func (c SysMgr) IndexAction() {
 
-    if !c.Session.AccessAllowed("user.admin") {
+    if !c.Session.AccessAllowed("sys.admin") {
         c.RenderError(401, "Access Denied")
         return
     }
@@ -21,7 +21,7 @@ func (c SysMgr) IndexAction() {
 
 func (c SysMgr) GenSetAction() {
 
-    if !c.Session.AccessAllowed("user.admin") {
+    if !c.Session.AccessAllowed("sys.admin") {
         c.RenderError(401, "Access Denied")
         return
     }
@@ -59,7 +59,7 @@ func (c SysMgr) GenSetAction() {
 
 func (c SysMgr) GenSetSaveAction() {
 
-    if !c.Session.AccessAllowed("user.admin") {
+    if !c.Session.AccessAllowed("sys.admin") {
         c.RenderError(401, "Access Denied")
         return
     }

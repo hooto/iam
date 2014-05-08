@@ -203,6 +203,10 @@ func (c UserMgr) SaveAction() {
         }
     }()
 
+    if !c.Session.AccessAllowed("user.admin") {
+        return
+    }
+
     if err := signup.Validate(c.Params); err != nil {
         rsp.Message = err.Error()
         return
