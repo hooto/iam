@@ -196,9 +196,9 @@ func (c *Config) DatabaseInstance() (*rdc.Conn, error) {
     }
 
     _, err = cn.ExecRaw("INSERT OR IGNORE INTO `ids_privilege` "+
-        "(pid,instance,uid,privilege,created) "+
-        "VALUES (\"1\",\"lessids\",0,\"user.admin\",?),"+
-        "(\"1\",\"lessids\",0,\"sys.admin\",?)",
+        "(pid,instance,uid,privilege,desc,created) "+
+        "VALUES (\"1\",\"lessids\",0,\"user.admin\",\"User Management\",?),"+
+        "(\"1\",\"lessids\",0,\"sys.admin\",\"System Management\",?)",
         timenow, timenow)
     if err != nil {
         return cn, err

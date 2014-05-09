@@ -6,6 +6,7 @@ import (
     "fmt"
     "io"
     "net/http"
+    "strings"
 )
 
 func (c UserMgr) RoleListAction() {
@@ -28,6 +29,17 @@ func (c UserMgr) RoleListAction() {
     }
 }
 
+type UserMgrInstance struct {
+    InstanceId string
+    AppTitle   string
+    Version    string
+    Privileges map[string]UserMgrPrivilege
+}
+type UserMgrPrivilege struct {
+    Desc    string
+    Checked bool
+}
+
 func (c UserMgr) RoleEditAction() {
 
     if !c.Session.AccessAllowed("user.admin") {
@@ -41,6 +53,8 @@ func (c UserMgr) RoleEditAction() {
         return
     }
 
+    rolePrivileges := []string{}
+
     if c.Params.Get("rid") != "" {
 
         q := rdc.NewQuerySet().From("ids_role").Limit(1)
@@ -51,15 +65,13 @@ func (c UserMgr) RoleEditAction() {
             return
         }
 
-        /* pls := strings.Split(rsrole[0]["privileges"].(string), ",")
-           for _, v := range pls {
-               for k2, v2 := range roles {
-                   if v2.Rid == v {
-                       roles[k2].Checked = "1"
-                       break
-                   }
-               }
-           } */
+        pls := strings.Split(rsrole[0]["privileges"].(string), ",")
+        for _, v := range pls {
+            if v == "" {
+                continue
+            }
+            rolePrivileges = append(rolePrivileges, v)
+        }
 
         c.ViewData["rid"] = c.Params.Get("rid")
         c.ViewData["name"] = rsrole[0]["name"]
@@ -72,6 +84,47 @@ func (c UserMgr) RoleEditAction() {
         c.ViewData["panel_title"] = "New Role"
         c.ViewData["rid"] = ""
     }
+
+    instances := map[string]UserMgrInstance{}
+    q := rdc.NewQuerySet().From("ids_instance").Limit(1000)
+    rsins, err := dcn.Query(q)
+    if err == nil && len(rsins) > 0 {
+        for _, v := range rsins {
+            instances[v["id"].(string)] = UserMgrInstance{
+                InstanceId: v["id"].(string),
+                AppTitle:   fmt.Sprintf("%v", v["app_title"]),
+                Version:    fmt.Sprintf("%v", v["version"]),
+                Privileges: map[string]UserMgrPrivilege{},
+            }
+        }
+    }
+
+    //prePrivileges := map[string]string{}
+    q = rdc.NewQuerySet().From("ids_privilege").Limit(1000)
+    rspri, err := dcn.Query(q)
+    if err == nil && len(rspri) > 0 {
+        for _, v := range rspri {
+
+            if _, ok := instances[v["instance"].(string)]; !ok {
+                continue
+            }
+
+            pid := fmt.Sprintf("%v", v["pid"])
+            checked := false
+            for _, rp := range rolePrivileges {
+                if rp == pid {
+                    checked = true
+                }
+            }
+            instances[v["instance"].(string)].Privileges[pid] = UserMgrPrivilege{
+                Desc:    fmt.Sprintf("%v", v["desc"]),
+                Checked: checked,
+            }
+        }
+    }
+
+    //c.ViewData["rolePrivileges"] = rolePrivileges
+    c.ViewData["instances"] = instances
 }
 
 func (c UserMgr) RoleSaveAction() {
@@ -121,8 +174,7 @@ func (c UserMgr) RoleSaveAction() {
     roleset["updated"] = rdc.TimeNow("datetime")
     roleset["name"] = c.Params.Get("name")
     roleset["desc"] = c.Params.Get("desc")
-    roleset["privileges"] = ""
-    //roleset["roles"] = strings.Join(c.Params.Values["roles"], ",")
+    roleset["privileges"] = strings.Join(c.Params.Values["privileges"], ",")
 
     if isNew {
 
