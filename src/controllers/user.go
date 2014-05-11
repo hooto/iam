@@ -44,6 +44,7 @@ func (c User) IndexAction() {
             "title": "System Settings",
         })
     }
+
     c.ViewData["menus"] = menus
 
     c.ViewData["webui_banner_title"] = conf.ConfigFetch().WebUiBannerTitle

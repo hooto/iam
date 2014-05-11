@@ -75,10 +75,11 @@ func (c *Config) DatabaseInstance() (*rdc.Conn, error) {
     tbl_ins := setup.NewTable("ids_instance")
     tbl_ins.FieldAdd("id", "pk-string", 8, 0)
     tbl_ins.FieldAdd("uid", "uint32", 10, setup.FieldIndexIndex)
+    tbl_ins.FieldAdd("status", "int16", 0, setup.FieldIndexIndex)
     tbl_ins.FieldAdd("app_id", "string", 50, setup.FieldIndexIndex)
     tbl_ins.FieldAdd("app_title", "string", 50, 0)
     tbl_ins.FieldAdd("version", "string", 50, 0)
-    tbl_ins.FieldAdd("data", "string-text", 0, 0)
+    tbl_ins.FieldAdd("privileges", "int32", 0, 0)
     tbl_ins.FieldAdd("created", "datetime", 0, 0)
     tbl_ins.FieldAdd("updated", "datetime", 0, 0)
 
@@ -188,8 +189,8 @@ func (c *Config) DatabaseInstance() (*rdc.Conn, error) {
     }
 
     _, err = cn.ExecRaw("INSERT OR IGNORE INTO `ids_instance` "+
-        "(id,uid,app_id,app_title,version,created,updated) "+
-        "VALUES (\"lessids\",0,\"lessids\",\"less Identity Server\",?,?,?)",
+        "(id,uid,status,app_id,app_title,version,created,updated) "+
+        "VALUES (\"lessids\",0,1,\"lessids\",\"less Identity Server\",?,?,?)",
         c.Version, timenow, timenow)
     if err != nil {
         return cn, err

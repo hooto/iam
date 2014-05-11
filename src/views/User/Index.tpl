@@ -39,8 +39,9 @@ function _user_menugo(uri)
 {
     switch (uri) {
     case "user/my":
-    case "sys-mgr/index":
     case "user-mgr/index":
+    case "auth-mgr/index":
+    case "sys-mgr/index":
         $(".iuh-menu a.active").removeClass('active');
         idsComLoader(uri);
         $(".iuh-menu").find("a[href='#"+uri+"']").addClass("active");
