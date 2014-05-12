@@ -9,9 +9,13 @@ import (
     "../models/login"
     "../models/profile"
     "../models/session"
+    "bytes"
     "encoding/base64"
     "fmt"
+    "github.com/eryx/imaging"
     "html"
+    "image"
+    "image/png"
     "io"
     "strings"
 )
@@ -232,15 +236,26 @@ func (c User) PhotoPutAction() {
         return
     }
 
-    body64 := strings.SplitAfter(req.Data.Data, ";base64,")
-    if len(body64) != 2 {
+    //
+    img64 := strings.SplitAfter(req.Data.Data, ";base64,")
+    if len(img64) != 2 {
         return
     }
-    _, err = base64.StdEncoding.DecodeString(body64[1])
+    imgreader := base64.NewDecoder(base64.StdEncoding, strings.NewReader(img64[1]))
+    imgsrc, _, err := image.Decode(imgreader)
     if err != nil {
         rsp.Message = err.Error()
         return
     }
+    imgnew := imaging.Thumbnail(imgsrc, 96, 96, imaging.CatmullRom)
+
+    var imgbuf bytes.Buffer
+    err = png.Encode(&imgbuf, imgnew)
+    if err != nil {
+        rsp.Message = err.Error()
+        return
+    }
+    imgphoto := base64.StdEncoding.EncodeToString(imgbuf.Bytes())
 
     dcn, err := rdc.InstancePull("def")
     if err != nil {
@@ -250,8 +265,9 @@ func (c User) PhotoPutAction() {
     }
 
     itemprofile := map[string]interface{}{
-        "photo":   req.Data.Data,
-        "updated": rdc.TimeNow("datetime"),
+        "photo":    "data:image/png;base64," + imgphoto,
+        "photosrc": req.Data.Data,
+        "updated":  rdc.TimeNow("datetime"),
     }
     ft := rdc.NewFilter()
     ft.And("uid", s.Uid)

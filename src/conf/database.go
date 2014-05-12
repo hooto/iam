@@ -37,6 +37,7 @@ func (c *Config) DatabaseInstance() (*rdc.Conn, error) {
     tbl_prf.FieldAdd("url_personal", "string", 100, 0)
     tbl_prf.FieldAdd("aboutme", "string-text", 0, 0)
     tbl_prf.FieldAdd("photo", "string-text", 0, 0)
+    tbl_prf.FieldAdd("photosrc", "string-text", 0, 0)
     tbl_prf.FieldAdd("created", "datetime", 0, 0)
     tbl_prf.FieldAdd("updated", "datetime", 0, 0)
 
