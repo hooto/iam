@@ -1,7 +1,8 @@
 package main
 
 import (
-    "../deps/lessgo/data/rdc"
+    "../deps/lessgo/data/rdo"
+    "../deps/lessgo/data/rdo/base"
     "../deps/lessgo/pass"
     "../deps/lessgo/utils"
     "./conf"
@@ -59,9 +60,7 @@ func main() {
         log.Fatal(err)
     }
 
-    if cn, err := cfg.DatabaseInstance(); err == nil {
-        rdc.InstanceRegister("def", cn)
-    } else {
+    if _, err := cfg.DatabaseInstance(); err != nil {
         log.Fatal(err)
     }
 
@@ -88,7 +87,7 @@ func cmdUserSet() {
 
     fmt.Println(CMDC_GREEN + "This wizard will guide you to create a System Administrator." + CMDC_CLOSE)
 
-    dcn, err := rdc.InstancePull("def")
+    dcn, err := rdo.ClientPull("def")
     if err != nil {
         fmt.Println("Internal Server Error: Can not connect to database")
         os.Exit(1)
@@ -108,10 +107,10 @@ func cmdUserSet() {
             continue
         }
 
-        q := rdc.NewQuerySet().From("ids_login").Limit(1)
+        q := base.NewQuerySet().From("ids_login").Limit(1)
         q.Where.And("email", email)
 
-        rsu, err := dcn.Query(q)
+        rsu, err := dcn.Base.Query(q)
         if err == nil && len(rsu) == 1 {
             fmt.Printf(CMDC_RED + "The Email already exists, please choose another one" + CMDC_CLOSE)
             continue
@@ -160,10 +159,10 @@ func cmdUserSet() {
         "group":    "",
         "roles":    "1,100",
         "timezone": "UTC",
-        "created":  rdc.TimeNow("datetime"), // TODO
-        "updated":  rdc.TimeNow("datetime"), // TODO
+        "created":  base.TimeNow("datetime"), // TODO
+        "updated":  base.TimeNow("datetime"), // TODO
     }
-    _, err = dcn.Insert("ids_login", item)
+    _, err = dcn.Base.Insert("ids_login", item)
     if err != nil {
         fmt.Println("Internal Server Error: Can not write to database 2", err)
         os.Exit(1)
@@ -173,9 +172,9 @@ func cmdUserSet() {
        lastid, _ := rs.LastInsertId()
        itemgu := map[string]interface{}{
            "gukey":   fmt.Sprintf("%v.%v", lastid, 1),
-           "created": rdc.TimeNow("datetime"),
+           "created": base.TimeNow("datetime"),
        }
-       rs, err = dcn.Insert("ids_group_users", itemgu)
+       rs, err = dcn.Base.Insert("ids_group_users", itemgu)
        if err != nil {
            fmt.Println("Internal Server Error: Can not write to database 3")
            os.Exit(1)
@@ -190,7 +189,7 @@ func cmdUserDel() {
 
     fmt.Println(CMDC_GREEN + "This wizard will guide you to delete a System Administrator." + CMDC_CLOSE)
 
-    dcn, err := rdc.InstancePull("def")
+    dcn, err := rdo.ClientPull("def")
     if err != nil {
         fmt.Println("Internal Server Error: Can not connect to database")
         os.Exit(1)
@@ -210,10 +209,10 @@ func cmdUserDel() {
             continue
         }
 
-        q := rdc.NewQuerySet().From("ids_login").Limit(1)
+        q := base.NewQuerySet().From("ids_login").Limit(1)
         q.Where.And("email", email)
 
-        rsu, err := dcn.Query(q)
+        rsu, err := dcn.Base.Query(q)
         if err != nil || len(rsu) != 1 {
             fmt.Printf(CMDC_RED + "The Email can not found, please choose another one" + CMDC_CLOSE)
             continue
@@ -222,13 +221,13 @@ func cmdUserDel() {
         break
     }
 
-    frupd := rdc.NewFilter()
+    frupd := base.NewFilter()
     frupd.And("email", email)
     item := map[string]interface{}{
         "status":  0,
-        "updated": rdc.TimeNow("datetime"), // TODO
+        "updated": base.TimeNow("datetime"), // TODO
     }
-    _, err = dcn.Update("ids_login", item, frupd)
+    _, err = dcn.Base.Update("ids_login", item, frupd)
     if err != nil {
         fmt.Println("Internal Server Error: Can not write to database 2", err)
         os.Exit(1)

@@ -1,7 +1,7 @@
 package main
 
 import (
-    "../deps/lessgo/data/rdc"
+    //"../deps/lessgo/data/rdo"
     "../deps/lessgo/net/email"
     "../deps/lessgo/pagelet"
     "./conf"
@@ -31,9 +31,7 @@ func main() {
         os.Exit(1)
     }
 
-    if cn, err := cfg.DatabaseInstance(); err == nil {
-        rdc.InstanceRegister("def", cn)
-    } else {
+    if _, err := cfg.DatabaseInstance(); err != nil {
         log.Fatal("Database Error:", err)
     }
 

@@ -1,7 +1,8 @@
 package controllers
 
 import (
-    "../../deps/lessgo/data/rdc"
+    "../../deps/lessgo/data/rdo"
+    "../../deps/lessgo/data/rdo/base"
     "../../deps/lessgo/utils"
     "fmt"
     "io"
@@ -23,15 +24,15 @@ func (c UserMgr) AuthListAction() {
         return
     }
 
-    dcn, err := rdc.InstancePull("def")
+    dcn, err := rdo.ClientPull("def")
     if err != nil {
         return
     }
 
     users := []interface{}{}
 
-    q := rdc.NewQuerySet().From("ids_instance").Limit(1000)
-    rsinst, err := dcn.Query(q)
+    q := base.NewQuerySet().From("ids_instance").Limit(1000)
+    rsinst, err := dcn.Base.Query(q)
     if err == nil && len(rsinst) > 0 {
 
         for k, v := range rsinst {
@@ -62,9 +63,9 @@ func (c UserMgr) AuthListAction() {
     }
 
     //
-    q = rdc.NewQuerySet().From("ids_login").Limit(1000)
+    q = base.NewQuerySet().From("ids_login").Limit(1000)
     q.Where.And("uid.in", users...)
-    rslogin, err := dcn.Query(q)
+    rslogin, err := dcn.Base.Query(q)
     if err == nil && len(rslogin) > 0 {
         for _, v := range rslogin {
 
@@ -86,7 +87,7 @@ func (c UserMgr) AuthEditAction() {
         return
     }
 
-    dcn, err := rdc.InstancePull("def")
+    dcn, err := rdo.ClientPull("def")
     if err != nil {
         c.RenderError(500, http.StatusText(500))
         return
@@ -94,9 +95,9 @@ func (c UserMgr) AuthEditAction() {
 
     if c.Params.Get("instid") != "" {
 
-        q := rdc.NewQuerySet().From("ids_instance").Limit(1)
+        q := base.NewQuerySet().From("ids_instance").Limit(1)
         q.Where.And("id", c.Params.Get("instid"))
-        rsinst, err := dcn.Query(q)
+        rsinst, err := dcn.Base.Query(q)
         if err != nil || len(rsinst) == 0 {
             c.RenderError(400, http.StatusText(400))
             return
@@ -120,9 +121,9 @@ func (c UserMgr) AuthEditAction() {
         c.ViewData["status"] = "1"
     }
 
-    q := rdc.NewQuerySet().From("ids_privilege").Limit(1000)
+    q := base.NewQuerySet().From("ids_privilege").Limit(1000)
     q.Where.And("instance", c.Params.Get("instid"))
-    rspri, err := dcn.Query(q)
+    rspri, err := dcn.Base.Query(q)
     if err == nil && len(rspri) > 0 {
         c.ViewData["privileges"] = rspri
     }
@@ -149,13 +150,13 @@ func (c UserMgr) AuthSaveAction() {
         return
     }
 
-    dcn, err := rdc.InstancePull("def")
+    dcn, err := rdo.ClientPull("def")
     if err != nil {
         rsp.Message = "Internal Server Error"
         return
     }
 
-    q := rdc.NewQuerySet().From("ids_instance").Limit(1)
+    q := base.NewQuerySet().From("ids_instance").Limit(1)
 
     isNew := true
     instset := map[string]interface{}{}
@@ -164,7 +165,7 @@ func (c UserMgr) AuthSaveAction() {
 
         q.Where.And("id", c.Params.Get("instid"))
 
-        rsinst, err := dcn.Query(q)
+        rsinst, err := dcn.Base.Query(q)
         if err != nil || len(rsinst) == 0 {
             rsp.Status = 400
             rsp.Message = http.StatusText(400)
@@ -174,7 +175,7 @@ func (c UserMgr) AuthSaveAction() {
         isNew = false
     }
 
-    instset["updated"] = rdc.TimeNow("datetime")
+    instset["updated"] = base.TimeNow("datetime")
     instset["app_title"] = c.Params.Get("app_title")
 
     if isNew {
@@ -185,9 +186,9 @@ func (c UserMgr) AuthSaveAction() {
 
         instset["status"] = c.Params.Get("status")
 
-        frupd := rdc.NewFilter()
+        frupd := base.NewFilter()
         frupd.And("id", c.Params.Get("instid"))
-        if _, err := dcn.Update("ids_instance", instset, frupd); err != nil {
+        if _, err := dcn.Base.Update("ids_instance", instset, frupd); err != nil {
             rsp.Status = 500
             rsp.Message = "Can not write to database"
             return

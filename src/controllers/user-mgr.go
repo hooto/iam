@@ -1,7 +1,8 @@
 package controllers
 
 import (
-    "../../deps/lessgo/data/rdc"
+    "../../deps/lessgo/data/rdo"
+    "../../deps/lessgo/data/rdo/base"
     "../../deps/lessgo/pagelet"
     "../../deps/lessgo/pass"
     "../../deps/lessgo/utils"
@@ -50,14 +51,14 @@ func (c UserMgr) ListAction() {
         return
     }
 
-    dcn, err := rdc.InstancePull("def")
+    dcn, err := rdo.ClientPull("def")
     if err != nil {
         return
     }
 
     rdict := map[string]string{}
-    q := rdc.NewQuerySet().From("ids_role").Limit(100)
-    rsr, err := dcn.Query(q)
+    q := base.NewQuerySet().From("ids_role").Limit(100)
+    rsr, err := dcn.Base.Query(q)
     if err == nil && len(rsr) > 0 {
         for _, v := range rsr {
             rdict[fmt.Sprintf("%v", v["rid"])] = v["name"].(string)
@@ -70,7 +71,7 @@ func (c UserMgr) ListAction() {
     }
 
     // filter: query_text
-    q = rdc.NewQuerySet().From("ids_login").Limit(userMgrPageLimit)
+    q = base.NewQuerySet().From("ids_login").Limit(userMgrPageLimit)
     if query_text := c.Params.Get("query_text"); query_text != "" {
         q.Where.And("name.like", "%"+query_text+"%").
             Or("uname.like", "%"+query_text+"%").
@@ -78,14 +79,14 @@ func (c UserMgr) ListAction() {
         c.ViewData["query_text"] = query_text
     }
 
-    count, _ := dcn.Count("ids_login", q.Where)
+    count, _ := dcn.Base.Count("ids_login", q.Where)
     pager := pagelet.Pager(page, int(count), userMgrPageLimit, 10)
     c.ViewData["pager"] = pager
 
     if pager.CurrentPageNumber > 1 {
         q.Offset(int64((pager.CurrentPageNumber - 1) * userMgrPageLimit))
     }
-    rsl, err := dcn.Query(q)
+    rsl, err := dcn.Base.Query(q)
     if err == nil && len(rsl) > 0 {
 
         for k, v := range rsl {
@@ -120,7 +121,7 @@ func (c UserMgr) EditAction() {
         return
     }
 
-    dcn, err := rdc.InstancePull("def")
+    dcn, err := rdo.ClientPull("def")
     if err != nil {
         c.RenderError(500, http.StatusText(500))
         return
@@ -128,9 +129,9 @@ func (c UserMgr) EditAction() {
 
     //
     roles := []RoleEntry{}
-    q := rdc.NewQuerySet().From("ids_role").Limit(100)
+    q := base.NewQuerySet().From("ids_role").Limit(100)
     q.Where.And("status", 1)
-    rsr, err := dcn.Query(q)
+    rsr, err := dcn.Base.Query(q)
     if err == nil && len(rsr) > 0 {
 
         for _, v := range rsr {
@@ -143,9 +144,9 @@ func (c UserMgr) EditAction() {
 
     if c.Params.Get("uid") != "" {
 
-        q := rdc.NewQuerySet().From("ids_login").Limit(1)
+        q := base.NewQuerySet().From("ids_login").Limit(1)
         q.Where.And("uid", c.Params.Get("uid"))
-        rslogin, err := dcn.Query(q)
+        rslogin, err := dcn.Base.Query(q)
         if err != nil || len(rslogin) == 0 {
             c.RenderError(400, http.StatusText(400))
             return
@@ -169,7 +170,7 @@ func (c UserMgr) EditAction() {
         c.ViewData["status"] = fmt.Sprintf("%v", rslogin[0]["status"])
 
         q.From("ids_profile")
-        rsprofile, err := dcn.Query(q)
+        rsprofile, err := dcn.Base.Query(q)
         if err == nil && len(rsprofile) == 1 {
             c.ViewData["birthday"] = rsprofile[0]["birthday"]
             c.ViewData["aboutme"] = rsprofile[0]["aboutme"]
@@ -212,13 +213,13 @@ func (c UserMgr) SaveAction() {
         return
     }
 
-    dcn, err := rdc.InstancePull("def")
+    dcn, err := rdo.ClientPull("def")
     if err != nil {
         rsp.Message = "Internal Server Error"
         return
     }
 
-    q := rdc.NewQuerySet().From("ids_login").Limit(1)
+    q := base.NewQuerySet().From("ids_login").Limit(1)
 
     isNew := true
     loginset := map[string]interface{}{}
@@ -227,7 +228,7 @@ func (c UserMgr) SaveAction() {
 
         q.Where.And("uid", c.Params.Get("uid"))
 
-        rslogin, err := dcn.Query(q)
+        rslogin, err := dcn.Base.Query(q)
         if err != nil || len(rslogin) == 0 {
             c.RenderError(400, http.StatusText(400))
             return
@@ -237,9 +238,9 @@ func (c UserMgr) SaveAction() {
     }
 
     //
-    q = rdc.NewQuerySet().From("ids_login").Limit(1)
+    q = base.NewQuerySet().From("ids_login").Limit(1)
     q.Where.And("email", c.Params.Get("email"))
-    rsu, err := dcn.Query(q)
+    rsu, err := dcn.Base.Query(q)
     if err == nil && len(rsu) == 1 {
 
         if isNew || fmt.Sprintf("%v", rsu[0]["uid"]) != c.Params.Get("uid") {
@@ -252,9 +253,9 @@ func (c UserMgr) SaveAction() {
     }
 
     //
-    q = rdc.NewQuerySet().From("ids_login").Limit(1)
+    q = base.NewQuerySet().From("ids_login").Limit(1)
     q.Where.And("uname", c.Params.Get("uname"))
-    rsu, err = dcn.Query(q)
+    rsu, err = dcn.Base.Query(q)
     if err == nil && len(rsu) == 1 {
 
         if isNew || fmt.Sprintf("%v", rsu[0]["uid"]) != c.Params.Get("uid") {
@@ -276,18 +277,18 @@ func (c UserMgr) SaveAction() {
     }
 
     if isNew {
-        loginset["created"] = rdc.TimeNow("datetime")
+        loginset["created"] = base.TimeNow("datetime")
         loginset["timezone"] = "UTC"
     }
     loginset["status"] = c.Params.Get("status")
-    loginset["updated"] = rdc.TimeNow("datetime")
+    loginset["updated"] = base.TimeNow("datetime")
     loginset["name"] = c.Params.Get("name")
     loginset["roles"] = strings.Join(c.Params.Values["roles"], ",")
 
-    frupd := rdc.NewFilter()
+    frupd := base.NewFilter()
 
     if isNew {
-        rst, err := dcn.Insert("ids_login", loginset)
+        rst, err := dcn.Base.Insert("ids_login", loginset)
         if err != nil {
             rsp.Status = 500
             rsp.Message = "Can not write to database"
@@ -306,7 +307,7 @@ func (c UserMgr) SaveAction() {
     } else {
 
         frupd.And("uid", c.Params.Get("uid"))
-        if _, err := dcn.Update("ids_login", loginset, frupd); err != nil {
+        if _, err := dcn.Base.Update("ids_login", loginset, frupd); err != nil {
             rsp.Status = 500
             rsp.Message = "Can not write to database"
             return
@@ -320,16 +321,16 @@ func (c UserMgr) SaveAction() {
     profile := map[string]interface{}{
         "birthday": c.Params.Get("birthday"),
         "aboutme":  c.Params.Get("aboutme"),
-        "updated":  rdc.TimeNow("datetime"),
+        "updated":  base.TimeNow("datetime"),
     }
     if isNew {
         profile["uid"] = c.Params.Get("uid")
         profile["gender"] = 0
-        profile["created"] = rdc.TimeNow("datetime")
+        profile["created"] = base.TimeNow("datetime")
 
-        dcn.Insert("ids_profile", profile)
+        dcn.Base.Insert("ids_profile", profile)
     } else {
-        dcn.Update("ids_profile", profile, frupd)
+        dcn.Base.Update("ids_profile", profile, frupd)
     }
 
     rsp.Status = 200

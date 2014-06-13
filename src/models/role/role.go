@@ -1,7 +1,8 @@
 package role
 
 import (
-    "../../../deps/lessgo/data/rdc"
+    "../../../deps/lessgo/data/rdo"
+    "../../../deps/lessgo/data/rdo/base"
     "fmt"
     "strings"
     "sync"
@@ -28,13 +29,13 @@ func innerRefresh() {
     locker.Lock()
     defer locker.Unlock()
 
-    dcn, err := rdc.InstancePull("def")
+    dcn, err := rdo.ClientPull("def")
     if err != nil {
         return
     }
 
-    q := rdc.NewQuerySet().From("ids_privilege").Limit(1000)
-    rspri, err := dcn.Query(q)
+    q := base.NewQuerySet().From("ids_privilege").Limit(1000)
+    rspri, err := dcn.Base.Query(q)
     if err != nil || len(rspri) == 0 {
         return
     }
@@ -48,9 +49,9 @@ func innerRefresh() {
         privileges[pkey] = fmt.Sprintf("%v", v["pid"])
     }
 
-    q = rdc.NewQuerySet().From("ids_role").Limit(1000)
+    q = base.NewQuerySet().From("ids_role").Limit(1000)
     q.Where.And("status", 1)
-    rsrole, err := dcn.Query(q)
+    rsrole, err := dcn.Base.Query(q)
     if err != nil || len(rsrole) == 0 {
         return
     }

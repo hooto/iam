@@ -1,7 +1,8 @@
 package controllers
 
 import (
-    "../../deps/lessgo/data/rdc"
+    "../../deps/lessgo/data/rdo"
+    "../../deps/lessgo/data/rdo/base"
     "../../deps/lessgo/net/email"
     "../../deps/lessgo/utils"
     "../conf"
@@ -14,15 +15,15 @@ func (c SysMgr) EmailSetAction() {
         return
     }
 
-    dcn, err := rdc.InstancePull("def")
+    dcn, err := rdo.ClientPull("def")
     if err != nil {
         c.RenderError(401, "Access Denied")
         return
     }
 
-    q := rdc.NewQuerySet().From("ids_sysconfig").Limit(10)
+    q := base.NewQuerySet().From("ids_sysconfig").Limit(10)
     q.Where.And("key", "mailer")
-    rs, err := dcn.Query(q)
+    rs, err := dcn.Base.Query(q)
     if err != nil || len(rs) < 1 {
         return
     }
@@ -43,16 +44,16 @@ func (c SysMgr) EmailSetSaveAction() {
         return
     }
 
-    dcn, err := rdc.InstancePull("def")
+    dcn, err := rdo.ClientPull("def")
     if err != nil {
         c.RenderError(401, "Access Denied")
         return
     }
 
     isNew := true
-    q := rdc.NewQuerySet().From("ids_sysconfig").Limit(1)
+    q := base.NewQuerySet().From("ids_sysconfig").Limit(1)
     q.Where.And("key", "mailer")
-    rs, err := dcn.Query(q)
+    rs, err := dcn.Base.Query(q)
     if err == nil && len(rs) == 1 {
         isNew = false
     }
@@ -77,15 +78,15 @@ func (c SysMgr) EmailSetSaveAction() {
         }
         itemset := map[string]interface{}{
             "value":   val,
-            "updated": rdc.TimeNow("datetime"),
+            "updated": base.TimeNow("datetime"),
         }
         if isNew {
             itemset["key"] = "mailer"
-            _, err = dcn.Insert("ids_sysconfig", itemset)
+            _, err = dcn.Base.Insert("ids_sysconfig", itemset)
         } else {
-            ft := rdc.NewFilter()
+            ft := base.NewFilter()
             ft.And("key", "mailer")
-            _, err = dcn.Update("ids_sysconfig", itemset, ft)
+            _, err = dcn.Base.Update("ids_sysconfig", itemset, ft)
         }
 
         if err != nil {

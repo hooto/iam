@@ -1,7 +1,8 @@
 package controllers
 
 import (
-    "../../deps/lessgo/data/rdc"
+    "../../deps/lessgo/data/rdo"
+    "../../deps/lessgo/data/rdo/base"
     "../../deps/lessgo/pagelet"
     "../../deps/lessgo/pass"
     "../../deps/lessgo/utils"
@@ -62,16 +63,16 @@ func (c User) MyAction() {
         return
     }
 
-    dcn, err := rdc.InstancePull("def")
+    dcn, err := rdo.ClientPull("def")
     if err != nil {
         c.RenderError(401, "Access Denied")
         return
     }
 
     // login
-    q := rdc.NewQuerySet().From("ids_login").Limit(1)
+    q := base.NewQuerySet().From("ids_login").Limit(1)
     q.Where.And("uid", s.Uid)
-    rslogin, err := dcn.Query(q)
+    rslogin, err := dcn.Base.Query(q)
     if err != nil || len(rslogin) != 1 {
         c.RenderError(401, "Access Denied")
         return
@@ -81,18 +82,18 @@ func (c User) MyAction() {
     c.ViewData["login_email"] = rslogin[0]["email"].(string)
 
     //
-    q = rdc.NewQuerySet().From("ids_profile").Limit(1)
+    q = base.NewQuerySet().From("ids_profile").Limit(1)
     q.Where.And("uid", s.Uid)
-    rsp, err := dcn.Query(q)
+    rsp, err := dcn.Base.Query(q)
     if err != nil || len(rsp) != 1 {
 
         item := map[string]interface{}{
             "uid":     s.Uid,
             "gender":  0,
-            "created": rdc.TimeNow("datetime"), // TODO
-            "updated": rdc.TimeNow("datetime"), // TODO
+            "created": base.TimeNow("datetime"), // TODO
+            "updated": base.TimeNow("datetime"), // TODO
         }
-        dcn.Insert("ids_profile", item)
+        dcn.Base.Insert("ids_profile", item)
     } else {
         if rslogin[0]["photo"] != nil && len(rslogin[0]["photo"].(string)) > 0 {
             c.ViewData["photo"] = rslogin[0]["photo"].(string)
@@ -107,21 +108,21 @@ func (c User) ProfileSetAction() {
         return
     }
 
-    dcn, err := rdc.InstancePull("def")
+    dcn, err := rdo.ClientPull("def")
     if err != nil {
         return
     }
 
-    q := rdc.NewQuerySet().From("ids_login").Limit(1)
+    q := base.NewQuerySet().From("ids_login").Limit(1)
     q.Where.And("uid", s.Uid)
-    rslogin, err := dcn.Query(q)
+    rslogin, err := dcn.Base.Query(q)
     if err != nil || len(rslogin) != 1 {
         return
     }
 
-    q = rdc.NewQuerySet().From("ids_profile").Limit(1)
+    q = base.NewQuerySet().From("ids_profile").Limit(1)
     q.Where.And("uid", s.Uid)
-    rsp, err := dcn.Query(q)
+    rsp, err := dcn.Base.Query(q)
     if err != nil || len(rsp) != 1 {
         return
     }
@@ -162,25 +163,25 @@ func (c User) ProfilePutAction() {
         return
     }
 
-    dcn, err := rdc.InstancePull("def")
+    dcn, err := rdo.ClientPull("def")
     if err != nil {
         return
     }
 
     itemlogin := map[string]interface{}{
         "name":    c.Params.Get("name"),
-        "updated": rdc.TimeNow("datetime"),
+        "updated": base.TimeNow("datetime"),
     }
-    ft := rdc.NewFilter()
+    ft := base.NewFilter()
     ft.And("uid", s.Uid)
-    dcn.Update("ids_login", itemlogin, ft)
+    dcn.Base.Update("ids_login", itemlogin, ft)
 
     itemprofile := map[string]interface{}{
         "birthday": c.Params.Get("birthday"),
         "aboutme":  c.Params.Get("aboutme"),
-        "updated":  rdc.TimeNow("datetime"), // TODO
+        "updated":  base.TimeNow("datetime"), // TODO
     }
-    dcn.Update("ids_profile", itemprofile, ft)
+    dcn.Base.Update("ids_profile", itemprofile, ft)
 
     rsp.Status = 200
     rsp.Message = "Successfully Updated"
@@ -257,7 +258,7 @@ func (c User) PhotoPutAction() {
     }
     imgphoto := base64.StdEncoding.EncodeToString(imgbuf.Bytes())
 
-    dcn, err := rdc.InstancePull("def")
+    dcn, err := rdo.ClientPull("def")
     if err != nil {
         rsp.Status = 500
         rsp.Message = "Can not pull database instance"
@@ -267,11 +268,11 @@ func (c User) PhotoPutAction() {
     itemprofile := map[string]interface{}{
         "photo":    "data:image/png;base64," + imgphoto,
         "photosrc": req.Data.Data,
-        "updated":  rdc.TimeNow("datetime"),
+        "updated":  base.TimeNow("datetime"),
     }
-    ft := rdc.NewFilter()
+    ft := base.NewFilter()
     ft.And("uid", s.Uid)
-    dcn.Update("ids_profile", itemprofile, ft)
+    dcn.Base.Update("ids_profile", itemprofile, ft)
 
     rsp.Status = 200
     rsp.Message = "Successfully changed, Page redirecting"
@@ -306,14 +307,14 @@ func (c User) PassPutAction() {
         return
     }
 
-    dcn, err := rdc.InstancePull("def")
+    dcn, err := rdo.ClientPull("def")
     if err != nil {
         return
     }
 
-    q := rdc.NewQuerySet().From("ids_login").Limit(1)
+    q := base.NewQuerySet().From("ids_login").Limit(1)
     q.Where.And("uid", s.Uid)
-    rsu, err := dcn.Query(q)
+    rsu, err := dcn.Base.Query(q)
     if err == nil && len(rsu) == 0 {
         rsp.Message = "User can not found"
         return
@@ -331,11 +332,11 @@ func (c User) PassPutAction() {
 
     itemlogin := map[string]interface{}{
         "pass":    pass,
-        "updated": rdc.TimeNow("datetime"),
+        "updated": base.TimeNow("datetime"),
     }
-    ft := rdc.NewFilter()
+    ft := base.NewFilter()
     ft.And("uid", s.Uid)
-    dcn.Update("ids_login", itemlogin, ft)
+    dcn.Base.Update("ids_login", itemlogin, ft)
 
     rsp.Status = 200
     rsp.Message = "Successfully Updated"
@@ -348,14 +349,14 @@ func (c User) EmailSetAction() {
         return
     }
 
-    dcn, err := rdc.InstancePull("def")
+    dcn, err := rdo.ClientPull("def")
     if err != nil {
         return
     }
 
-    q := rdc.NewQuerySet().From("ids_login").Limit(1)
+    q := base.NewQuerySet().From("ids_login").Limit(1)
     q.Where.And("uid", s.Uid)
-    rsu, err := dcn.Query(q)
+    rsu, err := dcn.Base.Query(q)
     if err == nil && len(rsu) == 1 {
         c.ViewData["login_email"] = rsu[0]["email"].(string)
     }
@@ -387,14 +388,14 @@ func (c User) EmailPutAction() {
         return
     }
 
-    dcn, err := rdc.InstancePull("def")
+    dcn, err := rdo.ClientPull("def")
     if err != nil {
         return
     }
 
-    q := rdc.NewQuerySet().From("ids_login").Limit(1)
+    q := base.NewQuerySet().From("ids_login").Limit(1)
     q.Where.And("uid", s.Uid)
-    rsu, err := dcn.Query(q)
+    rsu, err := dcn.Base.Query(q)
     if err == nil && len(rsu) == 0 {
         rsp.Message = "User can not found"
         return
@@ -407,11 +408,11 @@ func (c User) EmailPutAction() {
 
     itemlogin := map[string]interface{}{
         "email":   c.Params.Get("email"),
-        "updated": rdc.TimeNow("datetime"),
+        "updated": base.TimeNow("datetime"),
     }
-    ft := rdc.NewFilter()
+    ft := base.NewFilter()
     ft.And("uid", s.Uid)
-    dcn.Update("ids_login", itemlogin, ft)
+    dcn.Base.Update("ids_login", itemlogin, ft)
 
     rsp.Status = 200
     rsp.Message = "Successfully Updated"

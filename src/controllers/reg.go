@@ -1,7 +1,8 @@
 package controllers
 
 import (
-    "../../deps/lessgo/data/rdc"
+    "../../deps/lessgo/data/rdo"
+    "../../deps/lessgo/data/rdo/base"
     "../../deps/lessgo/net/email"
     "../../deps/lessgo/pagelet"
     "../../deps/lessgo/pass"
@@ -56,15 +57,15 @@ func (c Reg) SignUpRegAction() {
         return
     }
 
-    dcn, err := rdc.InstancePull("def")
+    dcn, err := rdo.ClientPull("def")
     if err != nil {
         rsp.Message = "Internal Server Error"
         return
     }
 
-    q := rdc.NewQuerySet().From("ids_login").Limit(1)
+    q := base.NewQuerySet().From("ids_login").Limit(1)
     q.Where.And("email", c.Params.Get("email"))
-    rsu, err := dcn.Query(q)
+    rsu, err := dcn.Base.Query(q)
     if err == nil && len(rsu) == 1 {
         rsp.Message = "The `Email` already exists, please choose another one"
         return
@@ -82,11 +83,11 @@ func (c Reg) SignUpRegAction() {
         "name":     c.Params.Get("name"),
         "status":   1,
         "roles":    "100",
-        "timezone": "UTC",                   // TODO
-        "created":  rdc.TimeNow("datetime"), // TODO
-        "updated":  rdc.TimeNow("datetime"), // TODO
+        "timezone": "UTC",                    // TODO
+        "created":  base.TimeNow("datetime"), // TODO
+        "updated":  base.TimeNow("datetime"), // TODO
     }
-    if _, err := dcn.Insert("ids_login", item); err != nil {
+    if _, err := dcn.Base.Insert("ids_login", item); err != nil {
         rsp.Status = 500
         rsp.Message = "Can not write to database"
         return
@@ -125,15 +126,15 @@ func (c Reg) ForgotPassPutAction() {
         return
     }
 
-    dcn, err := rdc.InstancePull("def")
+    dcn, err := rdo.ClientPull("def")
     if err != nil {
         rsp.Message = "Internal Server Error"
         return
     }
 
-    q := rdc.NewQuerySet().From("ids_login").Limit(1)
+    q := base.NewQuerySet().From("ids_login").Limit(1)
     q.Where.And("email", c.Params.Get("email"))
-    rsl, err := dcn.Query(q)
+    rsl, err := dcn.Base.Query(q)
     if err != nil || len(rsl) != 1 {
         rsp.Message = "Email can not found"
         return
@@ -143,10 +144,10 @@ func (c Reg) ForgotPassPutAction() {
     item := map[string]interface{}{
         "id":      id,
         "status":  0,
-        "email":   c.Params.Get("email"),                // TODO
-        "expired": rdc.TimeNowAdd("datetime", "+3600s"), // TODO
+        "email":   c.Params.Get("email"),                 // TODO
+        "expired": base.TimeNowAdd("datetime", "+3600s"), // TODO
     }
-    if _, err := dcn.Insert("ids_resetpass", item); err != nil {
+    if _, err := dcn.Base.Insert("ids_resetpass", item); err != nil {
         rsp.Status = 500
         rsp.Message = "Can not write to database"
         return
@@ -175,7 +176,7 @@ func (c Reg) ForgotPassPutAction() {
 <div>********************************************************</div>
 <div>Please do not reply to this message. Mail sent to this address cannot be answered.</div>
 </body>
-</html>`, cfg.ServiceName, c.Request.Host, id, rdc.TimeNow("datetime"), cfg.ServiceName)
+</html>`, cfg.ServiceName, c.Request.Host, id, base.TimeNow("datetime"), cfg.ServiceName)
 
     err = mr.SendMail(c.Params.Get("email"), c.T("Reset your password"), body)
 
@@ -189,19 +190,20 @@ func (c Reg) PassResetAction() {
         return
     }
 
-    dcn, err := rdc.InstancePull("def")
+    dcn, err := rdo.ClientPull("def")
     if err != nil {
         return
     }
 
-    q := rdc.NewQuerySet().From("ids_resetpass").Limit(1)
+    q := base.NewQuerySet().From("ids_resetpass").Limit(1)
     q.Where.And("id", c.Params.Get("id"))
-    rsr, err := dcn.Query(q)
+    rsr, err := dcn.Base.Query(q)
     if err != nil || len(rsr) != 1 {
         return
     }
 
-    if rsr[0]["expired"].(time.Time).Before(time.Now()) {
+    expired := base.TimeParse(rsr[0]["expired"].(string), "datetime")
+    if expired.Before(time.Now()) {
         return
     }
 
@@ -234,21 +236,22 @@ func (c Reg) PassResetPutAction() {
         return
     }
 
-    dcn, err := rdc.InstancePull("def")
+    dcn, err := rdo.ClientPull("def")
     if err != nil {
         rsp.Message = "Internal Server Error"
         return
     }
 
-    q := rdc.NewQuerySet().From("ids_resetpass").Limit(1)
+    q := base.NewQuerySet().From("ids_resetpass").Limit(1)
     q.Where.And("id", c.Params.Get("id"))
-    rsr, err := dcn.Query(q)
+    rsr, err := dcn.Base.Query(q)
     if err != nil || len(rsr) != 1 {
         rsp.Message = "Token not found"
         return
     }
 
-    if rsr[0]["expired"].(time.Time).Before(time.Now()) {
+    expired := base.TimeParse(rsr[0]["expired"].(string), "datetime")
+    if expired.Before(time.Now()) {
         rsp.Message = "Token expired"
         return
     }
@@ -258,17 +261,17 @@ func (c Reg) PassResetPutAction() {
         return
     }
 
-    q = rdc.NewQuerySet().From("ids_login").Limit(1)
+    q = base.NewQuerySet().From("ids_login").Limit(1)
     q.Where.And("email", c.Params.Get("email"))
-    rsl, err := dcn.Query(q)
+    rsl, err := dcn.Base.Query(q)
     if err != nil || len(rsl) != 1 {
         rsp.Message = "User can not found"
         return
     }
 
-    q = rdc.NewQuerySet().From("ids_profile").Limit(1)
+    q = base.NewQuerySet().From("ids_profile").Limit(1)
     q.Where.And("uid", rsl[0]["uid"])
-    rspf, err := dcn.Query(q)
+    rspf, err := dcn.Base.Query(q)
     if err != nil || len(rspf) != 1 {
         rsp.Message = "User can not found"
         return
@@ -286,16 +289,16 @@ func (c Reg) PassResetPutAction() {
 
     itemlogin := map[string]interface{}{
         "pass":    pass,
-        "updated": rdc.TimeNow("datetime"),
+        "updated": base.TimeNow("datetime"),
     }
-    ft := rdc.NewFilter()
+    ft := base.NewFilter()
     ft.And("uid", rsl[0]["uid"])
-    dcn.Update("ids_login", itemlogin, ft)
+    dcn.Base.Update("ids_login", itemlogin, ft)
 
     //
-    delfr := rdc.NewFilter()
+    delfr := base.NewFilter()
     delfr.And("id", c.Params.Get("id"))
-    dcn.Delete("ids_resetpass", delfr)
+    dcn.Base.Delete("ids_resetpass", delfr)
 
     rsp.Status = 200
     rsp.Message = "Successfully Updated"

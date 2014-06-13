@@ -1,7 +1,8 @@
 package session
 
 import (
-    "../../../deps/lessgo/data/rdc"
+    "../../../deps/lessgo/data/rdo"
+    "../../../deps/lessgo/data/rdo/base"
     "../../../deps/lessgo/pagelet"
     "fmt"
     "strconv"
@@ -36,19 +37,20 @@ func GetSession(r *pagelet.Request) (sess Session) {
         return
     }
 
-    dcn, err := rdc.InstancePull("def")
+    dcn, err := rdo.ClientPull("def")
     if err != nil {
         return
     }
 
-    q := rdc.NewQuerySet().From("ids_sessions").Limit(1)
+    q := base.NewQuerySet().From("ids_sessions").Limit(1)
     q.Where.And("token", token.Value)
-    rsu, err := dcn.Query(q)
+    rsu, err := dcn.Base.Query(q)
     if err == nil && len(rsu) == 0 {
         return
     }
-
-    sess.Expired = rsu[0]["expired"].(time.Time)
+    //fmt.Println(rsu, rsu[0]["expired"].(time.Time))
+    //sess.Expired = rsu[0]["expired"].(time.Time)
+    sess.Expired = base.TimeParse(rsu[0]["expired"].(string), "datetime")
     if sess.Expired.Before(time.Now()) {
         return
     }

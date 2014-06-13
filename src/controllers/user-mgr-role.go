@@ -1,7 +1,8 @@
 package controllers
 
 import (
-    "../../deps/lessgo/data/rdc"
+    "../../deps/lessgo/data/rdo"
+    "../../deps/lessgo/data/rdo/base"
     "../../deps/lessgo/utils"
     "fmt"
     "io"
@@ -16,14 +17,14 @@ func (c UserMgr) RoleListAction() {
         return
     }
 
-    dcn, err := rdc.InstancePull("def")
+    dcn, err := rdo.ClientPull("def")
     if err != nil {
         return
     }
 
-    q := rdc.NewQuerySet().From("ids_role").Limit(1000)
+    q := base.NewQuerySet().From("ids_role").Limit(1000)
     q.Where.And("status", 1)
-    rsr, err := dcn.Query(q)
+    rsr, err := dcn.Base.Query(q)
     if err == nil && len(rsr) > 0 {
         c.ViewData["list"] = rsr
     }
@@ -47,7 +48,7 @@ func (c UserMgr) RoleEditAction() {
         return
     }
 
-    dcn, err := rdc.InstancePull("def")
+    dcn, err := rdo.ClientPull("def")
     if err != nil {
         c.RenderError(500, http.StatusText(500))
         return
@@ -57,9 +58,9 @@ func (c UserMgr) RoleEditAction() {
 
     if c.Params.Get("rid") != "" {
 
-        q := rdc.NewQuerySet().From("ids_role").Limit(1)
+        q := base.NewQuerySet().From("ids_role").Limit(1)
         q.Where.And("rid", c.Params.Get("rid"))
-        rsrole, err := dcn.Query(q)
+        rsrole, err := dcn.Base.Query(q)
         if err != nil || len(rsrole) == 0 {
             c.RenderError(400, http.StatusText(400))
             return
@@ -86,8 +87,8 @@ func (c UserMgr) RoleEditAction() {
     }
 
     instances := map[string]UserMgrInstance{}
-    q := rdc.NewQuerySet().From("ids_instance").Limit(1000)
-    rsins, err := dcn.Query(q)
+    q := base.NewQuerySet().From("ids_instance").Limit(1000)
+    rsins, err := dcn.Base.Query(q)
     if err == nil && len(rsins) > 0 {
         for _, v := range rsins {
             instances[v["id"].(string)] = UserMgrInstance{
@@ -100,8 +101,8 @@ func (c UserMgr) RoleEditAction() {
     }
 
     //prePrivileges := map[string]string{}
-    q = rdc.NewQuerySet().From("ids_privilege").Limit(1000)
-    rspri, err := dcn.Query(q)
+    q = base.NewQuerySet().From("ids_privilege").Limit(1000)
+    rspri, err := dcn.Base.Query(q)
     if err == nil && len(rspri) > 0 {
         for _, v := range rspri {
 
@@ -146,13 +147,13 @@ func (c UserMgr) RoleSaveAction() {
         return
     }
 
-    dcn, err := rdc.InstancePull("def")
+    dcn, err := rdo.ClientPull("def")
     if err != nil {
         rsp.Message = "Internal Server Error"
         return
     }
 
-    q := rdc.NewQuerySet().From("ids_role").Limit(1)
+    q := base.NewQuerySet().From("ids_role").Limit(1)
 
     isNew := true
     roleset := map[string]interface{}{}
@@ -161,7 +162,7 @@ func (c UserMgr) RoleSaveAction() {
 
         q.Where.And("rid", c.Params.Get("rid"))
 
-        rsrole, err := dcn.Query(q)
+        rsrole, err := dcn.Base.Query(q)
         if err != nil || len(rsrole) == 0 {
             rsp.Status = 400
             rsp.Message = http.StatusText(400)
@@ -171,7 +172,7 @@ func (c UserMgr) RoleSaveAction() {
         isNew = false
     }
 
-    roleset["updated"] = rdc.TimeNow("datetime")
+    roleset["updated"] = base.TimeNow("datetime")
     roleset["name"] = c.Params.Get("name")
     roleset["desc"] = c.Params.Get("desc")
     roleset["privileges"] = strings.Join(c.Params.Values["privileges"], ",")
@@ -183,11 +184,11 @@ func (c UserMgr) RoleSaveAction() {
             return
         }
 
-        roleset["created"] = rdc.TimeNow("datetime")
+        roleset["created"] = base.TimeNow("datetime")
         roleset["uid"] = si.Uid
         roleset["status"] = 1
 
-        _, err = dcn.Insert("ids_role", roleset)
+        _, err = dcn.Base.Insert("ids_role", roleset)
         if err != nil {
             rsp.Status = 500
             rsp.Message = "Can not write to database"
@@ -196,9 +197,9 @@ func (c UserMgr) RoleSaveAction() {
 
     } else {
 
-        frupd := rdc.NewFilter()
+        frupd := base.NewFilter()
         frupd.And("rid", c.Params.Get("rid"))
-        if _, err := dcn.Update("ids_role", roleset, frupd); err != nil {
+        if _, err := dcn.Base.Update("ids_role", roleset, frupd); err != nil {
             rsp.Status = 500
             rsp.Message = "Can not write to database"
             return

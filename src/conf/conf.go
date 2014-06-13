@@ -1,7 +1,8 @@
 package conf
 
 import (
-    "../../deps/lessgo/data/rdc"
+    "../../deps/lessgo/data/rdo"
+    "../../deps/lessgo/data/rdo/base"
     "encoding/json"
     "errors"
     "fmt"
@@ -41,6 +42,7 @@ type Config struct {
     DatabasePath     string
     WebUiBannerTitle string
     Mailer           ConfigMailer `json:"mailer"`
+    Database         base.Config  `json:"database"`
 }
 
 func NewConfig(prefix string) (Config, error) {
@@ -88,22 +90,22 @@ func NewConfig(prefix string) (Config, error) {
 
     cfg.WebUiBannerTitle = "Account Center"
 
-    if cfg.DatabasePath == "" {
-        cfg.DatabasePath = cfg.Prefix + "/var/lessids.sqlite"
-    }
+    // if cfg.DatabasePath == "" {
+    //     cfg.DatabasePath = cfg.Prefix + "/var/lessids.sqlite"
+    // }
 
     return cfg, nil
 }
 
 func (c *Config) Refresh() {
 
-    dcn, err := rdc.InstancePull("def")
+    dcn, err := rdo.ClientPull("def")
     if err != nil {
         return
     }
 
-    q := rdc.NewQuerySet().From("ids_sysconfig").Limit(1000)
-    rs, err := dcn.Query(q)
+    q := base.NewQuerySet().From("ids_sysconfig").Limit(1000)
+    rs, err := dcn.Base.Query(q)
     if err != nil || len(rs) < 1 {
         return
     }

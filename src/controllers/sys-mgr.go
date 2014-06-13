@@ -1,7 +1,8 @@
 package controllers
 
 import (
-    "../../deps/lessgo/data/rdc"
+    "../../deps/lessgo/data/rdo"
+    "../../deps/lessgo/data/rdo/base"
     "../../deps/lessgo/pagelet"
     "../conf"
     "fmt"
@@ -26,15 +27,15 @@ func (c SysMgr) GenSetAction() {
         return
     }
 
-    dcn, err := rdc.InstancePull("def")
+    dcn, err := rdo.ClientPull("def")
     if err != nil {
         c.RenderError(401, "Access Denied")
         return
     }
 
-    q := rdc.NewQuerySet().From("ids_sysconfig").Limit(10)
+    q := base.NewQuerySet().From("ids_sysconfig").Limit(10)
     q.Where.And("key", "service_name").Or("key", "webui_banner_title")
-    rs, err := dcn.Query(q)
+    rs, err := dcn.Base.Query(q)
     if err != nil || len(rs) < 1 {
         return
     }
@@ -64,7 +65,7 @@ func (c SysMgr) GenSetSaveAction() {
         return
     }
 
-    dcn, err := rdc.InstancePull("def")
+    dcn, err := rdo.ClientPull("def")
     if err != nil {
         c.RenderError(401, "Access Denied")
         return
@@ -73,11 +74,11 @@ func (c SysMgr) GenSetSaveAction() {
     if conf.ConfigFetch().ServiceName != c.Params.Get("service_name") {
         itemset := map[string]interface{}{
             "value":   c.Params.Get("service_name"),
-            "updated": rdc.TimeNow("datetime"),
+            "updated": base.TimeNow("datetime"),
         }
-        ft := rdc.NewFilter()
+        ft := base.NewFilter()
         ft.And("key", "service_name")
-        if _, err := dcn.Update("ids_sysconfig", itemset, ft); err == nil {
+        if _, err := dcn.Base.Update("ids_sysconfig", itemset, ft); err == nil {
             conf.ConfigFetch().ServiceName = c.Params.Get("service_name")
         }
     }
@@ -85,11 +86,11 @@ func (c SysMgr) GenSetSaveAction() {
     if conf.ConfigFetch().WebUiBannerTitle != c.Params.Get("webui_banner_title") {
         itemset := map[string]interface{}{
             "value":   c.Params.Get("webui_banner_title"),
-            "updated": rdc.TimeNow("datetime"),
+            "updated": base.TimeNow("datetime"),
         }
-        ft := rdc.NewFilter()
+        ft := base.NewFilter()
         ft.And("key", "webui_banner_title")
-        if _, err := dcn.Update("ids_sysconfig", itemset, ft); err == nil {
+        if _, err := dcn.Base.Update("ids_sysconfig", itemset, ft); err == nil {
             conf.ConfigFetch().WebUiBannerTitle = c.Params.Get("webui_banner_title")
         }
     }
