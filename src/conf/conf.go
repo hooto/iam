@@ -112,12 +112,12 @@ func (c *Config) Refresh() {
 
     for _, v := range rs {
 
-        val := fmt.Sprintf("%v", v["value"])
+        val := v.Field("value").String()
         if val == "" {
             continue
         }
 
-        switch v["key"].(string) {
+        switch v.Field("key").String() {
         case "service_name":
             c.ServiceName = val
         case "webui_banner_title":

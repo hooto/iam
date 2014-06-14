@@ -12,7 +12,7 @@ import (
     "../models/session"
     "bytes"
     "encoding/base64"
-    "fmt"
+    //"fmt"
     "github.com/eryx/imaging"
     "html"
     "image"
@@ -77,9 +77,9 @@ func (c User) MyAction() {
         c.RenderError(401, "Access Denied")
         return
     }
-    c.ViewData["login_uid"] = fmt.Sprintf("%v", rslogin[0]["uid"])
-    c.ViewData["login_name"] = rslogin[0]["name"].(string)
-    c.ViewData["login_email"] = rslogin[0]["email"].(string)
+    c.ViewData["login_uid"] = rslogin[0].Field("uid").String()
+    c.ViewData["login_name"] = rslogin[0].Field("name").String()
+    c.ViewData["login_email"] = rslogin[0].Field("email").String()
 
     //
     q = base.NewQuerySet().From("ids_profile").Limit(1)
@@ -94,9 +94,11 @@ func (c User) MyAction() {
             "updated": base.TimeNow("datetime"), // TODO
         }
         dcn.Base.Insert("ids_profile", item)
+
     } else {
-        if rslogin[0]["photo"] != nil && len(rslogin[0]["photo"].(string)) > 0 {
-            c.ViewData["photo"] = rslogin[0]["photo"].(string)
+
+        if rsp[0].Field("photo").String() != "" {
+            c.ViewData["photo"] = rsp[0].Field("photo").String()
         }
     }
 }
@@ -128,12 +130,12 @@ func (c User) ProfileSetAction() {
     }
 
     c.ViewData["login_uid"] = s.Uid
-    c.ViewData["login_name"] = rslogin[0]["name"].(string)
-    if rsp[0]["birthday"] != nil {
-        c.ViewData["profile_birthday"] = rsp[0]["birthday"].(string)
+    c.ViewData["login_name"] = rslogin[0].Field("name").String()
+    if rsp[0].Field("birthday").String() != "" {
+        c.ViewData["profile_birthday"] = rsp[0].Field("birthday").String()
     }
-    if rsp[0]["aboutme"] != nil {
-        c.ViewData["profile_aboutme"] = html.EscapeString(rsp[0]["aboutme"].(string))
+    if rsp[0].Field("aboutme").String() != "" {
+        c.ViewData["profile_aboutme"] = html.EscapeString(rsp[0].Field("aboutme").String())
     }
 }
 
@@ -320,7 +322,7 @@ func (c User) PassPutAction() {
         return
     }
 
-    if !pass.Check(c.Params.Get("passwd_current"), rsu[0]["pass"].(string)) {
+    if !pass.Check(c.Params.Get("passwd_current"), rsu[0].Field("pass").String()) {
         rsp.Message = "Current Password can not match"
         return
     }
@@ -358,7 +360,7 @@ func (c User) EmailSetAction() {
     q.Where.And("uid", s.Uid)
     rsu, err := dcn.Base.Query(q)
     if err == nil && len(rsu) == 1 {
-        c.ViewData["login_email"] = rsu[0]["email"].(string)
+        c.ViewData["login_email"] = rsu[0].Field("email").String()
     }
 }
 
@@ -401,7 +403,7 @@ func (c User) EmailPutAction() {
         return
     }
 
-    if !pass.Check(c.Params.Get("passwd"), rsu[0]["pass"].(string)) {
+    if !pass.Check(c.Params.Get("passwd"), rsu[0].Field("pass").String()) {
         rsp.Message = "Current Password can not match"
         return
     }

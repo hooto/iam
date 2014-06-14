@@ -8,9 +8,7 @@ import (
     "../../deps/lessgo/utils"
     "../models/role"
     "encoding/base64"
-    "fmt"
     "io"
-    "strconv"
     "strings"
     "time"
 )
@@ -72,7 +70,7 @@ func (c Service) LoginAuthAction() {
         return
     }
 
-    if !pass.Check(c.Params.Get("passwd"), rsu[0]["pass"].(string)) {
+    if !pass.Check(c.Params.Get("passwd"), rsu[0].Field("pass").String()) {
         rsp.Message = "Email or Password can not match"
         return
     }
@@ -89,11 +87,11 @@ func (c Service) LoginAuthAction() {
         "token":    rsp.Data.AccessToken,
         "refresh":  utils.StringNewRand36(24),
         "status":   1,
-        "uid":      rsu[0]["uid"],
-        "uname":    rsu[0]["uname"],
-        "name":     rsu[0]["name"],
-        "roles":    rsu[0]["roles"],
-        "timezone": rsu[0]["timezone"],
+        "uid":      rsu[0].Field("uid").Int(),
+        "uname":    rsu[0].Field("uname").String(),
+        "name":     rsu[0].Field("name").String(),
+        "roles":    rsu[0].Field("roles").String(),
+        "timezone": rsu[0].Field("timezone").String(),
         "source":   addr,
         "created":  base.TimeNow("datetime"),                // TODO
         "expired":  base.TimeNowAdd("datetime", "+864000s"), // TODO
@@ -154,7 +152,7 @@ func (c Service) AuthAction() {
     }
 
     //
-    expired := base.TimeParse(rss[0]["expired"].(string), "datetime")
+    expired := rss[0].Field("expired").TimeParse("datetime")
     if expired.Before(time.Now()) {
         return
     }
@@ -165,19 +163,18 @@ func (c Service) AuthAction() {
     if addridx := strings.Index(c.Request.RemoteAddr, ":"); addridx > 0 {
         addr = c.Request.RemoteAddr[:addridx]
     }
-    if addr != rss[0]["source"].(string) {
+    if addr != rss[0].Field("source").String() {
         return
     }
 
     //
-    uid, _ := strconv.Atoi(fmt.Sprintf("%v", rss[0]["uid"]))
-    rsp.Data.Uid = uint32(uid)
-    rsp.Data.Uname = rss[0]["uname"].(string)
-    rsp.Data.Name = rss[0]["name"].(string)
-    rsp.Data.Roles = rss[0]["roles"].(string)
-    rsp.Data.AccessToken = rss[0]["token"].(string)
-    rsp.Data.RefreshToken = rss[0]["refresh"].(string)
-    rsp.Data.Timezone = rss[0]["timezone"].(string)
+    rsp.Data.Uid = uint32(rss[0].Field("uid").Int())
+    rsp.Data.Uname = rss[0].Field("uname").String()
+    rsp.Data.Name = rss[0].Field("name").String()
+    rsp.Data.Roles = rss[0].Field("roles").String()
+    rsp.Data.AccessToken = rss[0].Field("token").String()
+    rsp.Data.RefreshToken = rss[0].Field("refresh").String()
+    rsp.Data.Timezone = rss[0].Field("timezone").String()
     rsp.Data.Expired = base.TimeZoneFormat(expired, rsp.Data.Timezone, "atom")
 
     rsp.Status = 200
@@ -236,7 +233,7 @@ func (c Service) AccessAllowedAction() {
     }
 
     //
-    expired := base.TimeParse(rss[0]["expired"].(string), "datetime")
+    expired := rss[0].Field("expired").TimeParse("datetime")
     if expired.Before(time.Now()) {
         return
     }
@@ -247,11 +244,11 @@ func (c Service) AccessAllowedAction() {
         addr = c.Request.RemoteAddr[:addridx]
     }
 
-    if addr != rss[0]["source"].(string) {
+    if addr != rss[0].Field("source").String() {
         return
     }
 
-    if !role.AccessAllowed(rss[0]["roles"].(string), req.Data.InstanceId, req.Data.Privilege) {
+    if !role.AccessAllowed(rss[0].Field("roles").String(), req.Data.InstanceId, req.Data.Privilege) {
         return
     }
 
@@ -275,8 +272,8 @@ func (c Service) PhotoAction() {
     q.Where.And("uid", uid)
     rsp, err := dcn.Base.Query(q)
     if err == nil && len(rsp) == 1 {
-        if rsp[0]["photo"] != nil && len(rsp[0]["photo"].(string)) > 50 {
-            photo = rsp[0]["photo"].(string)
+        if len(rsp[0].Field("photo").String()) > 50 {
+            photo = rsp[0].Field("photo").String()
         }
     }
 

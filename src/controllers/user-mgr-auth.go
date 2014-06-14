@@ -4,7 +4,6 @@ import (
     "../../deps/lessgo/data/rdo"
     "../../deps/lessgo/data/rdo/base"
     "../../deps/lessgo/utils"
-    "fmt"
     "io"
     "net/http"
 )
@@ -33,33 +32,45 @@ func (c UserMgr) AuthListAction() {
 
     q := base.NewQuerySet().From("ids_instance").Limit(1000)
     rsinst, err := dcn.Base.Query(q)
-    if err == nil && len(rsinst) > 0 {
+    if err != nil || len(rsinst) == 0 {
+        return
+    }
 
-        for k, v := range rsinst {
+    ls := []map[string]interface{}{}
 
-            if vd, ok := userMgrAuthStatus[fmt.Sprintf("%v", v["status"])]; ok {
-                rsinst[k]["status_display"] = vd
-            }
+    for _, v := range rsinst {
 
-            uid := fmt.Sprintf("%v", v["uid"])
-            rsinst[k]["uid"] = uid
-            rsinst[k]["uid_name"] = uid
+        item := map[string]interface{}{
+            "id":         v.Field("id").String(),
+            "app_title":  v.Field("app_title").String(),
+            "app_id":     v.Field("app_id").String(),
+            "version":    v.Field("version").String(),
+            "uid":        v.Field("uid").String(),
+            "uid_name":   v.Field("uid").String(),
+            "privileges": v.Field("privileges").String(),
+            "created":    v.Field("created").TimeParse("datetime"),
+            "updated":    v.Field("updated").TimeParse("datetime"),
+        }
 
-            inArray := false
-            for _, vuid := range users {
-                if vuid == uid {
-                    inArray = true
-                    break
-                }
-            }
+        if vd, ok := userMgrAuthStatus[v.Field("status").String()]; ok {
+            item["status_display"] = vd
+        }
 
-            if !inArray {
-                users = append(users, uid)
+        uid := v.Field("uid").String()
+
+        inArray := false
+        for _, vuid := range users {
+            if vuid == uid {
+                inArray = true
+                break
             }
         }
 
-    } else {
-        return
+        if !inArray {
+            users = append(users, uid)
+        }
+
+        ls = append(ls, item)
     }
 
     //
@@ -69,15 +80,15 @@ func (c UserMgr) AuthListAction() {
     if err == nil && len(rslogin) > 0 {
         for _, v := range rslogin {
 
-            for k2, v2 := range rsinst {
-                if v2["uid"] == fmt.Sprintf("%v", v["uid"]) {
-                    rsinst[k2]["uid_name"] = fmt.Sprintf("%v", v["name"])
+            for k2, v2 := range ls {
+                if v2["uid"] == v.Field("uid").String() {
+                    ls[k2]["uid_name"] = v.Field("name").String()
                 }
             }
         }
     }
 
-    c.ViewData["list"] = rsinst
+    c.ViewData["list"] = ls
 }
 
 func (c UserMgr) AuthEditAction() {
@@ -103,14 +114,14 @@ func (c UserMgr) AuthEditAction() {
             return
         }
 
-        if vd, ok := userMgrAuthStatus[fmt.Sprintf("%v", rsinst[0]["status"])]; ok {
+        if vd, ok := userMgrAuthStatus[rsinst[0].Field("status").String()]; ok {
             c.ViewData["status_display"] = vd
         }
 
-        c.ViewData["version"] = rsinst[0]["version"]
-        c.ViewData["app_id"] = rsinst[0]["app_id"]
-        c.ViewData["app_title"] = rsinst[0]["app_title"]
-        c.ViewData["status"] = fmt.Sprintf("%v", rsinst[0]["status"])
+        c.ViewData["version"] = rsinst[0].Field("version").String()
+        c.ViewData["app_id"] = rsinst[0].Field("app_id").String()
+        c.ViewData["app_title"] = rsinst[0].Field("app_title").String()
+        c.ViewData["status"] = rsinst[0].Field("status").String()
 
         c.ViewData["panel_title"] = "Edit Authorization"
         c.ViewData["id"] = c.Params.Get("instid")
@@ -125,7 +136,15 @@ func (c UserMgr) AuthEditAction() {
     q.Where.And("instance", c.Params.Get("instid"))
     rspri, err := dcn.Base.Query(q)
     if err == nil && len(rspri) > 0 {
-        c.ViewData["privileges"] = rspri
+        ls := []map[string]interface{}{}
+        for _, v := range rspri {
+            ls = append(ls, map[string]interface{}{
+                "pid":       v.Field("pid").String(),
+                "privilege": v.Field("privilege").String(),
+                "desc":      v.Field("desc").String(),
+            })
+        }
+        c.ViewData["privileges"] = ls
     }
 
     c.ViewData["statuses"] = userMgrAuthStatus

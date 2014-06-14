@@ -5,7 +5,6 @@ import (
     "../../deps/lessgo/data/rdo/base"
     "../../deps/lessgo/pagelet"
     "../conf"
-    "fmt"
 )
 
 type SysMgr struct {
@@ -41,8 +40,8 @@ func (c SysMgr) GenSetAction() {
     }
 
     for _, v := range rs {
-        key := fmt.Sprintf("%v", v["key"])
-        val := fmt.Sprintf("%v", v["value"])
+        key := v.Field("key").String()
+        val := v.Field("value").String()
 
         if val == "" {
 

@@ -202,7 +202,7 @@ func (c Reg) PassResetAction() {
         return
     }
 
-    expired := base.TimeParse(rsr[0]["expired"].(string), "datetime")
+    expired := rsr[0].Field("expired").TimeParse("datetime") //, base.TimeParse(rsr[0]["expired"].(string), "datetime")
     if expired.Before(time.Now()) {
         return
     }
@@ -250,13 +250,13 @@ func (c Reg) PassResetPutAction() {
         return
     }
 
-    expired := base.TimeParse(rsr[0]["expired"].(string), "datetime")
+    expired := rsr[0].Field("expired").TimeParse("datetime") // base.TimeParse(rsr[0]["expired"].(string), "datetime")
     if expired.Before(time.Now()) {
         rsp.Message = "Token expired"
         return
     }
 
-    if rsr[0]["email"].(string) != c.Params.Get("email") {
+    if rsr[0].Field("email").String() != c.Params.Get("email") {
         rsp.Message = "Email or Birthday is not valid"
         return
     }
@@ -270,13 +270,13 @@ func (c Reg) PassResetPutAction() {
     }
 
     q = base.NewQuerySet().From("ids_profile").Limit(1)
-    q.Where.And("uid", rsl[0]["uid"])
+    q.Where.And("uid", rsl[0].Field("uid").Int())
     rspf, err := dcn.Base.Query(q)
     if err != nil || len(rspf) != 1 {
         rsp.Message = "User can not found"
         return
     }
-    if fmt.Sprintf("%v", rspf[0]["birthday"]) != c.Params.Get("birthday") {
+    if fmt.Sprintf("%v", rspf[0].Field("birthday").String()) != c.Params.Get("birthday") {
         rsp.Message = "Email or Birthday is not valid"
         return
     }
@@ -292,7 +292,7 @@ func (c Reg) PassResetPutAction() {
         "updated": base.TimeNow("datetime"),
     }
     ft := base.NewFilter()
-    ft.And("uid", rsl[0]["uid"])
+    ft.And("uid", rsl[0].Field("uid").Int())
     dcn.Base.Update("ids_login", itemlogin, ft)
 
     //

@@ -60,13 +60,12 @@ $(".ids-useridx-click").click(function(){
         lessModalOpen("/ids/user/"+ uri, 1, 500, 300, "{{T . "Change Email"}}", null);
         break;
     case "profile-set":
-        lessModalOpen("/ids/user/"+ uri, 1, 700, 400, "{{T . "Change Profile"}}", null);
+        lessModalOpen("/ids/user/"+ uri, 1, 700, 450, "{{T . "Change Profile"}}", null);
         break;
     case "photo-set":
         lessModalOpen("/ids/user/"+ uri, 1, 600, 400, "{{T . "Change Photo"}}", null);
         break;
     }
-    
 });
 
 </script>

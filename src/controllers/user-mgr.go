@@ -61,7 +61,7 @@ func (c UserMgr) ListAction() {
     rsr, err := dcn.Base.Query(q)
     if err == nil && len(rsr) > 0 {
         for _, v := range rsr {
-            rdict[fmt.Sprintf("%v", v["rid"])] = v["name"].(string)
+            rdict[v.Field("rid").String()] = v.Field("name").String()
         }
     }
 
@@ -87,11 +87,14 @@ func (c UserMgr) ListAction() {
         q.Offset(int64((pager.CurrentPageNumber - 1) * userMgrPageLimit))
     }
     rsl, err := dcn.Base.Query(q)
+
     if err == nil && len(rsl) > 0 {
 
-        for k, v := range rsl {
+        ls := []map[string]interface{}{}
 
-            rids := strings.Split(v["roles"].(string), ",")
+        for _, v := range rsl {
+
+            rids := strings.Split(v.Field("roles").String(), ",")
             for rk, rv := range rids {
 
                 rname, ok := rdict[rv]
@@ -102,13 +105,25 @@ func (c UserMgr) ListAction() {
                 rids[rk] = rname
             }
 
-            if vd, ok := userMgrStatus[fmt.Sprintf("%v", v["status"])]; ok {
-                rsl[k]["status_display"] = vd
+            status_display := ""
+            if vd, ok := userMgrStatus[v.Field("status").String()]; ok {
+                status_display = vd
             }
-            rsl[k]["roles_display"] = rids
+
+            ls = append(ls, map[string]interface{}{
+                "uid":            v.Field("uid").String(),
+                "uname":          v.Field("uname").String(),
+                "name":           v.Field("name").String(),
+                "email":          v.Field("email").String(),
+                "timezone":       v.Field("timezone").String(),
+                "status_display": status_display,
+                "roles_display":  rids,
+                "created":        v.Field("created").TimeParse("datetime"),
+                "updated":        v.Field("updated").TimeParse("datetime"),
+            })
         }
 
-        c.ViewData["list"] = rsl
+        c.ViewData["list"] = ls
     }
 
     c.ViewData["query_role"] = c.Params.Get("query_role")
@@ -136,8 +151,8 @@ func (c UserMgr) EditAction() {
 
         for _, v := range rsr {
             roles = append(roles, RoleEntry{
-                fmt.Sprintf("%v", v["rid"]),
-                fmt.Sprintf("%v", v["name"]),
+                v.Field("rid").String(),
+                v.Field("name").String(),
                 ""})
         }
     }
@@ -152,7 +167,7 @@ func (c UserMgr) EditAction() {
             return
         }
 
-        rls := strings.Split(rslogin[0]["roles"].(string), ",")
+        rls := strings.Split(rslogin[0].Field("roles").String(), ",")
         for _, v := range rls {
             for k2, v2 := range roles {
                 if v2.Rid == v {
@@ -163,17 +178,17 @@ func (c UserMgr) EditAction() {
         }
 
         c.ViewData["uid"] = c.Params.Get("uid")
-        c.ViewData["uname"] = rslogin[0]["uname"]
-        c.ViewData["email"] = rslogin[0]["email"]
+        c.ViewData["uname"] = rslogin[0].Field("uname").String()
+        c.ViewData["email"] = rslogin[0].Field("email").String()
         c.ViewData["passwd"] = userMgrPasswdHidden
-        c.ViewData["name"] = rslogin[0]["name"]
-        c.ViewData["status"] = fmt.Sprintf("%v", rslogin[0]["status"])
+        c.ViewData["name"] = rslogin[0].Field("name").String()
+        c.ViewData["status"] = rslogin[0].Field("status").String()
 
         q.From("ids_profile")
         rsprofile, err := dcn.Base.Query(q)
         if err == nil && len(rsprofile) == 1 {
-            c.ViewData["birthday"] = rsprofile[0]["birthday"]
-            c.ViewData["aboutme"] = rsprofile[0]["aboutme"]
+            c.ViewData["birthday"] = rsprofile[0].Field("birthday").String()
+            c.ViewData["aboutme"] = rsprofile[0].Field("aboutme").String()
         }
 
         c.ViewData["panel_title"] = "Edit Account"
@@ -243,7 +258,7 @@ func (c UserMgr) SaveAction() {
     rsu, err := dcn.Base.Query(q)
     if err == nil && len(rsu) == 1 {
 
-        if isNew || fmt.Sprintf("%v", rsu[0]["uid"]) != c.Params.Get("uid") {
+        if isNew || rsu[0].Field("uid").String() != c.Params.Get("uid") {
             rsp.Message = "The `Email` already exists, please choose another one"
             return
         }
@@ -258,7 +273,7 @@ func (c UserMgr) SaveAction() {
     rsu, err = dcn.Base.Query(q)
     if err == nil && len(rsu) == 1 {
 
-        if isNew || fmt.Sprintf("%v", rsu[0]["uid"]) != c.Params.Get("uid") {
+        if isNew || rsu[0].Field("uid").String() != c.Params.Get("uid") {
             rsp.Message = "The `Username` already exists, please choose another one"
             return
         }

@@ -4,7 +4,6 @@ import (
     "../../deps/lessgo/data/rdo"
     "../../deps/lessgo/data/rdo/base"
     "../../deps/lessgo/utils"
-    "fmt"
     "io"
     "net/http"
     "strings"
@@ -25,8 +24,20 @@ func (c UserMgr) RoleListAction() {
     q := base.NewQuerySet().From("ids_role").Limit(1000)
     q.Where.And("status", 1)
     rsr, err := dcn.Base.Query(q)
+
+    ls := []map[string]interface{}{}
+
     if err == nil && len(rsr) > 0 {
-        c.ViewData["list"] = rsr
+        for _, v := range rsr {
+            ls = append(ls, map[string]interface{}{
+                "rid":     v.Field("rid").String(),
+                "name":    v.Field("name").String(),
+                "desc":    v.Field("desc").String(),
+                "created": v.Field("created").TimeParse("datetime"),
+                "updated": v.Field("updated").TimeParse("datetime"),
+            })
+        }
+        c.ViewData["list"] = ls
     }
 }
 
@@ -66,7 +77,7 @@ func (c UserMgr) RoleEditAction() {
             return
         }
 
-        pls := strings.Split(rsrole[0]["privileges"].(string), ",")
+        pls := strings.Split(rsrole[0].Field("privileges").String(), ",")
         for _, v := range pls {
             if v == "" {
                 continue
@@ -75,9 +86,9 @@ func (c UserMgr) RoleEditAction() {
         }
 
         c.ViewData["rid"] = c.Params.Get("rid")
-        c.ViewData["name"] = rsrole[0]["name"]
-        c.ViewData["desc"] = rsrole[0]["desc"]
-        c.ViewData["status"] = fmt.Sprintf("%v", rsrole[0]["status"])
+        c.ViewData["name"] = rsrole[0].Field("name").String()
+        c.ViewData["desc"] = rsrole[0].Field("desc").String()
+        c.ViewData["status"] = rsrole[0].Field("status").String()
 
         c.ViewData["panel_title"] = "Edit Role"
         c.ViewData["rid"] = c.Params.Get("rid")
@@ -91,10 +102,10 @@ func (c UserMgr) RoleEditAction() {
     rsins, err := dcn.Base.Query(q)
     if err == nil && len(rsins) > 0 {
         for _, v := range rsins {
-            instances[v["id"].(string)] = UserMgrInstance{
-                InstanceId: v["id"].(string),
-                AppTitle:   fmt.Sprintf("%v", v["app_title"]),
-                Version:    fmt.Sprintf("%v", v["version"]),
+            instances[v.Field("id").String()] = UserMgrInstance{
+                InstanceId: v.Field("id").String(),
+                AppTitle:   v.Field("app_title").String(),
+                Version:    v.Field("version").String(),
                 Privileges: map[string]UserMgrPrivilege{},
             }
         }
@@ -106,19 +117,19 @@ func (c UserMgr) RoleEditAction() {
     if err == nil && len(rspri) > 0 {
         for _, v := range rspri {
 
-            if _, ok := instances[v["instance"].(string)]; !ok {
+            if _, ok := instances[v.Field("instance").String()]; !ok {
                 continue
             }
 
-            pid := fmt.Sprintf("%v", v["pid"])
+            pid := v.Field("pid").String()
             checked := false
             for _, rp := range rolePrivileges {
                 if rp == pid {
                     checked = true
                 }
             }
-            instances[v["instance"].(string)].Privileges[pid] = UserMgrPrivilege{
-                Desc:    fmt.Sprintf("%v", v["desc"]),
+            instances[v.Field("instance").String()].Privileges[pid] = UserMgrPrivilege{
+                Desc:    v.Field("desc").String(),
                 Checked: checked,
             }
         }

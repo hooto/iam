@@ -29,7 +29,7 @@ func (c SysMgr) EmailSetAction() {
     }
 
     var mailer conf.ConfigMailer
-    err = utils.JsonDecode(rs[0]["value"].(string), &mailer)
+    err = utils.JsonDecode(rs[0].Field("value").String(), &mailer)
     if err != nil {
         return
     }

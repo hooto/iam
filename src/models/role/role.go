@@ -3,7 +3,6 @@ package role
 import (
     "../../../deps/lessgo/data/rdo"
     "../../../deps/lessgo/data/rdo/base"
-    "fmt"
     "strings"
     "sync"
     "time"
@@ -41,12 +40,12 @@ func innerRefresh() {
     }
     for _, v := range rspri {
 
-        pkey := fmt.Sprintf("%v.%v", v["instance"], v["privilege"])
+        pkey := v.Field("instance").String() + "." + v.Field("privilege").String()
         if _, ok := privileges[pkey]; ok {
             continue
         }
 
-        privileges[pkey] = fmt.Sprintf("%v", v["pid"])
+        privileges[pkey] = v.Field("pid").String()
     }
 
     q = base.NewQuerySet().From("ids_role").Limit(1000)
@@ -58,13 +57,13 @@ func innerRefresh() {
 
     for _, v := range rsrole {
 
-        pid := fmt.Sprintf("%v", v["rid"])
+        pid := v.Field("rid").String()
 
         if _, ok := roles[pid]; ok {
             continue
         }
 
-        roles[pid] = strings.Split(v["privileges"].(string), ",")
+        roles[pid] = strings.Split(v.Field("privileges").String(), ",")
     }
 
     nextRefresh = time.Now().Add(time.Second * 60)

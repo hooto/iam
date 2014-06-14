@@ -4,8 +4,6 @@ import (
     "../../../deps/lessgo/data/rdo"
     "../../../deps/lessgo/data/rdo/base"
     "../../../deps/lessgo/pagelet"
-    "fmt"
-    "strconv"
     "strings"
     "sync"
     "time"
@@ -27,6 +25,7 @@ func IsLogin(r *pagelet.Request) bool {
     if sess.Uid > 0 {
         return true
     }
+
     return false
 }
 
@@ -48,9 +47,8 @@ func GetSession(r *pagelet.Request) (sess Session) {
     if err == nil && len(rsu) == 0 {
         return
     }
-    //fmt.Println(rsu, rsu[0]["expired"].(time.Time))
-    //sess.Expired = rsu[0]["expired"].(time.Time)
-    sess.Expired = base.TimeParse(rsu[0]["expired"].(string), "datetime")
+
+    sess.Expired = rsu[0].Field("expired").TimeParse("datetime")
     if sess.Expired.Before(time.Now()) {
         return
     }
@@ -59,13 +57,12 @@ func GetSession(r *pagelet.Request) (sess Session) {
     if addridx := strings.Index(r.RemoteAddr, ":"); addridx > 0 {
         addr = r.RemoteAddr[:addridx]
     }
-    if addr != rsu[0]["source"].(string) {
+    if addr != rsu[0].Field("source").String() {
         return
     }
 
-    uid, _ := strconv.Atoi(fmt.Sprintf("%v", rsu[0]["uid"]))
-    sess.Uid = uint32(uid)
-    sess.Uname = rsu[0]["uname"].(string)
+    sess.Uid = uint32(rsu[0].Field("uid").Int())
+    sess.Uname = rsu[0].Field("uname").String()
 
     return
 }
