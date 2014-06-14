@@ -27,19 +27,17 @@ func (c *Config) DatabaseInstance() (*base.Client, error) {
 
     timenow := base.TimeNow("datetime")
 
-    item := map[string]interface{}{
+    dc.Base.InsertIgnore("ids_role", map[string]interface{}{
         "rid":        1,
         "uid":        0,
         "status":     1,
         "name":       "Administrator",
         "desc":       "Root System Administrator",
-        "privileges": "1",
+        "privileges": "1,2",
         "created":    timenow,
         "updated":    timenow,
-    }
-    dc.Base.InsertIgnore("ids_role", item)
-
-    item = map[string]interface{}{
+    })
+    dc.Base.InsertIgnore("ids_role", map[string]interface{}{
         "rid":        100,
         "uid":        0,
         "status":     1,
@@ -48,10 +46,9 @@ func (c *Config) DatabaseInstance() (*base.Client, error) {
         "privileges": "",
         "created":    timenow,
         "updated":    timenow,
-    }
-    dc.Base.InsertIgnore("ids_role", item)
+    })
 
-    item = map[string]interface{}{
+    dc.Base.InsertIgnore("ids_role", map[string]interface{}{
         "rid":        101,
         "uid":        0,
         "status":     0,
@@ -60,10 +57,9 @@ func (c *Config) DatabaseInstance() (*base.Client, error) {
         "privileges": "",
         "created":    timenow,
         "updated":    timenow,
-    }
-    dc.Base.InsertIgnore("ids_role", item)
+    })
 
-    itemInstance := map[string]interface{}{
+    dc.Base.InsertIgnore("ids_instance", map[string]interface{}{
         "id":        "lessids",
         "uid":       0,
         "status":    1,
@@ -72,44 +68,37 @@ func (c *Config) DatabaseInstance() (*base.Client, error) {
         "version":   c.Version,
         "created":   timenow,
         "updated":   timenow,
-    }
-    dc.Base.InsertIgnore("ids_instance", itemInstance)
+    })
 
-    itemPrivilege := map[string]interface{}{
+    dc.Base.InsertIgnore("ids_privilege", map[string]interface{}{
         "pid":       "1",
         "instance":  "lessids",
         "uid":       0,
         "privilege": "user.admin",
         "desc":      "User Management",
         "created":   timenow,
-    }
-    dc.Base.InsertIgnore("ids_privilege", itemPrivilege)
-    itemPrivilege = map[string]interface{}{
-        "pid":       "1",
+    })
+    dc.Base.InsertIgnore("ids_privilege", map[string]interface{}{
+        "pid":       "2",
         "instance":  "lessids",
         "uid":       0,
         "privilege": "sys.admin",
         "desc":      "System Management",
         "created":   timenow,
-    }
-    dc.Base.InsertIgnore("ids_privilege", itemPrivilege)
+    })
 
-    itemConfig := map[string]interface{}{
+    dc.Base.InsertIgnore("ids_sysconfig", map[string]interface{}{
         "key":     "service_name",
         "value":   "less Identity Service",
         "created": timenow,
         "updated": timenow,
-    }
-    dc.Base.InsertIgnore("ids_sysconfig", itemConfig)
-    itemConfig = map[string]interface{}{
+    })
+    dc.Base.InsertIgnore("ids_sysconfig", map[string]interface{}{
         "key":     "webui_banner_title",
         "value":   "Account Center",
         "created": timenow,
         "updated": timenow,
-    }
-    dc.Base.InsertIgnore("ids_sysconfig", itemConfig)
-
-    //fmt.Println(ds)
+    })
 
     return dc, err
 }
