@@ -11,10 +11,10 @@ find ./src -name "*.tpl" |xargs cat|grep -v ^$|wc -l
 echo "DETAILs"
 find ./src -type f -name "*.go" | xargs wc -l | sort -n
 
-dirs=`find ./src -type d |xargs`
-for dir in $dirs; do
-    echo ${dir}
-    gofmt -tabwidth=4 -tabs=false -w=true ${dir}/*.go
+files=`find ./src -type f -name "*.go" |xargs`
+for files in $file; do
+    echo ${file}
+    gofmt -tabwidth=4 -tabs=false -w=true ${file}
 done
 
 go build -ldflags "-w -s" -o ./bin/lessids-cli ./src/cli.go 
