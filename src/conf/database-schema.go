@@ -21,7 +21,7 @@ const databaseSchema = `
                     "name": "action",
                     "type": "string",
                     "nullAble": true,
-                    "length": 30
+                    "length": "30"
                 },
                 {
                     "name": "created",
@@ -52,37 +52,37 @@ const databaseSchema = `
                 {
                     "name": "uname",
                     "type": "string",
-                    "length": 20
+                    "length": "20"
                 },
                 {
                     "name": "email",
                     "type": "string",
-                    "length": 100
+                    "length": "100"
                 },
                 {
                     "name": "name",
                     "type": "string",
-                    "length": 50
+                    "length": "50"
                 },
                 {
                     "name": "pass",
                     "type": "string",
-                    "length": 100
+                    "length": "100"
                 },
                 {
                     "name": "group",
                     "type": "string",
-                    "length": 200
+                    "length": "200"
                 },
                 {
                     "name": "roles",
                     "type": "string",
-                    "length": 200
+                    "length": "200"
                 },
                 {
                     "name": "timezone",
                     "type": "string",
-                    "length": 40
+                    "length": "40"
                 },
                 {
                     "name": "status",
@@ -148,7 +148,7 @@ const databaseSchema = `
                 {
                     "name": "address",
                     "type": "string",
-                    "length": 100
+                    "length": "100"
                 },
                 {
                     "name": "aboutme",
@@ -185,7 +185,7 @@ const databaseSchema = `
                 {
                     "name": "id",
                     "type": "string",
-                    "length": 24
+                    "length": "24"
                 },
                 {
                     "name": "status",
@@ -194,7 +194,7 @@ const databaseSchema = `
                 {
                     "name": "email",
                     "type": "string",
-                    "length": 100
+                    "length": "100"
                 },
                 {
                     "name": "expired",
@@ -220,7 +220,7 @@ const databaseSchema = `
                 {
                     "name": "id",
                     "type": "string",
-                    "length": 8
+                    "length": "8"
                 },
                 {
                     "name": "uid",
@@ -233,17 +233,17 @@ const databaseSchema = `
                 {
                     "name": "app_id",
                     "type": "string",
-                    "length": 50
+                    "length": "50"
                 },
                 {
                     "name": "app_title",
                     "type": "string",
-                    "length": 50
+                    "length": "50"
                 },
                 {
                     "name": "version",
                     "type": "string",
-                    "length": 50
+                    "length": "50"
                 },
                 {
                     "name": "privileges",
@@ -300,12 +300,12 @@ const databaseSchema = `
                 {
                     "name": "name",
                     "type": "string",
-                    "length": 50
+                    "length": "50"
                 },
                 {
                     "name": "desc",
                     "type": "string",
-                    "length": 100
+                    "length": "100"
                 },
                 {
                     "name": "privileges",
@@ -349,7 +349,7 @@ const databaseSchema = `
                 {
                     "name": "instance",
                     "type": "string",
-                    "length": 30
+                    "length": "30"
                 },
                 {
                     "name": "uid",
@@ -358,12 +358,12 @@ const databaseSchema = `
                 {
                     "name": "privilege",
                     "type": "string",
-                    "length": 100
+                    "length": "100"
                 },
                 {
                     "name": "desc",
                     "type": "string",
-                    "length": 50
+                    "length": "50"
                 },
                 {
                     "name": "created",
@@ -394,12 +394,12 @@ const databaseSchema = `
                 {
                     "name": "token",
                     "type": "string",
-                    "length": 24
+                    "length": "24"
                 },
                 {
                     "name": "refresh",
                     "type": "string",
-                    "length": 24
+                    "length": "24"
                 },
                 {
                     "name": "status",
@@ -412,27 +412,27 @@ const databaseSchema = `
                 {
                     "name": "name",
                     "type": "string",
-                    "length": 50
+                    "length": "50"
                 },
                 {
                     "name": "uname",
                     "type": "string",
-                    "length": 30
+                    "length": "30"
                 },
                 {
                     "name": "timezone",
                     "type": "string",
-                    "length": 40
+                    "length": "40"
                 },
                 {
                     "name": "roles",
                     "type": "string",
-                    "length": 200
+                    "length": "200"
                 },
                 {
                     "name": "source",
                     "type": "string",
-                    "length": 20
+                    "length": "20"
                 },
                 {
                     "name": "data",
@@ -475,7 +475,7 @@ const databaseSchema = `
                 {
                     "name": "key",
                     "type": "string",
-                    "length": 50
+                    "length": "50"
                 },
                 {
                     "name": "value",

@@ -13,7 +13,6 @@ find ./src -type f -name "*.go" | xargs wc -l | sort -n
 
 files=`find ./src -type f -name "*.go" |xargs`
 for file in $files; do
-    echo ${file}
     gofmt -tabwidth=4 -tabs=false -w=true ${file}
 done
 
