@@ -41,7 +41,7 @@ cp -rp ./src/views %{buildroot}%{app_home}/src/
 
 install -m 0755 -p bin/lessids %{buildroot}%{app_home}/bin/lessids
 install -m 0755 -p bin/lessids-cli %{buildroot}%{app_home}/bin/lessids-cli
-install -m 0755 -p etc/lessids.conf %{buildroot}%{app_home}/etc/lessids.conf
+install -m 0640 -p etc/lessids.conf %{buildroot}%{app_home}/etc/lessids.conf
 install -m 0755 -p -D misc/rhel/init.d-scripts %{buildroot}%{_initrddir}/lessids
 
 %clean

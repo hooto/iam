@@ -1,4 +1,11 @@
 {
     "port": 9528,
-    "domaindef": "app.example.com"
+    "database" : {
+        "driver": "mysql",
+        "host": "127.0.0.1",
+        "port": "3306",
+        "user": "db-user",
+        "pass": "db-access-password",
+        "dbname": "lessids"
+    }
 }
