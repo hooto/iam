@@ -14,7 +14,7 @@ import (
 )
 
 const (
-    Version       = "0.1.0dev"
+    Version       = "0.2.0dev"
     GroupMember   = 100
     GroupSysAdmin = 1
 )
@@ -60,9 +60,9 @@ func NewConfig(prefix string) (Config, error) {
     reg, _ := regexp.Compile("/+")
     cfg.Prefix = "/" + strings.Trim(reg.ReplaceAllString(prefix, "/"), "/")
 
-    file := cfg.Prefix + "/etc/lessids.json"
+    file := cfg.Prefix + "/etc/lessids.conf"
     if _, err := os.Stat(file); err != nil && os.IsNotExist(err) {
-        file = cfg.Prefix + "/etc/lessids.json.dev"
+        file = cfg.Prefix + "/etc/lessids.conf.dev"
     }
     if _, err := os.Stat(file); err != nil && os.IsNotExist(err) {
         return cfg, errors.New("Error: config file is not exists")

@@ -13,8 +13,8 @@ if ($arch != "x86_64") {
 
 $basedir = realpath(__DIR__.'/../..');
 
-$ver = file_get_contents($basedir."/src/main.go");
-if (!preg_match("/VERSION\ +string\ +\=\ +\"(.*)\"/", $ver, $mat)) {
+$ver = file_get_contents($basedir."/src/conf/conf.go");
+if (!preg_match("/Version\ +\=\ +\"(.*)\"/", $ver, $mat)) {
     die("Can not get version");
 }
 $ver = $mat[1];
@@ -32,13 +32,10 @@ mkdir -p /tmp/SOURCES/{$pkgname}-{$ver}/etc
 mkdir -p /tmp/SOURCES/{$pkgname}-{$ver}/bin
 mkdir -p /tmp/SOURCES/{$pkgname}-{$ver}/var
 mkdir -p /tmp/SOURCES/{$pkgname}-{$ver}/static
+mkdir -p /tmp/SOURCES/{$pkgname}-{$ver}/misc/rhel
 
 rm -f $basedir/bin/lessids*
 
-go build -ldflags \"-s -w\" -o $basedir/bin/lessids $basedir/src/main.go
-
-cp -rp $basedir/bin/lessids /tmp/SOURCES/{$pkgname}-{$ver}/bin/
-cp -rp $basedir/misc /tmp/SOURCES/{$pkgname}-{$ver}/
 cp -rp $basedir/static/jquery /tmp/SOURCES/{$pkgname}-{$ver}/static/
 cp -rp $basedir/static/ids /tmp/SOURCES/{$pkgname}-{$ver}/static/
 cp -rp $basedir/static/twitter-bootstrap /tmp/SOURCES/{$pkgname}-{$ver}/static/
@@ -48,13 +45,15 @@ cp -rp $basedir/static/lessui/master/img /tmp/SOURCES/{$pkgname}-{$ver}/static/l
 cp -rp $basedir/static/lessui/master/css /tmp/SOURCES/{$pkgname}-{$ver}/static/lessui/master/
 cp -rp $basedir/static/lessui/master/js /tmp/SOURCES/{$pkgname}-{$ver}/static/lessui/master/
 
-mkdir -p /tmp/SOURCES/{$pkgname}-{$ver}/src
-cp -rp $basedir/src/views /tmp/SOURCES/{$pkgname}-{$ver}/src/
+cp -rp $basedir/src /tmp/SOURCES/{$pkgname}-{$ver}/
+cp -rp $basedir/deps /tmp/SOURCES/{$pkgname}-{$ver}/
 
+cp -rp $basedir/build /tmp/SOURCES/{$pkgname}-{$ver}/
 cp -rp $basedir/LICENSE /tmp/SOURCES/{$pkgname}-{$ver}/
 cp -rp $basedir/README.md /tmp/SOURCES/{$pkgname}-{$ver}/
 
-cp -rp $basedir/etc/lessids.json.dist /tmp/SOURCES/{$pkgname}-{$ver}/etc/lessids.json
+cp -rp $basedir/etc/lessids.conf.dist /tmp/SOURCES/{$pkgname}-{$ver}/etc/lessids.conf
+cp -rp $basedir/misc/rhel/init.d-scripts /tmp/SOURCES/{$pkgname}-{$ver}/misc/rhel/init.d-scripts
 
 cd /tmp/SOURCES
 tar zcf {$pkgname}-{$ver}.tar.gz {$pkgname}-{$ver}

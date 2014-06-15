@@ -18,24 +18,30 @@ Requires(pre):  shadow-utils
 Requires(post): chkconfig
 
 %description
+
 %prep
+
 %setup  -q -n %{name}-%{version}
+
 %build
+export GOROOT=/usr/local/go
+export PATH=$PATH:/usr/local/go/bin
+export GOPATH=~/gopath
+./build
 
 %install
 rm -rf %{buildroot}
 
 install -d %{buildroot}%{app_home}/bin
 install -d %{buildroot}%{app_home}/etc
-install -d %{buildroot}%{app_home}/var
 install -d %{buildroot}%{app_home}/src
 
-cp -rp ./misc %{buildroot}%{app_home}/
 cp -rp ./static %{buildroot}%{app_home}/
 cp -rp ./src/views %{buildroot}%{app_home}/src/
 
 install -m 0755 -p bin/lessids %{buildroot}%{app_home}/bin/lessids
-install -m 0755 -p etc/lessids.json %{buildroot}%{app_home}/etc/lessids.json
+install -m 0755 -p bin/lessids-cli %{buildroot}%{app_home}/bin/lessids-cli
+install -m 0755 -p etc/lessids.conf %{buildroot}%{app_home}/etc/lessids.conf
 install -m 0755 -p -D misc/rhel/init.d-scripts %{buildroot}%{_initrddir}/lessids
 
 %clean
@@ -71,11 +77,10 @@ if [ $1 = 0 ]; then
 fi
 
 %postun
-    
+
 %files
 %defattr(-,lessids,lessids,-)
 %dir %{app_home}
-%{_initrddir}/lessids
-
 %{app_home}/
-
+%config(noreplace) %{app_home}/etc/lessids.conf
+%{_initrddir}/lessids
