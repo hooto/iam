@@ -3,6 +3,8 @@ package conf
 import (
     "../../deps/lessgo/data/rdo"
     "../../deps/lessgo/data/rdo/base"
+    "../../deps/lessgo/net/email"
+    "../../deps/lessgo/utils"
     "encoding/json"
     "errors"
     "fmt"
@@ -14,7 +16,7 @@ import (
 )
 
 const (
-    Version       = "0.2.0dev"
+    Version       = "0.2.1dev"
     GroupMember   = 100
     GroupSysAdmin = 1
 )
@@ -94,6 +96,13 @@ func NewConfig(prefix string) (Config, error) {
     //     cfg.DatabasePath = cfg.Prefix + "/var/lessids.sqlite"
     // }
 
+    _, err = cfg.DatabaseInstance()
+    if err != nil {
+        return cfg, err
+    }
+
+    cfg.Refresh()
+
     return cfg, nil
 }
 
@@ -122,6 +131,20 @@ func (c *Config) Refresh() {
             c.ServiceName = val
         case "webui_banner_title":
             c.WebUiBannerTitle = val
+        case "mailer":
+            var mailer ConfigMailer
+            err := utils.JsonDecode(val, &mailer)
+
+            if err == nil && mailer.SmtpHost != "" {
+                c.Mailer = mailer
+
+                email.MailerRegister("def",
+                    c.Mailer.SmtpHost,
+                    c.Mailer.SmtpPort,
+                    c.Mailer.SmtpUser,
+                    c.Mailer.SmtpPass)
+
+            }
         }
     }
 }

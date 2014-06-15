@@ -1,26 +1,23 @@
 package main
 
 import (
-    //"../deps/lessgo/data/rdo"
-    "../deps/lessgo/net/email"
     "../deps/lessgo/pagelet"
     "./conf"
     ctrl_def "./controllers"
     "flag"
     "fmt"
-    "log"
     "os"
     "runtime"
     "time"
 )
 
-var cfg conf.Config
-
-var flagPrefix = flag.String("prefix", "", "the prefix folder path")
+var (
+    err        error
+    cfg        conf.Config
+    flagPrefix = flag.String("prefix", "", "the prefix folder path")
+)
 
 func main() {
-
-    var err error
 
     runtime.GOMAXPROCS(runtime.NumCPU())
 
@@ -29,18 +26,6 @@ func main() {
     if cfg, err = conf.NewConfig(*flagPrefix); err != nil {
         fmt.Println(err)
         os.Exit(1)
-    }
-
-    if _, err := cfg.DatabaseInstance(); err != nil {
-        log.Fatal("Database Error:", err)
-    }
-
-    if cfg.Mailer.SmtpHost != "" {
-        email.MailerRegister("def",
-            cfg.Mailer.SmtpHost,
-            cfg.Mailer.SmtpPort,
-            cfg.Mailer.SmtpUser,
-            cfg.Mailer.SmtpPass)
     }
 
     //
