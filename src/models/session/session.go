@@ -15,6 +15,7 @@ var (
 
 type Session struct {
     Uid     uint32
+    Uuid    string
     Uname   string
     Expired time.Time
 }
@@ -62,6 +63,7 @@ func GetSession(r *pagelet.Request) (sess Session) {
     }
 
     sess.Uid = uint32(rsu[0].Field("uid").Int())
+    sess.Uuid = rsu[0].Field("uuid").String()
     sess.Uname = rsu[0].Field("uname").String()
 
     return

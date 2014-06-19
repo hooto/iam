@@ -49,6 +49,7 @@ func (c Reg) SignUpRegAction() {
         }
     }()
 
+    uuid := utils.StringNewRand36(8)
     uname := utils.StringNewRand36(8)
     c.Params.Set("uname", uname)
 
@@ -77,6 +78,7 @@ func (c Reg) SignUpRegAction() {
     }
 
     item := map[string]interface{}{
+        "uuid":     uuid,
         "uname":    uname,
         "email":    c.Params.Get("email"),
         "pass":     pass,

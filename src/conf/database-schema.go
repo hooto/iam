@@ -50,6 +50,11 @@ const databaseSchema = `
                     "type": "uint64"
                 },
                 {
+                    "name": "uuid",
+                    "type": "string",
+                    "length": "8"
+                },
+                {
                     "name": "uname",
                     "type": "string",
                     "length": "20"
@@ -102,6 +107,11 @@ const databaseSchema = `
                     "name": "PRIMARY",
                     "type": 3,
                     "cols": ["uid"]
+                },
+                {
+                    "name": "uuid",
+                    "type": 2,
+                    "cols": ["uuid"]
                 },
                 {
                     "name": "uname",
@@ -410,6 +420,11 @@ const databaseSchema = `
                     "type": "uint64"
                 },
                 {
+                    "name": "uuid",
+                    "type": "string",
+                    "length": "8"
+                },
+                {
                     "name": "name",
                     "type": "string",
                     "length": "50"
@@ -466,6 +481,11 @@ const databaseSchema = `
                     "name": "uid",
                     "type": 1,
                     "cols": ["uid"]
+                },
+                {
+                    "name": "uuid",
+                    "type": 1,
+                    "cols": ["uuid"]
                 }
             ]
         },

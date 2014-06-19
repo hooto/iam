@@ -1,16 +1,9 @@
 package conf
 
 import (
-    //"../../deps/lessgo/data/rdc"
-    //"../../deps/lessgo/data/rdc/setup"
     "../../deps/lessgo/data/rdo"
     "../../deps/lessgo/data/rdo/base"
-    //"fmt"
 )
-
-func (c *Config) DatabaseConnect() bool {
-    return true
-}
 
 func (c *Config) DatabaseInstance() (*base.Client, error) {
 

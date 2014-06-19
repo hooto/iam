@@ -88,6 +88,7 @@ func (c Service) LoginAuthAction() {
         "refresh":  utils.StringNewRand36(24),
         "status":   1,
         "uid":      rsu[0].Field("uid").Int(),
+        "uuid":     rsu[0].Field("uuid").String(),
         "uname":    rsu[0].Field("uname").String(),
         "name":     rsu[0].Field("name").String(),
         "roles":    rsu[0].Field("roles").String(),
@@ -169,6 +170,7 @@ func (c Service) AuthAction() {
 
     //
     rsp.Data.Uid = uint32(rss[0].Field("uid").Int())
+    rsp.Data.Uuid = rss[0].Field("uuid").String()
     rsp.Data.Uname = rss[0].Field("uname").String()
     rsp.Data.Name = rss[0].Field("name").String()
     rsp.Data.Roles = rss[0].Field("roles").String()

@@ -16,6 +16,7 @@ type ResponseSession struct {
     AccessToken  string `json:"access_token"`
     RefreshToken string `json:"refresh_token"`
     Uid          uint32 `json:"uid"`
+    Uuid         string `json:"uuid"`
     Uname        string `json:"uname"`
     Name         string `json:"name"`
     Data         string `json:"data"`
