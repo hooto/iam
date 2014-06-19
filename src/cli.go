@@ -149,8 +149,10 @@ func cmdUserSet() {
     }
     hash, _ := pass.HashDefault(passwd)
 
+    uuid := utils.StringNewRand36(8)
     uname := utils.StringNewRand36(8)
     item := map[string]interface{}{
+        "uuid":     uuid,
         "uname":    uname,
         "email":    email,
         "pass":     hash,
