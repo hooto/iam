@@ -50,6 +50,7 @@ func main() {
     pagelet.RegisterController("default", (*ctrl_def.Reg)(nil))
     pagelet.RegisterController("default", (*ctrl_def.User)(nil))
     pagelet.RegisterController("default", (*ctrl_def.UserMgr)(nil))
+    pagelet.RegisterController("default", (*ctrl_def.Status)(nil))
     pagelet.RegisterController("default", (*ctrl_def.SysMgr)(nil))
 
     //
