@@ -251,6 +251,11 @@ const databaseSchema = `
                     "length": "50"
                 },
                 {
+                    "name": "url",
+                    "type": "string",
+                    "length": "100"
+                },
+                {
                     "name": "version",
                     "type": "string",
                     "length": "50"
@@ -515,6 +520,54 @@ const databaseSchema = `
                     "name": "PRIMARY",
                     "type": 3,
                     "cols": ["key"]
+                }
+            ]
+        },
+        {
+            "name": "ids_myapp",
+            "columns": [
+                {
+                    "name": "instid",
+                    "type": "string",
+                    "length": "8"
+                },
+                {
+                    "name": "uid",
+                    "type": "uint64"
+                },
+                {
+                    "name": "status",
+                    "type": "uint16"
+                },
+                {
+                    "name": "app_id",
+                    "type": "string",
+                    "length": "50"
+                },
+                {
+                    "name": "app_title",
+                    "type": "string",
+                    "length": "50"
+                },
+                {
+                    "name": "created",
+                    "type": "datetime"
+                },
+                {
+                    "name": "updated",
+                    "type": "datetime"
+                }
+            ],
+            "indexes": [
+                {
+                    "name": "PRIMARY",
+                    "type": 3,
+                    "cols": ["instid", "uid"]
+                },
+                {
+                    "name": "status",
+                    "type": 1,
+                    "cols": ["status"]
                 }
             ]
         }

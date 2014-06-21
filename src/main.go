@@ -52,6 +52,8 @@ func main() {
     pagelet.RegisterController("default", (*ctrl_def.UserMgr)(nil))
     pagelet.RegisterController("default", (*ctrl_def.Status)(nil))
     pagelet.RegisterController("default", (*ctrl_def.SysMgr)(nil))
+    pagelet.RegisterController("default", (*ctrl_def.AppAuth)(nil))
+    pagelet.RegisterController("default", (*ctrl_def.AppMgr)(nil))
 
     //
     pagelet.Run()

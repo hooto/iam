@@ -36,6 +36,7 @@ func (c User) IndexAction() {
     //
     menus := []map[string]string{
         {"path": "#user/my", "title": "My Account"},
+        {"path": "#app/my", "title": "My Applications"},
     }
     if c.Session.AccessAllowed("user.admin") {
         menus = append(menus, map[string]string{
@@ -44,6 +45,10 @@ func (c User) IndexAction() {
         })
     }
     if c.Session.AccessAllowed("sys.admin") {
+        menus = append(menus, map[string]string{
+            "path":  "#app-mgr/index",
+            "title": "Applications",
+        })
         menus = append(menus, map[string]string{
             "path":  "#sys-mgr/index",
             "title": "System Settings",
