@@ -5,7 +5,7 @@
 
 <div class="ids-user-panel ids-user-profile">
   <div class="iup-title">{{T . "Profile"}}</div>
-  <img class="iup-photo" src="/ids/service/photo/{{.login_uid}}" />
+  <img class="iup-photo" src="/ids/service/photo/{{.login_uuid}}" />
   <ul class="iup-info">
     <li>{{T . "Name"}}: <strong>{{.login_name}}</strong></li>
     <li><a class="ids-useridx-click" href="#profile-set">{{T . "Change Profile"}}</a></li>

@@ -148,6 +148,11 @@ const databaseSchema = `
                     "type": "uint64"
                 },
                 {
+                    "name": "uuid",
+                    "type": "string",
+                    "length": "8"
+                },
+                {
                     "name": "gender",
                     "type": "uint8"
                 },
@@ -186,6 +191,11 @@ const databaseSchema = `
                     "name": "PRIMARY",
                     "type": 3,
                     "cols": ["uid"]
+                },
+                {
+                    "name": "uuid",
+                    "type": 2,
+                    "cols": ["uuid"]
                 }
             ]
         },

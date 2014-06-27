@@ -82,7 +82,8 @@ func (c User) MyAction() {
         c.RenderError(401, "Access Denied")
         return
     }
-    c.ViewData["login_uid"] = rslogin[0].Field("uid").String()
+    //c.ViewData["login_uid"] = rslogin[0].Field("uid").String()
+    c.ViewData["login_uuid"] = rslogin[0].Field("uuid").String()
     c.ViewData["login_name"] = rslogin[0].Field("name").String()
     c.ViewData["login_email"] = rslogin[0].Field("email").String()
 
@@ -94,6 +95,7 @@ func (c User) MyAction() {
 
         item := map[string]interface{}{
             "uid":     s.Uid,
+            "uuid":    rslogin[0].Field("uuid").String(),
             "gender":  0,
             "created": base.TimeNow("datetime"), // TODO
             "updated": base.TimeNow("datetime"), // TODO

@@ -340,6 +340,7 @@ func (c UserMgr) SaveAction() {
     }
     if isNew {
         profile["uid"] = c.Params.Get("uid")
+        profile["uuid"] = rsu[0].Field("uuid").String()
         profile["gender"] = 0
         profile["created"] = base.TimeNow("datetime")
 
