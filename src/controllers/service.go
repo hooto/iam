@@ -9,6 +9,7 @@ import (
     "../models/role"
     "encoding/base64"
     "io"
+    "net/http"
     "strings"
     "time"
 )
@@ -115,6 +116,38 @@ func (c Service) LoginAuthAction() {
 
     rsp.Status = 200
     rsp.Message = ""
+}
+
+func (c Service) SignOutAction() {
+
+    c.ViewData["continue"] = "/ids"
+
+    token := c.Session.AccessToken
+    if c.Params.Get("access_token") != "" {
+        token = c.Params.Get("access_token")
+    }
+
+    if len(c.Params.Get("continue")) > 0 {
+        c.ViewData["continue"] = c.Params.Get("continue")
+    }
+
+    dcn, err := rdo.ClientPull("def")
+    if err == nil {
+        ft := base.NewFilter()
+        ft.And("token", token)
+        if _, err := dcn.Base.Delete("ids_sessions", ft); err != nil {
+            //
+        }
+    }
+
+    ck := &http.Cookie{
+        Name:     "access_token",
+        Value:    "",
+        Path:     "/",
+        HttpOnly: true,
+        MaxAge:   -1,
+    }
+    http.SetCookie(c.Response.Out, ck)
 }
 
 func (c Service) AuthAction() {

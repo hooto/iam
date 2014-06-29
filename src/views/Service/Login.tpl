@@ -239,7 +239,7 @@ $("#ids-login-form").submit(function(event) {
 
             lessAlert("#ids-login-form-alert", 'alert-success', "Successfully Sign-on. Page redirecting");
             $("#ilf-grp-input").hide(200);
-            
+
             lessCookie.Set("access_token", rsj.data.access_token, 864000);
 
             window.setTimeout(function(){
