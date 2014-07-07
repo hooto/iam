@@ -1,11 +1,11 @@
 package controllers
 
 import (
-    "../../deps/lessgo/pagelet"
+	"../../deps/lessgo/pagelet"
 )
 
 type Error struct {
-    *pagelet.Controller
+	*pagelet.Controller
 }
 
 func (c Error) BrowserAction() {

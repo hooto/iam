@@ -1,13 +1,13 @@
 package controllers
 
 import (
-    "../../deps/lessgo/pagelet"
+	"../../deps/lessgo/pagelet"
 )
 
 type Index struct {
-    *pagelet.Controller
+	*pagelet.Controller
 }
 
 func (c Index) IndexAction() {
-    c.RenderRedirect("/ids/user/index")
+	c.RenderRedirect("/ids/user/index")
 }

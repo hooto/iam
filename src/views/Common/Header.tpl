@@ -34,6 +34,7 @@ $("#etpntn a").click(function(event) {
     //case "index/index":
     case "lpm/index":
     case "pkg-service/index":
+    case "container/index":
         $(this).parent().addClass("active");
         idsComLoader(uri);
         break;

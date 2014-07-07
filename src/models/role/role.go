@@ -1,96 +1,96 @@
 package role
 
 import (
-    "../../../deps/lessgo/data/rdo"
-    "../../../deps/lessgo/data/rdo/base"
-    "strings"
-    "sync"
-    "time"
+	"../../../deps/lessgo/data/rdo"
+	"../../../deps/lessgo/data/rdo/base"
+	"strings"
+	"sync"
+	"time"
 )
 
 var (
-    locker      sync.Mutex
-    nextRefresh = time.Now()
-    roles       = map[string][]string{}
-    privileges  = map[string]string{}
+	locker      sync.Mutex
+	nextRefresh = time.Now()
+	roles       = map[string][]string{}
+	privileges  = map[string]string{}
 )
 
 //func innerRefresh() {
 
 func innerRefresh() {
 
-    //fmt.Println("init once")
+	//fmt.Println("init once")
 
-    if nextRefresh.After(time.Now()) {
-        return
-    }
+	if nextRefresh.After(time.Now()) {
+		return
+	}
 
-    locker.Lock()
-    defer locker.Unlock()
+	locker.Lock()
+	defer locker.Unlock()
 
-    dcn, err := rdo.ClientPull("def")
-    if err != nil {
-        return
-    }
+	dcn, err := rdo.ClientPull("def")
+	if err != nil {
+		return
+	}
 
-    q := base.NewQuerySet().From("ids_privilege").Limit(1000)
-    rspri, err := dcn.Base.Query(q)
-    if err != nil || len(rspri) == 0 {
-        return
-    }
-    for _, v := range rspri {
+	q := base.NewQuerySet().From("ids_privilege").Limit(1000)
+	rspri, err := dcn.Base.Query(q)
+	if err != nil || len(rspri) == 0 {
+		return
+	}
+	for _, v := range rspri {
 
-        pkey := v.Field("instance").String() + "." + v.Field("privilege").String()
-        if _, ok := privileges[pkey]; ok {
-            continue
-        }
+		pkey := v.Field("instance").String() + "." + v.Field("privilege").String()
+		if _, ok := privileges[pkey]; ok {
+			continue
+		}
 
-        privileges[pkey] = v.Field("pid").String()
-    }
+		privileges[pkey] = v.Field("pid").String()
+	}
 
-    q = base.NewQuerySet().From("ids_role").Limit(1000)
-    q.Where.And("status", 1)
-    rsrole, err := dcn.Base.Query(q)
-    if err != nil || len(rsrole) == 0 {
-        return
-    }
+	q = base.NewQuerySet().From("ids_role").Limit(1000)
+	q.Where.And("status", 1)
+	rsrole, err := dcn.Base.Query(q)
+	if err != nil || len(rsrole) == 0 {
+		return
+	}
 
-    for _, v := range rsrole {
+	for _, v := range rsrole {
 
-        pid := v.Field("rid").String()
+		pid := v.Field("rid").String()
 
-        if _, ok := roles[pid]; ok {
-            continue
-        }
+		if _, ok := roles[pid]; ok {
+			continue
+		}
 
-        roles[pid] = strings.Split(v.Field("privileges").String(), ",")
-    }
+		roles[pid] = strings.Split(v.Field("privileges").String(), ",")
+	}
 
-    nextRefresh = time.Now().Add(time.Second * 60)
+	nextRefresh = time.Now().Add(time.Second * 60)
 }
 
 func AccessAllowed(role, instance, privilege string) bool {
 
-    innerRefresh()
+	innerRefresh()
 
-    pkey := instance + "." + privilege
-    pid, ok := privileges[pkey]
-    if !ok {
-        return false
-    }
+	pkey := instance + "." + privilege
+	pid, ok := privileges[pkey]
+	if !ok {
+		return false
+	}
 
-    rs := strings.Split(role, ",")
-    for _, v := range rs {
+	rs := strings.Split(role, ",")
+	for _, v := range rs {
 
-        if v2, ok := roles[v]; ok {
+		if v2, ok := roles[v]; ok {
 
-            for _, pid2 := range v2 {
-                if pid2 == pid {
-                    return true
-                }
-            }
-        }
-    }
+			for _, pid2 := range v2 {
+				if pid2 == pid {
+					return true
+				}
+			}
+		}
+	}
 
-    return false
+	return false
 }

@@ -1,99 +1,99 @@
 package conf
 
 import (
-    "../../deps/lessgo/data/rdo"
-    "../../deps/lessgo/data/rdo/base"
+	"../../deps/lessgo/data/rdo"
+	"../../deps/lessgo/data/rdo/base"
 )
 
 func (c *Config) DatabaseInstance() (*base.Client, error) {
 
-    dc, err := rdo.NewClient("def", c.Database)
-    if err != nil {
-        return dc, err
-    }
+	dc, err := rdo.NewClient("def", c.Database)
+	if err != nil {
+		return dc, err
+	}
 
-    ds, err := base.LoadDataSetFromString(databaseSchema)
-    err = dc.Dialect.SchemaSync(c.Database.Dbname, ds)
-    if err != nil {
-        return dc, err
-    }
+	ds, err := base.LoadDataSetFromString(databaseSchema)
+	err = dc.Dialect.SchemaSync(c.Database.Dbname, ds)
+	if err != nil {
+		return dc, err
+	}
 
-    timenow := base.TimeNow("datetime")
+	timenow := base.TimeNow("datetime")
 
-    dc.Base.InsertIgnore("ids_role", map[string]interface{}{
-        "rid":        1,
-        "uid":        0,
-        "status":     1,
-        "name":       "Administrator",
-        "desc":       "Root System Administrator",
-        "privileges": "1,2",
-        "created":    timenow,
-        "updated":    timenow,
-    })
-    dc.Base.InsertIgnore("ids_role", map[string]interface{}{
-        "rid":        100,
-        "uid":        0,
-        "status":     1,
-        "name":       "Member",
-        "desc":       "Universal Member",
-        "privileges": "",
-        "created":    timenow,
-        "updated":    timenow,
-    })
+	dc.Base.InsertIgnore("ids_role", map[string]interface{}{
+		"rid":        1,
+		"uid":        0,
+		"status":     1,
+		"name":       "Administrator",
+		"desc":       "Root System Administrator",
+		"privileges": "1,2",
+		"created":    timenow,
+		"updated":    timenow,
+	})
+	dc.Base.InsertIgnore("ids_role", map[string]interface{}{
+		"rid":        100,
+		"uid":        0,
+		"status":     1,
+		"name":       "Member",
+		"desc":       "Universal Member",
+		"privileges": "",
+		"created":    timenow,
+		"updated":    timenow,
+	})
 
-    dc.Base.InsertIgnore("ids_role", map[string]interface{}{
-        "rid":        101,
-        "uid":        0,
-        "status":     0,
-        "name":       "Anonymous",
-        "desc":       "Anonymous Member",
-        "privileges": "",
-        "created":    timenow,
-        "updated":    timenow,
-    })
+	dc.Base.InsertIgnore("ids_role", map[string]interface{}{
+		"rid":        101,
+		"uid":        0,
+		"status":     0,
+		"name":       "Anonymous",
+		"desc":       "Anonymous Member",
+		"privileges": "",
+		"created":    timenow,
+		"updated":    timenow,
+	})
 
-    dc.Base.InsertIgnore("ids_instance", map[string]interface{}{
-        "id":        "lessids",
-        "uid":       0,
-        "status":    1,
-        "app_id":    "lessids",
-        "app_title": "less Identity Server",
-        "version":   c.Version,
-        "created":   timenow,
-        "updated":   timenow,
-    })
+	dc.Base.InsertIgnore("ids_instance", map[string]interface{}{
+		"id":        "lessids",
+		"uid":       0,
+		"status":    1,
+		"app_id":    "lessids",
+		"app_title": "less Identity Server",
+		"version":   c.Version,
+		"created":   timenow,
+		"updated":   timenow,
+	})
 
-    dc.Base.InsertIgnore("ids_privilege", map[string]interface{}{
-        "pid":       "1",
-        "instance":  "lessids",
-        "uid":       0,
-        "privilege": "user.admin",
-        "desc":      "User Management",
-        "created":   timenow,
-    })
-    dc.Base.InsertIgnore("ids_privilege", map[string]interface{}{
-        "pid":       "2",
-        "instance":  "lessids",
-        "uid":       0,
-        "privilege": "sys.admin",
-        "desc":      "System Management",
-        "created":   timenow,
-    })
+	dc.Base.InsertIgnore("ids_privilege", map[string]interface{}{
+		"pid":       "1",
+		"instance":  "lessids",
+		"uid":       0,
+		"privilege": "user.admin",
+		"desc":      "User Management",
+		"created":   timenow,
+	})
+	dc.Base.InsertIgnore("ids_privilege", map[string]interface{}{
+		"pid":       "2",
+		"instance":  "lessids",
+		"uid":       0,
+		"privilege": "sys.admin",
+		"desc":      "System Management",
+		"created":   timenow,
+	})
 
-    dc.Base.InsertIgnore("ids_sysconfig", map[string]interface{}{
-        "key":     "service_name",
-        "value":   "less Identity Service",
-        "created": timenow,
-        "updated": timenow,
-    })
-    dc.Base.InsertIgnore("ids_sysconfig", map[string]interface{}{
-        "key":     "webui_banner_title",
-        "value":   "Account Center",
-        "created": timenow,
-        "updated": timenow,
-    })
+	dc.Base.InsertIgnore("ids_sysconfig", map[string]interface{}{
+		"key":     "service_name",
+		"value":   "less Identity Service",
+		"created": timenow,
+		"updated": timenow,
+	})
+	dc.Base.InsertIgnore("ids_sysconfig", map[string]interface{}{
+		"key":     "webui_banner_title",
+		"value":   "Account Center",
+		"created": timenow,
+		"updated": timenow,
+	})
 
-    return dc, err
+	return dc, err
 }
 
 // func (c *Config) DatabaseInstanceBak() (*rdc.Conn, error) {
