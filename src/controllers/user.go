@@ -12,7 +12,6 @@ import (
 	"../models/session"
 	"bytes"
 	"encoding/base64"
-	//"fmt"
 	"github.com/eryx/imaging"
 	"html"
 	"image"
@@ -227,8 +226,7 @@ func (c User) PhotoPutAction() {
 		return
 	}
 
-	body := c.Request.RawBodyString()
-	if body == "" {
+	if len(c.Request.RawBody) == 0 {
 		return
 	}
 
@@ -240,7 +238,7 @@ func (c User) PhotoPutAction() {
 			Data string `json:"data"`
 		} `json:"data"`
 	}
-	err := utils.JsonDecode(body, &req)
+	err := utils.JsonDecode(c.Request.RawBody, &req)
 	if err != nil {
 		rsp.Message = err.Error()
 		return

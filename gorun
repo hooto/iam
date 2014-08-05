@@ -17,7 +17,7 @@ for file in $files; do
 done
 
 go build -ldflags "-w -s" -o ./bin/lessids-cli ./src/cli.go 
-go build -ldflags "" -o ./bin/lessids ./src/main.go 
+go build -ldflags "-w -s" -o ./bin/lessids ./src/main.go 
 
 ./bin/lessids
 

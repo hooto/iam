@@ -90,8 +90,7 @@ func (c AppAuth) RegisterAction() {
 		}
 	}()
 
-	body := c.Request.RawBodyString()
-	if body == "" {
+	if len(c.Request.RawBody) == 0 {
 		return
 	}
 
@@ -110,7 +109,7 @@ func (c AppAuth) RegisterAction() {
 		} `json:"data"`
 	}
 
-	err := utils.JsonDecode(body, &req)
+	err := utils.JsonDecode(c.Request.RawBody, &req)
 	if err != nil {
 		rsp.Message = err.Error()
 		return
