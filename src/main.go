@@ -8,7 +8,6 @@ import (
 	"fmt"
 	"os"
 	"runtime"
-	"time"
 )
 
 var (
@@ -57,9 +56,4 @@ func main() {
 
 	//
 	pagelet.Run()
-
-	//
-	for {
-		time.Sleep(3e9)
-	}
 }
