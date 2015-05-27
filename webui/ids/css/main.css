@@ -1,0 +1,232 @@
+body {
+  min-width: 800px;
+  background-color: #f9f9f9;
+}
+
+.ids-container {
+  margin: 0 auto;
+  width: 1100px;
+  position: relative;
+}
+
+.ids-form-group-title {
+  margin: 15px 0;
+  font-size: 16px;
+  color: #999;
+  white-space: pre;
+}
+
+.ids-form-checkbox {
+  margin: 0 20px 0 0;
+  padding: 10px 0;
+}
+
+.ids-input-query {
+    padding: 5px 5px 5px 30px;
+    background: url(/ids/~/ids/img/search-16.png) no-repeat 8px; 
+    width: 300px;
+}
+
+.ids-callout {
+  padding: 10px;
+  border-left: 3px solid #eee;
+}
+.ids-callout h4 {
+  margin-top: 0;
+  margin-bottom: 5px;
+}
+.ids-callout-primary {
+  border-color: #428bca;
+  background-color: #f4f8fa;
+}
+.ids-callout-success {
+  border-color: #5cb85c;
+  background-color: #dff0d8;
+}
+.ids-callout-info {
+  border-color: #5bc0de;
+  background-color: #f4f8fa;
+}
+.ids-callout-warning {
+  border-color: #f0ad4e;
+  background-color: #fcf8f2;
+}
+.ids-callout-danger {
+  border-color: #d9534f;
+  background-color: #fdf7f7;
+}
+.ids-callout-primary h4 {
+  color: #428bca;
+}
+.ids-callout-success h4 {
+  color: #5cb85c;
+}
+.ids-callout-info h4 {
+  color: #5bc0de;
+}
+.ids-callout-warning h4 {
+  color: #f0ad4e;
+}
+.ids-callout-danger h4 {
+  color: #d9534f;
+}
+
+
+#ids-user-header {
+  height: 50px;
+  width: 100%;
+  position: relative;
+  background-color: #eee;
+  border-radius: 5px;
+}
+
+.iuh-brand {
+  position: relative;
+  height: 50px;
+  display: table;
+}
+.iuh-brand-logo {
+  width: 24px;
+  height: 24px;
+  position: absolute;
+  top: 50%;
+  margin-top: -12px;
+  margin-left: 10px;
+}
+.iuh-brand-title {
+  display: table-cell;
+  vertical-align:middle;
+  position: relative;
+  font-size: 18px;
+  left: 40px;
+}
+
+.iuh-menu {
+  float: left;
+  position: relative;
+  height: 50px;
+  display: table;
+}
+.iuh-menu a {
+  display: table-cell;
+  vertical-align:middle;
+  font-size: 16px;
+  padding: 0 20px;
+  margin-right: 20px;
+  text-decoration: none;
+  color: #333;
+}
+.iuh-menu a:hover {
+  background-color: rgba(0, 0, 0, 0.05);
+}
+.iuh-menu a.active {
+  background-color: rgba(0, 0, 0, 0.1);
+}
+
+#ids-userbox {
+  margin-right: 5px;
+}
+.ids-userbox-ico {
+  width: 32px;
+  height: 32px;
+  padding: 2px;
+  border-radius: 50%;
+  background-color: #dfdfdf;
+  display: none;
+}
+.ids-userbox-signout {
+  font-size: 14px;
+}
+.ids-userbox-signout:hover {
+  cursor: pointer;
+}
+
+.ids-user-panel {
+  border-radius: 5px;
+  background-color: #fff;
+  border-radius: 4px;
+  padding: 20px;
+  box-shadow: 0px 1px 2px 0px #999;
+  min-height: 220px;
+  width: 100%;
+}
+.ids-user-panel .iup-title {
+  font-size: 24px;
+  font-weight: bold;
+  margin: 10px 0 20px 0;
+}
+.ids-user-panel .iup-photo {
+  font-size: 24px;
+  font-weight: bold;
+  margin: 10px 0 20px 0;
+}
+
+/** manage */
+
+.ids-user-profile .iup-photo {
+  float: left;
+  height: 100px;
+  width: 100px;
+  margin: 0 20px 0 0;
+  background-color: #eee;
+}
+
+.ids-user-profile .iup-info  {
+  margin: 0 0 1em; 
+  padding: 0; 
+  list-style: none outside;
+}
+.ids-user-profile .iup-info li {
+  padding: 0 0 .4em;
+  margin: 0; 
+  line-height: 1.3em;
+}
+
+
+.ids-user-personal .iup-subtitle {
+  width: 120px;
+  font-weight: bold;
+}
+.ids-user-personal td {
+  vertical-align: top;
+  padding-bottom: 20px;
+}
+.ids-user-personal ul {
+  list-style: none outside;
+  margin: 0;
+  padding: 0;
+}
+
+
+.ids-user-products {list-style:none outside; padding-bottom:1em;} 
+.ids-user-products li {float:left; width:32%; display:inline; height:35px; 
+    font-weight:bold;}  
+.ids-user-products li span {display:block; margin-left:30px;}
+.ids-user-products li img {float:left;}
+.ids-user-products li.more {clear:both; padding-top:.2em; font-weight:normal;}
+
+
+.ids-um-formtable {
+  width: 100%;
+  border: 0;
+  margin: 10px 0;
+}
+
+.ids-um-formtable td {
+  padding: 5px 0;
+}
+
+.ids-footer {
+  margin: 20px auto;
+}
+.ids-footer a {
+    color: #428bca;
+    font-size: 14px;
+}
+
+.ids-footer .if-logo {
+  width: 16px;
+  height: 16px;
+}
+
+

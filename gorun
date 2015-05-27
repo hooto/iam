@@ -1,23 +1,25 @@
 #!/bin/bash
 
 echo "DIRs"
-find ./src -type d  | wc -l
+find . -type d  | wc -l
 echo "FILEs"
-find ./src -type f  | wc -l
+find . -type f  | wc -l
 echo "LINEs"
-find ./src -name "*.go" |xargs cat|grep -v ^$|wc -l
+find . -name "*.go" |xargs cat|grep -v ^$|wc -l
 echo "LINEs TPL"
-find ./src -name "*.tpl" |xargs cat|grep -v ^$|wc -l
+find . -name "*.tpl" |xargs cat|grep -v ^$|wc -l
 echo "DETAILs"
-find ./src -type f -name "*.go" | xargs wc -l | sort -n
+find . -type f -name "*.go" | xargs wc -l | sort -n
 
-files=`find ./src -type f -name "*.go" |xargs`
+files=`find . -type f -name "*.go" |xargs`
 for file in $files; do
     gofmt -s -w ${file}
 done
 
-go build -ldflags "-w -s" -o ./bin/lessids-cli ./src/cli.go 
-go build -ldflags "-w -s" -o ./bin/lessids ./src/main.go 
+rm -f ./bin/lessids
 
-./bin/lessids
+go build -ldflags "-w -s" -o ./bin/lessids-cli ./cmd/cli.go 
+go build -ldflags "-w -s" -o ./bin/lessids ./cmd/main.go 
+
+./bin/lessids -logtostderr=true
 

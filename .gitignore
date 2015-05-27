@@ -1,10 +1,7 @@
 # Folders
 etc
 bin
-deps/fsnotify
-deps/orm
 var
-spm
 doc
 *.php
 
