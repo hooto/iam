@@ -15,13 +15,15 @@
 package v1
 
 import (
-	"github.com/lessos/lessgo/data/rdo"
-	"github.com/lessos/lessgo/data/rdo/base"
+	"github.com/lessos/bigtree/btapi"
+
 	"github.com/lessos/lessgo/httpsrv"
 	"github.com/lessos/lessgo/types"
+	"github.com/lessos/lessgo/utils"
 
-	"../../config"
-	"../../idsapi"
+	"github.com/lessos/lessids/config"
+	"github.com/lessos/lessids/idsapi"
+	"github.com/lessos/lessids/store"
 )
 
 type SysConfig struct {
@@ -43,40 +45,40 @@ var (
 
 func (c SysConfig) GeneralAction() {
 
-	rsp := idsapi.SysConfigList{}
+	ls := idsapi.SysConfigList{}
 
-	defer c.RenderJson(&rsp)
+	defer c.RenderJson(&ls)
 
 	if !c.Session.AccessAllowed("sys.admin") {
-		rsp.Error = &types.ErrorMeta{idsapi.ErrCodeAccessDenied, "Access Denied"}
+		ls.Error = &types.ErrorMeta{idsapi.ErrCodeAccessDenied, "Access Denied"}
 		return
 	}
 
-	dcn, err := rdo.ClientPull("def")
-	if err != nil {
-		rsp.Error = &types.ErrorMeta{idsapi.ErrCodeUnavailable, "Service Unavailable"}
-		return
-	}
+	if objs := store.BtAgent.ObjectList(btapi.ObjectProposal{
+		Meta: btapi.ObjectMeta{
+			Path: "/sys-config/",
+		},
+	}); objs.Error == nil {
 
-	q := base.NewQuerySet().From("ids_sysconfig").Limit(10)
-	q.Where.And("key", "service_name").Or("key", "webui_banner_title")
-	rs, err := dcn.Base.Query(q)
-	if err == nil && len(rs) > 0 {
+		for _, obj := range objs.Items {
 
-		for _, v := range rs {
-			rsp.Items = rsp.Items.Insert(v.Field("key").String(), v.Field("value").String())
+			switch obj.Name() {
+			case "service_name", "webui_banner_title":
+				ls.Items = ls.Items.Insert(obj.Name(), obj.Data)
+			}
+
 		}
 	}
 
-	if val, ok := rsp.Items.Fetch("service_name"); val == "" || !ok {
-		rsp.Items = rsp.Items.Insert("service_name", config.Config.ServiceName)
+	if val, ok := ls.Items.Fetch("service_name"); val == "" || !ok {
+		ls.Items = ls.Items.Insert("service_name", config.Config.ServiceName)
 	}
 
-	if val, ok := rsp.Items.Fetch("webui_banner_title"); val == "" || !ok {
-		rsp.Items = rsp.Items.Insert("webui_banner_title", config.Config.WebUiBannerTitle)
+	if val, ok := ls.Items.Fetch("webui_banner_title"); val == "" || !ok {
+		ls.Items = ls.Items.Insert("webui_banner_title", config.Config.WebUiBannerTitle)
 	}
 
-	rsp.Kind = "SysConfigList"
+	ls.Kind = "SysConfigList"
 }
 
 func (c SysConfig) GeneralSetAction() {
@@ -95,12 +97,6 @@ func (c SysConfig) GeneralSetAction() {
 		return
 	}
 
-	dcn, err := rdo.ClientPull("def")
-	if err != nil {
-		sets.Error = &types.ErrorMeta{idsapi.ErrCodeUnavailable, "Service Unavailable"}
-		return
-	}
-
 	for _, v := range sets.Items {
 
 		mat := false
@@ -114,23 +110,25 @@ func (c SysConfig) GeneralSetAction() {
 			continue
 		}
 
-		set := map[string]interface{}{
-			"value":   v.Val,
-			"updated": base.TimeNow("datetime"),
+		var prevVersion uint64
+
+		if obj := store.BtAgent.ObjectGet(btapi.ObjectProposal{
+			Meta: btapi.ObjectMeta{
+				Path: "/sys-config/" + v.Key,
+			},
+		}); obj.Error == nil {
+			prevVersion = obj.Meta.Version
 		}
-		ft := base.NewFilter()
-		ft.And("key", v.Key)
 
-		qry := base.NewQuerySet()
-		qry.From("ids_sysconfig")
-		qry.Where = ft
-
-		if _, err := dcn.Base.Fetch(qry); err == nil {
-			_, err = dcn.Base.Update("ids_sysconfig", set, ft)
-		} else {
-			set["key"] = v.Key
-			set["created"] = base.TimeNow("datetime")
-			_, err = dcn.Base.Insert("ids_sysconfig", set)
+		if obj := store.BtAgent.ObjectSet(btapi.ObjectProposal{
+			Meta: btapi.ObjectMeta{
+				Path: "/sys-config/" + v.Key,
+			},
+			Data:        v.Val,
+			PrevVersion: prevVersion,
+		}); obj.Error != nil {
+			sets.Error = &types.ErrorMeta{"500", obj.Error.Message}
+			return
 		}
 	}
 
@@ -141,98 +139,82 @@ func (c SysConfig) GeneralSetAction() {
 
 func (c SysConfig) MailerAction() {
 
-	rsp := idsapi.SysConfigList{}
+	set := idsapi.SysConfigMailer{}
 
-	defer c.RenderJson(&rsp)
+	defer c.RenderJson(&set)
 
 	if !c.Session.AccessAllowed("sys.admin") {
-		rsp.Error = &types.ErrorMeta{idsapi.ErrCodeAccessDenied, "Access Denied"}
+		set.Error = &types.ErrorMeta{idsapi.ErrCodeAccessDenied, "Access Denied"}
 		return
 	}
 
-	dcn, err := rdo.ClientPull("def")
-	if err != nil {
-		rsp.Error = &types.ErrorMeta{idsapi.ErrCodeUnavailable, "Service Unavailable"}
-		return
+	if obj := store.BtAgent.ObjectGet(btapi.ObjectProposal{
+		Meta: btapi.ObjectMeta{
+			Path: "/sys-config/mailer",
+		},
+	}); obj.Error == nil {
+		obj.JsonDecode(&set)
 	}
 
-	q := base.NewQuerySet().From("ids_sysconfig").Limit(10)
-	q.Where.And("key.in", cfgMailerKeys...)
-
-	rs, err := dcn.Base.Query(q)
-	if err == nil && len(rs) > 0 {
-		for _, v := range rs {
-			rsp.Items = rsp.Items.Insert(v.Field("key").String(), v.Field("value").String())
-		}
-	}
-
-	for _, val := range cfgMailerKeys {
-		if _, ok := rsp.Items.Fetch(val.(string)); !ok {
-			rsp.Items = rsp.Items.Insert(val.(string), "")
-		}
-	}
-
-	rsp.Kind = "SysConfigList"
+	set.Kind = "SysConfigMailer"
 }
 
 func (c SysConfig) MailerSetAction() {
 
-	sets := idsapi.SysConfigList{}
+	var (
+		set  idsapi.SysConfigMailer
+		prev idsapi.SysConfigMailer
+	)
 
-	defer c.RenderJson(&sets)
+	defer c.RenderJson(&set)
 
-	if err := c.Request.JsonDecode(&sets); err != nil || len(sets.Items) < 1 {
-		sets.Error = &types.ErrorMeta{idsapi.ErrCodeInvalidArgument, "Bad Request"}
+	if err := c.Request.JsonDecode(&set); err != nil {
+		set.Error = &types.ErrorMeta{idsapi.ErrCodeInvalidArgument, "Bad Request"}
 		return
 	}
 
 	if !c.Session.AccessAllowed("sys.admin") {
-		sets.Error = &types.ErrorMeta{idsapi.ErrCodeAccessDenied, "Access Denied"}
+		set.Error = &types.ErrorMeta{idsapi.ErrCodeAccessDenied, "Access Denied"}
 		return
 	}
 
-	dcn, err := rdo.ClientPull("def")
-	if err != nil {
-		sets.Error = &types.ErrorMeta{idsapi.ErrCodeUnavailable, "Service Unavailable"}
-		return
+	var prevVersion uint64
+	if obj := store.BtAgent.ObjectGet(btapi.ObjectProposal{
+		Meta: btapi.ObjectMeta{
+			Path: "/sys-config/mailer",
+		},
+	}); obj.Error == nil {
+		obj.JsonDecode(&prev)
+		prevVersion = obj.Meta.Version
+
+		if set.SmtpHost == "" {
+			set.SmtpHost = prev.SmtpHost
+		}
+		if set.SmtpPort == "" {
+			set.SmtpPort = prev.SmtpPort
+		}
+		if set.SmtpUser == "" {
+			set.SmtpUser = prev.SmtpUser
+		}
+		if set.SmtpPass == "" {
+			set.SmtpPass = prev.SmtpPass
+		}
 	}
 
-	for _, v := range sets.Items {
+	setjs, _ := utils.JsonEncode(set)
 
-		mat := false
-		for _, vk := range cfgMailerKeys {
-			if vk.(string) == v.Key {
-				mat = true
-				break
-			}
-		}
-
-		if !mat {
-			continue
-		}
-
-		set := map[string]interface{}{
-			"value":   v.Val,
-			"updated": base.TimeNow("datetime"),
-		}
-
-		ft := base.NewFilter()
-		ft.And("key", v.Key)
-
-		qry := base.NewQuerySet()
-		qry.From("ids_sysconfig")
-		qry.Where = ft
-
-		if _, err := dcn.Base.Fetch(qry); err == nil {
-			dcn.Base.Update("ids_sysconfig", set, ft)
-		} else {
-			set["created"] = base.TimeNow("datetime")
-			set["key"] = v.Key
-			dcn.Base.Insert("ids_sysconfig", set)
-		}
+	if obj := store.BtAgent.ObjectSet(btapi.ObjectProposal{
+		Meta: btapi.ObjectMeta{
+			Path: "/sys-config/mailer",
+		},
+		Data:        setjs,
+		PrevVersion: prevVersion,
+	}); obj.Error != nil {
+		set.Error = &types.ErrorMeta{"500", obj.Error.Message}
+		return
 	}
 
 	config.Config.Refresh()
 
-	sets.Kind = "SysConfigList"
+	set.Kind = "SysConfigMailer"
 }

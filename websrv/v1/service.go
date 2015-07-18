@@ -20,15 +20,16 @@ import (
 	"strings"
 	"time"
 
-	"github.com/lessos/lessgo/data/rdo"
-	"github.com/lessos/lessgo/data/rdo/base"
+	"github.com/lessos/bigtree/btapi"
 	"github.com/lessos/lessgo/httpsrv"
 	"github.com/lessos/lessgo/pass"
 	"github.com/lessos/lessgo/types"
 	"github.com/lessos/lessgo/utils"
+	"github.com/lessos/lessgo/utilx"
 
-	"../../base/role"
-	"../../idsapi"
+	"github.com/lessos/lessids/base/role"
+	"github.com/lessos/lessids/idsapi"
+	"github.com/lessos/lessids/store"
 )
 
 type Service struct {
@@ -43,54 +44,60 @@ func (c Service) LoginAuthAction() {
 
 	defer c.RenderJson(&rsp)
 
-	dcn, err := rdo.ClientPull("def")
-	if err != nil {
-		rsp.Error = &types.ErrorMeta{"400", "Internal Server Error"}
-		return
-	}
+	uname := strings.TrimSpace(strings.ToLower(c.Params.Get("uname")))
 
-	if c.Params.Get("email") == "" || c.Params.Get("passwd") == "" {
+	if uname == "" || c.Params.Get("passwd") == "" {
 		rsp.Error = &types.ErrorMeta{"400", "Bad Request"}
 		return
 	}
 
-	email := strings.ToLower(c.Params.Get("email"))
+	var user idsapi.User
+	if obj := store.BtAgent.ObjectGet(btapi.ObjectProposal{
+		Meta: btapi.ObjectMeta{
+			Path: "/user/" + utils.StringEncode16(uname, 8),
+		},
+	}); obj.Error == nil {
+		obj.JsonDecode(&user)
+	}
 
-	q := base.NewQuerySet().From("ids_login").Limit(1)
-	q.Where.And("email", email)
-	rsu, err := dcn.Base.Query(q)
-	if err == nil && len(rsu) == 0 {
-		rsp.Error = &types.ErrorMeta{"400", "Email or Password can not match"}
+	if user.Meta.Name != uname {
+		rsp.Error = &types.ErrorMeta{"400", "Username or Password can not match"}
 		return
 	}
 
-	if !pass.Check(c.Params.Get("passwd"), rsu[0].Field("pass").String()) {
-		rsp.Error = &types.ErrorMeta{"400", "Bad Email or Password can not match"}
+	if !pass.Check(c.Params.Get("passwd"), user.Auth) {
+		rsp.Error = &types.ErrorMeta{"400", "Username or Password can not match"}
 		return
 	}
-
-	rsp.AccessToken = utils.StringNewRand(24)
 
 	addr := "127.0.0.1"
 	if addridx := strings.Index(c.Request.RemoteAddr, ":"); addridx > 0 {
 		addr = c.Request.RemoteAddr[:addridx]
 	}
 
-	session := map[string]interface{}{
-		"token":    rsp.AccessToken,
-		"refresh":  utils.StringNewRand(24),
-		"status":   1,
-		"uid":      rsu[0].Field("uid").String(),
-		"uname":    rsu[0].Field("uname").String(),
-		"name":     rsu[0].Field("name").String(),
-		"roles":    rsu[0].Field("roles").String(),
-		"timezone": rsu[0].Field("timezone").String(),
-		"source":   addr,
-		"created":  base.TimeNow("datetime"),                // TODO
-		"expired":  base.TimeNowAdd("datetime", "+864000s"), // TODO
+	session := idsapi.UserSession{
+		AccessToken:  utils.StringNewRand(24),
+		RefreshToken: utils.StringNewRand(24),
+		UserID:       user.Meta.ID,
+		UserName:     user.Meta.Name,
+		Name:         user.Name,
+		Groups:       user.Groups,
+		Timezone:     user.Timezone,
+		ClientAddr:   addr,
+		Created:      utilx.TimeNow("atom"),
+		Expired:      utilx.TimeNowAdd("atom", "+864000s"),
 	}
-	if _, err := dcn.Base.Insert("ids_sessions", session); err != nil {
-		rsp.Error = &types.ErrorMeta{"500", "Can not write to database" + err.Error()}
+
+	sessionjs, _ := utils.JsonEncode(session)
+
+	if sobj := store.BtAgent.ObjectSet(btapi.ObjectProposal{
+		Meta: btapi.ObjectMeta{
+			Path: "/session/" + session.AccessToken,
+			Ttl:  864000,
+		},
+		Data: sessionjs,
+	}); sobj.Error != nil {
+		rsp.Error = &types.ErrorMeta{"500", sobj.Error.Message}
 		return
 	}
 
@@ -101,8 +108,10 @@ func (c Service) LoginAuthAction() {
 		} else {
 			rsp.Continue += "&"
 		}
-		rsp.Continue += "access_token=" + rsp.AccessToken
+		rsp.Continue += "access_token=" + session.AccessToken
 	}
+
+	rsp.AccessToken = session.AccessToken
 
 	rsp.Kind = "ServiceLoginAuth"
 }
@@ -113,53 +122,40 @@ func (c Service) AuthAction() {
 
 	defer c.RenderJson(&rsp)
 
-	dcn, err := rdo.ClientPull("def")
-	if err != nil {
-		rsp.Error = &types.ErrorMeta{"500", "Internal Server Error"}
-		return
-	}
-
 	if c.Params.Get("access_token") == "" {
 		rsp.Error = &types.ErrorMeta{"401", "Unauthorized"}
 		return
 	}
 
-	q := base.NewQuerySet().From("ids_sessions").Limit(1)
-	q.Where.And("token", c.Params.Get("access_token"))
-	rss, err := dcn.Base.Query(q)
-	if err == nil && len(rss) == 0 {
+	if obj := store.BtAgent.ObjectGet(btapi.ObjectProposal{
+		Meta: btapi.ObjectMeta{
+			Path: "/session/" + c.Params.Get("access_token"),
+		},
+	}); obj.Error == nil {
+		obj.JsonDecode(&rsp)
+	}
+
+	if rsp.AccessToken == "" {
 		rsp.Error = &types.ErrorMeta{"401", "Unauthorized"}
 		return
 	}
 
 	//
-	expired := rss[0].Field("expired").TimeParse("datetime")
+	expired := utilx.TimeParse(rsp.Expired, "atom")
 	if expired.Before(time.Now()) {
 		rsp.Error = &types.ErrorMeta{"401", "Unauthorized"}
 		return
 	}
-	//fmt.Println("expired", expired)
 
 	//
 	addr := "0.0.0.0"
 	if addridx := strings.Index(c.Request.RemoteAddr, ":"); addridx > 0 {
 		addr = c.Request.RemoteAddr[:addridx]
 	}
-	if addr != rss[0].Field("source").String() {
+	if addr != rsp.ClientAddr {
 		rsp.Error = &types.ErrorMeta{"401", "Unauthorized"}
 		return
 	}
-
-	//
-	rsp.AccessToken = rss[0].Field("token").String()
-	rsp.RefreshToken = rss[0].Field("refresh").String()
-
-	rsp.UserID = rss[0].Field("uid").String()
-	rsp.UserName = rss[0].Field("uname").String()
-	rsp.Name = rss[0].Field("name").String()
-	rsp.Roles = rss[0].Field("roles").String()
-	rsp.Timezone = rss[0].Field("timezone").String()
-	rsp.Expired = base.TimeZoneFormat(expired, rsp.Timezone, "atom")
 
 	rsp.Kind = "UserSession"
 }
@@ -187,22 +183,22 @@ func (c Service) AccessAllowedAction() {
 		return
 	}
 
-	dcn, err := rdo.ClientPull("def")
-	if err != nil {
-		rsp.Error = &types.ErrorMeta{"500", "Internal Server Error"}
-		return
+	var session idsapi.UserSession
+	if obj := store.BtAgent.ObjectGet(btapi.ObjectProposal{
+		Meta: btapi.ObjectMeta{
+			Path: "/session/" + req.AccessToken,
+		},
+	}); obj.Error == nil {
+		obj.JsonDecode(&session)
 	}
 
-	q := base.NewQuerySet().From("ids_sessions").Limit(1)
-	q.Where.And("token", req.AccessToken)
-	rss, err := dcn.Base.Query(q)
-	if err == nil && len(rss) == 0 {
+	if session.AccessToken == "" {
 		rsp.Error = &types.ErrorMeta{"401", "Unauthorized"}
 		return
 	}
 
 	//
-	expired := rss[0].Field("expired").TimeParse("datetime")
+	expired := utilx.TimeParse(session.Expired, "atom")
 	if expired.Before(time.Now()) {
 		rsp.Error = &types.ErrorMeta{"401", "Unauthorized"}
 		return
@@ -213,13 +209,12 @@ func (c Service) AccessAllowedAction() {
 	if addridx := strings.Index(c.Request.RemoteAddr, ":"); addridx > 0 {
 		addr = c.Request.RemoteAddr[:addridx]
 	}
-
-	if addr != rss[0].Field("source").String() {
+	if addr != session.ClientAddr {
 		rsp.Error = &types.ErrorMeta{"401", "Unauthorized"}
 		return
 	}
 
-	if !role.AccessAllowed(rss[0].Field("roles").String(), req.InstanceID, req.Privilege) {
+	if !role.AccessAllowed(session.Roles, req.InstanceID, req.Privilege) {
 		rsp.Error = &types.ErrorMeta{"401", "Unauthorized"}
 		return
 	}
@@ -236,17 +231,16 @@ func (c Service) PhotoAction() {
 	if len(c.Request.RequestPath) > 14 {
 
 		uid := c.Request.RequestPath[14:]
-		dcn, err := rdo.ClientPull("def")
-		if err != nil {
-			return
-		}
 
-		q := base.NewQuerySet().From("ids_profile").Select("photo").Limit(1)
-		q.Where.And("uid", uid)
-		rsp, err := dcn.Base.Query(q)
-		if err == nil && len(rsp) == 1 {
-			if len(rsp[0].Field("photo").String()) > 50 {
-				photo = rsp[0].Field("photo").String()
+		var profile idsapi.UserProfile
+
+		if obj := store.BtAgent.ObjectGet(btapi.ObjectProposal{
+			Meta: btapi.ObjectMeta{
+				Path: "/user-profile/" + uid,
+			},
+		}); obj.Error == nil {
+			if err := obj.JsonDecode(&profile); err == nil && len(profile.Photo) > 50 {
+				photo = profile.Photo
 			}
 		}
 	}

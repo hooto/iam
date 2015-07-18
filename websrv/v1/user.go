@@ -17,22 +17,22 @@ package v1
 import (
 	"bytes"
 	"encoding/base64"
-	"html"
 	"image"
 	"image/png"
 	"strings"
 
 	"github.com/eryx/imaging"
-	"github.com/lessos/lessgo/data/rdo"
-	"github.com/lessos/lessgo/data/rdo/base"
+	"github.com/lessos/bigtree/btapi"
 	"github.com/lessos/lessgo/httpsrv"
 	"github.com/lessos/lessgo/pass"
 	"github.com/lessos/lessgo/types"
+	"github.com/lessos/lessgo/utils"
+	"github.com/lessos/lessgo/utilx"
 
-	"../../base/login"
-	"../../base/profile"
-	"../../base/session"
-	"../../idsapi"
+	"github.com/lessos/lessids/base/login"
+	"github.com/lessos/lessids/base/profile"
+	"github.com/lessos/lessids/idsapi"
+	"github.com/lessos/lessids/store"
 )
 
 type User struct {
@@ -45,53 +45,55 @@ func (c User) ProfileAction() {
 
 	defer c.RenderJson(&rsp)
 
-	s := session.GetSession(c.Request)
-	if s.Uid == "" {
+	session, err := c.Session.SessionFetch()
+
+	if err != nil || !session.IsLogin() {
 		rsp.Error = &types.ErrorMeta{"401", "Access Denied"}
 		return
 	}
 
-	dcn, err := rdo.ClientPull("def")
-	if err != nil {
-		rsp.Error = &types.ErrorMeta{"401", "Access Denied"}
-		return
+	// profile
+	if obj := store.BtAgent.ObjectGet(btapi.ObjectProposal{
+		Meta: btapi.ObjectMeta{
+			Path: "/user-profile/" + session.UserID,
+		},
+	}); obj.Error == nil {
+		obj.JsonDecode(&rsp)
+	}
+
+	if rsp.Name == "" {
+
+		rsp.Name = session.Name
+
+		projs, _ := utils.JsonEncode(rsp)
+
+		store.BtAgent.ObjectSet(btapi.ObjectProposal{
+			Meta: btapi.ObjectMeta{
+				Path: "/user-profile/" + session.UserID,
+			},
+			Data: projs,
+		})
 	}
 
 	// login
-	q := base.NewQuerySet().From("ids_login").Limit(1)
-	q.Where.And("uid", s.Uid)
-	rslogin, err := dcn.Base.Query(q)
-	if err != nil || len(rslogin) != 1 {
+	var user idsapi.User
+	if obj := store.BtAgent.ObjectGet(btapi.ObjectProposal{
+		Meta: btapi.ObjectMeta{
+			Path: "/user/" + session.UserID,
+		},
+	}); obj.Error == nil {
+		obj.JsonDecode(&user)
+	}
+
+	if user.Meta.ID != session.UserID {
 		rsp.Error = &types.ErrorMeta{"401", "Access Denied"}
 		return
 	}
 
-	rsp.Login.Meta.ID = rslogin[0].Field("uid").String()
-	rsp.Login.Meta.Name = rslogin[0].Field("uname").String()
-	rsp.Login.Name = rslogin[0].Field("name").String()
-	rsp.Login.Email = rslogin[0].Field("email").String()
-
-	rsp.Name = rslogin[0].Field("name").String()
-
-	//
-	q = base.NewQuerySet().From("ids_profile").Limit(1)
-	q.Where.And("uid", s.Uid)
-	rs, err := dcn.Base.Query(q)
-	if err != nil || len(rs) != 1 {
-
-		item := map[string]interface{}{
-			"uid":     s.Uid,
-			"gender":  0,
-			"created": base.TimeNow("datetime"), // TODO
-			"updated": base.TimeNow("datetime"), // TODO
-		}
-
-		dcn.Base.Insert("ids_profile", item)
-
-	} else {
-		rsp.Birthday = rs[0].Field("birthday").String()
-		rsp.About = html.EscapeString(rs[0].Field("aboutme").String())
-	}
+	rsp.Login.Meta = user.Meta
+	rsp.Login.Name = user.Name
+	rsp.Login.Email = user.Email
+	rsp.Name = user.Name
 
 	rsp.Kind = "UserProfile"
 }
@@ -116,32 +118,64 @@ func (c User) ProfileSetAction() {
 		return
 	}
 
-	s := session.GetSession(c.Request)
-	if s.Uid == "" {
-		rsp.Error = &types.ErrorMeta{idsapi.ErrCodeAccessDenied, "Access Denied"}
+	session, err := c.Session.SessionFetch()
+
+	if err != nil || !session.IsLogin() {
+		rsp.Error = &types.ErrorMeta{"401", "Access Denied"}
 		return
 	}
 
-	dcn, err := rdo.ClientPull("def")
-	if err != nil {
-		rsp.Error = &types.ErrorMeta{idsapi.ErrCodeInternalError, "Server Error"}
+	// login
+	var user idsapi.User
+	uobj := store.BtAgent.ObjectGet(btapi.ObjectProposal{
+		Meta: btapi.ObjectMeta{
+			Path: "/user/" + session.UserID,
+		},
+	})
+	if uobj.Error == nil {
+		uobj.JsonDecode(&user)
+	}
+
+	if user.Meta.ID != session.UserID {
+		rsp.Error = &types.ErrorMeta{"404", "User Not Found"}
 		return
 	}
+	user.Name = req.Name
 
-	itemlogin := map[string]interface{}{
-		"name":    req.Name,
-		"updated": base.TimeNow("datetime"),
-	}
-	ft := base.NewFilter()
-	ft.And("uid", s.Uid)
-	dcn.Base.Update("ids_login", itemlogin, ft)
+	userjs, _ := utils.JsonEncode(user)
 
-	itemprofile := map[string]interface{}{
-		"birthday": req.Birthday,
-		"aboutme":  req.About,
-		"updated":  base.TimeNow("datetime"), // TODO
+	store.BtAgent.ObjectSet(btapi.ObjectProposal{
+		Meta: btapi.ObjectMeta{
+			Path: "/user/" + session.UserID,
+		},
+		PrevVersion: uobj.Meta.Version,
+		Data:        userjs,
+	})
+
+	// profile
+	var profile idsapi.UserProfile
+	pobj := store.BtAgent.ObjectGet(btapi.ObjectProposal{
+		Meta: btapi.ObjectMeta{
+			Path: "/user-profile/" + session.UserID,
+		},
+	})
+	if pobj.Error == nil {
+		pobj.JsonDecode(&profile)
 	}
-	dcn.Base.Update("ids_profile", itemprofile, ft)
+
+	profile.Name = req.Name
+	profile.Birthday = req.Birthday
+	profile.About = req.About
+
+	projs, _ := utils.JsonEncode(profile)
+
+	store.BtAgent.ObjectSet(btapi.ObjectProposal{
+		Meta: btapi.ObjectMeta{
+			Path: "/user-profile/" + session.UserID,
+		},
+		PrevVersion: pobj.Meta.Version,
+		Data:        projs,
+	})
 
 	rsp.Kind = "UserProfile"
 }
@@ -165,41 +199,45 @@ func (c User) PassSetAction() {
 		return
 	}
 
-	s := session.GetSession(c.Request)
-	if s.Uid == "" {
-		rsp.Error = &types.ErrorMeta{idsapi.ErrCodeAccessDenied, "Access Denied"}
+	session, err := c.Session.SessionFetch()
+
+	if err != nil || !session.IsLogin() {
+		rsp.Error = &types.ErrorMeta{"401", "Access Denied"}
 		return
 	}
 
-	dcn, err := rdo.ClientPull("def")
-	if err != nil {
-		rsp.Error = &types.ErrorMeta{idsapi.ErrCodeInternalError, "Server Error"}
-		return
+	var user idsapi.User
+	uobj := store.BtAgent.ObjectGet(btapi.ObjectProposal{
+		Meta: btapi.ObjectMeta{
+			Path: "/user/" + session.UserID,
+		},
+	})
+	if uobj.Error == nil {
+		uobj.JsonDecode(&user)
 	}
 
-	q := base.NewQuerySet().From("ids_login").Limit(1)
-	q.Where.And("uid", s.Uid)
-	rsu, err := dcn.Base.Query(q)
-	if err == nil && len(rsu) == 0 {
+	if user.Meta.ID != session.UserID {
 		rsp.Error = &types.ErrorMeta{idsapi.ErrCodeInvalidArgument, "User Not Found"}
 		return
 	}
 
-	if !pass.Check(req.CurrentPassword, rsu[0].Field("pass").String()) {
+	if !pass.Check(req.CurrentPassword, user.Auth) {
 		rsp.Error = &types.ErrorMeta{idsapi.ErrCodeInvalidArgument, "Current Password can not match"}
-
 		return
 	}
 
-	pstr, _ := pass.HashDefault(req.NewPassword)
+	user.Meta.Updated = utilx.TimeNow("atom")
+	user.Auth, _ = pass.HashDefault(req.NewPassword)
 
-	itemlogin := map[string]interface{}{
-		"pass":    pstr,
-		"updated": base.TimeNow("datetime"),
-	}
-	ft := base.NewFilter()
-	ft.And("uid", s.Uid)
-	dcn.Base.Update("ids_login", itemlogin, ft)
+	userjs, _ := utils.JsonEncode(user)
+
+	store.BtAgent.ObjectSet(btapi.ObjectProposal{
+		Meta: btapi.ObjectMeta{
+			Path: "/user/" + user.Meta.ID,
+		},
+		PrevVersion: uobj.Meta.Version,
+		Data:        userjs,
+	})
 
 	rsp.Kind = "UserPassword"
 }
@@ -225,39 +263,45 @@ func (c User) EmailSetAction() {
 		req.Email = email
 	}
 
-	s := session.GetSession(c.Request)
-	if s.Uid == "" {
-		rsp.Error = &types.ErrorMeta{idsapi.ErrCodeAccessDenied, "Access Denied"}
+	session, err := c.Session.SessionFetch()
+
+	if err != nil || !session.IsLogin() {
+		rsp.Error = &types.ErrorMeta{"401", "Access Denied"}
 		return
 	}
 
-	dcn, err := rdo.ClientPull("def")
-	if err != nil {
-		rsp.Error = &types.ErrorMeta{idsapi.ErrCodeInternalError, "Server Error"}
+	var user idsapi.User
+	uobj := store.BtAgent.ObjectGet(btapi.ObjectProposal{
+		Meta: btapi.ObjectMeta{
+			Path: "/user/" + session.UserID,
+		},
+	})
+	if uobj.Error == nil {
+		uobj.JsonDecode(&user)
+	}
+
+	if user.Meta.ID != session.UserID {
+		rsp.Error = &types.ErrorMeta{idsapi.ErrCodeInvalidArgument, "User Not Found"}
 		return
 	}
 
-	q := base.NewQuerySet().From("ids_login").Limit(1)
-	q.Where.And("uid", s.Uid)
-	rsu, err := dcn.Base.Query(q)
-	if err == nil && len(rsu) == 0 {
-		rsp.Error = &types.ErrorMeta{idsapi.ErrCodeInvalidArgument, "User can not found"}
-		return
-	}
-
-	if !pass.Check(req.Auth, rsu[0].Field("pass").String()) {
+	if !pass.Check(req.Auth, user.Auth) {
 		rsp.Error = &types.ErrorMeta{idsapi.ErrCodeInvalidArgument, "Password can not match"}
 		return
 	}
 
-	itemlogin := map[string]interface{}{
-		"email":   req.Email,
-		"updated": base.TimeNow("datetime"),
-	}
+	user.Email = req.Email
+	user.Meta.Updated = utilx.TimeNow("atom")
 
-	ft := base.NewFilter()
-	ft.And("uid", s.Uid)
-	dcn.Base.Update("ids_login", itemlogin, ft)
+	userjs, _ := utils.JsonEncode(user)
+
+	store.BtAgent.ObjectSet(btapi.ObjectProposal{
+		Meta: btapi.ObjectMeta{
+			Path: "/user/" + user.Meta.ID,
+		},
+		PrevVersion: uobj.Meta.Version,
+		Data:        userjs,
+	})
 
 	rsp.Kind = "UserEmail"
 }
@@ -276,9 +320,10 @@ func (c User) PhotoSetAction() {
 		return
 	}
 
-	s := session.GetSession(c.Request)
-	if s.Uid == "" {
-		rsp.Error = &types.ErrorMeta{idsapi.ErrCodeAccessDenied, "Access Denied"}
+	session, err := c.Session.SessionFetch()
+
+	if err != nil || !session.IsLogin() {
+		rsp.Error = &types.ErrorMeta{"401", "Access Denied"}
 		return
 	}
 
@@ -304,20 +349,29 @@ func (c User) PhotoSetAction() {
 	}
 	imgphoto := base64.StdEncoding.EncodeToString(imgbuf.Bytes())
 
-	dcn, err := rdo.ClientPull("def")
-	if err != nil {
-		rsp.Error = &types.ErrorMeta{idsapi.ErrCodeInternalError, "Server Error"}
-		return
+	// profile
+	var profile idsapi.UserProfile
+	pobj := store.BtAgent.ObjectGet(btapi.ObjectProposal{
+		Meta: btapi.ObjectMeta{
+			Path: "/user-profile/" + session.UserID,
+		},
+	})
+	if pobj.Error == nil {
+		pobj.JsonDecode(&profile)
 	}
 
-	itemprofile := map[string]interface{}{
-		"photo":    "data:image/png;base64," + imgphoto,
-		"photosrc": req.Data,
-		"updated":  base.TimeNow("datetime"),
-	}
-	ft := base.NewFilter()
-	ft.And("uid", s.Uid)
-	dcn.Base.Update("ids_profile", itemprofile, ft)
+	profile.Photo = "data:image/png;base64," + imgphoto
+	profile.PhotoSource = req.Data
+
+	projs, _ := utils.JsonEncode(profile)
+
+	store.BtAgent.ObjectSet(btapi.ObjectProposal{
+		Meta: btapi.ObjectMeta{
+			Path: "/user-profile/" + session.UserID,
+		},
+		PrevVersion: pobj.Meta.Version,
+		Data:        projs,
+	})
 
 	rsp.Kind = "UserPhoto"
 }

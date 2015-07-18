@@ -162,7 +162,7 @@ body {
 
     <div id="ilf-grp-input">
     <div class="ilf-group">
-      <input type="text" class="ilf-input" name="email" value="{{.email}}" placeholder="{{T . "Email"}}">
+      <input type="text" class="ilf-input" name="uname" value="{{.uname}}" placeholder="{{T . "Username"}}">
     </div>
 
     <div class="ilf-group">
@@ -198,7 +198,7 @@ body {
 <script>
 
 //
-$("input[name=email]").focus();
+$("input[name=uname]").focus();
 
 //
 var ids_eh = $("#ids-login-box").height();
@@ -232,6 +232,7 @@ $("#ids-login-form").submit(function(event) {
             $("#ilf-grp-input").hide(100);
 
             l4iCookie.Set("access_token", rsj.access_token, 864000);
+            // console.log(rsj);
 
             window.setTimeout(function(){
                 window.location = rsj.continue;

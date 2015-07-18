@@ -16,8 +16,7 @@ package ctrl
 
 import (
 	"github.com/lessos/lessgo/httpsrv"
-
-	"../../config"
+	"github.com/lessos/lessids/config"
 )
 
 type Index struct {

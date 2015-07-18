@@ -15,162 +15,135 @@
 package v1
 
 import (
-	"github.com/lessos/lessgo/data/rdo"
-	"github.com/lessos/lessgo/data/rdo/base"
+	"github.com/lessos/bigtree/btapi"
 	"github.com/lessos/lessgo/types"
+	"github.com/lessos/lessgo/utils"
+	"github.com/lessos/lessgo/utilx"
 
-	"../../idsapi"
+	"github.com/lessos/lessids/idsapi"
+	"github.com/lessos/lessids/store"
 )
 
 func (c UserMgr) RoleListAction() {
 
-	rsp := idsapi.UserRoleList{}
+	ls := idsapi.UserRoleList{}
 
-	defer c.RenderJson(&rsp)
+	defer c.RenderJson(&ls)
 
 	if !c.Session.AccessAllowed("user.admin") {
-		rsp.Error = &types.ErrorMeta{idsapi.ErrCodeAccessDenied, "Access Denied"}
+		ls.Error = &types.ErrorMeta{idsapi.ErrCodeAccessDenied, "Access Denied"}
 		return
 	}
 
-	dcn, err := rdo.ClientPull("def")
-	if err != nil {
-		rsp.Error = &types.ErrorMeta{idsapi.ErrCodeUnavailable, "Service Unavailable"}
-		return
-	}
+	if objs := store.BtAgent.ObjectList(btapi.ObjectProposal{
+		Meta: btapi.ObjectMeta{
+			Path: "/role/",
+		},
+	}); objs.Error == nil {
 
-	q := base.NewQuerySet().From("ids_role").Limit(1000)
-	if c.Params.Get("status") != "0" {
-		q.Where.And("status", 1)
-	}
+		for _, obj := range objs.Items {
 
-	rsr, err := dcn.Base.Query(q)
+			var role idsapi.UserRole
+			if err := obj.JsonDecode(&role); err == nil {
 
-	if err == nil && len(rsr) > 0 {
-		for _, v := range rsr {
-			rsp.Items = append(rsp.Items, idsapi.UserRole{
-				Meta: types.ObjectMeta{
-					ID:      v.Field("rid").String(),
-					Name:    v.Field("name").String(),
-					Created: v.Field("created").TimeFormat("datetime", "atom"),
-					Updated: v.Field("updated").TimeFormat("datetime", "atom"),
-				},
-				Status: v.Field("status").Uint8(),
-				Desc:   v.Field("desc").String(),
-			})
+				ls.Items = append(ls.Items, role)
+			}
 		}
 	}
 
-	rsp.Kind = "UserRoleList"
+	ls.Kind = "UserRoleList"
 }
 
 func (c UserMgr) RoleEntryAction() {
 
-	rsp := idsapi.UserRole{}
+	set := idsapi.UserRole{}
 
-	defer c.RenderJson(&rsp)
+	defer c.RenderJson(&set)
 
 	if !c.Session.AccessAllowed("user.admin") {
-		rsp.Error = &types.ErrorMeta{idsapi.ErrCodeAccessDenied, "Access Denied"}
+		set.Error = &types.ErrorMeta{idsapi.ErrCodeAccessDenied, "Access Denied"}
 		return
 	}
 
-	dcn, err := rdo.ClientPull("def")
-	if err != nil {
-		rsp.Error = &types.ErrorMeta{idsapi.ErrCodeUnavailable, "Service Unavailable"}
+	if obj := store.BtAgent.ObjectGet(btapi.ObjectProposal{
+		Meta: btapi.ObjectMeta{
+			Path: "/role/" + c.Params.Get("roleid"),
+		},
+	}); obj.Error == nil {
+		obj.JsonDecode(&set)
+	}
+
+	if set.Meta.ID == "" {
+		set.Error = &types.ErrorMeta{idsapi.ErrCodeInvalidArgument, "Role Not Found"}
 		return
 	}
 
-	q := base.NewQuerySet().From("ids_role").Limit(1)
-	q.Where.And("rid", c.Params.Get("roleid"))
-
-	rsr, err := dcn.Base.Query(q)
-	if err != nil || len(rsr) != 1 {
-		rsp.Error = &types.ErrorMeta{idsapi.ErrCodeAccessDenied, "Access Denied"}
-		return
-	}
-
-	rsp.Meta.ID = rsr[0].Field("rid").String()
-	rsp.Meta.Name = rsr[0].Field("name").String()
-	rsp.Meta.Created = rsr[0].Field("created").TimeFormat("datetime", "atom")
-	rsp.Meta.Updated = rsr[0].Field("updated").TimeFormat("datetime", "atom")
-	rsp.Desc = rsr[0].Field("desc").String()
-	rsp.Status = rsr[0].Field("status").Uint8()
-
-	rsp.Kind = "UserRole"
+	set.Kind = "UserRole"
 }
 
 func (c UserMgr) RoleSetAction() {
 
-	rsp := idsapi.UserRole{}
+	var (
+		prev        idsapi.UserRole
+		set         idsapi.UserRole
+		prevVersion uint64
+	)
 
-	defer c.RenderJson(&rsp)
+	defer c.RenderJson(&set)
 
-	if err := c.Request.JsonDecode(&rsp); err != nil {
-		rsp.Error = &types.ErrorMeta{idsapi.ErrCodeInvalidArgument, "Bad Request"}
+	if err := c.Request.JsonDecode(&set); err != nil {
+		set.Error = &types.ErrorMeta{idsapi.ErrCodeInvalidArgument, "Bad Request"}
 		return
 	}
 
 	if !c.Session.AccessAllowed("user.admin") {
-		rsp.Error = &types.ErrorMeta{idsapi.ErrCodeAccessDenied, "Access Denied"}
+		set.Error = &types.ErrorMeta{idsapi.ErrCodeAccessDenied, "Access Denied"}
 		return
 	}
 
-	dcn, err := rdo.ClientPull("def")
-	if err != nil {
-		rsp.Error = &types.ErrorMeta{idsapi.ErrCodeUnavailable, "Service Unavailable"}
-		return
-	}
+	if set.Meta.ID == "" {
 
-	q := base.NewQuerySet().From("ids_role").Limit(1)
-
-	isNew := true
-	roleset := map[string]interface{}{}
-
-	if rsp.Meta.ID != "" {
-
-		q.Where.And("rid", rsp.Meta.ID)
-
-		rsrole, err := dcn.Base.Query(q)
-		if err != nil || len(rsrole) == 0 {
-			rsp.Error = &types.ErrorMeta{idsapi.ErrCodeInvalidArgument, "UserRole Not Found"}
-			return
-		}
-
-		isNew = false
-	}
-
-	roleset["updated"] = base.TimeNow("datetime")
-	roleset["name"] = rsp.Meta.Name
-	roleset["desc"] = rsp.Desc
-	roleset["status"] = rsp.Status
-	// roleset["privileges"] = strings.Join(c.Params.Values["privileges"], ",")
-
-	if isNew {
-
-		si, err := c.Session.SessionFetch()
-		if err != nil {
-			return
-		}
-
-		roleset["created"] = base.TimeNow("datetime")
-		roleset["uid"] = si.UserID
-
-		_, err = dcn.Base.Insert("ids_role", roleset)
-		if err != nil {
-			rsp.Error = &types.ErrorMeta{idsapi.ErrCodeUnavailable, "Service Unavailable"}
-			return
-		}
+		//
+		set.Meta.ID = utils.StringNewRand(8)
+		set.Meta.Created = utilx.TimeNow("atom")
+		set.Meta.UserID = utils.StringEncode16("sysadmin", 8)
 
 	} else {
 
-		frupd := base.NewFilter()
-		frupd.And("rid", rsp.Meta.ID)
-		if _, err := dcn.Base.Update("ids_role", roleset, frupd); err != nil {
-			rsp.Error = &types.ErrorMeta{idsapi.ErrCodeUnavailable, "Service Unavailable"}
+		if obj := store.BtAgent.ObjectGet(btapi.ObjectProposal{
+			Meta: btapi.ObjectMeta{
+				Path: "/role/" + set.Meta.ID,
+			},
+		}); obj.Error == nil {
+			obj.JsonDecode(&prev)
+			prevVersion = obj.Meta.Version
+		}
+
+		if prev.Meta.ID != set.Meta.ID {
+			set.Error = &types.ErrorMeta{idsapi.ErrCodeInvalidArgument, "UserRole Not Found"}
 			return
 		}
+
+		set.Meta.Created = prev.Meta.Updated
+		set.Meta.UserID = prev.Meta.UserID
+
 	}
 
-	rsp.Kind = "UserRole"
+	set.Meta.Updated = utilx.TimeNow("atom")
+	// roleset["privileges"] = strings.Join(c.Params.Values["privileges"], ",")
+
+	setjs, _ := utils.JsonEncode(set)
+
+	if obj := store.BtAgent.ObjectSet(btapi.ObjectProposal{
+		Meta: btapi.ObjectMeta{
+			Path: "/role/" + set.Meta.ID,
+		},
+		Data:        setjs,
+		PrevVersion: prevVersion,
+	}); obj.Error != nil {
+		set.Error = &types.ErrorMeta{"500", obj.Error.Message}
+		return
+	}
+
+	set.Kind = "UserRole"
 }

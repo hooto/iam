@@ -16,8 +16,7 @@ package ctrl
 
 import (
 	"github.com/lessos/lessgo/httpsrv"
-
-	"../../config"
+	"github.com/lessos/lessids/config"
 )
 
 func NewModule() httpsrv.Module {
@@ -36,7 +35,6 @@ func NewModule() httpsrv.Module {
 	module.ControllerRegister(new(Service))
 	module.ControllerRegister(new(Reg))
 	module.ControllerRegister(new(User))
-	module.ControllerRegister(new(Status))
 	module.ControllerRegister(new(AppAuth))
 
 	// // TODO auto config

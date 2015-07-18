@@ -1,12 +1,15 @@
 package role
 
 import (
+	"fmt"
 	"strings"
 	"sync"
 	"time"
 
-	"github.com/lessos/lessgo/data/rdo"
-	"github.com/lessos/lessgo/data/rdo/base"
+	"github.com/lessos/bigtree/btapi"
+
+	"github.com/lessos/lessids/idsapi"
+	"github.com/lessos/lessids/store"
 )
 
 var (
@@ -29,42 +32,50 @@ func innerRefresh() {
 	locker.Lock()
 	defer locker.Unlock()
 
-	dcn, err := rdo.ClientPull("def")
-	if err != nil {
-		return
-	}
+	if objs := store.BtAgent.ObjectList(btapi.ObjectProposal{
+		Meta: btapi.ObjectMeta{
+			Path: "/app-instance/",
+		},
+	}); objs.Error == nil {
 
-	q := base.NewQuerySet().From("ids_privilege").Limit(1000)
-	rspri, err := dcn.Base.Query(q)
-	if err != nil || len(rspri) == 0 {
-		return
-	}
-	for _, v := range rspri {
+		for _, obj := range objs.Items {
 
-		pkey := v.Field("instance").String() + "." + v.Field("privilege").String()
-		if _, ok := privileges[pkey]; ok {
-			continue
+			var inst idsapi.AppInstance
+			if err := obj.JsonDecode(&inst); err == nil {
+
+				for _, priv := range inst.Privileges {
+
+					pkey := inst.Meta.ID + "." + priv.Privilege
+
+					if _, ok := privileges[pkey]; ok {
+						continue
+					}
+
+					privileges[pkey] = fmt.Sprintf("%d", priv.ID)
+				}
+			}
 		}
-
-		privileges[pkey] = v.Field("pid").String()
 	}
 
-	q = base.NewQuerySet().From("ids_role").Limit(1000)
-	q.Where.And("status", 1)
-	rsrole, err := dcn.Base.Query(q)
-	if err != nil || len(rsrole) == 0 {
-		return
-	}
+	//
+	if objs := store.BtAgent.ObjectList(btapi.ObjectProposal{
+		Meta: btapi.ObjectMeta{
+			Path: "/role/",
+		},
+	}); objs.Error == nil {
 
-	for _, v := range rsrole {
+		for _, obj := range objs.Items {
 
-		pid := v.Field("rid").String()
+			var role idsapi.UserRole
+			if err := obj.JsonDecode(&role); err == nil {
 
-		if _, ok := roles[pid]; ok {
-			continue
+				if _, ok := roles[role.Meta.ID]; ok {
+					continue
+				}
+
+				roles[role.Meta.ID] = role.Privileges
+			}
 		}
-
-		roles[pid] = strings.Split(v.Field("privileges").String(), ",")
 	}
 
 	nextRefresh = time.Now().Add(time.Second * 60)

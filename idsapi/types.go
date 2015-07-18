@@ -44,9 +44,16 @@ type UserSession struct {
 	Name           string    `json:"name"`
 	Data           string    `json:"data"`
 	Roles          string    `json:"roles"`
-	Expired        string    `json:"expired"`
+	Groups         []uint32  `json:"groups"`
 	InnerExpired   time.Time `json:"inner_expired,omitempty"`
 	Timezone       string    `json:"timezone"`
+	Source         string    `json:"source"`
+	Created        string    `json:"created"`
+	Expired        string    `json:"expired"`
+}
+
+func (s *UserSession) IsLogin() bool {
+	return (s.UserID != "")
 }
 
 type UserAccessEntry struct {
@@ -64,6 +71,7 @@ type User struct {
 	Auth           string           `json:"auth,omitempty"`
 	Timezone       string           `json:"timezone,omitempty"`
 	Roles          []uint16         `json:"roles,omitempty"`
+	Groups         []uint32         `json:"groups,omitempty"`
 	Status         uint8            `json:"status"`
 	Profile        *UserProfile     `json:"profile,omitempty"`
 }
@@ -79,6 +87,7 @@ type UserProfile struct {
 	Login          User   `json:"login,omitempty"`
 	Gender         uint8  `json:"gender,omitempty"`
 	Photo          string `json:"photo,omitempty"`
+	PhotoSource    string `json:"photoSource,omitempty"`
 	Name           string `json:"name,omitempty"`
 	Birthday       string `json:"birthday,omitempty"`
 	About          string `json:"about,omitempty"`
@@ -88,6 +97,14 @@ type UserPasswordSet struct {
 	types.TypeMeta  `json:",inline"`
 	CurrentPassword string `json:"currentPassword,omitempty"`
 	NewPassword     string `json:"newPassword,omitempty"`
+}
+
+type UserPasswordReset struct {
+	types.TypeMeta `json:",inline"`
+	ID             string `json:"id,omitempty"`
+	UserID         string `json:"userid,omitempty"`
+	Email          string `json:"email,omitempty"`
+	Expired        string `json:"expired,omitempty"`
 }
 
 type UserEmailSet struct {
@@ -108,6 +125,7 @@ type UserRole struct {
 	Meta           types.ObjectMeta `json:"meta,omitempty"`
 	Status         uint8            `json:"status"`
 	Desc           string           `json:"desc,omitempty"`
+	Privileges     []string         `json:"privileges,omitempty"`
 }
 
 type UserRoleList struct {
@@ -153,4 +171,12 @@ type AppInstanceList struct {
 type SysConfigList struct {
 	types.TypeMeta `json:",inline"`
 	Items          types.LabelListMeta `json:"items,omitempty"`
+}
+
+type SysConfigMailer struct {
+	types.TypeMeta `json:",inline"`
+	SmtpHost       string `json:"smtp_host"`
+	SmtpPort       string `json:"smtp_port"`
+	SmtpUser       string `json:"smtp_user"`
+	SmtpPass       string `json:"smtp_pass"`
 }

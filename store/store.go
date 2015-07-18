@@ -12,30 +12,19 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package profile
+package store
 
 import (
-	"errors"
-	"strings"
-	"time"
-
-	"github.com/lessos/lessids/idsapi"
+	"github.com/lessos/bigtree/btagent"
+	"github.com/lessos/bigtree/btapi"
 )
 
-func PutValidate(set idsapi.UserProfile) (idsapi.UserProfile, error) {
+var (
+	BtAgent *btagent.Agent
+)
 
-	set.Name = strings.TrimSpace(set.Name)
-	if len(set.Name) < 1 || len(set.Name) > 30 {
-		return set, errors.New("Name must be between 1 and 30 characters long")
-	}
-
-	if _, err := time.Parse("2006-01-02", set.Birthday); err != nil {
-		return set, errors.New("Birthday is not valid")
-	}
-
-	if set.About == "" {
-		return set, errors.New("About Me can not be null")
-	}
-
-	return set, nil
+func init() {
+	BtAgent, _ = btagent.NewAgent(btapi.DataAccessConfig{
+		PathPoint: "/sys/ids",
+	})
 }

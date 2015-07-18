@@ -16,20 +16,21 @@ package ctrl
 
 import (
 	"fmt"
-	"time"
+	"strings"
 
-	"github.com/lessos/lessgo/data/rdo"
-	"github.com/lessos/lessgo/data/rdo/base"
+	"github.com/lessos/bigtree/btapi"
 	"github.com/lessos/lessgo/httpsrv"
 	"github.com/lessos/lessgo/net/email"
 	"github.com/lessos/lessgo/pass"
 	"github.com/lessos/lessgo/types"
 	"github.com/lessos/lessgo/utils"
+	"github.com/lessos/lessgo/utilx"
 
-	"../../base/login"
-	"../../base/signup"
-	"../../config"
-	"../../idsapi"
+	"github.com/lessos/lessids/base/login"
+	"github.com/lessos/lessids/base/signup"
+	"github.com/lessos/lessids/config"
+	"github.com/lessos/lessids/idsapi"
+	"github.com/lessos/lessids/store"
 )
 
 type Reg struct {
@@ -41,8 +42,6 @@ func (c Reg) SignUpAction() {
 }
 
 func (c Reg) SignUpRegAction() {
-
-	c.AutoRender = false
 
 	rsp := struct {
 		types.TypeMeta
@@ -58,37 +57,49 @@ func (c Reg) SignUpRegAction() {
 		return
 	}
 
-	dcn, err := rdo.ClientPull("def")
-	if err != nil {
-		rsp.Error = &types.ErrorMeta{idsapi.ErrCodeInternalError, "Internal Server Error"}
+	uname := strings.TrimSpace(strings.ToLower(c.Params.Get("uname")))
+
+	var user idsapi.User
+	if obj := store.BtAgent.ObjectGet(btapi.ObjectProposal{
+		Meta: btapi.ObjectMeta{
+			Path: "/user/" + utils.StringEncode16(uname, 8),
+		},
+	}); obj.Error == nil {
+		obj.JsonDecode(&user)
+	}
+
+	if user.Meta.Name == uname {
+		rsp.Error = &types.ErrorMeta{idsapi.ErrCodeInvalidArgument, "The `Username` already exists, please choose another one"}
 		return
 	}
 
-	q := base.NewQuerySet().From("ids_login").Limit(1)
-	q.Where.And("email", c.Params.Get("email"))
-	rsu, err := dcn.Base.Query(q)
-	if err == nil && len(rsu) == 1 {
-		rsp.Error = &types.ErrorMeta{idsapi.ErrCodeInvalidArgument, "The `Email` already exists, please choose another one"}
-		return
+	auth, _ := pass.HashDefault(c.Params.Get("passwd"))
+
+	user = idsapi.User{
+		Meta: types.ObjectMeta{
+			ID:      utils.StringEncode16(uname, 8),
+			Name:    uname,
+			Created: utilx.TimeNow("atom"),
+			Updated: utilx.TimeNow("atom"),
+		},
+		Email:    strings.TrimSpace(strings.ToLower(c.Params.Get("email"))),
+		Auth:     auth,
+		Name:     c.Params.Get("name"),
+		Status:   1,
+		Roles:    []uint16{100},
+		Groups:   []uint32{100},
+		Timezone: "UTC",
 	}
 
-	pass, _ := pass.HashDefault(c.Params.Get("passwd"))
-	uid := utils.StringEncode16(c.Params.Get("uname"), 8)
+	userjs, _ := utils.JsonEncode(user)
 
-	item := map[string]interface{}{
-		"uid":      uid,
-		"uname":    c.Params.Get("uname"),
-		"email":    c.Params.Get("email"),
-		"pass":     pass,
-		"name":     c.Params.Get("name"),
-		"status":   1,
-		"roles":    "100",
-		"timezone": "UTC",                    // TODO
-		"created":  base.TimeNow("datetime"), // TODO
-		"updated":  base.TimeNow("datetime"), // TODO
-	}
-	if _, err := dcn.Base.Insert("ids_login", item); err != nil {
-		rsp.Error = &types.ErrorMeta{idsapi.ErrCodeInternalError, "Can not write to database"}
+	if obj := store.BtAgent.ObjectSet(btapi.ObjectProposal{
+		Meta: btapi.ObjectMeta{
+			Path: "/user/" + user.Meta.ID,
+		},
+		Data: userjs,
+	}); obj.Error != nil {
+		rsp.Error = &types.ErrorMeta{"500", obj.Error.Message}
 		return
 	}
 
@@ -116,29 +127,41 @@ func (c Reg) ForgotPassPutAction() {
 		c.Params.Set("email", email)
 	}
 
-	dcn, err := rdo.ClientPull("def")
-	if err != nil {
-		rsp.Error = &types.ErrorMeta{idsapi.ErrCodeInternalError, "Internal Server Error"}
+	if c.Params.Get("userid") == "" {
+		rsp.Error = &types.ErrorMeta{idsapi.ErrCodeInvalidArgument, "User Not Found"}
 		return
 	}
 
-	q := base.NewQuerySet().From("ids_login").Limit(1)
-	q.Where.And("email", c.Params.Get("email"))
-	rsl, err := dcn.Base.Query(q)
-	if err != nil || len(rsl) != 1 {
-		rsp.Error = &types.ErrorMeta{idsapi.ErrCodeInvalidArgument, "Email can not found"}
+	var user idsapi.User
+	if obj := store.BtAgent.ObjectGet(btapi.ObjectProposal{
+		Meta: btapi.ObjectMeta{
+			Path: "/user/" + c.Params.Get("userid"),
+		},
+	}); obj.Error == nil {
+		obj.JsonDecode(&user)
+	}
+
+	if user.Meta.UserID != c.Params.Get("userid") {
+		rsp.Error = &types.ErrorMeta{idsapi.ErrCodeInvalidArgument, "User Not Found"}
 		return
 	}
 
-	id := utils.StringNewRand(24)
-	item := map[string]interface{}{
-		"id":      id,
-		"status":  0,
-		"email":   c.Params.Get("email"),                 // TODO
-		"expired": base.TimeNowAdd("datetime", "+3600s"), // TODO
+	reset := idsapi.UserPasswordReset{
+		ID:      utils.StringNewRand(24),
+		UserID:  user.Meta.ID,
+		Email:   c.Params.Get("email"),
+		Expired: utilx.TimeNowAdd("atom", "+3600s"),
 	}
-	if _, err := dcn.Base.Insert("ids_resetpass", item); err != nil {
-		rsp.Error = &types.ErrorMeta{idsapi.ErrCodeInternalError, "Can not write to database"}
+	resetjs, _ := utils.JsonEncode(reset)
+
+	if obj := store.BtAgent.ObjectSet(btapi.ObjectProposal{
+		Meta: btapi.ObjectMeta{
+			Path: "/pwd-reset/" + reset.ID,
+			Ttl:  3600,
+		},
+		Data: resetjs,
+	}); obj.Error != nil {
+		rsp.Error = &types.ErrorMeta{"500", obj.Error.Message}
 		return
 	}
 
@@ -163,7 +186,7 @@ func (c Reg) ForgotPassPutAction() {
 <div>********************************************************</div>
 <div>Please do not reply to this message. Mail sent to this address cannot be answered.</div>
 </body>
-</html>`, config.Config.ServiceName, c.Request.Host, id, base.TimeNow("datetime"), config.Config.ServiceName)
+</html>`, config.Config.ServiceName, c.Request.Host, reset.ID, utilx.TimeNow("datetime"), config.Config.ServiceName)
 
 	err = mr.SendMail(c.Params.Get("email"), c.Translate("Reset your password"), body)
 
@@ -180,20 +203,16 @@ func (c Reg) PassResetAction() {
 		return
 	}
 
-	dcn, err := rdo.ClientPull("def")
-	if err != nil {
-		return
+	var reset idsapi.UserPasswordReset
+	if obj := store.BtAgent.ObjectGet(btapi.ObjectProposal{
+		Meta: btapi.ObjectMeta{
+			Path: "/pwd-reset/" + c.Params.Get("id"),
+		},
+	}); obj.Error == nil {
+		obj.JsonDecode(&reset)
 	}
 
-	q := base.NewQuerySet().From("ids_resetpass").Limit(1)
-	q.Where.And("id", c.Params.Get("id"))
-	rsr, err := dcn.Base.Query(q)
-	if err != nil || len(rsr) != 1 {
-		return
-	}
-
-	expired := rsr[0].Field("expired").TimeParse("datetime") //, base.TimeParse(rsr[0]["expired"].(string), "datetime")
-	if expired.Before(time.Now()) {
+	if reset.ID != c.Params.Get("id") {
 		return
 	}
 
@@ -218,65 +237,64 @@ func (c Reg) PassResetPutAction() {
 		return
 	}
 
-	dcn, err := rdo.ClientPull("def")
-	if err != nil {
-		rsp.Error = &types.ErrorMeta{idsapi.ErrCodeInternalError, "Internal Server Error"}
-		return
+	var reset idsapi.UserPasswordReset
+	rsobj := store.BtAgent.ObjectGet(btapi.ObjectProposal{
+		Meta: btapi.ObjectMeta{
+			Path: "/pwd-reset/" + c.Params.Get("id"),
+		},
+	})
+	if rsobj.Error == nil {
+		rsobj.JsonDecode(&reset)
 	}
 
-	q := base.NewQuerySet().From("ids_resetpass").Limit(1)
-	q.Where.And("id", c.Params.Get("id"))
-	rsr, err := dcn.Base.Query(q)
-	if err != nil || len(rsr) != 1 {
+	if reset.ID != c.Params.Get("id") {
 		rsp.Error = &types.ErrorMeta{idsapi.ErrCodeInvalidArgument, "Token not found"}
 		return
 	}
 
-	expired := rsr[0].Field("expired").TimeParse("datetime") // base.TimeParse(rsr[0]["expired"].(string), "datetime")
-	if expired.Before(time.Now()) {
-		rsp.Error = &types.ErrorMeta{idsapi.ErrCodeInvalidArgument, "Token expired"}
-		return
-	}
-
-	if rsr[0].Field("email").String() != c.Params.Get("email") {
+	if reset.Email != c.Params.Get("email") {
 		rsp.Error = &types.ErrorMeta{idsapi.ErrCodeInvalidArgument, "Email is not valid"}
 		return
 	}
 
-	q = base.NewQuerySet().From("ids_login").Limit(1)
-	q.Where.And("email", c.Params.Get("email"))
-	rsl, err := dcn.Base.Query(q)
-	if err != nil || len(rsl) != 1 {
-		rsp.Error = &types.ErrorMeta{idsapi.ErrCodeInvalidArgument, "User can not found"}
+	var user idsapi.User
+	uobj := store.BtAgent.ObjectGet(btapi.ObjectProposal{
+		Meta: btapi.ObjectMeta{
+			Path: "/user/" + reset.UserID,
+		},
+	})
+	if uobj.Error == nil {
+		uobj.JsonDecode(&user)
+	}
+
+	if user.Meta.ID != reset.UserID {
+		rsp.Error = &types.ErrorMeta{idsapi.ErrCodeInvalidArgument, "User Not Found"}
 		return
 	}
 
-	q = base.NewQuerySet().From("ids_profile").Limit(1)
-	q.Where.And("uid", rsl[0].Field("uid").Int())
-	rspf, err := dcn.Base.Query(q)
-	if err != nil || len(rspf) != 1 {
-		rsp.Error = &types.ErrorMeta{idsapi.ErrCodeInvalidArgument, "User can not found"}
+	user.Email = reset.Email
+	user.Auth, _ = pass.HashDefault(c.Params.Get("passwd"))
+	user.Meta.Updated = utilx.TimeNow("atom")
+
+	userjs, _ := utils.JsonEncode(user)
+
+	if obj := store.BtAgent.ObjectSet(btapi.ObjectProposal{
+		Meta: btapi.ObjectMeta{
+			Path: "/user/" + user.Meta.ID,
+		},
+		PrevVersion: uobj.Meta.Version,
+		Data:        userjs,
+	}); obj.Error != nil {
+		rsp.Error = &types.ErrorMeta{"500", obj.Error.Message}
 		return
 	}
-	// if fmt.Sprintf("%v", rspf[0].Field("birthday").String()) != c.Params.Get("birthday") {
-	// 	rsp.Error = &types.ErrorMeta{idsapi.ErrCodeInvalidArgument, "Email or Birthday is not valid"}
-	// 	return
-	// }
 
-	pass, _ := pass.HashDefault(c.Params.Get("passwd"))
-
-	itemlogin := map[string]interface{}{
-		"pass":    pass,
-		"updated": base.TimeNow("datetime"),
-	}
-	ft := base.NewFilter()
-	ft.And("uid", rsl[0].Field("uid").Int())
-	dcn.Base.Update("ids_login", itemlogin, ft)
-
-	//
-	delfr := base.NewFilter()
-	delfr.And("id", c.Params.Get("id"))
-	dcn.Base.Delete("ids_resetpass", delfr)
+	store.BtAgent.ObjectDel(btapi.ObjectProposal{
+		Meta: btapi.ObjectMeta{
+			Path: "/pwd-reset/" + reset.ID,
+		},
+		PrevVersion: rsobj.Meta.Version,
+	})
 
 	rsp.Kind = "UserAuth"
 }

@@ -17,7 +17,7 @@ package login
 import (
 	"errors"
 
-	"../../idsapi"
+	"github.com/lessos/lessids/idsapi"
 )
 
 func PassSetValidate(set idsapi.UserPasswordSet) error {

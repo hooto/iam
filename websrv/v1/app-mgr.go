@@ -15,15 +15,12 @@
 package v1
 
 import (
-	"strconv"
-	"strings"
-
-	"github.com/lessos/lessgo/data/rdo"
-	"github.com/lessos/lessgo/data/rdo/base"
+	"github.com/lessos/bigtree/btapi"
 	"github.com/lessos/lessgo/httpsrv"
 	"github.com/lessos/lessgo/types"
 
-	"../../idsapi"
+	"github.com/lessos/lessids/idsapi"
+	"github.com/lessos/lessids/store"
 )
 
 const (
@@ -36,171 +33,77 @@ type AppMgr struct {
 
 func (c AppMgr) InstListAction() {
 
-	rsp := idsapi.AppInstanceList{}
+	ls := idsapi.AppInstanceList{}
 
-	defer c.RenderJson(&rsp)
+	defer c.RenderJson(&ls)
 
 	if !c.Session.AccessAllowed("user.admin") {
-		rsp.Error = &types.ErrorMeta{idsapi.ErrCodeAccessDenied, "Access Denied"}
+		ls.Error = &types.ErrorMeta{idsapi.ErrCodeAccessDenied, "Access Denied"}
 		return
 	}
 
-	dcn, err := rdo.ClientPull("def")
-	if err != nil {
-		rsp.Error = &types.ErrorMeta{idsapi.ErrCodeUnavailable, "Service Unavailable"}
-		return
-	}
+	if objs := store.BtAgent.ObjectList(btapi.ObjectProposal{
+		Meta: btapi.ObjectMeta{
+			Path: "/app-instance/",
+		},
+	}); objs.Error == nil {
 
-	users := []interface{}{}
+		for _, obj := range objs.Items {
 
-	q := base.NewQuerySet().From("ids_instance").Limit(appMgrInstPageLimit)
+			var inst idsapi.AppInstance
+			if err := obj.JsonDecode(&inst); err == nil {
 
-	count, _ := dcn.Base.Count("ids_instance", q.Where)
-	page := c.Params.Int64("page")
-	if page < 1 {
-		page = 1
-	}
-	if page > 1 {
-		q.Offset(int64((page - 1) * appMgrInstPageLimit))
-	}
-
-	if rs, err := dcn.Base.Query(q); err == nil && len(rs) > 0 {
-
-		for _, v := range rs {
-
-			item := idsapi.AppInstance{
-				Meta: types.ObjectMeta{
-					ID:      v.Field("id").String(),
-					Name:    v.Field("app_title").String(),
-					Created: v.Field("created").TimeFormat("datetime", "atom"),
-					Updated: v.Field("updated").TimeFormat("datetime", "atom"),
-					UserID:  v.Field("uid").String(),
-				},
-				AppID:   v.Field("app_id").String(),
-				Version: v.Field("version").String(),
-				Status:  v.Field("status").Uint8(),
-				// Privileges
+				ls.Items = append(ls.Items, inst)
 			}
-
-			uid := v.Field("uid").String()
-
-			inArray := false
-			for _, vuid := range users {
-				if vuid == uid {
-					inArray = true
-					break
-				}
-			}
-
-			if !inArray {
-				users = append(users, uid)
-			}
-
-			rsp.Items = append(rsp.Items, item)
 		}
 	}
 
-	rsp.Meta.TotalResults = uint64(count)
-	rsp.Meta.StartIndex = uint64((page - 1) * appMgrInstPageLimit)
-	rsp.Meta.ItemsPerList = uint64(appMgrInstPageLimit)
+	// TODO Query
 
-	rsp.Kind = "AppInstanceList"
-
-	// // 	//
-	// 	q = base.NewQuerySet().From("ids_login").Limit(1000)
-	// 	q.Where.And("uid.in", users...)
-	// 	rslogin, err := dcn.Base.Query(q)
-	// 	if err == nil && len(rslogin) > 0 {
-	// 		for _, v := range rslogin {
-
-	// 			for k2, v2 := range ls {
-	// 				if v2["uid"] == v.Field("uid").String() {
-	// 					ls[k2]["uid_name"] = v.Field("name").String()
-	// 				}
-	// 			}
-	// 		}
-	// 	}
-
-	// // 	c.Data["list"] = ls
+	ls.Kind = "AppInstanceList"
 }
 
 func (c AppMgr) InstEntryAction() {
 
-	rsp := idsapi.AppInstance{}
+	set := idsapi.AppInstance{}
 
-	defer c.RenderJson(&rsp)
+	defer c.RenderJson(&set)
 
 	if !c.Session.AccessAllowed("user.admin") {
-		rsp.Error = &types.ErrorMeta{idsapi.ErrCodeAccessDenied, "Access Denied"}
+		set.Error = &types.ErrorMeta{idsapi.ErrCodeAccessDenied, "Access Denied"}
 		return
 	}
 
-	dcn, err := rdo.ClientPull("def")
-	if err != nil {
-		rsp.Error = &types.ErrorMeta{idsapi.ErrCodeUnavailable, "Service Unavailable"}
+	if obj := store.BtAgent.ObjectGet(btapi.ObjectProposal{
+		Meta: btapi.ObjectMeta{
+			Path: "/app-instance/" + c.Params.Get("instid"),
+		},
+	}); obj.Error == nil {
+		obj.JsonDecode(&set)
+	}
+
+	if set.Meta.ID == "" {
+		set.Error = &types.ErrorMeta{idsapi.ErrCodeInvalidArgument, "App Instance Not Found"}
 		return
 	}
 
-	q := base.NewQuerySet().From("ids_instance").Limit(1)
-	q.Where.And("id", c.Params.Get("instid"))
+	// TODO set.Privileges
 
-	rsr, err := dcn.Base.Query(q)
-	if err != nil || len(rsr) != 1 {
-		rsp.Error = &types.ErrorMeta{idsapi.ErrCodeAccessDenied, "Access Denied"}
-		return
-	}
-
-	rsp.Meta.ID = rsr[0].Field("rid").String()
-	rsp.Meta.Name = rsr[0].Field("app_title").String()
-	rsp.Meta.Created = rsr[0].Field("created").TimeFormat("datetime", "atom")
-	rsp.Meta.Updated = rsr[0].Field("updated").TimeFormat("datetime", "atom")
-
-	rsp.AppID = rsr[0].Field("app_id").String()
-	rsp.Version = rsr[0].Field("version").String()
-	rsp.Status = rsr[0].Field("status").Uint8()
-
-	q = base.NewQuerySet().From("ids_privilege").Limit(500)
-	q.Where.And("instance", c.Params.Get("instid"))
-
-	if rspri, err := dcn.Base.Query(q); err == nil && len(rspri) > 0 {
-
-		for _, v := range rspri {
-
-			item := idsapi.AppPrivilege{
-				ID:        v.Field("pid").Uint32(),
-				Privilege: v.Field("privilege").String(),
-				Desc:      v.Field("desc").String(),
-			}
-
-			rids := strings.Split(v.Field("roles").String(), ",")
-			for _, rv := range rids {
-
-				roleid, _ := strconv.Atoi(rv)
-				if roleid > 0 {
-					item.Roles = append(item.Roles, uint16(roleid))
-				}
-			}
-
-			rsp.Privileges = append(rsp.Privileges, item)
-		}
-	}
-
-	rsp.Kind = "AppInstance"
-
+	set.Kind = "AppInstance"
 }
 
 // func (c AppMgr) InstSaveAction() {
 
 // 	c.AutoRender = false
 
-// 	var rsp ResponseJson
-// 	rsp.ApiVersion = apiVersion
-// 	rsp.Status = 400
-// 	rsp.Message = "Bad Request"
+// 	var set ResponseJson
+// 	set.ApiVersion = apiVersion
+// 	set.Status = 400
+// 	set.Message = "Bad Request"
 
 // 	defer func() {
-// 		if rspj, err := utils.JsonEncode(rsp); err == nil {
-// 			io.WriteString(c.Response.Out, rspj)
+// 		if setj, err := utils.JsonEncode(set); err == nil {
+// 			io.WriteString(c.Response.Out, setj)
 // 		}
 // 	}()
 
@@ -210,7 +113,7 @@ func (c AppMgr) InstEntryAction() {
 
 // 	dcn, err := rdo.ClientPull("def")
 // 	if err != nil {
-// 		rsp.Message = "Internal Server Error"
+// 		set.Message = "Internal Server Error"
 // 		return
 // 	}
 
@@ -225,8 +128,8 @@ func (c AppMgr) InstEntryAction() {
 
 // 		rsinst, err := dcn.Base.Query(q)
 // 		if err != nil || len(rsinst) == 0 {
-// 			rsp.Status = 400
-// 			rsp.Message = http.StatusText(400)
+// 			set.Status = 400
+// 			set.Message = http.StatusText(400)
 // 			return
 // 		}
 
@@ -247,12 +150,12 @@ func (c AppMgr) InstEntryAction() {
 // 		frupd := base.NewFilter()
 // 		frupd.And("id", c.Params.Get("instid"))
 // 		if _, err := dcn.Base.Update("ids_instance", instset, frupd); err != nil {
-// 			rsp.Status = 500
-// 			rsp.Message = "Can not write to database"
+// 			set.Status = 500
+// 			set.Message = "Can not write to database"
 // 			return
 // 		}
 // 	}
 
-// 	rsp.Status = 200
-// 	rsp.Message = ""
+// 	set.Status = 200
+// 	set.Message = ""
 // }

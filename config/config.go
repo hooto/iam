@@ -23,9 +23,10 @@ import (
 	"regexp"
 	"strings"
 
-	"github.com/lessos/lessgo/data/rdo"
-	"github.com/lessos/lessgo/data/rdo/base"
+	"github.com/lessos/bigtree/btapi"
 	"github.com/lessos/lessgo/net/email"
+	"github.com/lessos/lessids/idsapi"
+	"github.com/lessos/lessids/store"
 )
 
 const (
@@ -36,23 +37,19 @@ const (
 
 var (
 	err    error
-	Config ConfigCommon
+	Config = ConfigCommon{
+		ServiceName:      "lessOS Identity Service",
+		WebUiBannerTitle: "Account Center",
+	}
 )
-
-type ConfigMailer struct {
-	SmtpHost string `json:"smtp_host"`
-	SmtpPort string `json:"smtp_port"`
-	SmtpUser string `json:"smtp_user"`
-	SmtpPass string `json:"smtp_pass"`
-}
 
 type ConfigCommon struct {
 	Port             uint16 `json:"port"`
 	Prefix           string
 	ServiceName      string `json:"service_name"`
 	WebUiBannerTitle string
-	Mailer           ConfigMailer `json:"mailer"`
-	Database         base.Config  `json:"database"`
+	Mailer           idsapi.SysConfigMailer `json:"mailer"`
+	BtData           btapi.DataAccessConfig `json:"btdata,omitempty"`
 }
 
 func Init(prefix string) error {
@@ -89,17 +86,6 @@ func Init(prefix string) error {
 		return fmt.Errorf("Error: config file invalid. (%s)", err.Error())
 	}
 
-	if Config.ServiceName == "" {
-		Config.ServiceName = "lessOS Identity Service"
-	}
-
-	Config.WebUiBannerTitle = "Account Center"
-
-	_, err = Config.DatabaseInstance()
-	if err != nil {
-		return err
-	}
-
 	Config.Refresh()
 
 	return nil
@@ -107,46 +93,44 @@ func Init(prefix string) error {
 
 func (c *ConfigCommon) Refresh() {
 
-	dcn, err := rdo.ClientPull("def")
-	if err != nil {
-		return
-	}
+	//
+	var mailer idsapi.SysConfigMailer
+	if obj := store.BtAgent.ObjectGet(btapi.ObjectProposal{
+		Meta: btapi.ObjectMeta{
+			Path: "/sys-config/mailer",
+		},
+	}); obj.Error == nil {
+		obj.JsonDecode(&mailer)
 
-	q := base.NewQuerySet().From("ids_sysconfig").Limit(100)
-	rs, err := dcn.Base.Query(q)
-	if err != nil || len(rs) < 1 {
-		return
-	}
+		if c.Mailer.SmtpHost != "" {
 
-	for _, v := range rs {
-
-		val := v.Field("value").String()
-		if val == "" {
-			continue
-		}
-
-		switch v.Field("key").String() {
-		case "service_name":
-			c.ServiceName = val
-		case "webui_banner_title":
-			c.WebUiBannerTitle = val
-		case "mailer_smtp_host":
-			c.Mailer.SmtpHost = val
-		case "mailer_smtp_port":
-			c.Mailer.SmtpPort = val
-		case "mailer_smtp_user":
-			c.Mailer.SmtpUser = val
-		case "mailer_smtp_pass":
-			c.Mailer.SmtpPass = val
+			email.MailerRegister("def",
+				c.Mailer.SmtpHost,
+				c.Mailer.SmtpPort,
+				c.Mailer.SmtpUser,
+				c.Mailer.SmtpPass)
 		}
 	}
 
-	if c.Mailer.SmtpHost != "" {
+	if obj := store.BtAgent.ObjectGet(btapi.ObjectProposal{
+		Meta: btapi.ObjectMeta{
+			Path: "/sys-config/service_name",
+		},
+	}); obj.Error == nil {
 
-		email.MailerRegister("def",
-			c.Mailer.SmtpHost,
-			c.Mailer.SmtpPort,
-			c.Mailer.SmtpUser,
-			c.Mailer.SmtpPass)
+		if obj.Data != "" {
+			c.ServiceName = obj.Data
+		}
+	}
+
+	if obj := store.BtAgent.ObjectGet(btapi.ObjectProposal{
+		Meta: btapi.ObjectMeta{
+			Path: "/sys-config/webui_banner_title",
+		},
+	}); obj.Error == nil {
+
+		if obj.Data != "" {
+			c.WebUiBannerTitle = obj.Data
+		}
 	}
 }

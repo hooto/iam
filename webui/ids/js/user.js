@@ -321,8 +321,8 @@ idsuser.PhotoSetCommit = function()
 
 idsuser.SignOut = function()
 {
-    l4iCookie.Del("access_token");
+    // l4iCookie.Del("access_token");
     window.setTimeout(function(){    
-        window.location = "/ids/service/login";
+        window.location = "/ids/service/sign-out";
     }, 500);
 }

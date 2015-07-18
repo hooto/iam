@@ -22,9 +22,9 @@ import (
 
 	"github.com/lessos/lessgo/httpsrv"
 
-	"../config"
-	"../websrv/ctrl"
-	"../websrv/v1"
+	"github.com/lessos/lessids/config"
+	"github.com/lessos/lessids/websrv/ctrl"
+	"github.com/lessos/lessids/websrv/v1"
 )
 
 var flagPrefix = flag.String("prefix", "", "the prefix folder path")
