@@ -31,7 +31,7 @@
     <tr>
       <th>ID</th>
       <th>App ID</th>
-      <th>Name</th>      
+      <th>App Name</th>      
       <th>Version</th>
       <th>Status</th>
       <th>Created</th>
@@ -50,7 +50,7 @@
     <tr>
       <td>{[=v.meta.id]}</td>
       <td>{[=v.app_id]}</td>
-      <td>{[=v.meta.name]}</td>
+      <td>{[=v.app_title]}</td>
       <td>{[=v.version]}</td>
       <td>
         {[~it._statusls :sv]}
@@ -59,8 +59,8 @@
       </td>
       <td>{[=l4i.TimeParseFormat(v.meta.created, "Y-m-d")]}</td>
       <td>{[=l4i.TimeParseFormat(v.meta.updated, "Y-m-d")]}</td>
-      <td>
-        <a href="#app-mgr/inst-set" onclick="idsmyapp.InstSetForm('{[=v.meta.id]}')">Setting</a>
+      <td align="right">
+        <a href="#app-mgr/inst-set" onclick="idsmyapp.InstSetForm('{[=v.meta.id]}')"  class="btn btn-default btn-xs">Setting</a>
       </td>
     </tr>
 {[~]}

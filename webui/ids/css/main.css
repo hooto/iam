@@ -101,27 +101,64 @@ body {
   left: 40px;
 }
 
-.iuh-menu {
-  float: left;
+#ids-uh-topnav {
   position: relative;
-  height: 50px;
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  overflow: auto;
   display: table;
 }
-.iuh-menu a {
+
+#ids-uh-topnav > a {
   display: table-cell;
+  margin-right: 20px;
   vertical-align:middle;
   font-size: 16px;
   padding: 0 20px;
-  margin-right: 20px;
   text-decoration: none;
   color: #333;
+  height: 50px;
+  line-height: 50px;
 }
-.iuh-menu a:hover {
+
+#ids-uh-topnav > a:hover {
   background-color: rgba(0, 0, 0, 0.05);
 }
-.iuh-menu a.active {
+
+#ids-uh-topnav > a.active {
   background-color: rgba(0, 0, 0, 0.1);
 }
+
+.ids-subnav {
+  position: relative;
+  list-style: none;
+  padding: 0;
+  margin: 0 0 10px 0;
+  overflow: auto;
+  display: table;
+}
+
+.ids-subnav > a {
+  display: table-cell;
+  margin-right: 20px;
+  vertical-align:middle;
+  font-size: 14px;
+  padding: 5px 10px;
+  text-decoration: none;
+  color: #333;
+  border-radius: 3px;
+}
+
+.ids-subnav > a:hover {
+  background-color: rgba(0, 0, 0, 0.1);
+}
+
+.ids-subnav > a.active {
+  color: #fff;
+  background-color: #428bca;
+}
+
 
 #ids-userbox {
   margin-right: 5px;

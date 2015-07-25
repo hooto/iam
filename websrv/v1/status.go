@@ -16,23 +16,24 @@ package v1
 
 import (
 	"github.com/lessos/lessgo/httpsrv"
+	"github.com/lessos/lessgo/types"
 )
 
-func NewModule() httpsrv.Module {
+type Status struct {
+	*httpsrv.Controller
+}
 
-	module := httpsrv.NewModule("ids_api")
+func (c Status) InfoAction() {
 
-	module.ControllerRegister(new(Service))
+	rsp := struct {
+		types.TypeMeta
+		Status string `json:"status"`
+	}{
+		TypeMeta: types.TypeMeta{
+			Kind: "Status",
+		},
+		Status: "OK",
+	}
 
-	module.ControllerRegister(new(User))
-	module.ControllerRegister(new(MyApp))
-
-	module.ControllerRegister(new(SysConfig))
-	module.ControllerRegister(new(UserMgr))
-	module.ControllerRegister(new(AppMgr))
-
-	module.ControllerRegister(new(Status))
-	module.ControllerRegister(new(AppAuth))
-
-	return module
+	defer c.RenderJson(rsp)
 }

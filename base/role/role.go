@@ -1,103 +1,144 @@
+// Copyright 2015 lessOS.com, All rights reserved.
+//
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+//     http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+
 package role
 
 import (
-	"fmt"
-	"strings"
 	"sync"
 	"time"
 
 	"github.com/lessos/bigtree/btapi"
-
+	"github.com/lessos/lessgo/utils"
 	"github.com/lessos/lessids/idsapi"
 	"github.com/lessos/lessids/store"
 )
 
 var (
-	locker      sync.Mutex
-	nextRefresh = time.Now()
-	roles       = map[string][]string{}
-	privileges  = map[string]string{}
+	locker sync.Mutex
+	// nextRefresh = time.Now().Add(time.Second * -61)
+	// roles       = map[uint32]role_bound{}
+	// privileges  = map[string]string{}
+	inst2perms = map[string]*perm_map{}
 )
 
-//func innerRefresh() {
+type perm_map struct {
+	refresh time.Time
+	maps    map[string][]uint32
+}
 
-func innerRefresh() {
+// func innerRefresh() {
 
-	//fmt.Println("init once")
+// 	//fmt.Println("init once")
 
-	if nextRefresh.After(time.Now()) {
-		return
-	}
+// 	if nextRefresh.After(time.Now()) {
+// 		return
+// 	}
+
+// 	locker.Lock()
+// 	defer locker.Unlock()
+
+// 	//
+// 	if objs := store.BtAgent.ObjectList(btapi.ObjectProposal{
+// 		Meta: btapi.ObjectMeta{
+// 			Path: "/role/",
+// 		},
+// 	}); objs.Error == nil {
+
+// 		if len(objs.Items) < 3 {
+// 			it := store.InitNew{}
+// 			it.Init()
+// 		}
+
+// 		for _, obj := range objs.Items {
+
+// 			var role idsapi.UserRole
+// 			if err := obj.JsonDecode(&role); err == nil {
+
+// 				if _, ok := roles[role.IdxID]; ok {
+// 					continue
+// 				}
+
+// 				roles[role.IdxID] = role.Privileges
+// 			}
+// 		}
+// 	}
+
+// 	nextRefresh = time.Now().Add(time.Second * 60)
+// }
+
+func instPerms(instanceid string) *perm_map {
 
 	locker.Lock()
 	defer locker.Unlock()
 
-	if objs := store.BtAgent.ObjectList(btapi.ObjectProposal{
-		Meta: btapi.ObjectMeta{
-			Path: "/app-instance/",
-		},
-	}); objs.Error == nil {
+	perm, ok := inst2perms[instanceid]
+	if ok {
 
-		for _, obj := range objs.Items {
+		if perm.refresh.After(time.Now()) {
+			return perm
+		}
 
-			var inst idsapi.AppInstance
-			if err := obj.JsonDecode(&inst); err == nil {
+		perm.refresh = time.Now().Add(time.Second * 60)
 
-				for _, priv := range inst.Privileges {
+	} else {
 
-					pkey := inst.Meta.ID + "." + priv.Privilege
-
-					if _, ok := privileges[pkey]; ok {
-						continue
-					}
-
-					privileges[pkey] = fmt.Sprintf("%d", priv.ID)
-				}
-			}
+		perm = &perm_map{
+			refresh: time.Now().Add(time.Second * 60),
+			maps:    map[string][]uint32{},
 		}
 	}
 
 	//
-	if objs := store.BtAgent.ObjectList(btapi.ObjectProposal{
+	if obj := store.BtAgent.ObjectGet(btapi.ObjectProposal{
 		Meta: btapi.ObjectMeta{
-			Path: "/role/",
+			Path: "/app-instance/" + instanceid,
 		},
-	}); objs.Error == nil {
+	}); obj.Error == nil {
 
-		for _, obj := range objs.Items {
+		var inst idsapi.AppInstance
 
-			var role idsapi.UserRole
-			if err := obj.JsonDecode(&role); err == nil {
+		if err := obj.JsonDecode(&inst); err == nil {
 
-				if _, ok := roles[role.Meta.ID]; ok {
-					continue
+			for _, ip := range inst.Privileges {
+
+				if len(ip.Roles) > 0 {
+					perm.maps[ip.Privilege] = ip.Roles
 				}
-
-				roles[role.Meta.ID] = role.Privileges
 			}
+
+			inst2perms[instanceid] = perm
 		}
 	}
 
-	nextRefresh = time.Now().Add(time.Second * 60)
+	return perm
 }
 
-func AccessAllowed(role, instance, privilege string) bool {
+func AccessAllowed(roles []uint32, instanceid, privilege string) bool {
 
-	innerRefresh()
-
-	pkey := instance + "." + privilege
-	pid, ok := privileges[pkey]
-	if !ok {
-		return false
+	if instanceid == "" {
+		instanceid = utils.StringEncode16("lessids", 12)
 	}
 
-	rs := strings.Split(role, ",")
-	for _, v := range rs {
+	p := instPerms(instanceid)
 
-		if v2, ok := roles[v]; ok {
+	if mroles, ok := p.maps[privilege]; ok {
 
-			for _, pid2 := range v2 {
-				if pid2 == pid {
+		for _, rid := range mroles {
+
+			for _, diffrid := range roles {
+
+				if rid == diffrid {
 					return true
 				}
 			}

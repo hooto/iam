@@ -22,6 +22,7 @@ import (
 	"path/filepath"
 	"regexp"
 	"strings"
+	"time"
 
 	"github.com/lessos/bigtree/btapi"
 	"github.com/lessos/lessgo/net/email"
@@ -36,8 +37,10 @@ const (
 )
 
 var (
-	err    error
-	Config = ConfigCommon{
+	err                      error
+	Prefix                   = "/opt/lessos/ids"
+	UserRegistrationDisabled = false
+	Config                   = ConfigCommon{
 		ServiceName:      "lessOS Identity Service",
 		WebUiBannerTitle: "Account Center",
 	}
@@ -45,30 +48,29 @@ var (
 
 type ConfigCommon struct {
 	Port             uint16 `json:"port"`
-	Prefix           string
 	ServiceName      string `json:"service_name"`
 	WebUiBannerTitle string
-	Mailer           idsapi.SysConfigMailer `json:"mailer"`
-	BtData           btapi.DataAccessConfig `json:"btdata,omitempty"`
+	// Mailer           idsapi.SysConfigMailer `json:"mailer"`
+	BtData btapi.DataAccessConfig `json:"btdata,omitempty"`
 }
 
 func Init(prefix string) error {
 
 	if prefix == "" {
 		prefix, err = filepath.Abs(filepath.Dir(os.Args[0]) + "/..")
-		if err != nil {
-			prefix = "/opt/lessos/ids"
+		if err == nil {
+			Prefix = prefix
 		}
 	}
 	reg, _ := regexp.Compile("/+")
-	Config.Prefix = "/" + strings.Trim(reg.ReplaceAllString(prefix, "/"), "/")
+	Prefix = "/" + strings.Trim(reg.ReplaceAllString(Prefix, "/"), "/")
 
-	file := Config.Prefix + "/etc/main.json"
+	file := Prefix + "/etc/main.json"
 	if _, err := os.Stat(file); err != nil && os.IsNotExist(err) {
-		file = Config.Prefix + "/etc/main.json.dev"
+		file = Prefix + "/etc/main.json.dev"
 	}
 	if _, err := os.Stat(file); err != nil && os.IsNotExist(err) {
-		return fmt.Errorf("Error: config file is not exists %s", Config.Prefix+"/etc/main.json")
+		return fmt.Errorf("Error: config file is not exists %s", Prefix+"/etc/main.json")
 	}
 
 	fp, err := os.Open(file)
@@ -86,7 +88,25 @@ func Init(prefix string) error {
 		return fmt.Errorf("Error: config file invalid. (%s)", err.Error())
 	}
 
-	Config.Refresh()
+	InitConfig()
+
+	return InitConfig()
+}
+
+func InitConfig() error {
+
+	go func() {
+
+		for {
+
+			if store.Ready {
+				Config.Refresh()
+				break
+			}
+
+			time.Sleep(1e9)
+		}
+	}()
 
 	return nil
 }
@@ -100,15 +120,16 @@ func (c *ConfigCommon) Refresh() {
 			Path: "/sys-config/mailer",
 		},
 	}); obj.Error == nil {
+
 		obj.JsonDecode(&mailer)
 
-		if c.Mailer.SmtpHost != "" {
+		if mailer.SmtpHost != "" {
 
 			email.MailerRegister("def",
-				c.Mailer.SmtpHost,
-				c.Mailer.SmtpPort,
-				c.Mailer.SmtpUser,
-				c.Mailer.SmtpPass)
+				mailer.SmtpHost,
+				mailer.SmtpPort,
+				mailer.SmtpUser,
+				mailer.SmtpPass)
 		}
 	}
 
@@ -131,6 +152,19 @@ func (c *ConfigCommon) Refresh() {
 
 		if obj.Data != "" {
 			c.WebUiBannerTitle = obj.Data
+		}
+	}
+
+	if obj := store.BtAgent.ObjectGet(btapi.ObjectProposal{
+		Meta: btapi.ObjectMeta{
+			Path: "/sys-config/user_reg_disable",
+		},
+	}); obj.Error == nil {
+
+		if obj.Data == "1" {
+			UserRegistrationDisabled = true
+		} else {
+			UserRegistrationDisabled = false
 		}
 	}
 }

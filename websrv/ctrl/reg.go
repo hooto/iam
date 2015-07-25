@@ -17,6 +17,7 @@ package ctrl
 import (
 	"fmt"
 	"strings"
+	"time"
 
 	"github.com/lessos/bigtree/btapi"
 	"github.com/lessos/lessgo/httpsrv"
@@ -39,6 +40,7 @@ type Reg struct {
 
 func (c Reg) SignUpAction() {
 	c.Data["continue"] = c.Params.Get("continue")
+	c.Data["user_reg_disable"] = config.UserRegistrationDisabled
 }
 
 func (c Reg) SignUpRegAction() {
@@ -51,6 +53,11 @@ func (c Reg) SignUpRegAction() {
 	}
 
 	defer c.RenderJson(&rsp)
+
+	if config.UserRegistrationDisabled {
+		rsp.Error = &types.ErrorMeta{idsapi.ErrCodeAccessDenied, "The User Registration Disabled"}
+		return
+	}
 
 	if err := signup.Validate(c.Params); err != nil {
 		rsp.Error = &types.ErrorMeta{idsapi.ErrCodeInvalidArgument, err.Error()}
@@ -86,7 +93,7 @@ func (c Reg) SignUpRegAction() {
 		Auth:     auth,
 		Name:     c.Params.Get("name"),
 		Status:   1,
-		Roles:    []uint16{100},
+		Roles:    []uint32{100},
 		Groups:   []uint32{100},
 		Timezone: "UTC",
 	}
@@ -120,36 +127,36 @@ func (c Reg) ForgotPassPutAction() {
 
 	defer c.RenderJson(&rsp)
 
-	if email, err := login.EmailSetValidate(c.Params.Get("email")); err != nil {
+	uemail, err := login.EmailSetValidate(c.Params.Get("email"))
+	if err != nil {
 		rsp.Error = &types.ErrorMeta{idsapi.ErrCodeInvalidArgument, err.Error()}
 		return
-	} else {
-		c.Params.Set("email", email)
 	}
 
-	if c.Params.Get("userid") == "" {
+	if c.Params.Get("username") == "" {
 		rsp.Error = &types.ErrorMeta{idsapi.ErrCodeInvalidArgument, "User Not Found"}
 		return
 	}
+	userid := utils.StringEncode16(c.Params.Get("username"), 8)
 
 	var user idsapi.User
 	if obj := store.BtAgent.ObjectGet(btapi.ObjectProposal{
 		Meta: btapi.ObjectMeta{
-			Path: "/user/" + c.Params.Get("userid"),
+			Path: "/user/" + userid,
 		},
 	}); obj.Error == nil {
 		obj.JsonDecode(&user)
 	}
 
-	if user.Meta.UserID != c.Params.Get("userid") {
+	if user.Meta.ID != userid || user.Email != uemail {
 		rsp.Error = &types.ErrorMeta{idsapi.ErrCodeInvalidArgument, "User Not Found"}
 		return
 	}
 
 	reset := idsapi.UserPasswordReset{
 		ID:      utils.StringNewRand(24),
-		UserID:  user.Meta.ID,
-		Email:   c.Params.Get("email"),
+		UserID:  userid,
+		Email:   uemail,
 		Expired: utilx.TimeNowAdd("atom", "+3600s"),
 	}
 	resetjs, _ := utils.JsonEncode(reset)
@@ -167,7 +174,7 @@ func (c Reg) ForgotPassPutAction() {
 
 	mr, err := email.MailerPull("def")
 	if err != nil {
-		rsp.Error = &types.ErrorMeta{idsapi.ErrCodeInternalError, "Internal Server Error"}
+		rsp.Error = &types.ErrorMeta{idsapi.ErrCodeInternalError, "Internal Server Error 001"}
 		return
 	}
 
@@ -181,7 +188,7 @@ func (c Reg) ForgotPassPutAction() {
 <div>This request was made on %s.</div>
 <br>
 <div>Regards,</div>
-<div>%s Account Services</div>
+<div>%s Account Service</div>
 
 <div>********************************************************</div>
 <div>Please do not reply to this message. Mail sent to this address cannot be answered.</div>
@@ -189,6 +196,11 @@ func (c Reg) ForgotPassPutAction() {
 </html>`, config.Config.ServiceName, c.Request.Host, reset.ID, utilx.TimeNow("datetime"), config.Config.ServiceName)
 
 	err = mr.SendMail(c.Params.Get("email"), c.Translate("Reset your password"), body)
+
+	if err != nil {
+		time.Sleep(2e9)
+		err = mr.SendMail(c.Params.Get("email"), c.Translate("Reset your password"), body)
+	}
 
 	if err != nil {
 		rsp.Error = &types.ErrorMeta{idsapi.ErrCodeInternalError, err.Error()}

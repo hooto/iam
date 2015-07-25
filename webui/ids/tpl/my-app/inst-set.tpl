@@ -19,7 +19,7 @@
     <div class="form-group">
       <label class="col-sm-2 control-label">Name</label>
       <div class="col-sm-10">
-        <input type="text" class="form-control" name="name" value="{[=it.meta.name]}">
+        <input type="text" class="form-control" name="app_title" value="{[=it.app_title]}">
       </div>
     </div>
 
@@ -34,6 +34,13 @@
       </div>
     </div>
 
+    <div class="form-group">
+      <label class="col-sm-2 control-label">Access URL</label>
+      <div class="col-sm-10">
+        <input type="text" class="form-control" name="url" value="{[=it.url]}">
+      </div>
+    </div>
+
     {[ if (it.privileges.length > 0) { ]}
     <label class="ids-form-group-title">Privilege Information</label>
 
@@ -44,20 +51,21 @@
         <thead>
           <tr>
             <th>Privilege</th>
-            <th>Description</th>
-            <th>General Roles</th>
+            <th>Roles</th>
           </tr>
         </thead>
         <tbody>
           {[~it.privileges :v]}
           <tr>
-            <td>{[=v.privilege]}</td>
-            <td>{[=v.desc]}</td>
+            <td>
+              <p><strong>{[=v.desc]}</strong></p>
+              <p>{[=v.privilege]}</p>
+            </td>
             <td>
             {[ if (v.roles) { ]}
             {[~v.roles :rv]}
               {[~it._roles.items :drv]}
-              {[ if (rv == drv.meta.id) { ]}
+              {[ if (rv == drv.idxid) { ]}
                 {[=drv.meta.name]}
               {[ } ]}
               {[~]}

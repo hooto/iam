@@ -33,7 +33,7 @@
       <th>Name</th>
       <th>Email</th>
       <th>Status</th>
-      <th>Role</th>
+      <th>Roles</th>
       <th>Registered</th>
       <th>Updated</th>
       <th></th>
@@ -57,7 +57,7 @@
       <td>
         {[~v.roles :rv]}
         {[~it._roles.items :drv]}
-        {[ if (drv.meta.id == rv) { ]}
+        {[ if (drv.idxid == rv) { ]}
         <div>{[=drv.meta.name]}</div>
         {[ } ]}
         {[~]}
@@ -65,8 +65,9 @@
       </td>
       <td>{[=l4i.TimeParseFormat(v.meta.created, "Y-m-d")]}</td>
       <td>{[=l4i.TimeParseFormat(v.meta.updated, "Y-m-d")]}</td>
-      <td>
-        <a href="#user-mgr/user-set" onclick="idsusrmgr.UserSetForm('{[=v.meta.id]}')">Setting</a>
+      <td align="right">
+        <a href="#user-mgr/user-set" onclick="idsusrmgr.UserSetForm('{[=v.meta.id]}')" 
+          class="btn btn-default btn-xs">Setting</a>
       </td>
     </tr>
 {[~]}

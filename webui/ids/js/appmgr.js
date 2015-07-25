@@ -5,6 +5,16 @@ var idsappmgr = {
         status: 2, title: "Banned",
     }],
     roles : null,
+    appinstdef : {
+        meta : {
+            id : "",
+        },
+        app_id : "",
+        app_title : "",
+        version : "",
+        status : 1,
+        url : "",
+    },
 }
 
 idsappmgr.Init = function()
@@ -38,7 +48,11 @@ idsappmgr.InstList = function()
             for (var i in data.items) {
 
                 if (!data.items[i].privileges) {
-                    data.items[i].privileges = []
+                    data.items[i].privileges = [];
+                }
+
+                if (!data.items[i].version) {
+                    data.items[i].version = "";
                 }
 
                 data.items[i]._privilegeNumber = data.items[i].privileges.length;
@@ -98,10 +112,14 @@ idsappmgr.InstSetForm = function(instid)
                 }
             }
 
+            if (!data.url) {
+                data.url = "";
+            }
+
             l4iModal.Open({
                 tplsrc  : tpl,
                 width   : 900,
-                height  : 500,
+                height  : 600,
                 data    : data,
                 title   : "App Instance Setting",
                 buttons : [{
@@ -137,7 +155,7 @@ idsappmgr.InstSetForm = function(instid)
             });
         
         } else {
-            ep.emit("data", l4i.Clone(idsappmgr.userdef));
+            ep.emit("data", l4i.Clone(idsappmgr.appinstdef));
         }
 
         ids.TplCmd("app-mgr/inst-set", {
@@ -148,49 +166,44 @@ idsappmgr.InstSetForm = function(instid)
 
 idsappmgr.InstSetCommit = function()
 {
-    var form = $("#ids-appmgr-userset");
+    var form = $("#ids-appmgr-instset");
     
-    var req = l4i.Clone(idsappmgr.userdef)
+    var req = l4i.Clone(idsappmgr.appinstdef)
 
     req.meta.id = form.find("input[name=instid]").val();
-    if (req.meta.id == "") {
-        req.meta.name = form.find("input[name=username]").val();
-    }
-    req.email = form.find("input[name=email]").val();
-    req.auth = form.find("input[name=auth]").val();
-    req.name = form.find("input[name=name]").val();
+    req.app_title = form.find("input[name=app_title]").val();
+    req.url = form.find("input[name=url]").val();
 
-    req.profile.birthday = form.find("input[name=birthday]").val();
-    req.profile.about = form.find("textarea[name=about]").val();
+    req.status = parseInt(form.find("input[name=status]:checked").val());
 
     try {
 
-        form.find("input[name=roles]:checked").each(function() {
+        // form.find("input[name=roles]:checked").each(function() {
             
-            var val = parseInt($(this).val());
-            if (val > 0) {
-                req.roles.push(val);
-            }            
-        });
+        //     var val = parseInt($(this).val());
+        //     if (val > 0) {
+        //         req.roles.push(val);
+        //     }
+        // });
 
     } catch (err) {
-        return l4i.InnerAlert("#ids-appmgr-userset-alert", 'alert-danger', err);
+        return l4i.InnerAlert("#ids-appmgr-instset-alert", 'alert-danger', err);
     }
 
-    ids.ApiCmd("app-mgr/user-set", {
+    ids.ApiCmd("app-mgr/inst-set", {
         method : "PUT",
         data   : JSON.stringify(req),
         callback : function(err, data) {
             
             if (err) {
-                return l4i.InnerAlert("#ids-appmgr-userset-alert", 'alert-danger', err);
+                return l4i.InnerAlert("#ids-appmgr-instset-alert", 'alert-danger', err);
             }
 
             if (!data || data.error) {
-                return l4i.InnerAlert("#ids-appmgr-userset-alert", 'alert-danger', data.error.message);
+                return l4i.InnerAlert("#ids-appmgr-instset-alert", 'alert-danger', data.error.message);
             }
 
-            l4i.InnerAlert("#ids-appmgr-userset-alert", 'alert-success', "Successfully updated");
+            l4i.InnerAlert("#ids-appmgr-instset-alert", 'alert-success', "Successfully updated");
 
             window.setTimeout(function(){
                 l4iModal.Close();

@@ -45,7 +45,7 @@ func (c User) ProfileAction() {
 
 	defer c.RenderJson(&rsp)
 
-	session, err := c.Session.SessionFetch()
+	session, err := c.Session.Instance()
 
 	if err != nil || !session.IsLogin() {
 		rsp.Error = &types.ErrorMeta{"401", "Access Denied"}
@@ -118,7 +118,7 @@ func (c User) ProfileSetAction() {
 		return
 	}
 
-	session, err := c.Session.SessionFetch()
+	session, err := c.Session.Instance()
 
 	if err != nil || !session.IsLogin() {
 		rsp.Error = &types.ErrorMeta{"401", "Access Denied"}
@@ -199,7 +199,7 @@ func (c User) PassSetAction() {
 		return
 	}
 
-	session, err := c.Session.SessionFetch()
+	session, err := c.Session.Instance()
 
 	if err != nil || !session.IsLogin() {
 		rsp.Error = &types.ErrorMeta{"401", "Access Denied"}
@@ -263,7 +263,7 @@ func (c User) EmailSetAction() {
 		req.Email = email
 	}
 
-	session, err := c.Session.SessionFetch()
+	session, err := c.Session.Instance()
 
 	if err != nil || !session.IsLogin() {
 		rsp.Error = &types.ErrorMeta{"401", "Access Denied"}
@@ -320,7 +320,7 @@ func (c User) PhotoSetAction() {
 		return
 	}
 
-	session, err := c.Session.SessionFetch()
+	session, err := c.Session.Instance()
 
 	if err != nil || !session.IsLogin() {
 		rsp.Error = &types.ErrorMeta{"401", "Access Denied"}

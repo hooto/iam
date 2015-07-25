@@ -27,29 +27,29 @@ func (c User) PanelInfoAction() {
 
 	rsp := map[string]interface{}{}
 	//
-	menus := []map[string]string{
-		{"path": "#user/overview", "title": "My Account"},
+	nav := []map[string]string{
+		// {"path": "#user/overview", "title": "My Account"},
 		{"path": "#my-app/index", "title": "My Applications"},
 	}
 	// fmt.Println(c.Session)
 	if c.Session.AccessAllowed("user.admin") {
-		menus = append(menus, map[string]string{
+		nav = append(nav, map[string]string{
 			"path":  "#user-mgr/index",
 			"title": "User Manage",
 		})
 	}
 	if c.Session.AccessAllowed("sys.admin") {
-		menus = append(menus, map[string]string{
+		nav = append(nav, map[string]string{
 			"path":  "#app-mgr/index",
 			"title": "Applications",
 		})
-		menus = append(menus, map[string]string{
+		nav = append(nav, map[string]string{
 			"path":  "#sys-mgr/index",
 			"title": "System Settings",
 		})
 	}
 
-	rsp["menus"] = menus
+	rsp["topnav"] = nav
 	rsp["webui_banner_title"] = config.Config.WebUiBannerTitle
 
 	c.RenderJson(rsp)

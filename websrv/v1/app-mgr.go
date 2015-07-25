@@ -16,8 +16,11 @@ package v1
 
 import (
 	"github.com/lessos/bigtree/btapi"
+
 	"github.com/lessos/lessgo/httpsrv"
 	"github.com/lessos/lessgo/types"
+	"github.com/lessos/lessgo/utils"
+	"github.com/lessos/lessgo/utilx"
 
 	"github.com/lessos/lessids/idsapi"
 	"github.com/lessos/lessids/store"
@@ -37,7 +40,7 @@ func (c AppMgr) InstListAction() {
 
 	defer c.RenderJson(&ls)
 
-	if !c.Session.AccessAllowed("user.admin") {
+	if !c.Session.AccessAllowed("sys.admin") {
 		ls.Error = &types.ErrorMeta{idsapi.ErrCodeAccessDenied, "Access Denied"}
 		return
 	}
@@ -69,7 +72,7 @@ func (c AppMgr) InstEntryAction() {
 
 	defer c.RenderJson(&set)
 
-	if !c.Session.AccessAllowed("user.admin") {
+	if !c.Session.AccessAllowed("sys.admin") {
 		set.Error = &types.ErrorMeta{idsapi.ErrCodeAccessDenied, "Access Denied"}
 		return
 	}
@@ -87,75 +90,58 @@ func (c AppMgr) InstEntryAction() {
 		return
 	}
 
-	// TODO set.Privileges
-
 	set.Kind = "AppInstance"
 }
 
-// func (c AppMgr) InstSaveAction() {
+func (c AppMgr) InstSetAction() {
 
-// 	c.AutoRender = false
+	set := idsapi.AppInstance{}
 
-// 	var set ResponseJson
-// 	set.ApiVersion = apiVersion
-// 	set.Status = 400
-// 	set.Message = "Bad Request"
+	defer c.RenderJson(&set)
 
-// 	defer func() {
-// 		if setj, err := utils.JsonEncode(set); err == nil {
-// 			io.WriteString(c.Response.Out, setj)
-// 		}
-// 	}()
+	if !c.Session.AccessAllowed("sys.admin") {
+		set.Error = &types.ErrorMeta{idsapi.ErrCodeAccessDenied, "Access Denied"}
+		return
+	}
 
-// 	if !c.Session.AccessAllowed("user.admin") {
-// 		return
-// 	}
+	if err := c.Request.JsonDecode(&set); err != nil || set.Meta.ID == "" {
+		set.Error = &types.ErrorMeta{idsapi.ErrCodeInvalidArgument, "InvalidArgument"}
+		return
+	}
 
-// 	dcn, err := rdo.ClientPull("def")
-// 	if err != nil {
-// 		set.Message = "Internal Server Error"
-// 		return
-// 	}
+	var prev idsapi.AppInstance
+	var prevVersion uint64
+	if obj := store.BtAgent.ObjectGet(btapi.ObjectProposal{
+		Meta: btapi.ObjectMeta{
+			Path: "/app-instance/" + set.Meta.ID,
+		},
+	}); obj.Error == nil {
+		obj.JsonDecode(&prev)
+		prevVersion = obj.Meta.Version
+	}
 
-// 	q := base.NewQuerySet().From("ids_instance").Limit(1)
+	if prev.Meta.ID == "" || prevVersion < 1 {
+		set.Error = &types.ErrorMeta{idsapi.ErrCodeInvalidArgument, "App Instance Not Found"}
+		return
+	}
 
-// 	isNew := true
-// 	instset := map[string]interface{}{}
+	if set.AppTitle != prev.AppTitle || set.Url != prev.Url {
+		prev.Meta.Updated = utilx.TimeNow("atom")
+		prev.AppTitle = set.AppTitle
+		prev.Url = set.Url
 
-// 	if c.Params.Get("instid") != "" {
+		setjs, _ := utils.JsonEncode(prev)
+		if obj := store.BtAgent.ObjectSet(btapi.ObjectProposal{
+			Meta: btapi.ObjectMeta{
+				Path: "/app-instance/" + set.Meta.ID,
+			},
+			PrevVersion: prevVersion,
+			Data:        setjs,
+		}); obj.Error != nil {
+			set.Error = &types.ErrorMeta{idsapi.ErrCodeInternalError, obj.Error.Message}
+			return
+		}
+	}
 
-// 		q.Where.And("id", c.Params.Get("instid"))
-
-// 		rsinst, err := dcn.Base.Query(q)
-// 		if err != nil || len(rsinst) == 0 {
-// 			set.Status = 400
-// 			set.Message = http.StatusText(400)
-// 			return
-// 		}
-
-// 		isNew = false
-// 	}
-
-// 	instset["updated"] = base.TimeNow("datetime")
-// 	instset["app_title"] = c.Params.Get("app_title")
-
-// 	if isNew {
-
-// 		// TODO
-
-// 	} else {
-
-// 		instset["status"] = c.Params.Get("status")
-
-// 		frupd := base.NewFilter()
-// 		frupd.And("id", c.Params.Get("instid"))
-// 		if _, err := dcn.Base.Update("ids_instance", instset, frupd); err != nil {
-// 			set.Status = 500
-// 			set.Message = "Can not write to database"
-// 			return
-// 		}
-// 	}
-
-// 	set.Status = 200
-// 	set.Message = ""
-// }
+	set.Kind = "AppInstance"
+}

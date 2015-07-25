@@ -78,8 +78,10 @@ ids.Ajax = function(url, options)
     url += Math.random();
 
     //
-    url += "&access_token="+ l4iCookie.Get("access_token");
-
+    if (l4iCookie.Get("access_token")) {
+        url += "&access_token="+ l4iCookie.Get("access_token");
+    }
+    
     //
     if (options.method === undefined) {
         options.method = "GET";

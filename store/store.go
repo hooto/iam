@@ -15,16 +15,50 @@
 package store
 
 import (
+	"time"
+
 	"github.com/lessos/bigtree/btagent"
 	"github.com/lessos/bigtree/btapi"
 )
 
 var (
+	Ready   bool
 	BtAgent *btagent.Agent
 )
 
 func init() {
+
 	BtAgent, _ = btagent.NewAgent(btapi.DataAccessConfig{
 		PathPoint: "/sys/ids",
 	})
+
+	go func() {
+
+		for {
+
+			BtAgent.ObjectSet(btapi.ObjectProposal{
+				Meta: btapi.ObjectMeta{
+					Path: "ids-test",
+					Ttl:  3,
+				},
+				Data: "test",
+			})
+
+			if rs := BtAgent.ObjectGet(btapi.ObjectProposal{
+				Meta: btapi.ObjectMeta{
+					Path: "ids-test",
+				},
+			}); rs.Data == "test" {
+
+				in := InitNew{}
+				in.Init()
+
+				Ready = true
+
+				break
+			}
+
+			time.Sleep(1e9)
+		}
+	}()
 }

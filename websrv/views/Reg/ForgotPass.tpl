@@ -120,7 +120,12 @@ body {
     <input type="hidden" name="continue" value="{{.continue}}">
 
     <div id="ids-resetpass-form-alert" class="alert alert-info ilf-groups">
-    Enter the email address you use to sign in, the System will sent a URL to your email to reset the password.
+      <p>Enter the username and email address you use to sign in.</p>
+      <p>The System will sent a URL to your email to reset the password.</p>
+    </div>
+
+    <div class="ilf-group">
+      <input type="text" class="ilf-input" name="username" placeholder="{{T . "Username"}}">
     </div>
 
     <div class="ilf-group">
@@ -147,7 +152,7 @@ body {
 <script>
 
 //
-$("input[name=email]").focus();
+$("input[name=username]").focus();
 
 //
 var ids_eh = $("#ids-resetpass-box").height();
@@ -161,7 +166,9 @@ $("#ids-resetpass-form").submit(function(event) {
 
     event.preventDefault();
 
-    l4i.InnerAlert("#ids-resetpass-form-alert", 'alert-info', "Pending");
+    var alertid = "#ids-resetpass-form-alert";
+
+    l4i.InnerAlert(alertid, 'alert-info', "Pending");
 
     $.ajax({
         type    : "POST",
@@ -172,14 +179,14 @@ $("#ids-resetpass-form").submit(function(event) {
         success : function(data) {
 
             if (data.error) {
-                return l4i.InnerAlert("#ids-resetpass-form-alert", 'alert-danger', data.error.message);
+                return l4i.InnerAlert(alertid, 'alert-danger', data.error.message);
             }
 
             if (data.kind != "UserAuth") {
-                return l4i.InnerAlert("#ids-resetpass-form-alert", 'alert-danger', "Unknown Error");
+                return l4i.InnerAlert(alertid, 'alert-danger', "Unknown Error");
             }
                 
-            l4i.InnerAlert("#ids-resetpass-form-alert", 'alert-success', "The reset URL has been sent to your mailbox, please check your email.");
+            l4i.InnerAlert(alertid, 'alert-success', "The reset URL has been sent to your mailbox, please check your email.");
             $(".ilf-group").hide(200);
 
             // window.setTimeout(function(){
@@ -187,7 +194,7 @@ $("#ids-resetpass-form").submit(function(event) {
             // }, 1500);
         },
         error: function(xhr, textStatus, error) {
-            l4i.InnerAlert("#ids-resetpass-form-alert", 'alert-danger', '{{T . "Internal Server Error"}}');
+            l4i.InnerAlert(alertid, 'alert-danger', '{{T . "Internal Server Error"}}');
         }
     });
 });

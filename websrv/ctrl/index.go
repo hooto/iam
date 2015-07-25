@@ -30,6 +30,11 @@ func (c Index) IndexAction() {
 		return
 	}
 
+	if c.Params.Get("access_token") != "" {
+		c.Redirect("/ids")
+		return
+	}
+
 	c.RenderString(`<!DOCTYPE html>
 <html lang="en">
 <head>

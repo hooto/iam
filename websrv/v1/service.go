@@ -16,11 +16,12 @@ package v1
 
 import (
 	"encoding/base64"
-	"io"
+	"net/http"
 	"strings"
 	"time"
 
 	"github.com/lessos/bigtree/btapi"
+
 	"github.com/lessos/lessgo/httpsrv"
 	"github.com/lessos/lessgo/pass"
 	"github.com/lessos/lessgo/types"
@@ -81,6 +82,7 @@ func (c Service) LoginAuthAction() {
 		UserID:       user.Meta.ID,
 		UserName:     user.Meta.Name,
 		Name:         user.Name,
+		Roles:        user.Roles,
 		Groups:       user.Groups,
 		Timezone:     user.Timezone,
 		ClientAddr:   addr,
@@ -113,6 +115,15 @@ func (c Service) LoginAuthAction() {
 
 	rsp.AccessToken = session.AccessToken
 
+	ck := &http.Cookie{
+		Name:     "access_token",
+		Value:    session.AccessToken,
+		Path:     "/",
+		HttpOnly: true,
+		Expires:  time.Now().Add(864000 * time.Second),
+	}
+	http.SetCookie(c.Response.Out, ck)
+
 	rsp.Kind = "ServiceLoginAuth"
 }
 
@@ -122,28 +133,28 @@ func (c Service) AuthAction() {
 
 	defer c.RenderJson(&rsp)
 
-	if c.Params.Get("access_token") == "" {
-		rsp.Error = &types.ErrorMeta{"401", "Unauthorized"}
+	if c.Session.AccessToken == "" {
+		rsp.Error = &types.ErrorMeta{idsapi.ErrCodeUnauthorized, "Unauthorized"}
 		return
 	}
 
 	if obj := store.BtAgent.ObjectGet(btapi.ObjectProposal{
 		Meta: btapi.ObjectMeta{
-			Path: "/session/" + c.Params.Get("access_token"),
+			Path: "/session/" + c.Session.AccessToken,
 		},
 	}); obj.Error == nil {
 		obj.JsonDecode(&rsp)
 	}
 
 	if rsp.AccessToken == "" {
-		rsp.Error = &types.ErrorMeta{"401", "Unauthorized"}
+		rsp.Error = &types.ErrorMeta{idsapi.ErrCodeUnauthorized, "Unauthorized"}
 		return
 	}
 
 	//
 	expired := utilx.TimeParse(rsp.Expired, "atom")
 	if expired.Before(time.Now()) {
-		rsp.Error = &types.ErrorMeta{"401", "Unauthorized"}
+		rsp.Error = &types.ErrorMeta{idsapi.ErrCodeUnauthorized, "Unauthorized"}
 		return
 	}
 
@@ -153,7 +164,7 @@ func (c Service) AuthAction() {
 		addr = c.Request.RemoteAddr[:addridx]
 	}
 	if addr != rsp.ClientAddr {
-		rsp.Error = &types.ErrorMeta{"401", "Unauthorized"}
+		rsp.Error = &types.ErrorMeta{idsapi.ErrCodeUnauthorized, "Unauthorized"}
 		return
 	}
 
@@ -170,16 +181,18 @@ func (c Service) AccessAllowedAction() {
 	defer c.RenderJson(&rsp)
 
 	if len(c.Request.RawBody) == 0 {
-		rsp.Error = &types.ErrorMeta{"401", "Unauthorized"}
+		rsp.Error = &types.ErrorMeta{idsapi.ErrCodeUnauthorized, "Unauthorized"}
 		return
 	}
 
+	// fmt.Println("AccessAllowedAction", string(c.Request.RawBody))
+
 	if err := c.Request.JsonDecode(&req); err != nil {
-		rsp.Error = &types.ErrorMeta{"401", err.Error()}
+		rsp.Error = &types.ErrorMeta{idsapi.ErrCodeUnauthorized, err.Error()}
 		return
 	}
 	if req.AccessToken == "" {
-		rsp.Error = &types.ErrorMeta{"401", "Unauthorized"}
+		rsp.Error = &types.ErrorMeta{idsapi.ErrCodeUnauthorized, "Unauthorized"}
 		return
 	}
 
@@ -193,14 +206,14 @@ func (c Service) AccessAllowedAction() {
 	}
 
 	if session.AccessToken == "" {
-		rsp.Error = &types.ErrorMeta{"401", "Unauthorized"}
+		rsp.Error = &types.ErrorMeta{idsapi.ErrCodeUnauthorized, "Unauthorized"}
 		return
 	}
 
 	//
 	expired := utilx.TimeParse(session.Expired, "atom")
 	if expired.Before(time.Now()) {
-		rsp.Error = &types.ErrorMeta{"401", "Unauthorized"}
+		rsp.Error = &types.ErrorMeta{idsapi.ErrCodeUnauthorized, "Unauthorized"}
 		return
 	}
 
@@ -210,12 +223,12 @@ func (c Service) AccessAllowedAction() {
 		addr = c.Request.RemoteAddr[:addridx]
 	}
 	if addr != session.ClientAddr {
-		rsp.Error = &types.ErrorMeta{"401", "Unauthorized"}
+		rsp.Error = &types.ErrorMeta{idsapi.ErrCodeUnauthorized, "Unauthorized"}
 		return
 	}
 
 	if !role.AccessAllowed(session.Roles, req.InstanceID, req.Privilege) {
-		rsp.Error = &types.ErrorMeta{"401", "Unauthorized"}
+		rsp.Error = &types.ErrorMeta{idsapi.ErrCodeUnauthorized, "Unauthorized"}
 		return
 	}
 
@@ -254,5 +267,5 @@ func (c Service) PhotoAction() {
 		return
 	}
 
-	io.WriteString(c.Response.Out, string(data))
+	c.Response.Out.Write(data)
 }

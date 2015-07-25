@@ -121,6 +121,7 @@ body {
 
     <div id="ids-signup-form-alert" class="alert hide ilf-group"></div>
 
+    {{if eq .user_reg_disable false }}
     <div class="ilf-group">
       <input type="text" class="ilf-input" name="name" value="{{.name}}" placeholder="{{T . "Your name"}}">
     </div>
@@ -140,6 +141,9 @@ body {
     <div class="ilf-group">
       <button type="submit" class="ilf-btn">{{T . "Create Account"}}</button>
     </div>
+    {{else}}
+    <div class="alert alert-danger">User registration was closed!<br>Please contact the administrator to manually register accounts</div>
+    {{end}}
 
   </form>
 

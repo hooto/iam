@@ -6,7 +6,7 @@
 </style>
 
 <div class="page-header">
-  <h2>Email Settings <small></small></h2>
+  <h2>Mailer Settings <small></small></h2>
 </div>
 
 <div id="ids-sysmgr-mailerset-alert" class="alert hide"></div>
@@ -18,14 +18,14 @@
     <div class="form-group">
       <label class="col-sm-3">SMTP server address</label>
       <div class="col-sm-4">
-        <input type="text" class="form-control" name="mailer_smtp_host" value="{[=it._items.mailer_smtp_host]}">
+        <input type="text" class="form-control" name="mailer_smtp_host" value="{[=it.smtp_host]}">
       </div>
     </div>
 
     <div class="form-group">
       <label class="col-sm-3">SMTP Port</label>
       <div class="col-sm-4">
-        <input type="text" class="form-control" name="mailer_smtp_port" value="{[=it._items.mailer_smtp_port]}">
+        <input type="text" class="form-control" name="mailer_smtp_port" value="{[=it.smtp_port]}">
       </div>
       <div class="col-sm-5">
         <div class="ids-callout ids-callout-primary">
@@ -39,7 +39,7 @@
     <div class="form-group">
       <label class="col-sm-3">SMTP username</label>
       <div class="col-sm-4">
-        <input type="text" class="form-control" name="mailer_smtp_user" value="{[=it._items.mailer_smtp_user]}">
+        <input type="text" class="form-control" name="mailer_smtp_user" value="{[=it.smtp_user]}">
       </div>
       <div class="col-sm-5">
         <div class="ids-callout ids-callout-primary">
@@ -53,7 +53,7 @@
     <div class="form-group">
       <label class="col-sm-3">SMTP password</label>
       <div class="col-sm-4">
-        <input type="password" class="form-control" name="mailer_smtp_pass" value="{[=it._items.mailer_smtp_pass]}">
+        <input type="password" class="form-control" name="mailer_smtp_pass" value="{[=it.smtp_pass]}">
       </div>
       <div class="col-sm-5">
         <div class="ids-callout ids-callout-primary">

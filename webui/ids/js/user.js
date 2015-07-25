@@ -173,6 +173,18 @@ idsuser.ProfileSetForm = function()
 
         var ep = EventProxy.create('tpl', 'data', function (tpl, data) {
 
+            if (!data.login.name) {
+                data.login.name = data.meta.name;
+            }
+
+            if (!data.birthday) {
+                data.birthday = "";
+            }
+
+            if (!data.about) {
+                data.about = "";
+            }
+
             l4iModal.Open({
                 tplsrc  : tpl,
                 data    : data,

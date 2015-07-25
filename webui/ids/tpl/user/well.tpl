@@ -8,9 +8,10 @@
       </div>
     </td>
     <td>
-      <div class="iuh-menu">
-        {[~it.menus :v]}
-        <a href="{[=v.path]}">{[=v.title]}</a>
+      <div id="ids-uh-topnav">
+        <a class="l4i-nav-item active" href="#user/overview">My Account</a>
+        {[~it.topnav :v]}
+        <a href="{[=v.path]}" class="l4i-nav-item">{[=v.title]}</a>
         {[~]}
       </div>
     </td>

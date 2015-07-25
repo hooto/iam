@@ -9,226 +9,125 @@ type AppAuth struct {
 	*httpsrv.Controller
 }
 
-// func (c AppAuth) InfoAction() {
-
-// 	c.AutoRender = false
-
-// 	var rsp struct {
-// 		ResponseJson
-// 		Data struct {
-// 			InstanceId string `json:"instance_id"`
-// 			AppId      string `json:"app_id"`
-// 			Version    string `json:"version"`
-// 		} `json:"data"`
-// 	}
-// 	rsp.ApiVersion = apiVersion
-// 	rsp.Status = 400
-// 	rsp.Message = "Bad Request"
-
-// 	defer func() {
-// 		if rspj, err := utils.JsonEncode(rsp); err == nil {
-// 			io.WriteString(c.Response.Out, rspj)
-// 		}
-// 	}()
-
-// 	dcn, err := rdo.ClientPull("def")
-// 	if err != nil {
-// 		rsp.Status = 500
-// 		rsp.Message = "Internal Server Error"
-// 		return
-// 	}
-
-// 	instanceid := c.Params.Get("instanceid")
-
-// 	q := base.NewQuerySet().From("ids_instance").Limit(1)
-// 	q.Where.And("id", instanceid)
-// 	rs, err := dcn.Base.Query(q)
-// 	if err == nil && len(rs) == 0 {
-// 		rsp.Status = 404
-// 		rsp.Message = "Instance Not Found"
-// 		return
-// 	}
-
-// 	rsp.Data.InstanceId = rs[0].Field("id").String()
-// 	rsp.Data.AppId = rs[0].Field("app_id").String()
-// 	rsp.Data.Version = rs[0].Field("version").String()
-
-// 	rsp.Status = 200
-// 	rsp.Message = ""
-// }
-
 // func (c AppAuth) RegisterAction() {
 
-// 	c.AutoRender = false
+// 	set := idsapi.AppInstanceRegister{}
 
-// 	var rsp struct {
-// 		ResponseJson
-// 		Data struct {
-// 			InstanceId string `json:"instance_id"`
-// 			AppId      string `json:"app_id"`
-// 			AppTitle   string `json:"app_title"`
-// 			Version    string `json:"version"`
-// 			Url        string `json:"url"`
-// 			Privileges []struct {
-// 				Key  string `json:"key"`
-// 				Desc string `json:"desc"`
-// 			} `json:"privileges"`
-// 			Continue    string `json:"continue"`
-// 			AccessToken string `json:"access_token"`
-// 		} `json:"data"`
-// 	}
-// 	rsp.ApiVersion = apiVersion
-// 	rsp.Status = 400
-// 	rsp.Message = "Bad Request"
+// 	defer c.RenderJson(&set)
 
-// 	defer func() {
-// 		if rspj, err := utils.JsonEncode(rsp); err == nil {
-// 			io.WriteString(c.Response.Out, rspj)
-// 		}
-// 	}()
-
-// 	if len(c.Request.RawBody) == 0 {
-// 		return
+// 	if err := c.Request.JsonDecode(&set); err != nil {
+// 		set.Error = &types.ErrorMeta{idsapi.ErrCodeInvalidArgument, "Bad Argument"}
 // 	}
 
-// 	var req struct {
-// 		AccessToken string `json:"access_token"`
-// 		Data        struct {
-// 			InstanceId  string `json:"instance_id"`
-// 			InstanceUrl string `json:"instance_url"`
-// 			AppId       string `json:"app_id"`
-// 			AppTitle    string `json:"app_title"`
-// 			Version     string `json:"version"`
-// 			Privileges  []struct {
-// 				Key  string `json:"key"`
-// 				Desc string `json:"desc"`
-// 			} `json:"privileges"`
-// 		} `json:"data"`
-// 	}
+// 	if set.Meta.ID == "" {
 
-// 	err := utils.JsonDecode(c.Request.RawBody, &req)
-// 	if err != nil {
-// 		rsp.Message = err.Error()
-// 		return
-// 	}
-// 	if req.AccessToken == "" {
-// 		return
-// 	}
-
-// 	dcn, err := rdo.ClientPull("def")
-// 	if err != nil {
-// 		rsp.Message = "Internal Server Error"
-// 		return
-// 	}
-
-// 	if !c.Session.AccessAllowed("sys.admin") {
-// 		rsp.Status = 401
-// 		rsp.Message = "Unauthorized"
-// 		return
-// 	}
-
-// 	sess, err := c.Session.SessionFetch()
-
-// 	q := base.NewQuerySet().From("ids_instance").Limit(1)
-// 	q.Where.And("id", req.Data.InstanceId)
-// 	rs, err := dcn.Base.Query(q)
-// 	if err != nil {
-// 		rsp.Message = "Internal Server Error"
-// 		return
-// 	}
-// 	if len(rs) == 0 {
-
-// 		item := map[string]interface{}{
-// 			"id":        req.Data.InstanceId,
-// 			"uid":       sess.UserID,
-// 			"status":    1,
-// 			"app_id":    req.Data.AppId,
-// 			"app_title": req.Data.AppTitle,
-// 			"version":   req.Data.Version,
-// 			"url":       req.Data.InstanceUrl,
-// 			"created":   base.TimeNow("datetime"),
-// 			"updated":   base.TimeNow("datetime"),
-// 		}
-
-// 		if _, err := dcn.Base.Insert("ids_instance", item); err != nil {
-// 			rsp.Status = 500
-// 			rsp.Message = "Can not write to database" + err.Error()
-// 			return
-// 		}
+// 		set.Error = &types.ErrorMeta{idsapi.ErrCodeInvalidArgument, "Bad Argument"}
 
 // 	} else {
 
-// 		item := map[string]interface{}{
-// 			"app_title": req.Data.AppTitle,
-// 			"version":   req.Data.Version,
-// 			"url":       req.Data.InstanceUrl,
-// 			"updated":   base.TimeNow("datetime"),
-// 		}
-// 		frupd := base.NewFilter()
-// 		frupd.And("id", req.Data.InstanceId)
-// 		if _, err := dcn.Base.Update("ids_instance", item, frupd); err != nil {
-// 			rsp.Status = 500
-// 			rsp.Message = "Can not write to database" + err.Error()
-// 			return
-// 		}
 // 	}
 
-// 	//
-// 	q = base.NewQuerySet().From("ids_privilege").Limit(1000)
-// 	q.Where.And("instance", req.Data.InstanceId)
-// 	rs, err = dcn.Base.Query(q)
-// 	if err != nil {
-// 		rsp.Message = "Internal Server Error"
+// 	// if !c.Session.AccessAllowed("sys.admin") {
+// 	//     set.Error = &types.ErrorMeta{idsapi.ErrCodeAccessDenied, "Unauthorized"}
+// 	//     return
+// 	// }
+
+// 	// sess, err := c.Session.SessionFetch()
+
+// 	var prevVersion uint64
+// 	var prev idsapi.AppInstance
+
+// 	if obj := store.BtAgent.ObjectGet(btapi.ObjectProposal{
+// 		Meta: btapi.ObjectMeta{
+// 			Path: "/app-instance/" + set.Meta.ID,
+// 		},
+// 	}); obj.Error == nil {
+// 		obj.JsonDecode(&prev)
+// 		prevVersion = obj.Meta.Version
+// 	}
+
+// 	if prev.Meta.ID == "" {
+
+// 		set.Meta.Created = utilx.TimeNow("datetime")
+// 		set.Meta.Updated = utilx.TimeNow("datetime")
+// 		set.Status = 1
+// 		set.Meta.UserID = ""
+
+// 	} else {
+
+// 		set.Meta.Created = prev.Meta.Created
+// 		set.Meta.UserID = prev.Meta.UserID
+// 		set.Status = prev.Status
+// 	}
+
+// 	setjs, _ := utils.JsonEncode(set)
+
+// 	if obj := store.BtAgent.ObjectSet(btapi.ObjectProposal{
+// 		Meta: btapi.ObjectMeta{
+// 			Path: "/app-instance/" + set.Meta.ID,
+// 		},
+// 		Data:        setjs,
+// 		PrevVersion: prevVersion,
+// 	}); obj.Error != nil {
+// 		set.Error = &types.ErrorMeta{idsapi.ErrCodeInternalError, obj.Error.Message}
 // 		return
 // 	}
 
-// 	for _, prePriv := range rs {
+// 	//
+// 	// q = base.NewQuerySet().From("ids_privilege").Limit(1000)
+// 	// q.Where.And("instance", req.Data.InstanceId)
+// 	// rs, err = dcn.Base.Query(q)
+// 	// if err != nil {
+// 	//  rsp.Message = "Internal Server Error"
+// 	//  return
+// 	// }
 
-// 		isExist := false
-// 		for _, curPrev := range req.Data.Privileges {
+// 	// for _, prePriv := range rs {
 
-// 			if prePriv.Field("privilege").String() == curPrev.Key {
-// 				isExist = true
-// 				break
-// 			}
-// 		}
+// 	//  isExist := false
+// 	//  for _, curPrev := range req.Data.Privileges {
 
-// 		if !isExist {
-// 			frupd := base.NewFilter()
-// 			frupd.And("instance", req.Data.InstanceId).And("privilege", prePriv.Field("privilege").String())
-// 			dcn.Base.Delete("ids_privilege", frupd)
-// 		}
-// 	}
+// 	//      if prePriv.Field("privilege").String() == curPrev.Key {
+// 	//          isExist = true
+// 	//          break
+// 	//      }
+// 	//  }
 
-// 	for _, curPrev := range req.Data.Privileges {
+// 	//  if !isExist {
+// 	//      frupd := base.NewFilter()
+// 	//      frupd.And("instance", req.Data.InstanceId).And("privilege", prePriv.Field("privilege").String())
+// 	//      dcn.Base.Delete("ids_privilege", frupd)
+// 	//  }
+// 	// }
 
-// 		isExist := false
+// 	// for _, curPrev := range req.Data.Privileges {
 
-// 		for _, prePriv := range rs {
+// 	//  isExist := false
 
-// 			if prePriv.Field("privilege").String() == curPrev.Key {
-// 				isExist = true
-// 				break
-// 			}
-// 		}
+// 	//  for _, prePriv := range rs {
 
-// 		if !isExist {
-// 			item := map[string]interface{}{
-// 				"instance":  req.Data.InstanceId,
-// 				"uid":       sess.UserID,
-// 				"privilege": curPrev.Key,
-// 				"desc":      curPrev.Desc,
-// 				"created":   base.TimeNow("datetime"),
-// 			}
+// 	//      if prePriv.Field("privilege").String() == curPrev.Key {
+// 	//          isExist = true
+// 	//          break
+// 	//      }
+// 	//  }
 
-// 			if _, err := dcn.Base.Insert("ids_privilege", item); err != nil {
-// 				rsp.Status = 500
-// 				rsp.Message = "Can not write to database" + err.Error()
-// 				return
-// 			}
-// 		}
-// 	}
+// 	//  if !isExist {
+// 	//      item := map[string]interface{}{
+// 	//          "instance":  req.Data.InstanceId,
+// 	//          "uid":       sess.UserID,
+// 	//          "privilege": curPrev.Key,
+// 	//          "desc":      curPrev.Desc,
+// 	//          "created":   base.TimeNow("datetime"),
+// 	//      }
 
-// 	rsp.Status = 200
-// 	rsp.Message = ""
+// 	//      if _, err := dcn.Base.Insert("ids_privilege", item); err != nil {
+// 	//          rsp.Status = 500
+// 	//          rsp.Message = "Can not write to database" + err.Error()
+// 	//          return
+// 	//      }
+// 	//  }
+// 	// }
+
+// 	set.Kind = "AppInstance"
 // }

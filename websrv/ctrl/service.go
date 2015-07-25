@@ -41,7 +41,7 @@ func (c Service) SignOutAction() {
 	token := c.Params.Get("access_token")
 
 	if token == "" {
-		session, _ := c.Session.SessionFetch()
+		session, _ := c.Session.Instance()
 		token = session.AccessToken
 	}
 

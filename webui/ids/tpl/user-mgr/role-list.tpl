@@ -52,8 +52,8 @@
       </td>
       <td>{[=l4i.TimeParseFormat(v.meta.created, "Y-m-d")]}</td>
       <td>{[=l4i.TimeParseFormat(v.meta.updated, "Y-m-d")]}</td>
-      <td>
-        <a href="#user-mgr/role-set" onclick="idsusrmgr.RoleSetForm('{[=v.meta.id]}')">Setting</a>
+      <td align="right">
+        <a href="#user-mgr/role-set" onclick="idsusrmgr.RoleSetForm('{[=v.meta.id]}')" class="btn btn-default btn-xs">Setting</a>
       </td>
     </tr>
 {[~]}

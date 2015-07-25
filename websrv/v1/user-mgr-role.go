@@ -126,7 +126,6 @@ func (c UserMgr) RoleSetAction() {
 
 		set.Meta.Created = prev.Meta.Updated
 		set.Meta.UserID = prev.Meta.UserID
-
 	}
 
 	set.Meta.Updated = utilx.TimeNow("atom")
