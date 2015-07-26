@@ -28,16 +28,16 @@ func (c User) PanelInfoAction() {
 	rsp := map[string]interface{}{}
 	//
 	nav := []map[string]string{
-		// {"path": "#user/overview", "title": "My Account"},
 		{"path": "#my-app/index", "title": "My Applications"},
 	}
-	// fmt.Println(c.Session)
+
 	if c.Session.AccessAllowed("user.admin") {
 		nav = append(nav, map[string]string{
 			"path":  "#user-mgr/index",
 			"title": "User Manage",
 		})
 	}
+
 	if c.Session.AccessAllowed("sys.admin") {
 		nav = append(nav, map[string]string{
 			"path":  "#app-mgr/index",

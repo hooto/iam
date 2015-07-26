@@ -140,7 +140,7 @@ idsmyapp.InstSetForm = function(instid)
         if (idsmyapp.roles) {
             ep.emit("roles", idsmyapp.roles)
         } else {
-            ids.ApiCmd("user-mgr/role-list?status=0", {
+            ids.ApiCmd("user/role-list?status=0", {
                 callback: function(err, roles) {
                     idsmyapp.roles = roles;
                     ep.emit("roles", roles);
@@ -190,7 +190,7 @@ idsmyapp.InstSetCommit = function()
         return l4i.InnerAlert("#ids-myapp-instset-alert", 'alert-danger', err);
     }
 
-    ids.ApiCmd("my-app/user-set", {
+    ids.ApiCmd("my-app/inst-set", {
         method : "PUT",
         data   : JSON.stringify(req),
         callback : function(err, data) {

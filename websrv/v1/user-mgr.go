@@ -43,10 +43,6 @@ var (
 	}
 )
 
-type RoleEntry struct {
-	Rid, Name, Checked string
-}
-
 type UserMgr struct {
 	*httpsrv.Controller
 }
@@ -170,6 +166,7 @@ func (c UserMgr) UserSetAction() {
 			return
 		}
 
+		set.Meta.Name = set.Meta.Name
 		set.Meta.ID = utils.StringEncode16(set.Meta.Name, 8)
 		set.Meta.Created = utilx.TimeNow("atom")
 
@@ -192,21 +189,23 @@ func (c UserMgr) UserSetAction() {
 			return
 		}
 
-		if set.Email == "" {
-			set.Email = prev.Email
+		if set.Email != "" {
+			prev.Email = set.Email
 		}
 
-		if set.Auth == userMgrPasswdHidden {
-			set.Auth = prev.Auth
+		if set.Auth != userMgrPasswdHidden || set.Auth != "" {
+			prev.Auth = set.Auth
 		}
 
-		if set.Timezone == "" {
-			set.Timezone = prev.Timezone
+		if set.Timezone != "" {
+			prev.Timezone = set.Timezone
 		}
 
-		if set.Name == "" {
-			set.Name = prev.Name
+		if set.Name != "" {
+			prev.Name = set.Name
 		}
+
+		set = prev
 	}
 
 	if err := signup.ValidateUserID(&set); err != nil {
@@ -247,6 +246,10 @@ func (c UserMgr) UserSetAction() {
 
 		if set.Profile.About != "" {
 			profile.About = set.Profile.About
+		}
+
+		if set.Name != "" {
+			profile.Name = set.Name
 		}
 	}
 

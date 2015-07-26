@@ -375,3 +375,37 @@ func (c User) PhotoSetAction() {
 
 	rsp.Kind = "UserPhoto"
 }
+
+func (c User) RoleListAction() {
+
+	ls := idsapi.UserRoleList{}
+
+	defer c.RenderJson(&ls)
+
+	session, err := c.Session.Instance()
+
+	if err != nil || !session.IsLogin() {
+		ls.Error = &types.ErrorMeta{idsapi.ErrCodeUnauthorized, "Access Denied"}
+		return
+	}
+
+	if objs := store.BtAgent.ObjectList(btapi.ObjectProposal{
+		Meta: btapi.ObjectMeta{
+			Path: "/role/",
+		},
+	}); objs.Error == nil {
+
+		for _, obj := range objs.Items {
+
+			var role idsapi.UserRole
+			if err := obj.JsonDecode(&role); err == nil {
+
+				if role.IdxID <= 1000 || role.Meta.UserID == session.UserID {
+					ls.Items = append(ls.Items, role)
+				}
+			}
+		}
+	}
+
+	ls.Kind = "UserRoleList"
+}

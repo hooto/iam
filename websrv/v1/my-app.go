@@ -18,6 +18,8 @@ import (
 	"github.com/lessos/bigtree/btapi"
 	"github.com/lessos/lessgo/httpsrv"
 	"github.com/lessos/lessgo/types"
+	"github.com/lessos/lessgo/utils"
+	"github.com/lessos/lessgo/utilx"
 
 	"github.com/lessos/lessids/idsapi"
 	"github.com/lessos/lessids/store"
@@ -37,8 +39,10 @@ func (c MyApp) InstListAction() {
 
 	defer c.RenderJson(&ls)
 
-	if !c.Session.AccessAllowed("user.admin") {
-		ls.Error = &types.ErrorMeta{idsapi.ErrCodeAccessDenied, "Access Denied"}
+	session, err := c.Session.Instance()
+
+	if err != nil || !session.IsLogin() {
+		ls.Error = &types.ErrorMeta{idsapi.ErrCodeUnauthorized, "Access Denied"}
 		return
 	}
 
@@ -53,12 +57,12 @@ func (c MyApp) InstListAction() {
 			var inst idsapi.AppInstance
 			if err := obj.JsonDecode(&inst); err == nil {
 
-				ls.Items = append(ls.Items, inst)
+				if inst.Meta.UserID == session.UserID {
+					ls.Items = append(ls.Items, inst)
+				}
 			}
 		}
 	}
-
-	// TODO Query
 
 	ls.Kind = "AppInstanceList"
 }
@@ -69,8 +73,10 @@ func (c MyApp) InstEntryAction() {
 
 	defer c.RenderJson(&set)
 
-	if !c.Session.AccessAllowed("user.admin") {
-		set.Error = &types.ErrorMeta{idsapi.ErrCodeAccessDenied, "Access Denied"}
+	session, err := c.Session.Instance()
+
+	if err != nil || !session.IsLogin() {
+		set.Error = &types.ErrorMeta{idsapi.ErrCodeUnauthorized, "Access Denied"}
 		return
 	}
 
@@ -87,75 +93,72 @@ func (c MyApp) InstEntryAction() {
 		return
 	}
 
-	// TODO set.Privileges
+	if set.Meta.UserID != session.UserID {
+		set = idsapi.AppInstance{}
+		set.Error = &types.ErrorMeta{idsapi.ErrCodeUnauthorized, "Access Denied"}
+		return
+	}
 
 	set.Kind = "AppInstance"
 }
 
-// func (c MyApp) InstSaveAction() {
+func (c MyApp) InstSetAction() {
 
-// 	c.AutoRender = false
+	set := idsapi.AppInstance{}
 
-// 	var set ResponseJson
-// 	set.ApiVersion = apiVersion
-// 	set.Status = 400
-// 	set.Message = "Bad Request"
+	defer c.RenderJson(&set)
 
-// 	defer func() {
-// 		if setj, err := utils.JsonEncode(set); err == nil {
-// 			io.WriteString(c.Response.Out, setj)
-// 		}
-// 	}()
+	session, err := c.Session.Instance()
 
-// 	if !c.Session.AccessAllowed("user.admin") {
-// 		return
-// 	}
+	if err != nil || !session.IsLogin() {
+		set.Error = &types.ErrorMeta{idsapi.ErrCodeUnauthorized, "Access Denied"}
+		return
+	}
 
-// 	dcn, err := rdo.ClientPull("def")
-// 	if err != nil {
-// 		set.Message = "Internal Server Error"
-// 		return
-// 	}
+	if err := c.Request.JsonDecode(&set); err != nil || set.Meta.ID == "" {
+		set.Error = &types.ErrorMeta{idsapi.ErrCodeInvalidArgument, "InvalidArgument"}
+		return
+	}
 
-// 	q := base.NewQuerySet().From("ids_instance").Limit(1)
+	var prev idsapi.AppInstance
+	var prevVersion uint64
+	if obj := store.BtAgent.ObjectGet(btapi.ObjectProposal{
+		Meta: btapi.ObjectMeta{
+			Path: "/app-instance/" + set.Meta.ID,
+		},
+	}); obj.Error == nil {
+		obj.JsonDecode(&prev)
+		prevVersion = obj.Meta.Version
+	}
 
-// 	isNew := true
-// 	instset := map[string]interface{}{}
+	if prev.Meta.ID == "" || prevVersion < 1 {
+		set.Error = &types.ErrorMeta{idsapi.ErrCodeInvalidArgument, "App Instance Not Found"}
+		return
+	}
 
-// 	if c.Params.Get("instid") != "" {
+	if prev.Meta.UserID != session.UserID {
+		set.Error = &types.ErrorMeta{idsapi.ErrCodeUnauthorized, "Access Denied"}
+		return
+	}
 
-// 		q.Where.And("id", c.Params.Get("instid"))
+	if set.AppTitle != prev.AppTitle || set.Url != prev.Url {
 
-// 		rsinst, err := dcn.Base.Query(q)
-// 		if err != nil || len(rsinst) == 0 {
-// 			set.Status = 400
-// 			set.Message = http.StatusText(400)
-// 			return
-// 		}
+		prev.Meta.Updated = utilx.TimeNow("atom")
+		prev.AppTitle = set.AppTitle
+		prev.Url = set.Url
 
-// 		isNew = false
-// 	}
+		setjs, _ := utils.JsonEncode(prev)
+		if obj := store.BtAgent.ObjectSet(btapi.ObjectProposal{
+			Meta: btapi.ObjectMeta{
+				Path: "/app-instance/" + set.Meta.ID,
+			},
+			PrevVersion: prevVersion,
+			Data:        setjs,
+		}); obj.Error != nil {
+			set.Error = &types.ErrorMeta{idsapi.ErrCodeInternalError, obj.Error.Message}
+			return
+		}
+	}
 
-// 	instset["updated"] = base.TimeNow("datetime")
-// 	instset["app_title"] = c.Params.Get("app_title")
-
-// 	if isNew {
-
-// 		// TODO
-
-// 	} else {
-
-// 		instset["status"] = c.Params.Get("status")
-
-// 		frupd := base.NewFilter()
-// 		frupd.And("id", c.Params.Get("instid"))
-// 		if _, err := dcn.Base.Update("ids_instance", instset, frupd); err != nil {
-// 			set.Status = 500
-// 			set.Message = "Can not write to database"
-// 			return
-// 		}
-// 	}
-
-// 	set.Status = 200
-// 	set.Message = ""
-// }
+	set.Kind = "AppInstance"
+}
