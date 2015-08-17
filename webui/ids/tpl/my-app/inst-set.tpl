@@ -27,9 +27,9 @@
       <label class="col-sm-2 control-label">Status</label>
       <div class="col-sm-10">
         {[~it._statusls :v]}
-          <span class="ids-form-checkbox">
-            <input type="radio" name="status" value="{[=v.status]}" {[ if (v.status == it.status) { ]}checked="checked"{[ } ]}> {[=v.title]}
-          </span>
+        {[ if (v.status == it.status) { ]}
+          {[=v.title]}
+        {[ } ]}
         {[~]}
       </div>
     </div>
@@ -58,8 +58,7 @@
           {[~it.privileges :v]}
           <tr>
             <td>
-              <p><strong>{[=v.desc]}</strong></p>
-              <p>{[=v.privilege]}</p>
+              <strong>{[=v.desc]}</strong>
             </td>
             <td>
             {[ if (v.roles) { ]}

@@ -17,6 +17,7 @@ package ctrl
 import (
 	"github.com/lessos/lessgo/httpsrv"
 	"github.com/lessos/lessids/config"
+	"github.com/lessos/lessids/idclient"
 )
 
 type Index struct {
@@ -25,7 +26,7 @@ type Index struct {
 
 func (c Index) IndexAction() {
 
-	if !c.Session.IsLogin() {
+	if !idclient.SessionIsLogin(c.Session) {
 		c.Redirect("/ids/service/login?continue=/ids")
 		return
 	}

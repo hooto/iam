@@ -17,6 +17,7 @@ package v1
 import (
 	"encoding/base64"
 	"net/http"
+	"net/url"
 	"strings"
 	"time"
 
@@ -37,10 +38,25 @@ type Service struct {
 	*httpsrv.Controller
 }
 
+func _url_host(requrl string) string {
+
+	u, err := url.Parse(requrl)
+
+	if err != nil {
+		return "localhost"
+	}
+
+	if i := strings.Index(u.Host, ":"); i > 0 {
+		return u.Host[:i]
+	}
+
+	return u.Host
+}
+
 func (c Service) LoginAuthAction() {
 
 	rsp := idsapi.ServiceLoginAuth{
-		Continue: "/ids",
+		RedirectUri: "/ids",
 	}
 
 	defer c.RenderJson(&rsp)
@@ -103,26 +119,35 @@ func (c Service) LoginAuthAction() {
 		return
 	}
 
-	if len(c.Params.Get("continue")) > 0 {
-		rsp.Continue = c.Params.Get("continue")
-		if strings.Index(rsp.Continue, "?") == -1 {
-			rsp.Continue += "?"
-		} else {
-			rsp.Continue += "&"
+	if len(c.Params.Get("redirect_uri")) > 0 {
+
+		rsp.RedirectUri = c.Params.Get("redirect_uri")
+
+		if _url_host(rsp.RedirectUri) != _url_host(c.Request.URL.Host) {
+
+			if strings.Index(rsp.RedirectUri, "?") == -1 {
+				rsp.RedirectUri += "?"
+			} else {
+				rsp.RedirectUri += "&"
+			}
+
+			rsp.RedirectUri += "access_token=" + session.AccessToken + "&expires_in=864000"
+
+			if c.Params.Get("state") != "" {
+				rsp.RedirectUri += "&state=" + c.Params.Get("state")
+			}
 		}
-		rsp.Continue += "access_token=" + session.AccessToken
 	}
 
 	rsp.AccessToken = session.AccessToken
 
-	ck := &http.Cookie{
-		Name:     "access_token",
+	http.SetCookie(c.Response.Out, &http.Cookie{
+		Name:     "_ids_at",
 		Value:    session.AccessToken,
 		Path:     "/",
 		HttpOnly: true,
 		Expires:  time.Now().Add(864000 * time.Second),
-	}
-	http.SetCookie(c.Response.Out, ck)
+	})
 
 	rsp.Kind = "ServiceLoginAuth"
 }
@@ -133,14 +158,14 @@ func (c Service) AuthAction() {
 
 	defer c.RenderJson(&rsp)
 
-	if c.Session.AccessToken == "" {
+	if c.Params.Get("access_token") == "" {
 		rsp.Error = &types.ErrorMeta{idsapi.ErrCodeUnauthorized, "Unauthorized"}
 		return
 	}
 
 	if obj := store.BtAgent.ObjectGet(btapi.ObjectProposal{
 		Meta: btapi.ObjectMeta{
-			Path: "/session/" + c.Session.AccessToken,
+			Path: "/session/" + c.Params.Get("access_token"),
 		},
 	}); obj.Error == nil {
 		obj.JsonDecode(&rsp)
@@ -227,7 +252,7 @@ func (c Service) AccessAllowedAction() {
 		return
 	}
 
-	if !role.AccessAllowed(session.Roles, req.InstanceID, req.Privilege) {
+	if !role.AccessAllowed(session.UserID, session.Roles, req.InstanceID, req.Privilege) {
 		rsp.Error = &types.ErrorMeta{idsapi.ErrCodeUnauthorized, "Unauthorized"}
 		return
 	}

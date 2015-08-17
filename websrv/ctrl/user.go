@@ -17,6 +17,7 @@ package ctrl
 import (
 	"github.com/lessos/lessgo/httpsrv"
 	"github.com/lessos/lessids/config"
+	"github.com/lessos/lessids/idclient"
 )
 
 type User struct {
@@ -31,14 +32,15 @@ func (c User) PanelInfoAction() {
 		{"path": "#my-app/index", "title": "My Applications"},
 	}
 
-	if c.Session.AccessAllowed("user.admin") {
+	if idclient.SessionAccessAllowed(c.Session, "user.admin", "df085c6dc6ff" ) {
 		nav = append(nav, map[string]string{
 			"path":  "#user-mgr/index",
 			"title": "User Manage",
 		})
 	}
 
-	if c.Session.AccessAllowed("sys.admin") {
+	if idclient.SessionAccessAllowed(c.Session, "sys.admin", "df085c6dc6ff" ) {
+
 		nav = append(nav, map[string]string{
 			"path":  "#app-mgr/index",
 			"title": "Applications",

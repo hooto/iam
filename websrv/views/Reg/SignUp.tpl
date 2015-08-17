@@ -1,33 +1,32 @@
 {{template "Common/HtmlHeader.tpl" .}}
 
-<style>
+<style type="text/css">
 body {
   margin: 0 auto;
   position: relative;
   font-size: 13px;
   font-family: Arial, sans-serif;
-  background-color: #fff;
+  background-color: #222;
+  color: #eee;
 }
 
 #ids-signup-box {
-  width: 400px;
-  position: absolute;
+  width: 500px;
   left: 50%;
-  top: 20%;
-  margin-left: -200px;
-  color: #555;
+  top: 20px;
+  margin: 0 auto;
 }
 
 #ids-signup-form {
   background-color: #f7f7f7;
   border-radius: 4px;
   padding: 30px 30px 20px 30px;
-  box-shadow: 0px 2px 2px 0px #999;
+  /*box-shadow: 0px 2px 2px 0px #999;*/
 }
 
 .ids-signup-msg01 {
   font-size: 20px;
-  margin: 20px 0;
+  padding: 40px 0;
   text-align: center;
 }
 
@@ -89,12 +88,13 @@ body {
 }
 
 #ids-signup-box .ilb-signup {
-  margin: 10px 0;
+  margin: 20px 0;
   text-align: center;
   font-size: 15px;
 }
 #ids-signup-box .ilb-signup a {
-  color: #427fed;
+  font-size: 16px;
+  color: #fff;
 }
 
 #ids-signup-box .ilb-footer {
@@ -123,11 +123,7 @@ body {
 
     {{if eq .user_reg_disable false }}
     <div class="ilf-group">
-      <input type="text" class="ilf-input" name="name" value="{{.name}}" placeholder="{{T . "Your name"}}">
-    </div>
-
-    <div class="ilf-group">
-      <input type="text" class="ilf-input" name="uname" value="{{.uname}}" placeholder="{{T . "Unique username"}}">
+      <input type="text" class="ilf-input" name="uname" value="{{.uname}}" placeholder="{{T . "Unique Username"}}">
     </div>
 
     <div class="ilf-group">
@@ -153,7 +149,7 @@ body {
 
   <div class="ilb-footer">
     <img src="/ids/~/ids/img/ids-s2-32.png"> 
-    <a href="http://www.lessos.com" target="_blank">lessOS Identity Server</a>
+    <a href="http://www.lessos.com/p/lessids" target="_blank">lessOS Identity Server</a>
   </div>
 
 </div>
@@ -162,13 +158,6 @@ body {
 
 //
 $("input[name=name]").focus();
-
-//
-var ids_eh = $("#ids-signup-box").height();
-$("#ids-signup-box").css({
-    "top": "40%",
-    "margin-top": - (ids_eh / 2) + "px" 
-});
 
 //
 $("#ids-signup-form").submit(function(event) {

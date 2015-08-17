@@ -91,7 +91,7 @@ func (c Reg) SignUpRegAction() {
 		},
 		Email:    strings.TrimSpace(strings.ToLower(c.Params.Get("email"))),
 		Auth:     auth,
-		Name:     c.Params.Get("name"),
+		Name:     strings.Title(uname),
 		Status:   1,
 		Roles:    []uint32{100},
 		Groups:   []uint32{100},

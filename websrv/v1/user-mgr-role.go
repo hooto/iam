@@ -22,6 +22,7 @@ import (
 
 	"github.com/lessos/lessids/idsapi"
 	"github.com/lessos/lessids/store"
+	"github.com/lessos/lessids/idclient"
 )
 
 func (c UserMgr) RoleListAction() {
@@ -30,7 +31,7 @@ func (c UserMgr) RoleListAction() {
 
 	defer c.RenderJson(&ls)
 
-	if !c.Session.AccessAllowed("user.admin") {
+	if !idclient.SessionAccessAllowed(c.Session,"user.admin", "df085c6dc6ff") {
 		ls.Error = &types.ErrorMeta{idsapi.ErrCodeAccessDenied, "Access Denied"}
 		return
 	}
@@ -60,7 +61,7 @@ func (c UserMgr) RoleEntryAction() {
 
 	defer c.RenderJson(&set)
 
-	if !c.Session.AccessAllowed("user.admin") {
+	if !idclient.SessionAccessAllowed(c.Session,"user.admin", "df085c6dc6ff") {
 		set.Error = &types.ErrorMeta{idsapi.ErrCodeAccessDenied, "Access Denied"}
 		return
 	}
@@ -96,7 +97,7 @@ func (c UserMgr) RoleSetAction() {
 		return
 	}
 
-	if !c.Session.AccessAllowed("user.admin") {
+	if !idclient.SessionAccessAllowed(c.Session,"user.admin", "df085c6dc6ff") {
 		set.Error = &types.ErrorMeta{idsapi.ErrCodeAccessDenied, "Access Denied"}
 		return
 	}

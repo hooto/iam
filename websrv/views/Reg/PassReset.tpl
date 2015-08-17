@@ -1,35 +1,34 @@
 {{template "Common/HtmlHeader.tpl" .}}
 
-
 <style type="text/css">
 body {
   margin: 0 auto;
   position: relative;
   font-size: 13px;
   font-family: Arial, sans-serif;
-  background-color: #fff;
+  background-color: #222;
+  color: #eee;
 }
 
 
 #ids-reg-passreset-box {
-  width: 480px;
-  position: absolute;
+  width: 550px;
+  /*position: absolute;*/
   left: 50%;
-  top: 20%;
-  margin-left: -240px;
-  color: #555;
+  top: 20px;
+  margin: 0 auto;
 }
 
 #ids-reg-passreset-form {
   background-color: #f7f7f7;
   border-radius: 4px;
   padding: 30px 30px 20px 30px;
-  box-shadow: 0px 2px 2px 0px #999;
+  /*box-shadow: 0px 2px 2px 0px #999;*/
 }
 
 .ids-reg-passreset-msg01 {
   font-size: 20px;
-  margin: 20px 0;
+  padding: 40px 0;
   text-align: center;
 }
 
@@ -104,12 +103,13 @@ body {
 }
 
 #ids-reg-passreset-box .ilb-reg-passreset {
-  margin: 10px 0;
+  margin: 20px 0;
   text-align: center;
   font-size: 15px;
 }
 #ids-reg-passreset-box .ilb-reg-passreset a {
-  color: #427fed;
+  font-size: 16px;
+  color: #fff;
 }
 
 #ids-reg-passreset-box .ilb-footer {
@@ -129,7 +129,7 @@ body {
 
 <div id="ids-reg-passreset-box">
 
-  <div class="ids-reg-passreset-msg01">{{T . "Reset your password"}}</div>
+  <div class="ids-reg-passreset-msg01">{{T . "Reset your Password"}}</div>
 
   {{if .pass_reset_id}}
   <form id="ids-reg-passreset-form" action="#forgot-pass">
@@ -168,7 +168,7 @@ body {
 
   <div class="ilb-footer">
     <img src="/ids/~/ids/img/ids-s2-32.png"> 
-    <a href="http://www.lessos.com" target="_blank">lessOS Identity Server</a>
+    <a href="http://www.lessos.com/p/lessids" target="_blank">lessOS Identity Server</a>
   </div>
 
 </div>
@@ -177,13 +177,6 @@ body {
 <script>
 
 $("input[name=email]").focus();
-
-//
-var ids_eh = $("#ids-reg-passreset-box").height();
-$("#ids-reg-passreset-box").css({
-    "top": "40%",
-    "margin-top": - (ids_eh / 2) + "px" 
-});
 
 //
 $("#ids-reg-passreset-form").submit(function(event) {

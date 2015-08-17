@@ -21,6 +21,7 @@ import (
 	"github.com/lessos/lessgo/utils"
 	"github.com/lessos/lessgo/utilx"
 
+	"github.com/lessos/lessids/idclient"
 	"github.com/lessos/lessids/idsapi"
 	"github.com/lessos/lessids/store"
 )
@@ -39,7 +40,7 @@ func (c MyApp) InstListAction() {
 
 	defer c.RenderJson(&ls)
 
-	session, err := c.Session.Instance()
+	session, err := idclient.SessionInstance(c.Session)
 
 	if err != nil || !session.IsLogin() {
 		ls.Error = &types.ErrorMeta{idsapi.ErrCodeUnauthorized, "Access Denied"}
@@ -73,7 +74,7 @@ func (c MyApp) InstEntryAction() {
 
 	defer c.RenderJson(&set)
 
-	session, err := c.Session.Instance()
+	session, err := idclient.SessionInstance(c.Session)
 
 	if err != nil || !session.IsLogin() {
 		set.Error = &types.ErrorMeta{idsapi.ErrCodeUnauthorized, "Access Denied"}
@@ -108,7 +109,7 @@ func (c MyApp) InstSetAction() {
 
 	defer c.RenderJson(&set)
 
-	session, err := c.Session.Instance()
+	session, err := idclient.SessionInstance(c.Session)
 
 	if err != nil || !session.IsLogin() {
 		set.Error = &types.ErrorMeta{idsapi.ErrCodeUnauthorized, "Access Denied"}

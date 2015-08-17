@@ -18,6 +18,7 @@ import (
 	"net/http"
 
 	"github.com/lessos/bigtree/btapi"
+	"github.com/lessos/lessids/idclient"
 	"github.com/lessos/lessgo/httpsrv"
 	"github.com/lessos/lessids/store"
 )
@@ -28,9 +29,20 @@ type Service struct {
 
 func (c Service) LoginAction() {
 
-	c.Data["continue"] = c.Params.Get("continue")
 	if c.Params.Get("persistent") == "1" {
-		c.Data["persistentChecked"] = "checked"
+		c.Data["persistent_checked"] = "checked"
+	}
+
+	if c.Params.Get("client_id") != "" {
+		c.Data["client_id"] = c.Params.Get("client_id")
+	}
+
+	if c.Params.Get("redirect_uri") != "" {
+		c.Data["redirect_uri"] = c.Params.Get("redirect_uri")
+	}
+
+	if c.Params.Get("state") != "" {
+		c.Data["state"] = c.Params.Get("state")
 	}
 }
 
@@ -41,7 +53,7 @@ func (c Service) SignOutAction() {
 	token := c.Params.Get("access_token")
 
 	if token == "" {
-		session, _ := c.Session.Instance()
+		session, _ := idclient.SessionInstance(c.Session )
 		token = session.AccessToken
 	}
 
@@ -62,12 +74,10 @@ func (c Service) SignOutAction() {
 		PrevVersion: obj.Meta.Version,
 	})
 
-	ck := &http.Cookie{
+	http.SetCookie(c.Response.Out, &http.Cookie{
 		Name:     "access_token",
 		Value:    "",
 		Path:     "/",
-		HttpOnly: true,
 		MaxAge:   -1,
-	}
-	http.SetCookie(c.Response.Out, ck)
+	})
 }

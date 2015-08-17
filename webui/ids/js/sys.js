@@ -19,7 +19,7 @@ idssys.Index = function()
     });
 }
 
-idssys.GeneralSet = function(name)
+idssys.GeneralSet = function()
 {
     seajs.use(["ep"], function(EventProxy) {
 

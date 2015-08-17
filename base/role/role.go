@@ -22,60 +22,19 @@ import (
 	"github.com/lessos/lessgo/utils"
 	"github.com/lessos/lessids/idsapi"
 	"github.com/lessos/lessids/store"
+	// "github.com/lessos/lessgo/logger"
 )
 
 var (
-	locker sync.Mutex
-	// nextRefresh = time.Now().Add(time.Second * -61)
-	// roles       = map[uint32]role_bound{}
-	// privileges  = map[string]string{}
+	locker     sync.Mutex
 	inst2perms = map[string]*perm_map{}
 )
 
 type perm_map struct {
 	refresh time.Time
+	owner   string
 	maps    map[string][]uint32
 }
-
-// func innerRefresh() {
-
-// 	//fmt.Println("init once")
-
-// 	if nextRefresh.After(time.Now()) {
-// 		return
-// 	}
-
-// 	locker.Lock()
-// 	defer locker.Unlock()
-
-// 	//
-// 	if objs := store.BtAgent.ObjectList(btapi.ObjectProposal{
-// 		Meta: btapi.ObjectMeta{
-// 			Path: "/role/",
-// 		},
-// 	}); objs.Error == nil {
-
-// 		if len(objs.Items) < 3 {
-// 			it := store.InitNew{}
-// 			it.Init()
-// 		}
-
-// 		for _, obj := range objs.Items {
-
-// 			var role idsapi.UserRole
-// 			if err := obj.JsonDecode(&role); err == nil {
-
-// 				if _, ok := roles[role.IdxID]; ok {
-// 					continue
-// 				}
-
-// 				roles[role.IdxID] = role.Privileges
-// 			}
-// 		}
-// 	}
-
-// 	nextRefresh = time.Now().Add(time.Second * 60)
-// }
 
 func instPerms(instanceid string) *perm_map {
 
@@ -95,6 +54,7 @@ func instPerms(instanceid string) *perm_map {
 
 		perm = &perm_map{
 			refresh: time.Now().Add(time.Second * 60),
+			owner:   "",
 			maps:    map[string][]uint32{},
 		}
 	}
@@ -113,6 +73,7 @@ func instPerms(instanceid string) *perm_map {
 			for _, ip := range inst.Privileges {
 
 				if len(ip.Roles) > 0 {
+					perm.owner = inst.Meta.UserID
 					perm.maps[ip.Privilege] = ip.Roles
 				}
 			}
@@ -124,13 +85,17 @@ func instPerms(instanceid string) *perm_map {
 	return perm
 }
 
-func AccessAllowed(roles []uint32, instanceid, privilege string) bool {
+func AccessAllowed(owner string, roles []uint32, instanceid, privilege string) bool {
 
 	if instanceid == "" {
 		instanceid = utils.StringEncode16("lessids", 12)
 	}
 
 	p := instPerms(instanceid)
+	if p.owner == owner {
+		// logger.Printf("info", "acl ok owner %s %s", instanceid, privilege)
+		return true
+	}
 
 	if mroles, ok := p.maps[privilege]; ok {
 
@@ -139,11 +104,14 @@ func AccessAllowed(roles []uint32, instanceid, privilege string) bool {
 			for _, diffrid := range roles {
 
 				if rid == diffrid {
+					// logger.Printf("info", "acl ok role %s %s", instanceid, privilege)
 					return true
 				}
 			}
 		}
 	}
+
+	// logger.Printf("info", "acl !! %s %s", instanceid, privilege)
 
 	return false
 }

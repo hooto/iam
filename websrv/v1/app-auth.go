@@ -53,6 +53,7 @@ func (c AppAuth) InfoAction() {
 
 		set.InstanceID = instid
 		set.AppID = inst.AppID
+		// set.Version = inst.Version
 
 		set.Kind = "AppAuthInfo"
 

@@ -1,34 +1,38 @@
 {{template "Common/HtmlHeader.tpl" .}}
 
-<style>
+<style type="text/css">
 body {
-  margin: 0 auto;
+  margin: 0 !important;
+  padding: 0;
   position: relative;
   font-size: 13px;
   font-family: Arial, sans-serif;
-  background-color: #fff;
+  background-color: #222;
+  /*background-color: #07c;*/
+  color: #eee;
 }
 
 #ids-login-box {
   width: 360px;
-  position: absolute;
+  /*position: absolute;*/
   left: 50%;
-  top: 20%;
-  margin-left: -180px;
+  top: 20px;
   color: #555;
+  margin: 0 auto;
 }
 
 #ids-login-form {
   background-color: #f7f7f7;
   border-radius: 4px;
   padding: 20px 30px 20px 30px;
-  box-shadow: 0px 2px 2px 0px #999;
+  /*box-shadow: 0px 2px 2px 0px #999;*/
 }
 
 .ids-login-msg01 {
-  font-size: 20px;
-  margin: 20px 0;
+  font-size: 24px;
+  padding: 40px 0;
   text-align: center;
+  color: #eee;
 }
 
 .ids-user-ico-default {
@@ -37,7 +41,7 @@ body {
   padding: 2px;
   position: relative;
   left: 50%;
-  margin: 0 0 30px -48px;
+  margin: 10px 0 30px -48px;
   border-radius: 50%;
   background-color: #dfdfdf;
 }
@@ -126,12 +130,13 @@ body {
 }
 
 #ids-login-box .ilb-signup {
-  margin: 10px 0;
+  margin: 20px 0;
   text-align: center;
   font-size: 15px;
 }
 #ids-login-box .ilb-signup a {
-  color: #427fed;
+  font-size: 16px;
+  color: #fff;
 }
 
 #ids-login-box .ilb-footer {
@@ -140,7 +145,7 @@ body {
   font-size: 14px;
 }
 #ids-login-box .ilb-footer a {
-  color: #777;
+  color: #ccc;
 }
 #ids-login-box .ilb-footer img {
   width: 16px;
@@ -152,98 +157,92 @@ body {
 
   <div class="ids-login-msg01">{{T . "Sign in with your Account"}}</div>
 
-  <form id="ids-login-form" action="#">
+  <form id="ids-login-form" onsubmit="return false;">
 
-    <input type="hidden" name="continue" value="{{.continue}}">
+    <input type="hidden" name="redirect_uri" value="{{.redirect_uri}}">
+    <input type="hidden" name="state" value="{{.state}}">
 
     <img class="ids-user-ico-default"  src="/ids/~/ids/img/user-default.png">
 
-    <div id="ids-login-form-alert" class="alert hide ilf-group"></div>
+    <div id="ids-login-form-alert" class="alert ilf-group {{if eq .alert_msg nil}}hide{{end}}">{{.alert_msg}}</div>
 
     <div id="ilf-grp-input">
-    <div class="ilf-group">
-      <input type="text" class="ilf-input" name="uname" value="{{.uname}}" placeholder="{{T . "Username"}}">
-    </div>
-
-    <div class="ilf-group">
-      <input type="password" class="ilf-input" name="passwd" placeholder="{{T . "Password"}}">
-    </div>
-
-    <div class="ilf-group">
-      <button type="submit" class="ilf-btn">{{T . "Sign in"}}</button>
-    </div>
-
-    <div>
-      <div class="ilf-checkbox">
-        <input name="persistent" type="checkbox" value="1" checked="{{.persistentChecked}}"> Stay signed in
+      <div class="ilf-group">
+        <input type="text" class="ilf-input" name="uname" value="{{.uname}}" placeholder="{{T . "Username"}}">
       </div>
-      <div class="ilf-help">
+
+      <div class="ilf-group">
+        <input type="password" class="ilf-input" name="passwd" placeholder="{{T . "Password"}}">
+      </div>
+
+      <div class="ilf-group">
+        <button type="submit" class="ilf-btn">{{T . "Sign in"}}</button>
+      </div>
+
+      <div>
+        <div class="ilf-checkbox">
+          <input name="persistent" type="checkbox" value="1" checked="{{.persistent_checked}}"> Stay signed in
+        </div>
+        <div class="ilf-help">
         <a href="/ids/reg/forgot-pass">Forgot Password?</a>
+        </div>
       </div>
-    </div>
     </div>
   </form>
 
   <div class="ilb-signup">
-    <a href="/ids/reg/sign-up?continue={{.continue}}">Create an account</a>
+    <a href="/ids/reg/sign-up?redirect_uri={{.redirect_uri}}">Don't have an account? Create Account</a>
   </div>
 
   <div class="ilb-footer">
     <img src="/ids/~/ids/img/ids-s2-32.png"> 
-    <a href="http://www.lessos.com" target="_blank">lessOS Identity Server</a>
+    <a href="http://www.lessos.com/p/lessids" target="_blank">lessOS Identity Server</a>
   </div>
 
 </div>
 
-<script>
+<script type="text/javascript">
 
-//
-$("input[name=uname]").focus();
+window.onload = function()
+{
+    //
+    $("#ids-login-form").find("input[name=uname]").focus();
+    
+    //
+    $("#ids-login-form").submit(function(event) {
 
-//
-var ids_eh = $("#ids-login-box").height();
-$("#ids-login-box").css({
-    "top": "40%",
-    "margin-top": - (ids_eh / 2) + "px" 
-});
+        event.preventDefault();
 
-//
-$("#ids-login-form").submit(function(event) {
+        var alertid = "#ids-login-form-alert";
 
-    event.preventDefault();
+        ids.Ajax("/ids/v1/service/login-auth", {
+            type    : "POST",
+            data    : $(this).serialize(),
+            timeout : 3000,
+            success : function(rsj) {
 
-    $.ajax({
-        type    : "POST",
-        url     : "/ids/v1/service/login-auth",
-        data    : $(this).serialize(),//JSON.stringify(req),
-        timeout : 3000,
-        //contentType: "application/json; charset=utf-8",
-        success : function(rsj) {
+                if (!rsj || !rsj.kind || rsj.kind != "ServiceLoginAuth") {
 
-            if (rsj.error) {
-                return l4i.InnerAlert("#ids-login-form-alert", 'alert-danger', rsj.error.message);
+                    if (rsj.error) {
+                        return l4i.InnerAlert(alertid, 'alert-danger', rsj.error.message);
+                    }
+
+                    return l4i.InnerAlert(alertid, 'alert-danger', "Network Connection Exception");
+                }
+    
+                l4i.InnerAlert(alertid, 'alert-success', "Successfully Sign-on. Page redirecting ...");
+                $("#ilf-grp-input").hide(100);
+    
+                window.setTimeout(function() {
+                    window.location = rsj.redirect_uri;
+                }, 1500);
+            },
+            error: function(xhr, textStatus, error) {
+                l4i.InnerAlert(alertid, 'alert-danger', '{{T . "Internal Server Error"}}');
             }
-
-            if (!rsj.kind || rsj.kind != "ServiceLoginAuth") {
-                return l4i.InnerAlert("#ids-login-form-alert", 'alert-danger', "Network Connection Exception");
-            }
-
-            l4i.InnerAlert("#ids-login-form-alert", 'alert-success', "Successfully Sign-on. Page redirecting ...");
-            $("#ilf-grp-input").hide(100);
-
-            l4iCookie.Set("access_token", rsj.access_token, 864000);
-            // console.log(rsj);
-
-            window.setTimeout(function(){
-                window.location = rsj.continue;
-            }, 1500);
-        },
-        error: function(xhr, textStatus, error) {
-            l4i.InnerAlert("#ids-login-form-alert", 'alert-danger', '{{T . "Internal Server Error"}}');
-        }
+        });
     });
-});
-
+}
 </script>
 
 {{template "Common/HtmlFooter.tpl" .}}

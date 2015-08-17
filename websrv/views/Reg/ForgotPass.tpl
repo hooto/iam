@@ -1,33 +1,33 @@
 {{template "Common/HtmlHeader.tpl" .}}
 
-<style>
+<style type="text/css">
 body {
   margin: 0 auto;
   position: relative;
   font-size: 13px;
   font-family: Arial, sans-serif;
-  background-color: #fff;
+  background-color: #222;
+  color: #eee;
 }
 
 #ids-resetpass-box {
-  width: 400px;
-  position: absolute;
+  width: 550px;
+  /*position: absolute;*/
   left: 50%;
-  top: 20%;
-  margin-left: -200px;
-  color: #555;
+  top: 20px;
+  margin: 0 auto;
 }
 
 #ids-resetpass-form {
   background-color: #f7f7f7;
   border-radius: 4px;
   padding: 30px 30px 20px 30px;
-  box-shadow: 0px 2px 2px 0px #999;
+  /*box-shadow: 0px 2px 2px 0px #999;*/
 }
 
 .ids-resetpass-msg01 {
   font-size: 20px;
-  margin: 20px 0;
+  padding: 40px 0;
   text-align: center;
 }
 
@@ -89,12 +89,13 @@ body {
 }
 
 #ids-resetpass-box .ilb-resetpass {
-  margin: 10px 0;
+  margin: 20px 0;
   text-align: center;
   font-size: 15px;
 }
 #ids-resetpass-box .ilb-resetpass a {
-  color: #427fed;
+  font-size: 16px;
+  color: #fff;
 }
 
 #ids-resetpass-box .ilb-footer {
@@ -144,7 +145,7 @@ body {
 
   <div class="ilb-footer">
     <img src="/ids/~/ids/img/ids-s2-32.png"> 
-    <a href="http://www.lessos.com" target="_blank">lessOS Identity Server</a>
+    <a href="http://www.lessos.com/p/lessids" target="_blank">lessOS Identity Server</a>
   </div>
 
 </div>
@@ -154,12 +155,6 @@ body {
 //
 $("input[name=username]").focus();
 
-//
-var ids_eh = $("#ids-resetpass-box").height();
-$("#ids-resetpass-box").css({
-    "top": "40%",
-    "margin-top": - (ids_eh / 2) + "px" 
-});
 
 //
 $("#ids-resetpass-form").submit(function(event) {

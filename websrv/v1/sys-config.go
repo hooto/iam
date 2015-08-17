@@ -23,6 +23,7 @@ import (
 	"github.com/lessos/lessids/config"
 	"github.com/lessos/lessids/idsapi"
 	"github.com/lessos/lessids/store"
+	"github.com/lessos/lessids/idclient"
 )
 
 type SysConfig struct {
@@ -44,7 +45,7 @@ func (c SysConfig) GeneralAction() {
 
 	defer c.RenderJson(&ls)
 
-	if !c.Session.AccessAllowed("sys.admin") {
+	if !idclient.SessionAccessAllowed(c.Session, "sys.admin", "df085c6dc6ff") {
 		ls.Error = &types.ErrorMeta{idsapi.ErrCodeAccessDenied, "Access Denied"}
 		return
 	}
@@ -90,7 +91,7 @@ func (c SysConfig) GeneralSetAction() {
 		return
 	}
 
-	if !c.Session.AccessAllowed("sys.admin") {
+	if !idclient.SessionAccessAllowed(c.Session, "sys.admin","df085c6dc6ff") {
 		sets.Error = &types.ErrorMeta{idsapi.ErrCodeAccessDenied, "Access Denied"}
 		return
 	}
@@ -141,7 +142,7 @@ func (c SysConfig) MailerAction() {
 
 	defer c.RenderJson(&ls)
 
-	if !c.Session.AccessAllowed("sys.admin") {
+	if !idclient.SessionAccessAllowed(c.Session, "sys.admin","df085c6dc6ff") {
 		ls.Error = &types.ErrorMeta{idsapi.ErrCodeAccessDenied, "Access Denied"}
 		return
 	}

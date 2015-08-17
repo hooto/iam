@@ -31,7 +31,7 @@ const (
 
 type ServiceLoginAuth struct {
 	types.TypeMeta `json:",inline"`
-	Continue       string `json:"continue,omitempty"`
+	RedirectUri    string `json:"redirect_uri,omitempty"`
 	AccessToken    string `json:"access_token,omitempty"`
 }
 
@@ -176,7 +176,7 @@ type AppAuthInfo struct {
 	types.TypeMeta `json:",inline"`
 	InstanceID     string `json:"instance_id"`
 	AppID          string `json:"app_id"`
-	// Version    string `json:"version"`
+	// Version        string `json:"version,omitempty"`
 }
 
 type AppInstanceRegister struct {

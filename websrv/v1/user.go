@@ -33,6 +33,7 @@ import (
 	"github.com/lessos/lessids/base/profile"
 	"github.com/lessos/lessids/idsapi"
 	"github.com/lessos/lessids/store"
+		"github.com/lessos/lessids/idclient"
 )
 
 type User struct {
@@ -45,7 +46,7 @@ func (c User) ProfileAction() {
 
 	defer c.RenderJson(&rsp)
 
-	session, err := c.Session.Instance()
+	session, err := idclient.SessionInstance(c.Session)
 
 	if err != nil || !session.IsLogin() {
 		rsp.Error = &types.ErrorMeta{"401", "Access Denied"}
@@ -118,7 +119,7 @@ func (c User) ProfileSetAction() {
 		return
 	}
 
-	session, err := c.Session.Instance()
+	session, err := idclient.SessionInstance(c.Session)
 
 	if err != nil || !session.IsLogin() {
 		rsp.Error = &types.ErrorMeta{"401", "Access Denied"}
@@ -199,7 +200,7 @@ func (c User) PassSetAction() {
 		return
 	}
 
-	session, err := c.Session.Instance()
+	session, err := idclient.SessionInstance(c.Session)
 
 	if err != nil || !session.IsLogin() {
 		rsp.Error = &types.ErrorMeta{"401", "Access Denied"}
@@ -263,7 +264,7 @@ func (c User) EmailSetAction() {
 		req.Email = email
 	}
 
-	session, err := c.Session.Instance()
+	session, err := idclient.SessionInstance(c.Session)
 
 	if err != nil || !session.IsLogin() {
 		rsp.Error = &types.ErrorMeta{"401", "Access Denied"}
@@ -320,7 +321,7 @@ func (c User) PhotoSetAction() {
 		return
 	}
 
-	session, err := c.Session.Instance()
+	session, err := idclient.SessionInstance(c.Session)
 
 	if err != nil || !session.IsLogin() {
 		rsp.Error = &types.ErrorMeta{"401", "Access Denied"}
@@ -382,7 +383,7 @@ func (c User) RoleListAction() {
 
 	defer c.RenderJson(&ls)
 
-	session, err := c.Session.Instance()
+	session, err := idclient.SessionInstance(c.Session)
 
 	if err != nil || !session.IsLogin() {
 		ls.Error = &types.ErrorMeta{idsapi.ErrCodeUnauthorized, "Access Denied"}

@@ -23,6 +23,7 @@ import (
 	"github.com/lessos/lessgo/utilx"
 
 	"github.com/lessos/lessids/idsapi"
+	"github.com/lessos/lessids/idclient"
 	"github.com/lessos/lessids/store"
 )
 
@@ -40,7 +41,7 @@ func (c AppMgr) InstListAction() {
 
 	defer c.RenderJson(&ls)
 
-	if !c.Session.AccessAllowed("sys.admin") {
+	if !idclient.SessionAccessAllowed(c.Session, "sys.admin", "df085c6dc6ff") {
 		ls.Error = &types.ErrorMeta{idsapi.ErrCodeAccessDenied, "Access Denied"}
 		return
 	}
@@ -72,7 +73,7 @@ func (c AppMgr) InstEntryAction() {
 
 	defer c.RenderJson(&set)
 
-	if !c.Session.AccessAllowed("sys.admin") {
+	if !idclient.SessionAccessAllowed(c.Session, "sys.admin", "df085c6dc6ff") {
 		set.Error = &types.ErrorMeta{idsapi.ErrCodeAccessDenied, "Access Denied"}
 		return
 	}
@@ -99,7 +100,7 @@ func (c AppMgr) InstSetAction() {
 
 	defer c.RenderJson(&set)
 
-	if !c.Session.AccessAllowed("sys.admin") {
+	if !idclient.SessionAccessAllowed(c.Session, "sys.admin", "df085c6dc6ff") {
 		set.Error = &types.ErrorMeta{idsapi.ErrCodeAccessDenied, "Access Denied"}
 		return
 	}

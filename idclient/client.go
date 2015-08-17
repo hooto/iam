@@ -16,6 +16,7 @@ package idclient
 
 import (
 	"errors"
+	"fmt"
 	"sync"
 	"time"
 
@@ -23,10 +24,15 @@ import (
 	"github.com/lessos/lessgo/utils"
 	"github.com/lessos/lessgo/utilx"
 	"github.com/lessos/lessids/idsapi"
+	"github.com/lessos/lessgo/httpsrv"
+)
+
+const (
+	AccessTokenKey = "_ids_at"
 )
 
 var (
-	ServiceUrl        = "http://127.0.0.1:50101/ids"
+	ServiceUrl        = "http://127.0.0.1:9528/ids"
 	sessions          = map[string]idsapi.UserSession{}
 	nextClean         = time.Now()
 	innerExpiredRange = time.Second * 1800
@@ -62,7 +68,49 @@ func LoginUrl(backurl string) string {
 	return ServiceUrl + "/service/login?continue=" + backurl
 }
 
-func Instance(token string) (session idsapi.UserSession, err error) {
+func AuthServiceUrl(client_id, redirect_uri, state string) string {
+	return fmt.Sprintf("%s/service/login?response_type=token&client_id=%s&redirect_uri=%s&state=%s",
+		ServiceUrl, client_id, redirect_uri, state)
+}
+
+func SessionAccessToken(s *httpsrv.Session) string {
+	return s.Get(AccessTokenKey)
+}
+
+func SesionSet(s *httpsrv.Session) error {
+
+
+	return nil
+}
+
+func SessionIsLogin(s *httpsrv.Session) bool {
+	
+	if s == nil {
+		return false
+	}
+
+	return _is_login(s.Get(AccessTokenKey))
+}
+
+func SessionAccessAllowed(s *httpsrv.Session, privilege, client_id string ) bool {
+
+	if s == nil {
+		return false
+	}
+
+	return _access_allowed(privilege, s.Get(AccessTokenKey), client_id)
+}
+
+func SessionInstance(s *httpsrv.Session) (session idsapi.UserSession, err error) {
+
+	if s == nil {
+		return idsapi.UserSession{}, errors.New("No Session Found")
+	} 
+
+	return _instance(s.Get(AccessTokenKey))
+}
+
+func _instance(token string) (session idsapi.UserSession, err error) {
 
 	if ServiceUrl == "" || token == "" {
 		return session, errors.New("Unauthorized")
@@ -95,18 +143,18 @@ func Instance(token string) (session idsapi.UserSession, err error) {
 	return us, nil
 }
 
-func IsLogin(token string) bool {
+func _is_login(token string) bool {
 
-	if _, err := Instance(token); err != nil {
+	if _, err := _instance(token); err != nil {
 		return false
 	}
 
 	return true
 }
 
-func AccessAllowed(privilege, instanceid, token string) bool {
+func _access_allowed(privilege, token, instanceid  string) bool {
 
-	if !IsLogin(token) {
+	if !_is_login(token) {
 		return false
 	}
 
