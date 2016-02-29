@@ -32,14 +32,14 @@ func (c User) PanelInfoAction() {
 		{"path": "#my-app/index", "title": "My Applications"},
 	}
 
-	if idclient.SessionAccessAllowed(c.Session, "user.admin", "df085c6dc6ff" ) {
+	if idclient.SessionAccessAllowed(c.Session, "user.admin", "df085c6dc6ff") {
 		nav = append(nav, map[string]string{
 			"path":  "#user-mgr/index",
 			"title": "User Manage",
 		})
 	}
 
-	if idclient.SessionAccessAllowed(c.Session, "sys.admin", "df085c6dc6ff" ) {
+	if idclient.SessionAccessAllowed(c.Session, "sys.admin", "df085c6dc6ff") {
 
 		nav = append(nav, map[string]string{
 			"path":  "#app-mgr/index",

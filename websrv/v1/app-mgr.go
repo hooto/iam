@@ -19,11 +19,10 @@ import (
 
 	"github.com/lessos/lessgo/httpsrv"
 	"github.com/lessos/lessgo/types"
-	"github.com/lessos/lessgo/utils"
 	"github.com/lessos/lessgo/utilx"
 
-	"github.com/lessos/lessids/idsapi"
 	"github.com/lessos/lessids/idclient"
+	"github.com/lessos/lessids/idsapi"
 	"github.com/lessos/lessids/store"
 )
 
@@ -46,11 +45,7 @@ func (c AppMgr) InstListAction() {
 		return
 	}
 
-	if objs := store.BtAgent.ObjectList(btapi.ObjectProposal{
-		Meta: btapi.ObjectMeta{
-			Path: "/app-instance/",
-		},
-	}); objs.Error == nil {
+	if objs := store.BtAgent.ObjectList("/global/ids/app-instance/"); objs.Error == nil {
 
 		for _, obj := range objs.Items {
 
@@ -78,11 +73,7 @@ func (c AppMgr) InstEntryAction() {
 		return
 	}
 
-	if obj := store.BtAgent.ObjectGet(btapi.ObjectProposal{
-		Meta: btapi.ObjectMeta{
-			Path: "/app-instance/" + c.Params.Get("instid"),
-		},
-	}); obj.Error == nil {
+	if obj := store.BtAgent.ObjectGet("/global/ids/app-instance/" + c.Params.Get("instid")); obj.Error == nil {
 		obj.JsonDecode(&set)
 	}
 
@@ -112,11 +103,7 @@ func (c AppMgr) InstSetAction() {
 
 	var prev idsapi.AppInstance
 	var prevVersion uint64
-	if obj := store.BtAgent.ObjectGet(btapi.ObjectProposal{
-		Meta: btapi.ObjectMeta{
-			Path: "/app-instance/" + set.Meta.ID,
-		},
-	}); obj.Error == nil {
+	if obj := store.BtAgent.ObjectGet("/global/ids/app-instance/" + set.Meta.ID); obj.Error == nil {
 		obj.JsonDecode(&prev)
 		prevVersion = obj.Meta.Version
 	}
@@ -131,13 +118,8 @@ func (c AppMgr) InstSetAction() {
 		prev.AppTitle = set.AppTitle
 		prev.Url = set.Url
 
-		setjs, _ := utils.JsonEncode(prev)
-		if obj := store.BtAgent.ObjectSet(btapi.ObjectProposal{
-			Meta: btapi.ObjectMeta{
-				Path: "/app-instance/" + set.Meta.ID,
-			},
+		if obj := store.BtAgent.ObjectSet("/global/ids/app-instance/"+set.Meta.ID, prev, &btapi.ObjectWriteOptions{
 			PrevVersion: prevVersion,
-			Data:        setjs,
 		}); obj.Error != nil {
 			set.Error = &types.ErrorMeta{idsapi.ErrCodeInternalError, obj.Error.Message}
 			return

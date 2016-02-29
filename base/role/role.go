@@ -18,11 +18,9 @@ import (
 	"sync"
 	"time"
 
-	"github.com/lessos/bigtree/btapi"
 	"github.com/lessos/lessgo/utils"
 	"github.com/lessos/lessids/idsapi"
 	"github.com/lessos/lessids/store"
-	// "github.com/lessos/lessgo/logger"
 )
 
 var (
@@ -60,11 +58,7 @@ func instPerms(instanceid string) *perm_map {
 	}
 
 	//
-	if obj := store.BtAgent.ObjectGet(btapi.ObjectProposal{
-		Meta: btapi.ObjectMeta{
-			Path: "/app-instance/" + instanceid,
-		},
-	}); obj.Error == nil {
+	if obj := store.BtAgent.ObjectGet("/global/ids/app-instance/" + instanceid); obj.Error == nil {
 
 		var inst idsapi.AppInstance
 

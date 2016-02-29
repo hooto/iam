@@ -20,11 +20,11 @@ import (
 	"sync"
 	"time"
 
+	"github.com/lessos/lessgo/httpsrv"
 	"github.com/lessos/lessgo/net/httpclient"
 	"github.com/lessos/lessgo/utils"
 	"github.com/lessos/lessgo/utilx"
 	"github.com/lessos/lessids/idsapi"
-	"github.com/lessos/lessgo/httpsrv"
 )
 
 const (
@@ -79,12 +79,11 @@ func SessionAccessToken(s *httpsrv.Session) string {
 
 func SesionSet(s *httpsrv.Session) error {
 
-
 	return nil
 }
 
 func SessionIsLogin(s *httpsrv.Session) bool {
-	
+
 	if s == nil {
 		return false
 	}
@@ -92,7 +91,7 @@ func SessionIsLogin(s *httpsrv.Session) bool {
 	return _is_login(s.Get(AccessTokenKey))
 }
 
-func SessionAccessAllowed(s *httpsrv.Session, privilege, client_id string ) bool {
+func SessionAccessAllowed(s *httpsrv.Session, privilege, client_id string) bool {
 
 	if s == nil {
 		return false
@@ -105,12 +104,12 @@ func SessionInstance(s *httpsrv.Session) (session idsapi.UserSession, err error)
 
 	if s == nil {
 		return idsapi.UserSession{}, errors.New("No Session Found")
-	} 
+	}
 
-	return _instance(s.Get(AccessTokenKey))
+	return Instance(s.Get(AccessTokenKey))
 }
 
-func _instance(token string) (session idsapi.UserSession, err error) {
+func Instance(token string) (session idsapi.UserSession, err error) {
 
 	if ServiceUrl == "" || token == "" {
 		return session, errors.New("Unauthorized")
@@ -121,6 +120,7 @@ func _instance(token string) (session idsapi.UserSession, err error) {
 	}
 
 	hc := httpclient.Get(ServiceUrl + "/v1/service/auth?access_token=" + token)
+	defer hc.Close()
 
 	var us idsapi.UserSession
 
@@ -145,14 +145,14 @@ func _instance(token string) (session idsapi.UserSession, err error) {
 
 func _is_login(token string) bool {
 
-	if _, err := _instance(token); err != nil {
+	if _, err := Instance(token); err != nil {
 		return false
 	}
 
 	return true
 }
 
-func _access_allowed(privilege, token, instanceid  string) bool {
+func _access_allowed(privilege, token, instanceid string) bool {
 
 	if !_is_login(token) {
 		return false
@@ -168,6 +168,7 @@ func _access_allowed(privilege, token, instanceid  string) bool {
 	hc := httpclient.Post(ServiceUrl + "/v1/service/access-allowed")
 	hc.Header("contentType", "application/json; charset=utf-8")
 	hc.Body(js)
+	defer hc.Close()
 
 	var us idsapi.UserAccessEntry
 	if err := hc.ReplyJson(&us); err != nil || us.Kind != "UserAccessEntry" {

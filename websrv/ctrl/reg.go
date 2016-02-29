@@ -67,11 +67,7 @@ func (c Reg) SignUpRegAction() {
 	uname := strings.TrimSpace(strings.ToLower(c.Params.Get("uname")))
 
 	var user idsapi.User
-	if obj := store.BtAgent.ObjectGet(btapi.ObjectProposal{
-		Meta: btapi.ObjectMeta{
-			Path: "/user/" + utils.StringEncode16(uname, 8),
-		},
-	}); obj.Error == nil {
+	if obj := store.BtAgent.ObjectGet("/global/ids/user/" + utils.StringEncode16(uname, 8)); obj.Error == nil {
 		obj.JsonDecode(&user)
 	}
 
@@ -98,14 +94,7 @@ func (c Reg) SignUpRegAction() {
 		Timezone: "UTC",
 	}
 
-	userjs, _ := utils.JsonEncode(user)
-
-	if obj := store.BtAgent.ObjectSet(btapi.ObjectProposal{
-		Meta: btapi.ObjectMeta{
-			Path: "/user/" + user.Meta.ID,
-		},
-		Data: userjs,
-	}); obj.Error != nil {
+	if obj := store.BtAgent.ObjectSet("/global/ids/user/"+user.Meta.ID, user, nil); obj.Error != nil {
 		rsp.Error = &types.ErrorMeta{"500", obj.Error.Message}
 		return
 	}
@@ -140,11 +129,7 @@ func (c Reg) ForgotPassPutAction() {
 	userid := utils.StringEncode16(c.Params.Get("username"), 8)
 
 	var user idsapi.User
-	if obj := store.BtAgent.ObjectGet(btapi.ObjectProposal{
-		Meta: btapi.ObjectMeta{
-			Path: "/user/" + userid,
-		},
-	}); obj.Error == nil {
+	if obj := store.BtAgent.ObjectGet("/global/ids/user/" + userid); obj.Error == nil {
 		obj.JsonDecode(&user)
 	}
 
@@ -159,14 +144,9 @@ func (c Reg) ForgotPassPutAction() {
 		Email:   uemail,
 		Expired: utilx.TimeNowAdd("atom", "+3600s"),
 	}
-	resetjs, _ := utils.JsonEncode(reset)
 
-	if obj := store.BtAgent.ObjectSet(btapi.ObjectProposal{
-		Meta: btapi.ObjectMeta{
-			Path: "/pwd-reset/" + reset.ID,
-			Ttl:  3600,
-		},
-		Data: resetjs,
+	if obj := store.BtAgent.ObjectSet("/global/ids/pwd-reset/"+reset.ID, reset, &btapi.ObjectWriteOptions{
+		Ttl: 3600,
 	}); obj.Error != nil {
 		rsp.Error = &types.ErrorMeta{"500", obj.Error.Message}
 		return
@@ -216,11 +196,7 @@ func (c Reg) PassResetAction() {
 	}
 
 	var reset idsapi.UserPasswordReset
-	if obj := store.BtAgent.ObjectGet(btapi.ObjectProposal{
-		Meta: btapi.ObjectMeta{
-			Path: "/pwd-reset/" + c.Params.Get("id"),
-		},
-	}); obj.Error == nil {
+	if obj := store.BtAgent.ObjectGet("/global/ids/pwd-reset/" + c.Params.Get("id")); obj.Error == nil {
 		obj.JsonDecode(&reset)
 	}
 
@@ -250,11 +226,7 @@ func (c Reg) PassResetPutAction() {
 	}
 
 	var reset idsapi.UserPasswordReset
-	rsobj := store.BtAgent.ObjectGet(btapi.ObjectProposal{
-		Meta: btapi.ObjectMeta{
-			Path: "/pwd-reset/" + c.Params.Get("id"),
-		},
-	})
+	rsobj := store.BtAgent.ObjectGet("/global/ids/pwd-reset/" + c.Params.Get("id"))
 	if rsobj.Error == nil {
 		rsobj.JsonDecode(&reset)
 	}
@@ -270,11 +242,7 @@ func (c Reg) PassResetPutAction() {
 	}
 
 	var user idsapi.User
-	uobj := store.BtAgent.ObjectGet(btapi.ObjectProposal{
-		Meta: btapi.ObjectMeta{
-			Path: "/user/" + reset.UserID,
-		},
-	})
+	uobj := store.BtAgent.ObjectGet("/global/ids/user/" + reset.UserID)
 	if uobj.Error == nil {
 		uobj.JsonDecode(&user)
 	}
@@ -288,23 +256,14 @@ func (c Reg) PassResetPutAction() {
 	user.Auth, _ = pass.HashDefault(c.Params.Get("passwd"))
 	user.Meta.Updated = utilx.TimeNow("atom")
 
-	userjs, _ := utils.JsonEncode(user)
-
-	if obj := store.BtAgent.ObjectSet(btapi.ObjectProposal{
-		Meta: btapi.ObjectMeta{
-			Path: "/user/" + user.Meta.ID,
-		},
+	if obj := store.BtAgent.ObjectSet("/global/ids/user/"+user.Meta.ID, user, &btapi.ObjectWriteOptions{
 		PrevVersion: uobj.Meta.Version,
-		Data:        userjs,
 	}); obj.Error != nil {
 		rsp.Error = &types.ErrorMeta{"500", obj.Error.Message}
 		return
 	}
 
-	store.BtAgent.ObjectDel(btapi.ObjectProposal{
-		Meta: btapi.ObjectMeta{
-			Path: "/pwd-reset/" + reset.ID,
-		},
+	store.BtAgent.ObjectDel("/global/ids/pwd-reset/"+reset.ID, &btapi.ObjectWriteOptions{
 		PrevVersion: rsobj.Meta.Version,
 	})
 

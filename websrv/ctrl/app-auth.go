@@ -37,7 +37,7 @@ type AppAuth struct {
 // 	var prevVersion uint64
 // 	var prev idsapi.AppInstance
 
-// 	if obj := store.BtAgent.ObjectGet(btapi.ObjectProposal{
+// 	if obj := store.BtAgent.ObjectGet(btapi.ObjectPut{
 // 		Meta: btapi.ObjectMeta{
 // 			Path: "/app-instance/" + set.Meta.ID,
 // 		},
@@ -62,7 +62,7 @@ type AppAuth struct {
 
 // 	setjs, _ := utils.JsonEncode(set)
 
-// 	if obj := store.BtAgent.ObjectSet(btapi.ObjectProposal{
+// 	if obj := store.BtAgent.ObjectSet(btapi.ObjectPut{
 // 		Meta: btapi.ObjectMeta{
 // 			Path: "/app-instance/" + set.Meta.ID,
 // 		},

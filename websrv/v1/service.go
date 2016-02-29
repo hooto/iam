@@ -69,11 +69,7 @@ func (c Service) LoginAuthAction() {
 	}
 
 	var user idsapi.User
-	if obj := store.BtAgent.ObjectGet(btapi.ObjectProposal{
-		Meta: btapi.ObjectMeta{
-			Path: "/user/" + utils.StringEncode16(uname, 8),
-		},
-	}); obj.Error == nil {
+	if obj := store.BtAgent.ObjectGet("/global/ids/user/" + utils.StringEncode16(uname, 8)); obj.Error == nil {
 		obj.JsonDecode(&user)
 	}
 
@@ -106,14 +102,8 @@ func (c Service) LoginAuthAction() {
 		Expired:      utilx.TimeNowAdd("atom", "+864000s"),
 	}
 
-	sessionjs, _ := utils.JsonEncode(session)
-
-	if sobj := store.BtAgent.ObjectSet(btapi.ObjectProposal{
-		Meta: btapi.ObjectMeta{
-			Path: "/session/" + session.AccessToken,
-			Ttl:  864000,
-		},
-		Data: sessionjs,
+	if sobj := store.BtAgent.ObjectSet("/global/ids/session/"+session.AccessToken, session, &btapi.ObjectWriteOptions{
+		Ttl: 86400000,
 	}); sobj.Error != nil {
 		rsp.Error = &types.ErrorMeta{"500", sobj.Error.Message}
 		return
@@ -163,11 +153,7 @@ func (c Service) AuthAction() {
 		return
 	}
 
-	if obj := store.BtAgent.ObjectGet(btapi.ObjectProposal{
-		Meta: btapi.ObjectMeta{
-			Path: "/session/" + c.Params.Get("access_token"),
-		},
-	}); obj.Error == nil {
+	if obj := store.BtAgent.ObjectGet("/global/ids/session/" + c.Params.Get("access_token")); obj.Error == nil {
 		obj.JsonDecode(&rsp)
 	}
 
@@ -184,14 +170,14 @@ func (c Service) AuthAction() {
 	}
 
 	//
-	addr := "0.0.0.0"
-	if addridx := strings.Index(c.Request.RemoteAddr, ":"); addridx > 0 {
-		addr = c.Request.RemoteAddr[:addridx]
-	}
-	if addr != rsp.ClientAddr {
-		rsp.Error = &types.ErrorMeta{idsapi.ErrCodeUnauthorized, "Unauthorized"}
-		return
-	}
+	// addr := "0.0.0.0"
+	// if addridx := strings.Index(c.Request.RemoteAddr, ":"); addridx > 0 {
+	// 	addr = c.Request.RemoteAddr[:addridx]
+	// }
+	// if addr != rsp.ClientAddr {
+	// 	rsp.Error = &types.ErrorMeta{idsapi.ErrCodeUnauthorized, "Unauthorized"}
+	// 	return
+	// }
 
 	rsp.Kind = "UserSession"
 }
@@ -222,11 +208,7 @@ func (c Service) AccessAllowedAction() {
 	}
 
 	var session idsapi.UserSession
-	if obj := store.BtAgent.ObjectGet(btapi.ObjectProposal{
-		Meta: btapi.ObjectMeta{
-			Path: "/session/" + req.AccessToken,
-		},
-	}); obj.Error == nil {
+	if obj := store.BtAgent.ObjectGet("/global/ids/session/" + req.AccessToken); obj.Error == nil {
 		obj.JsonDecode(&session)
 	}
 
@@ -272,11 +254,7 @@ func (c Service) PhotoAction() {
 
 		var profile idsapi.UserProfile
 
-		if obj := store.BtAgent.ObjectGet(btapi.ObjectProposal{
-			Meta: btapi.ObjectMeta{
-				Path: "/user-profile/" + uid,
-			},
-		}); obj.Error == nil {
+		if obj := store.BtAgent.ObjectGet("/global/ids/user-profile/" + uid); obj.Error == nil {
 			if err := obj.JsonDecode(&profile); err == nil && len(profile.Photo) > 50 {
 				photo = profile.Photo
 			}

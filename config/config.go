@@ -24,7 +24,6 @@ import (
 	"strings"
 	"time"
 
-	"github.com/lessos/bigtree/btapi"
 	"github.com/lessos/lessgo/net/email"
 	"github.com/lessos/lessids/idsapi"
 	"github.com/lessos/lessids/store"
@@ -51,7 +50,7 @@ type ConfigCommon struct {
 	ServiceName      string `json:"service_name"`
 	WebUiBannerTitle string
 	// Mailer           idsapi.SysConfigMailer `json:"mailer"`
-	BtData btapi.DataAccessConfig `json:"btdata,omitempty"`
+	// BtData btapi.DataAccessConfig `json:"btdata,omitempty"`
 }
 
 func Init(prefix string) error {
@@ -115,11 +114,7 @@ func (c *ConfigCommon) Refresh() {
 
 	//
 	var mailer idsapi.SysConfigMailer
-	if obj := store.BtAgent.ObjectGet(btapi.ObjectProposal{
-		Meta: btapi.ObjectMeta{
-			Path: "/sys-config/mailer",
-		},
-	}); obj.Error == nil {
+	if obj := store.BtAgent.ObjectGet("/global/ids/sys-config/mailer"); obj.Error == nil {
 
 		obj.JsonDecode(&mailer)
 
@@ -133,33 +128,21 @@ func (c *ConfigCommon) Refresh() {
 		}
 	}
 
-	if obj := store.BtAgent.ObjectGet(btapi.ObjectProposal{
-		Meta: btapi.ObjectMeta{
-			Path: "/sys-config/service_name",
-		},
-	}); obj.Error == nil {
+	if obj := store.BtAgent.ObjectGet("/global/ids/sys-config/service_name"); obj.Error == nil {
 
 		if obj.Data != "" {
 			c.ServiceName = obj.Data
 		}
 	}
 
-	if obj := store.BtAgent.ObjectGet(btapi.ObjectProposal{
-		Meta: btapi.ObjectMeta{
-			Path: "/sys-config/webui_banner_title",
-		},
-	}); obj.Error == nil {
+	if obj := store.BtAgent.ObjectGet("/global/ids/sys-config/webui_banner_title"); obj.Error == nil {
 
 		if obj.Data != "" {
 			c.WebUiBannerTitle = obj.Data
 		}
 	}
 
-	if obj := store.BtAgent.ObjectGet(btapi.ObjectProposal{
-		Meta: btapi.ObjectMeta{
-			Path: "/sys-config/user_reg_disable",
-		},
-	}); obj.Error == nil {
+	if obj := store.BtAgent.ObjectGet("/global/ids/sys-config/user_reg_disable"); obj.Error == nil {
 
 		if obj.Data == "1" {
 			UserRegistrationDisabled = true

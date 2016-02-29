@@ -26,9 +26,9 @@ import (
 	"github.com/lessos/lessgo/utilx"
 
 	"github.com/lessos/lessids/base/signup"
+	"github.com/lessos/lessids/idclient"
 	"github.com/lessos/lessids/idsapi"
 	"github.com/lessos/lessids/store"
-	"github.com/lessos/lessids/idclient"
 )
 
 const (
@@ -54,16 +54,12 @@ func (c UserMgr) UserListAction() {
 
 	defer c.RenderJson(&ls)
 
-	if !idclient.SessionAccessAllowed(c.Session,"user.admin", "df085c6dc6ff") {
+	if !idclient.SessionAccessAllowed(c.Session, "user.admin", "df085c6dc6ff") {
 		ls.Error = &types.ErrorMeta{idsapi.ErrCodeAccessDenied, "Access Denied"}
 		return
 	}
 
-	if objs := store.BtAgent.ObjectList(btapi.ObjectProposal{
-		Meta: btapi.ObjectMeta{
-			Path: "/user/",
-		},
-	}); objs.Error == nil {
+	if objs := store.BtAgent.ObjectList("/global/ids/user/"); objs.Error == nil {
 
 		for _, obj := range objs.Items {
 
@@ -101,16 +97,12 @@ func (c UserMgr) UserEntryAction() {
 
 	defer c.RenderJson(&set)
 
-	if !idclient.SessionAccessAllowed(c.Session,"user.admin", "df085c6dc6ff") {
+	if !idclient.SessionAccessAllowed(c.Session, "user.admin", "df085c6dc6ff") {
 		set.Error = &types.ErrorMeta{idsapi.ErrCodeAccessDenied, "Access Denied"}
 		return
 	}
 
-	if obj := store.BtAgent.ObjectGet(btapi.ObjectProposal{
-		Meta: btapi.ObjectMeta{
-			Path: "/user/" + c.Params.Get("userid"),
-		},
-	}); obj.Error == nil {
+	if obj := store.BtAgent.ObjectGet("/global/ids/user/" + c.Params.Get("userid")); obj.Error == nil {
 		obj.JsonDecode(&set)
 	}
 
@@ -123,11 +115,7 @@ func (c UserMgr) UserEntryAction() {
 
 	//
 	var profile idsapi.UserProfile
-	if obj := store.BtAgent.ObjectGet(btapi.ObjectProposal{
-		Meta: btapi.ObjectMeta{
-			Path: "/user-profile/" + c.Params.Get("userid"),
-		},
-	}); obj.Error == nil {
+	if obj := store.BtAgent.ObjectGet("/global/ids/user-profile/" + c.Params.Get("userid")); obj.Error == nil {
 		obj.JsonDecode(&profile)
 		profile.About = html.EscapeString(profile.About)
 	}
@@ -148,7 +136,7 @@ func (c UserMgr) UserSetAction() {
 		return
 	}
 
-	if !idclient.SessionAccessAllowed(c.Session,"user.admin", "df085c6dc6ff") {
+	if !idclient.SessionAccessAllowed(c.Session, "user.admin", "df085c6dc6ff") {
 		set.Error = &types.ErrorMeta{idsapi.ErrCodeAccessDenied, "Access Denied"}
 		return
 	}
@@ -176,11 +164,7 @@ func (c UserMgr) UserSetAction() {
 	} else {
 
 		var prev idsapi.User
-		if obj := store.BtAgent.ObjectGet(btapi.ObjectProposal{
-			Meta: btapi.ObjectMeta{
-				Path: "/user/" + set.Meta.ID,
-			},
-		}); obj.Error == nil {
+		if obj := store.BtAgent.ObjectGet("/global/ids/user/" + set.Meta.ID); obj.Error == nil {
 			obj.JsonDecode(&prev)
 			prevVersion = obj.Meta.Version
 		}
@@ -216,13 +200,7 @@ func (c UserMgr) UserSetAction() {
 
 	set.Meta.Updated = utilx.TimeNow("atom")
 
-	setjs, _ := utils.JsonEncode(set)
-
-	if obj := store.BtAgent.ObjectSet(btapi.ObjectProposal{
-		Meta: btapi.ObjectMeta{
-			Path: "/user/" + set.Meta.ID,
-		},
-		Data:        setjs,
+	if obj := store.BtAgent.ObjectSet("/global/ids/user/"+set.Meta.ID, set, &btapi.ObjectWriteOptions{
 		PrevVersion: prevVersion,
 	}); obj.Error != nil {
 		set.Error = &types.ErrorMeta{"500", obj.Error.Message}
@@ -232,11 +210,7 @@ func (c UserMgr) UserSetAction() {
 	prevVersion = 0
 	var profile idsapi.UserProfile
 
-	if obj := store.BtAgent.ObjectGet(btapi.ObjectProposal{
-		Meta: btapi.ObjectMeta{
-			Path: "/user-profile/" + set.Meta.ID,
-		},
-	}); obj.Error == nil {
+	if obj := store.BtAgent.ObjectGet("/global/ids/user-profile/" + set.Meta.ID); obj.Error == nil {
 
 		obj.JsonDecode(&profile)
 		prevVersion = obj.Meta.Version
@@ -254,13 +228,7 @@ func (c UserMgr) UserSetAction() {
 		}
 	}
 
-	profjs, _ := utils.JsonEncode(profile)
-
-	if obj := store.BtAgent.ObjectSet(btapi.ObjectProposal{
-		Meta: btapi.ObjectMeta{
-			Path: "/user-profile/" + set.Meta.ID,
-		},
-		Data:        profjs,
+	if obj := store.BtAgent.ObjectSet("/global/ids/user-profile/"+set.Meta.ID, profile, &btapi.ObjectWriteOptions{
 		PrevVersion: prevVersion,
 	}); obj.Error != nil {
 		set.Error = &types.ErrorMeta{"500", obj.Error.Message}

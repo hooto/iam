@@ -21,9 +21,9 @@ import (
 	"github.com/lessos/lessgo/types"
 
 	"github.com/lessos/lessids/config"
+	"github.com/lessos/lessids/idclient"
 	"github.com/lessos/lessids/idsapi"
 	"github.com/lessos/lessids/store"
-	"github.com/lessos/lessids/idclient"
 )
 
 type SysConfig struct {
@@ -50,17 +50,13 @@ func (c SysConfig) GeneralAction() {
 		return
 	}
 
-	if objs := store.BtAgent.ObjectList(btapi.ObjectProposal{
-		Meta: btapi.ObjectMeta{
-			Path: "/sys-config/",
-		},
-	}); objs.Error == nil {
+	if objs := store.BtAgent.ObjectList("/global/ids/sys-config/"); objs.Error == nil {
 
 		for _, obj := range objs.Items {
 
-			switch obj.Name() {
+			switch obj.Meta.Name {
 			case "service_name", "webui_banner_title", "user_reg_disable":
-				ls.Items = ls.Items.Insert(obj.Name(), obj.Data)
+				ls.Items = ls.Items.Insert(obj.Meta.Name, obj.Data)
 			}
 		}
 	}
@@ -91,7 +87,7 @@ func (c SysConfig) GeneralSetAction() {
 		return
 	}
 
-	if !idclient.SessionAccessAllowed(c.Session, "sys.admin","df085c6dc6ff") {
+	if !idclient.SessionAccessAllowed(c.Session, "sys.admin", "df085c6dc6ff") {
 		sets.Error = &types.ErrorMeta{idsapi.ErrCodeAccessDenied, "Access Denied"}
 		return
 	}
@@ -111,19 +107,11 @@ func (c SysConfig) GeneralSetAction() {
 
 		var prevVersion uint64
 
-		if obj := store.BtAgent.ObjectGet(btapi.ObjectProposal{
-			Meta: btapi.ObjectMeta{
-				Path: "/sys-config/" + v.Key,
-			},
-		}); obj.Error == nil {
+		if obj := store.BtAgent.ObjectGet("/global/ids/sys-config/" + v.Key); obj.Error == nil {
 			prevVersion = obj.Meta.Version
 		}
 
-		if obj := store.BtAgent.ObjectSet(btapi.ObjectProposal{
-			Meta: btapi.ObjectMeta{
-				Path: "/sys-config/" + v.Key,
-			},
-			Data:        v.Val,
+		if obj := store.BtAgent.ObjectSet("/global/ids/sys-config/"+v.Key, v.Val, &btapi.ObjectWriteOptions{
 			PrevVersion: prevVersion,
 		}); obj.Error != nil {
 			sets.Error = &types.ErrorMeta{"500", obj.Error.Message}
@@ -142,16 +130,12 @@ func (c SysConfig) MailerAction() {
 
 	defer c.RenderJson(&ls)
 
-	if !idclient.SessionAccessAllowed(c.Session, "sys.admin","df085c6dc6ff") {
+	if !idclient.SessionAccessAllowed(c.Session, "sys.admin", "df085c6dc6ff") {
 		ls.Error = &types.ErrorMeta{idsapi.ErrCodeAccessDenied, "Access Denied"}
 		return
 	}
 
-	if obj := store.BtAgent.ObjectGet(btapi.ObjectProposal{
-		Meta: btapi.ObjectMeta{
-			Path: "/sys-config/mailer",
-		},
-	}); obj.Error == nil {
+	if obj := store.BtAgent.ObjectGet("/global/ids/sys-config/mailer"); obj.Error == nil {
 
 		ls.Items = ls.Items.Insert("mailer", obj.Data)
 	}

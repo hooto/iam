@@ -26,14 +26,13 @@ import (
 	"github.com/lessos/lessgo/httpsrv"
 	"github.com/lessos/lessgo/pass"
 	"github.com/lessos/lessgo/types"
-	"github.com/lessos/lessgo/utils"
 	"github.com/lessos/lessgo/utilx"
 
 	"github.com/lessos/lessids/base/login"
 	"github.com/lessos/lessids/base/profile"
+	"github.com/lessos/lessids/idclient"
 	"github.com/lessos/lessids/idsapi"
 	"github.com/lessos/lessids/store"
-		"github.com/lessos/lessids/idclient"
 )
 
 type User struct {
@@ -54,11 +53,7 @@ func (c User) ProfileAction() {
 	}
 
 	// profile
-	if obj := store.BtAgent.ObjectGet(btapi.ObjectProposal{
-		Meta: btapi.ObjectMeta{
-			Path: "/user-profile/" + session.UserID,
-		},
-	}); obj.Error == nil {
+	if obj := store.BtAgent.ObjectGet("/global/ids/user-profile/" + session.UserID); obj.Error == nil {
 		obj.JsonDecode(&rsp)
 	}
 
@@ -66,23 +61,12 @@ func (c User) ProfileAction() {
 
 		rsp.Name = session.Name
 
-		projs, _ := utils.JsonEncode(rsp)
-
-		store.BtAgent.ObjectSet(btapi.ObjectProposal{
-			Meta: btapi.ObjectMeta{
-				Path: "/user-profile/" + session.UserID,
-			},
-			Data: projs,
-		})
+		store.BtAgent.ObjectSet("/global/ids/user-profile/"+session.UserID, rsp, nil)
 	}
 
 	// login
 	var user idsapi.User
-	if obj := store.BtAgent.ObjectGet(btapi.ObjectProposal{
-		Meta: btapi.ObjectMeta{
-			Path: "/user/" + session.UserID,
-		},
-	}); obj.Error == nil {
+	if obj := store.BtAgent.ObjectGet("/global/ids/user/" + session.UserID); obj.Error == nil {
 		obj.JsonDecode(&user)
 	}
 
@@ -128,11 +112,7 @@ func (c User) ProfileSetAction() {
 
 	// login
 	var user idsapi.User
-	uobj := store.BtAgent.ObjectGet(btapi.ObjectProposal{
-		Meta: btapi.ObjectMeta{
-			Path: "/user/" + session.UserID,
-		},
-	})
+	uobj := store.BtAgent.ObjectGet("/global/ids/user/" + session.UserID)
 	if uobj.Error == nil {
 		uobj.JsonDecode(&user)
 	}
@@ -143,23 +123,13 @@ func (c User) ProfileSetAction() {
 	}
 	user.Name = req.Name
 
-	userjs, _ := utils.JsonEncode(user)
-
-	store.BtAgent.ObjectSet(btapi.ObjectProposal{
-		Meta: btapi.ObjectMeta{
-			Path: "/user/" + session.UserID,
-		},
+	store.BtAgent.ObjectSet("/global/ids/user/"+session.UserID, user, &btapi.ObjectWriteOptions{
 		PrevVersion: uobj.Meta.Version,
-		Data:        userjs,
 	})
 
 	// profile
 	var profile idsapi.UserProfile
-	pobj := store.BtAgent.ObjectGet(btapi.ObjectProposal{
-		Meta: btapi.ObjectMeta{
-			Path: "/user-profile/" + session.UserID,
-		},
-	})
+	pobj := store.BtAgent.ObjectGet("/global/ids/user-profile/" + session.UserID)
 	if pobj.Error == nil {
 		pobj.JsonDecode(&profile)
 	}
@@ -168,14 +138,8 @@ func (c User) ProfileSetAction() {
 	profile.Birthday = req.Birthday
 	profile.About = req.About
 
-	projs, _ := utils.JsonEncode(profile)
-
-	store.BtAgent.ObjectSet(btapi.ObjectProposal{
-		Meta: btapi.ObjectMeta{
-			Path: "/user-profile/" + session.UserID,
-		},
+	store.BtAgent.ObjectSet("/global/ids/user-profile/"+session.UserID, profile, &btapi.ObjectWriteOptions{
 		PrevVersion: pobj.Meta.Version,
-		Data:        projs,
 	})
 
 	rsp.Kind = "UserProfile"
@@ -208,11 +172,7 @@ func (c User) PassSetAction() {
 	}
 
 	var user idsapi.User
-	uobj := store.BtAgent.ObjectGet(btapi.ObjectProposal{
-		Meta: btapi.ObjectMeta{
-			Path: "/user/" + session.UserID,
-		},
-	})
+	uobj := store.BtAgent.ObjectGet("/global/ids/user/" + session.UserID)
 	if uobj.Error == nil {
 		uobj.JsonDecode(&user)
 	}
@@ -230,14 +190,8 @@ func (c User) PassSetAction() {
 	user.Meta.Updated = utilx.TimeNow("atom")
 	user.Auth, _ = pass.HashDefault(req.NewPassword)
 
-	userjs, _ := utils.JsonEncode(user)
-
-	store.BtAgent.ObjectSet(btapi.ObjectProposal{
-		Meta: btapi.ObjectMeta{
-			Path: "/user/" + user.Meta.ID,
-		},
+	store.BtAgent.ObjectSet("/global/ids/user/"+user.Meta.ID, user, &btapi.ObjectWriteOptions{
 		PrevVersion: uobj.Meta.Version,
-		Data:        userjs,
 	})
 
 	rsp.Kind = "UserPassword"
@@ -272,11 +226,7 @@ func (c User) EmailSetAction() {
 	}
 
 	var user idsapi.User
-	uobj := store.BtAgent.ObjectGet(btapi.ObjectProposal{
-		Meta: btapi.ObjectMeta{
-			Path: "/user/" + session.UserID,
-		},
-	})
+	uobj := store.BtAgent.ObjectGet("/global/ids/user/" + session.UserID)
 	if uobj.Error == nil {
 		uobj.JsonDecode(&user)
 	}
@@ -294,14 +244,8 @@ func (c User) EmailSetAction() {
 	user.Email = req.Email
 	user.Meta.Updated = utilx.TimeNow("atom")
 
-	userjs, _ := utils.JsonEncode(user)
-
-	store.BtAgent.ObjectSet(btapi.ObjectProposal{
-		Meta: btapi.ObjectMeta{
-			Path: "/user/" + user.Meta.ID,
-		},
+	store.BtAgent.ObjectSet("/global/ids/user/"+user.Meta.ID, user, &btapi.ObjectWriteOptions{
 		PrevVersion: uobj.Meta.Version,
-		Data:        userjs,
 	})
 
 	rsp.Kind = "UserEmail"
@@ -352,11 +296,7 @@ func (c User) PhotoSetAction() {
 
 	// profile
 	var profile idsapi.UserProfile
-	pobj := store.BtAgent.ObjectGet(btapi.ObjectProposal{
-		Meta: btapi.ObjectMeta{
-			Path: "/user-profile/" + session.UserID,
-		},
-	})
+	pobj := store.BtAgent.ObjectGet("/global/ids/user-profile/" + session.UserID)
 	if pobj.Error == nil {
 		pobj.JsonDecode(&profile)
 	}
@@ -364,14 +304,8 @@ func (c User) PhotoSetAction() {
 	profile.Photo = "data:image/png;base64," + imgphoto
 	profile.PhotoSource = req.Data
 
-	projs, _ := utils.JsonEncode(profile)
-
-	store.BtAgent.ObjectSet(btapi.ObjectProposal{
-		Meta: btapi.ObjectMeta{
-			Path: "/user-profile/" + session.UserID,
-		},
+	store.BtAgent.ObjectSet("/global/ids/user-profile/"+session.UserID, profile, &btapi.ObjectWriteOptions{
 		PrevVersion: pobj.Meta.Version,
-		Data:        projs,
 	})
 
 	rsp.Kind = "UserPhoto"
@@ -390,11 +324,7 @@ func (c User) RoleListAction() {
 		return
 	}
 
-	if objs := store.BtAgent.ObjectList(btapi.ObjectProposal{
-		Meta: btapi.ObjectMeta{
-			Path: "/role/",
-		},
-	}); objs.Error == nil {
+	if objs := store.BtAgent.ObjectList("/global/ids/role/"); objs.Error == nil {
 
 		for _, obj := range objs.Items {
 

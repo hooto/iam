@@ -41,11 +41,7 @@ func (c AppAuth) InfoAction() {
 	}
 
 	var inst idsapi.AppInstance
-	if obj := store.BtAgent.ObjectGet(btapi.ObjectProposal{
-		Meta: btapi.ObjectMeta{
-			Path: "/app-instance/" + instid,
-		},
-	}); obj.Error == nil {
+	if obj := store.BtAgent.ObjectGet("/global/ids/app-instance/" + instid); obj.Error == nil {
 		obj.JsonDecode(&inst)
 	}
 
@@ -80,11 +76,7 @@ func (c AppAuth) RegisterAction() {
 	// }
 
 	var session idsapi.UserSession
-	if obj := store.BtAgent.ObjectGet(btapi.ObjectProposal{
-		Meta: btapi.ObjectMeta{
-			Path: "/session/" + set.AccessToken,
-		},
-	}); obj.Error == nil {
+	if obj := store.BtAgent.ObjectGet("/global/ids/session/" + set.AccessToken); obj.Error == nil {
 		obj.JsonDecode(&session)
 	}
 
@@ -109,11 +101,7 @@ func (c AppAuth) RegisterAction() {
 		prev        idsapi.AppInstance
 	)
 
-	if obj := store.BtAgent.ObjectGet(btapi.ObjectProposal{
-		Meta: btapi.ObjectMeta{
-			Path: "/app-instance/" + set.Instance.Meta.ID,
-		},
-	}); obj.Error == nil {
+	if obj := store.BtAgent.ObjectGet("/global/ids/app-instance/" + set.Instance.Meta.ID); obj.Error == nil {
 		obj.JsonDecode(&prev)
 		prevVersion = obj.Meta.Version
 	}
@@ -137,13 +125,7 @@ func (c AppAuth) RegisterAction() {
 		set.Instance.Status = prev.Status
 	}
 
-	setjs, _ := utils.JsonEncode(set.Instance)
-
-	if obj := store.BtAgent.ObjectSet(btapi.ObjectProposal{
-		Meta: btapi.ObjectMeta{
-			Path: "/app-instance/" + set.Instance.Meta.ID,
-		},
-		Data:        setjs,
+	if obj := store.BtAgent.ObjectSet("/global/ids/app-instance/"+set.Instance.Meta.ID, set.Instance, &btapi.ObjectWriteOptions{
 		PrevVersion: prevVersion,
 	}); obj.Error != nil {
 		set.Error = &types.ErrorMeta{idsapi.ErrCodeInternalError, obj.Error.Message}

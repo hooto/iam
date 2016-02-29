@@ -4,8 +4,6 @@ import (
 	"fmt"
 	"strings"
 
-	"github.com/lessos/bigtree/btapi"
-
 	"github.com/lessos/lessgo/types"
 	"github.com/lessos/lessgo/utils"
 	"github.com/lessos/lessgo/utilx"
@@ -31,39 +29,21 @@ func (i InitNew) Init() {
 		Desc:   "Root System Administrator",
 		Status: 1,
 	}
-	rolejs, _ := utils.JsonEncode(role)
-	BtAgent.ObjectSet(btapi.ObjectProposal{
-		Meta: btapi.ObjectMeta{
-			Path: fmt.Sprintf("/role/%s", role.Meta.ID),
-		},
-		Data: rolejs,
-	})
+	BtAgent.ObjectSet(fmt.Sprintf("/global/ids/role/%s", role.Meta.ID), role, nil)
 
 	//
 	role.Meta.ID = utils.StringEncode16("100", 8)
 	role.Meta.Name = "Member"
 	role.IdxID = 100
 	role.Desc = "Universal Member"
-	rolejs, _ = utils.JsonEncode(role)
-	BtAgent.ObjectSet(btapi.ObjectProposal{
-		Meta: btapi.ObjectMeta{
-			Path: fmt.Sprintf("/role/%s", role.Meta.ID),
-		},
-		Data: rolejs,
-	})
+	BtAgent.ObjectSet(fmt.Sprintf("/global/ids/role/%s", role.Meta.ID), role, nil)
 
 	//
 	role.Meta.ID = utils.StringEncode16("1000", 8)
 	role.Meta.Name = "Anonymous"
 	role.IdxID = 1000
 	role.Desc = "Anonymous Member"
-	rolejs, _ = utils.JsonEncode(role)
-	BtAgent.ObjectSet(btapi.ObjectProposal{
-		Meta: btapi.ObjectMeta{
-			Path: fmt.Sprintf("/role/%s", role.Meta.ID),
-		},
-		Data: rolejs,
-	})
+	BtAgent.ObjectSet(fmt.Sprintf("/global/ids/role/%s", role.Meta.ID), role, nil)
 
 	//
 	ps := []idsapi.AppPrivilege{
@@ -91,14 +71,7 @@ func (i InitNew) Init() {
 		Url:        "",
 		Privileges: ps,
 	}
-	instjs, _ := utils.JsonEncode(inst)
-
-	BtAgent.ObjectSet(btapi.ObjectProposal{
-		Meta: btapi.ObjectMeta{
-			Path: "/app-instance/" + inst.Meta.ID,
-		},
-		Data: instjs,
-	})
+	BtAgent.ObjectSet("/global/ids/app-instance/"+inst.Meta.ID, inst, nil)
 
 	// privilege
 	rps := map[uint32][]string{}
@@ -116,11 +89,6 @@ func (i InitNew) Init() {
 
 	for rid, v := range rps {
 
-		BtAgent.ObjectSet(btapi.ObjectProposal{
-			Meta: btapi.ObjectMeta{
-				Path: fmt.Sprintf("/role-privilege/%d/%s", rid, inst.Meta.ID),
-			},
-			Data: strings.Join(v, ","),
-		})
+		BtAgent.ObjectSet(fmt.Sprintf("/global/ids/role-privilege/%d/%s", rid, inst.Meta.ID), strings.Join(v, ","), nil)
 	}
 }

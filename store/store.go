@@ -23,32 +23,26 @@ import (
 
 var (
 	Ready   bool
-	BtAgent *btagent.Agent
+	BtAgent btagent.ApiAgent
 )
 
 func init() {
 
-	BtAgent, _ = btagent.NewAgent(btapi.DataAccessConfig{
-		PathPoint: "/sys/ids",
-	})
+	BtAgent = btagent.ApiAgent{}
+
+	// BtAgent, _ = btagent.NewAgent(btapi.DataAccessConfig{
+	// 	PathPoint: "/sys/ids",
+	// })
 
 	go func() {
 
 		for {
 
-			BtAgent.ObjectSet(btapi.ObjectProposal{
-				Meta: btapi.ObjectMeta{
-					Path: "ids-test",
-					Ttl:  3,
-				},
-				Data: "test",
+			BtAgent.ObjectSet("global/ids/ids-test", "test", &btapi.ObjectWriteOptions{
+				Ttl: 3,
 			})
 
-			if rs := BtAgent.ObjectGet(btapi.ObjectProposal{
-				Meta: btapi.ObjectMeta{
-					Path: "ids-test",
-				},
-			}); rs.Data == "test" {
+			if rs := BtAgent.ObjectGet("global/ids/ids-test"); rs.Data == "test" {
 
 				in := InitNew{}
 				in.Init()

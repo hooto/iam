@@ -18,8 +18,8 @@ import (
 	"net/http"
 
 	"github.com/lessos/bigtree/btapi"
-	"github.com/lessos/lessids/idclient"
 	"github.com/lessos/lessgo/httpsrv"
+	"github.com/lessos/lessids/idclient"
 	"github.com/lessos/lessids/store"
 )
 
@@ -53,7 +53,7 @@ func (c Service) SignOutAction() {
 	token := c.Params.Get("access_token")
 
 	if token == "" {
-		session, _ := idclient.SessionInstance(c.Session )
+		session, _ := idclient.SessionInstance(c.Session)
 		token = session.AccessToken
 	}
 
@@ -61,23 +61,16 @@ func (c Service) SignOutAction() {
 		c.Data["continue"] = c.Params.Get("continue")
 	}
 
-	obj := store.BtAgent.ObjectGet(btapi.ObjectProposal{
-		Meta: btapi.ObjectMeta{
-			Path: "/session/" + token,
-		},
-	})
+	obj := store.BtAgent.ObjectGet("/global/ids/session/" + token)
 
-	store.BtAgent.ObjectDel(btapi.ObjectProposal{
-		Meta: btapi.ObjectMeta{
-			Path: "/session/" + token,
-		},
+	store.BtAgent.ObjectDel("/global/ids/session/"+token, &btapi.ObjectWriteOptions{
 		PrevVersion: obj.Meta.Version,
 	})
 
 	http.SetCookie(c.Response.Out, &http.Cookie{
-		Name:     "access_token",
-		Value:    "",
-		Path:     "/",
-		MaxAge:   -1,
+		Name:   "access_token",
+		Value:  "",
+		Path:   "/",
+		MaxAge: -1,
 	})
 }

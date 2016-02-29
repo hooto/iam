@@ -31,10 +31,10 @@ func Validate(params *httpsrv.Params) error {
 		return errors.New("Email is not valid")
 	}
 
-	params.Set("name", strings.TrimSpace(params.Get("name")))
-	if len(params.Get("name")) == 0 || len(params.Get("name")) > 30 {
-		return errors.New("Name must be between 1 and 30 characters long")
-	}
+	// params.Set("name", strings.TrimSpace(params.Get("name")))
+	// if len(params.Get("name")) == 0 || len(params.Get("name")) > 30 {
+	// 	return errors.New("Name must be between 1 and 30 characters long")
+	// }
 
 	if len(params.Get("passwd")) < 8 || len(params.Get("passwd")) > 30 {
 		return errors.New("Password must be between 8 and 30 characters long")
