@@ -146,6 +146,7 @@ func (c UserMgr) UserSetAction() {
 		return
 	}
 
+	var prev idsapi.User
 	var prevVersion uint64
 
 	if set.Meta.ID == "" {
@@ -155,24 +156,26 @@ func (c UserMgr) UserSetAction() {
 			return
 		}
 
-		set.Meta.Name = set.Meta.Name
 		set.Meta.ID = utils.StringEncode16(set.Meta.Name, 8)
 		set.Meta.Created = utilx.TimeNow("atom")
 
 		set.Auth, _ = pass.HashDefault(set.Auth)
+	}
 
-	} else {
+	//
+	if obj := store.BtAgent.ObjectGet("/global/ids/user/" + set.Meta.ID); obj.Error == nil {
+		obj.JsonDecode(&prev)
+		prevVersion = obj.Meta.Version
+	}
 
-		var prev idsapi.User
-		if obj := store.BtAgent.ObjectGet("/global/ids/user/" + set.Meta.ID); obj.Error == nil {
-			obj.JsonDecode(&prev)
-			prevVersion = obj.Meta.Version
-		}
+	//
+	if err := signup.ValidateUserID(&set); err != nil {
+		set.Error = &types.ErrorMeta{idsapi.ErrCodeInvalidArgument, err.Error()}
+		return
+	}
 
-		if prev.Meta.ID != set.Meta.ID {
-			set.Error = &types.ErrorMeta{idsapi.ErrCodeInvalidArgument, "User Not Found"}
-			return
-		}
+	//
+	if prev.Meta.ID == set.Meta.ID {
 
 		if set.Email != "" {
 			prev.Email = set.Email
@@ -190,12 +193,9 @@ func (c UserMgr) UserSetAction() {
 			prev.Name = set.Name
 		}
 
-		set = prev
-	}
+		prev.Profile = set.Profile
 
-	if err := signup.ValidateUserID(&set); err != nil {
-		set.Error = &types.ErrorMeta{idsapi.ErrCodeInvalidArgument, err.Error()}
-		return
+		set = prev
 	}
 
 	set.Meta.Updated = utilx.TimeNow("atom")
@@ -207,32 +207,35 @@ func (c UserMgr) UserSetAction() {
 		return
 	}
 
-	prevVersion = 0
-	var profile idsapi.UserProfile
+	if set.Profile != nil {
 
-	if obj := store.BtAgent.ObjectGet("/global/ids/user-profile/" + set.Meta.ID); obj.Error == nil {
+		prevVersion = 0
+		var profile idsapi.UserProfile
 
-		obj.JsonDecode(&profile)
-		prevVersion = obj.Meta.Version
+		if obj := store.BtAgent.ObjectGet("/global/ids/user-profile/" + set.Meta.ID); obj.Error == nil {
 
-		if _, err := time.Parse("2006-01-02", set.Profile.Birthday); err == nil {
-			profile.Birthday = set.Profile.Birthday
+			obj.JsonDecode(&profile)
+			prevVersion = obj.Meta.Version
+
+			if _, err := time.Parse("2006-01-02", set.Profile.Birthday); err == nil {
+				profile.Birthday = set.Profile.Birthday
+			}
+
+			if set.Profile.About != "" {
+				profile.About = set.Profile.About
+			}
+
+			if set.Name != "" {
+				profile.Name = set.Name
+			}
 		}
 
-		if set.Profile.About != "" {
-			profile.About = set.Profile.About
+		if obj := store.BtAgent.ObjectSet("/global/ids/user-profile/"+set.Meta.ID, profile, &btapi.ObjectWriteOptions{
+			PrevVersion: prevVersion,
+		}); obj.Error != nil {
+			set.Error = &types.ErrorMeta{"500", obj.Error.Message}
+			return
 		}
-
-		if set.Name != "" {
-			profile.Name = set.Name
-		}
-	}
-
-	if obj := store.BtAgent.ObjectSet("/global/ids/user-profile/"+set.Meta.ID, profile, &btapi.ObjectWriteOptions{
-		PrevVersion: prevVersion,
-	}); obj.Error != nil {
-		set.Error = &types.ErrorMeta{"500", obj.Error.Message}
-		return
 	}
 
 	set.Kind = "User"
