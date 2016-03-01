@@ -52,9 +52,11 @@ func innerExpiredClean() {
 	locker.Lock()
 	defer locker.Unlock()
 
+	tnow := utilx.TimeMetaNow()
+
 	for k, v := range sessions {
 
-		if v.InnerExpired.Before(time.Now()) {
+		if v.Expired > tnow {
 			continue
 		}
 
@@ -129,11 +131,8 @@ func Instance(token string) (session idsapi.UserSession, err error) {
 		return session, errors.New("Unauthorized")
 	}
 
-	us.InnerExpired = time.Now().Add(innerExpiredRange)
-
-	exp := utilx.TimeParse(us.Expired, "atom")
-	if us.InnerExpired.After(exp) {
-		us.InnerExpired = exp
+	if utilx.TimeMetaNow() > us.Expired {
+		return session, errors.New("Unauthorized")
 	}
 
 	locker.Lock()

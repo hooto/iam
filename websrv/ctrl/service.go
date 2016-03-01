@@ -68,7 +68,7 @@ func (c Service) SignOutAction() {
 	})
 
 	http.SetCookie(c.Response.Out, &http.Cookie{
-		Name:   "access_token",
+		Name:   idclient.AccessTokenKey,
 		Value:  "",
 		Path:   "/",
 		MaxAge: -1,

@@ -16,6 +16,7 @@ package v1
 
 import (
 	"encoding/base64"
+	"fmt"
 	"net/http"
 	"net/url"
 	"strings"
@@ -98,12 +99,14 @@ func (c Service) LoginAuthAction() {
 		Groups:       user.Groups,
 		Timezone:     user.Timezone,
 		ClientAddr:   addr,
-		Created:      utilx.TimeNow("atom"),
-		Expired:      utilx.TimeNowAdd("atom", "+864000s"),
+		Created:      utilx.TimeMetaNow(),
+		Expired:      utilx.TimeMetaNowAdd("+864000s"),
 	}
 
-	if sobj := store.BtAgent.ObjectSet("/global/ids/session/"+session.AccessToken, session, &btapi.ObjectWriteOptions{
-		Ttl: 86400000,
+	skey := fmt.Sprintf("/global/ids/session/%s/%s", session.UserID, session.AccessToken)
+
+	if sobj := store.BtAgent.ObjectSet(skey, session, &btapi.ObjectWriteOptions{
+		Ttl: 86400000, // TODO
 	}); sobj.Error != nil {
 		rsp.Error = &types.ErrorMeta{"500", sobj.Error.Message}
 		return
@@ -133,7 +136,7 @@ func (c Service) LoginAuthAction() {
 
 	http.SetCookie(c.Response.Out, &http.Cookie{
 		Name:     "_ids_at",
-		Value:    session.AccessToken,
+		Value:    session.FullToken(),
 		Path:     "/",
 		HttpOnly: true,
 		Expires:  time.Now().Add(864000 * time.Second),
@@ -148,12 +151,14 @@ func (c Service) AuthAction() {
 
 	defer c.RenderJson(&rsp)
 
-	if c.Params.Get("access_token") == "" {
+	token := c.Params.Get("access_token")
+	if len(token) < 30 {
 		rsp.Error = &types.ErrorMeta{idsapi.ErrCodeUnauthorized, "Unauthorized"}
 		return
 	}
+	token = token[:8] + "/" + token[9:]
 
-	if obj := store.BtAgent.ObjectGet("/global/ids/session/" + c.Params.Get("access_token")); obj.Error == nil {
+	if obj := store.BtAgent.ObjectGet("/global/ids/session/" + token); obj.Error == nil {
 		obj.JsonDecode(&rsp)
 	}
 
@@ -163,8 +168,7 @@ func (c Service) AuthAction() {
 	}
 
 	//
-	expired := utilx.TimeParse(rsp.Expired, "atom")
-	if expired.Before(time.Now()) {
+	if rsp.Expired < utilx.TimeMetaNow() {
 		rsp.Error = &types.ErrorMeta{idsapi.ErrCodeUnauthorized, "Unauthorized"}
 		return
 	}
@@ -202,10 +206,11 @@ func (c Service) AccessAllowedAction() {
 		rsp.Error = &types.ErrorMeta{idsapi.ErrCodeUnauthorized, err.Error()}
 		return
 	}
-	if req.AccessToken == "" {
+	if len(req.AccessToken) < 30 {
 		rsp.Error = &types.ErrorMeta{idsapi.ErrCodeUnauthorized, "Unauthorized"}
 		return
 	}
+	req.AccessToken = req.AccessToken[:8] + "/" + req.AccessToken[9:]
 
 	var session idsapi.UserSession
 	if obj := store.BtAgent.ObjectGet("/global/ids/session/" + req.AccessToken); obj.Error == nil {
@@ -218,8 +223,7 @@ func (c Service) AccessAllowedAction() {
 	}
 
 	//
-	expired := utilx.TimeParse(session.Expired, "atom")
-	if expired.Before(time.Now()) {
+	if session.Expired < utilx.TimeMetaNow() {
 		rsp.Error = &types.ErrorMeta{idsapi.ErrCodeUnauthorized, "Unauthorized"}
 		return
 	}

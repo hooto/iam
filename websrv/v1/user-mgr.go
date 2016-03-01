@@ -158,8 +158,12 @@ func (c UserMgr) UserSetAction() {
 
 		set.Meta.ID = utils.StringEncode16(set.Meta.Name, 8)
 		set.Meta.Created = utilx.TimeNow("atom")
+	}
 
+	if set.Auth != userMgrPasswdHidden && set.Auth != "" {
 		set.Auth, _ = pass.HashDefault(set.Auth)
+	} else {
+		set.Auth = ""
 	}
 
 	//
@@ -181,7 +185,7 @@ func (c UserMgr) UserSetAction() {
 			prev.Email = set.Email
 		}
 
-		if set.Auth != userMgrPasswdHidden || set.Auth != "" {
+		if set.Auth != "" {
 			prev.Auth = set.Auth
 		}
 

@@ -15,8 +15,6 @@
 package idsapi
 
 import (
-	"time"
-
 	"github.com/lessos/lessgo/types"
 )
 
@@ -37,24 +35,26 @@ type ServiceLoginAuth struct {
 
 type UserSession struct {
 	types.TypeMeta `json:",inline"`
-	AccessToken    string    `json:"access_token"`
-	RefreshToken   string    `json:"refresh_token,omitempty"`
-	UserID         string    `json:"userid"`
-	UserName       string    `json:"username"`
-	ClientAddr     string    `json:"client_addr,omitempty"`
-	Name           string    `json:"name"`
-	Data           string    `json:"data,omitempty"`
-	Roles          []uint32  `json:"roles,omitempty"`
-	Groups         []uint32  `json:"groups,omitempty"`
-	InnerExpired   time.Time `json:"inner_expired,omitempty"`
-	Timezone       string    `json:"timezone"`
-	Source         string    `json:"source,omitempty"`
-	Created        string    `json:"created"`
-	Expired        string    `json:"expired"`
+	AccessToken    string   `json:"access_token"`
+	RefreshToken   string   `json:"refresh_token,omitempty"`
+	UserID         string   `json:"userid"`
+	UserName       string   `json:"username"`
+	Name           string   `json:"name"`
+	Roles          []uint32 `json:"roles,omitempty"`
+	Groups         []uint32 `json:"groups,omitempty"`
+	Timezone       string   `json:"timezone"`
+	HostZone       string   `json:"host_zone,omitempty"`
+	ClientAddr     string   `json:"client_addr,omitempty"`
+	Created        uint64   `json:"created"`
+	Expired        uint64   `json:"expired"`
 }
 
 func (s *UserSession) IsLogin() bool {
 	return (s.UserID != "")
+}
+
+func (s *UserSession) FullToken() string {
+	return s.UserID + "." + s.AccessToken
 }
 
 type UserAccessEntry struct {
