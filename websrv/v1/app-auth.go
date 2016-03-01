@@ -74,6 +74,11 @@ func (c AppAuth) RegisterAction() {
 	// 	set.Error = &types.ErrorMeta{idsapi.ErrCodeInvalidArgument, "Bad Argument"}
 	// 	return
 	// }
+	if len(set.AccessToken) < 30 {
+		set.Error = &types.ErrorMeta{idsapi.ErrCodeUnauthorized, "Unauthorized"}
+		return
+	}
+	set.AccessToken = set.AccessToken[:8] + "/" + set.AccessToken[9:]
 
 	var session idsapi.UserSession
 	if obj := store.BtAgent.ObjectGet("/global/ids/session/" + set.AccessToken); obj.Error == nil {

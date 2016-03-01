@@ -124,7 +124,7 @@ func (c Service) LoginAuthAction() {
 				rsp.RedirectUri += "&"
 			}
 
-			rsp.RedirectUri += "access_token=" + session.AccessToken + "&expires_in=864000"
+			rsp.RedirectUri += "access_token=" + session.FullToken() + "&expires_in=864000"
 
 			if c.Params.Get("state") != "" {
 				rsp.RedirectUri += "&state=" + c.Params.Get("state")

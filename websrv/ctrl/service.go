@@ -50,22 +50,9 @@ func (c Service) SignOutAction() {
 
 	c.Data["continue"] = "/ids"
 
-	token := c.Params.Get("access_token")
-
-	if token == "" {
-		session, _ := idclient.SessionInstance(c.Session)
-		token = session.AccessToken
-	}
-
 	if len(c.Params.Get("continue")) > 0 {
 		c.Data["continue"] = c.Params.Get("continue")
 	}
-
-	obj := store.BtAgent.ObjectGet("/global/ids/session/" + token)
-
-	store.BtAgent.ObjectDel("/global/ids/session/"+token, &btapi.ObjectWriteOptions{
-		PrevVersion: obj.Meta.Version,
-	})
 
 	http.SetCookie(c.Response.Out, &http.Cookie{
 		Name:   idclient.AccessTokenKey,
@@ -73,4 +60,22 @@ func (c Service) SignOutAction() {
 		Path:   "/",
 		MaxAge: -1,
 	})
+
+	token := c.Params.Get("access_token")
+
+	if token == "" {
+		session, _ := idclient.SessionInstance(c.Session)
+		token = session.AccessToken
+	}
+
+	if len(token) > 30 {
+
+		token = token[:8] + "/" + token[9:]
+
+		obj := store.BtAgent.ObjectGet("/global/ids/session/" + token)
+
+		store.BtAgent.ObjectDel("/global/ids/session/"+token, &btapi.ObjectWriteOptions{
+			PrevVersion: obj.Meta.Version,
+		})
+	}
 }
