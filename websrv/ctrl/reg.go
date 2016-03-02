@@ -146,7 +146,7 @@ func (c Reg) ForgotPassPutAction() {
 	}
 
 	if obj := store.BtAgent.ObjectSet("/global/ids/pwd-reset/"+reset.ID, reset, &btapi.ObjectWriteOptions{
-		Ttl: 3600,
+		Ttl: 3600000,
 	}); obj.Error != nil {
 		rsp.Error = &types.ErrorMeta{"500", obj.Error.Message}
 		return

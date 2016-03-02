@@ -39,7 +39,7 @@ func init() {
 		for {
 
 			BtAgent.ObjectSet("global/ids/ids-test", "test", &btapi.ObjectWriteOptions{
-				Ttl: 3,
+				Ttl: 3000,
 			})
 
 			if rs := BtAgent.ObjectGet("global/ids/ids-test"); rs.Data == "test" {

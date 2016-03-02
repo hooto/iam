@@ -106,7 +106,7 @@ func (c Service) LoginAuthAction() {
 	skey := fmt.Sprintf("/global/ids/session/%s/%s", session.UserID, session.AccessToken)
 
 	if sobj := store.BtAgent.ObjectSet(skey, session, &btapi.ObjectWriteOptions{
-		Ttl: 86400000, // TODO
+		Ttl: 86400000,
 	}); sobj.Error != nil {
 		rsp.Error = &types.ErrorMeta{"500", sobj.Error.Message}
 		return
@@ -132,7 +132,7 @@ func (c Service) LoginAuthAction() {
 		}
 	}
 
-	rsp.AccessToken = session.AccessToken
+	rsp.AccessToken = session.FullToken()
 
 	http.SetCookie(c.Response.Out, &http.Cookie{
 		Name:     "_ids_at",
