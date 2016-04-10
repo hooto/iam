@@ -22,8 +22,8 @@ import (
 
 	"github.com/lessos/lessgo/httpsrv"
 	"github.com/lessos/lessgo/net/httpclient"
+	"github.com/lessos/lessgo/types"
 	"github.com/lessos/lessgo/utils"
-	"github.com/lessos/lessgo/utilx"
 	"github.com/lessos/lessids/idsapi"
 )
 
@@ -32,11 +32,10 @@ const (
 )
 
 var (
-	ServiceUrl        = "http://127.0.0.1:9528/ids"
-	sessions          = map[string]idsapi.UserSession{}
-	nextClean         = time.Now()
-	innerExpiredRange = time.Second * 1800
-	locker            sync.Mutex
+	ServiceUrl = "http://127.0.0.1:9528/ids"
+	sessions   = map[string]idsapi.UserSession{}
+	nextClean  = time.Now()
+	locker     sync.Mutex
 )
 
 func Expired(ttl int) time.Time {
@@ -52,7 +51,7 @@ func innerExpiredClean() {
 	locker.Lock()
 	defer locker.Unlock()
 
-	tnow := utilx.TimeMetaNow()
+	tnow := types.MetaTimeNow()
 
 	for k, v := range sessions {
 
@@ -131,7 +130,7 @@ func Instance(token string) (session idsapi.UserSession, err error) {
 		return session, errors.New("Unauthorized")
 	}
 
-	if utilx.TimeMetaNow() > us.Expired {
+	if types.MetaTimeNow() > us.Expired {
 		return session, errors.New("Unauthorized")
 	}
 

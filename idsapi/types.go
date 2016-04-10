@@ -35,18 +35,18 @@ type ServiceLoginAuth struct {
 
 type UserSession struct {
 	types.TypeMeta `json:",inline"`
-	AccessToken    string   `json:"access_token"`
-	RefreshToken   string   `json:"refresh_token,omitempty"`
-	UserID         string   `json:"userid"`
-	UserName       string   `json:"username"`
-	Name           string   `json:"name"`
-	Roles          []uint32 `json:"roles,omitempty"`
-	Groups         []uint32 `json:"groups,omitempty"`
-	Timezone       string   `json:"timezone"`
-	HostZone       string   `json:"host_zone,omitempty"`
-	ClientAddr     string   `json:"client_addr,omitempty"`
-	Created        uint64   `json:"created"`
-	Expired        uint64   `json:"expired"`
+	AccessToken    string         `json:"access_token"`
+	RefreshToken   string         `json:"refresh_token,omitempty"`
+	UserID         string         `json:"userid"`
+	UserName       string         `json:"username"`
+	Name           string         `json:"name"`
+	Roles          []uint32       `json:"roles,omitempty"`
+	Groups         []uint32       `json:"groups,omitempty"`
+	Timezone       string         `json:"timezone"`
+	HostZone       string         `json:"host_zone,omitempty"`
+	ClientAddr     string         `json:"client_addr,omitempty"`
+	Created        types.MetaTime `json:"created"`
+	Expired        types.MetaTime `json:"expired"`
 }
 
 func (s *UserSession) IsLogin() bool {

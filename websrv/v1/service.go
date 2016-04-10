@@ -28,7 +28,6 @@ import (
 	"github.com/lessos/lessgo/pass"
 	"github.com/lessos/lessgo/types"
 	"github.com/lessos/lessgo/utils"
-	"github.com/lessos/lessgo/utilx"
 
 	"github.com/lessos/lessids/base/role"
 	"github.com/lessos/lessids/idsapi"
@@ -99,8 +98,8 @@ func (c Service) LoginAuthAction() {
 		Groups:       user.Groups,
 		Timezone:     user.Timezone,
 		ClientAddr:   addr,
-		Created:      utilx.TimeMetaNow(),
-		Expired:      utilx.TimeMetaNowAdd("+864000s"),
+		Created:      types.MetaTimeNow(),
+		Expired:      types.MetaTimeNow().Add("+864000s"),
 	}
 
 	skey := fmt.Sprintf("/global/ids/session/%s/%s", session.UserID, session.AccessToken)
@@ -168,7 +167,7 @@ func (c Service) AuthAction() {
 	}
 
 	//
-	if rsp.Expired < utilx.TimeMetaNow() {
+	if rsp.Expired < types.MetaTimeNow() {
 		rsp.Error = &types.ErrorMeta{idsapi.ErrCodeUnauthorized, "Unauthorized"}
 		return
 	}
@@ -223,7 +222,7 @@ func (c Service) AccessAllowedAction() {
 	}
 
 	//
-	if session.Expired < utilx.TimeMetaNow() {
+	if session.Expired < types.MetaTimeNow() {
 		rsp.Error = &types.ErrorMeta{idsapi.ErrCodeUnauthorized, "Unauthorized"}
 		return
 	}
