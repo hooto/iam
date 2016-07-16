@@ -1,4 +1,4 @@
-// Copyright 2015 lessOS.com, All rights reserved.
+// Copyright 2014-2016 iam Author, All rights reserved.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -28,11 +28,11 @@ import (
 	"github.com/lessos/lessgo/types"
 	"github.com/lessos/lessgo/utilx"
 
-	"github.com/lessos/lessids/base/login"
-	"github.com/lessos/lessids/base/profile"
-	"github.com/lessos/lessids/idclient"
-	"github.com/lessos/lessids/idsapi"
-	"github.com/lessos/lessids/store"
+	"github.com/lessos/iam/base/login"
+	"github.com/lessos/iam/base/profile"
+	"github.com/lessos/iam/iamapi"
+	"github.com/lessos/iam/iamclient"
+	"github.com/lessos/iam/store"
 )
 
 type User struct {
@@ -41,11 +41,11 @@ type User struct {
 
 func (c User) ProfileAction() {
 
-	rsp := idsapi.UserProfile{}
+	rsp := iamapi.UserProfile{}
 
 	defer c.RenderJson(&rsp)
 
-	session, err := idclient.SessionInstance(c.Session)
+	session, err := iamclient.SessionInstance(c.Session)
 
 	if err != nil || !session.IsLogin() {
 		rsp.Error = &types.ErrorMeta{"401", "Access Denied"}
@@ -53,7 +53,7 @@ func (c User) ProfileAction() {
 	}
 
 	// profile
-	if obj := store.BtAgent.ObjectGet("/global/ids/user-profile/" + session.UserID); obj.Error == nil {
+	if obj := store.BtAgent.ObjectGet("/global/iam/user-profile/" + session.UserID); obj.Error == nil {
 		obj.JsonDecode(&rsp)
 	}
 
@@ -61,12 +61,12 @@ func (c User) ProfileAction() {
 
 		rsp.Name = session.Name
 
-		store.BtAgent.ObjectSet("/global/ids/user-profile/"+session.UserID, rsp, nil)
+		store.BtAgent.ObjectSet("/global/iam/user-profile/"+session.UserID, rsp, nil)
 	}
 
 	// login
-	var user idsapi.User
-	if obj := store.BtAgent.ObjectGet("/global/ids/user/" + session.UserID); obj.Error == nil {
+	var user iamapi.User
+	if obj := store.BtAgent.ObjectGet("/global/iam/user/" + session.UserID); obj.Error == nil {
 		obj.JsonDecode(&user)
 	}
 
@@ -87,23 +87,23 @@ func (c User) ProfileSetAction() {
 
 	var (
 		rsp types.TypeMeta
-		req idsapi.UserProfile
+		req iamapi.UserProfile
 		err error
 	)
 
 	defer c.RenderJson(&rsp)
 
 	if err := c.Request.JsonDecode(&req); err != nil {
-		rsp.Error = &types.ErrorMeta{idsapi.ErrCodeInvalidArgument, "Bad Request"}
+		rsp.Error = &types.ErrorMeta{iamapi.ErrCodeInvalidArgument, "Bad Request"}
 		return
 	}
 
 	if req, err = profile.PutValidate(req); err != nil {
-		rsp.Error = &types.ErrorMeta{idsapi.ErrCodeInvalidArgument, err.Error()}
+		rsp.Error = &types.ErrorMeta{iamapi.ErrCodeInvalidArgument, err.Error()}
 		return
 	}
 
-	session, err := idclient.SessionInstance(c.Session)
+	session, err := iamclient.SessionInstance(c.Session)
 
 	if err != nil || !session.IsLogin() {
 		rsp.Error = &types.ErrorMeta{"401", "Access Denied"}
@@ -111,8 +111,8 @@ func (c User) ProfileSetAction() {
 	}
 
 	// login
-	var user idsapi.User
-	uobj := store.BtAgent.ObjectGet("/global/ids/user/" + session.UserID)
+	var user iamapi.User
+	uobj := store.BtAgent.ObjectGet("/global/iam/user/" + session.UserID)
 	if uobj.Error == nil {
 		uobj.JsonDecode(&user)
 	}
@@ -123,13 +123,13 @@ func (c User) ProfileSetAction() {
 	}
 	user.Name = req.Name
 
-	store.BtAgent.ObjectSet("/global/ids/user/"+session.UserID, user, &btapi.ObjectWriteOptions{
+	store.BtAgent.ObjectSet("/global/iam/user/"+session.UserID, user, &btapi.ObjectWriteOptions{
 		PrevVersion: uobj.Meta.Version,
 	})
 
 	// profile
-	var profile idsapi.UserProfile
-	pobj := store.BtAgent.ObjectGet("/global/ids/user-profile/" + session.UserID)
+	var profile iamapi.UserProfile
+	pobj := store.BtAgent.ObjectGet("/global/iam/user-profile/" + session.UserID)
 	if pobj.Error == nil {
 		pobj.JsonDecode(&profile)
 	}
@@ -138,7 +138,7 @@ func (c User) ProfileSetAction() {
 	profile.Birthday = req.Birthday
 	profile.About = req.About
 
-	store.BtAgent.ObjectSet("/global/ids/user-profile/"+session.UserID, profile, &btapi.ObjectWriteOptions{
+	store.BtAgent.ObjectSet("/global/iam/user-profile/"+session.UserID, profile, &btapi.ObjectWriteOptions{
 		PrevVersion: pobj.Meta.Version,
 	})
 
@@ -149,48 +149,48 @@ func (c User) PassSetAction() {
 
 	var (
 		rsp types.TypeMeta
-		req idsapi.UserPasswordSet
+		req iamapi.UserPasswordSet
 	)
 
 	defer c.RenderJson(&rsp)
 
 	if err := c.Request.JsonDecode(&req); err != nil {
-		rsp.Error = &types.ErrorMeta{idsapi.ErrCodeInvalidArgument, "Bad Request"}
+		rsp.Error = &types.ErrorMeta{iamapi.ErrCodeInvalidArgument, "Bad Request"}
 		return
 	}
 
 	if err := login.PassSetValidate(req); err != nil {
-		rsp.Error = &types.ErrorMeta{idsapi.ErrCodeInvalidArgument, err.Error()}
+		rsp.Error = &types.ErrorMeta{iamapi.ErrCodeInvalidArgument, err.Error()}
 		return
 	}
 
-	session, err := idclient.SessionInstance(c.Session)
+	session, err := iamclient.SessionInstance(c.Session)
 
 	if err != nil || !session.IsLogin() {
 		rsp.Error = &types.ErrorMeta{"401", "Access Denied"}
 		return
 	}
 
-	var user idsapi.User
-	uobj := store.BtAgent.ObjectGet("/global/ids/user/" + session.UserID)
+	var user iamapi.User
+	uobj := store.BtAgent.ObjectGet("/global/iam/user/" + session.UserID)
 	if uobj.Error == nil {
 		uobj.JsonDecode(&user)
 	}
 
 	if user.Meta.ID != session.UserID {
-		rsp.Error = &types.ErrorMeta{idsapi.ErrCodeInvalidArgument, "User Not Found"}
+		rsp.Error = &types.ErrorMeta{iamapi.ErrCodeInvalidArgument, "User Not Found"}
 		return
 	}
 
 	if !pass.Check(req.CurrentPassword, user.Auth) {
-		rsp.Error = &types.ErrorMeta{idsapi.ErrCodeInvalidArgument, "Current Password can not match"}
+		rsp.Error = &types.ErrorMeta{iamapi.ErrCodeInvalidArgument, "Current Password can not match"}
 		return
 	}
 
 	user.Meta.Updated = utilx.TimeNow("atom")
 	user.Auth, _ = pass.HashDefault(req.NewPassword)
 
-	store.BtAgent.ObjectSet("/global/ids/user/"+user.Meta.ID, user, &btapi.ObjectWriteOptions{
+	store.BtAgent.ObjectSet("/global/iam/user/"+user.Meta.ID, user, &btapi.ObjectWriteOptions{
 		PrevVersion: uobj.Meta.Version,
 	})
 
@@ -201,50 +201,50 @@ func (c User) EmailSetAction() {
 
 	var (
 		rsp types.TypeMeta
-		req idsapi.UserEmailSet
+		req iamapi.UserEmailSet
 	)
 
 	defer c.RenderJson(&rsp)
 
 	if err := c.Request.JsonDecode(&req); err != nil {
-		rsp.Error = &types.ErrorMeta{idsapi.ErrCodeInvalidArgument, "Bad Request"}
+		rsp.Error = &types.ErrorMeta{iamapi.ErrCodeInvalidArgument, "Bad Request"}
 		return
 	}
 
 	if email, err := login.EmailSetValidate(req.Email); err != nil {
-		rsp.Error = &types.ErrorMeta{idsapi.ErrCodeInvalidArgument, err.Error()}
+		rsp.Error = &types.ErrorMeta{iamapi.ErrCodeInvalidArgument, err.Error()}
 		return
 	} else {
 		req.Email = email
 	}
 
-	session, err := idclient.SessionInstance(c.Session)
+	session, err := iamclient.SessionInstance(c.Session)
 
 	if err != nil || !session.IsLogin() {
 		rsp.Error = &types.ErrorMeta{"401", "Access Denied"}
 		return
 	}
 
-	var user idsapi.User
-	uobj := store.BtAgent.ObjectGet("/global/ids/user/" + session.UserID)
+	var user iamapi.User
+	uobj := store.BtAgent.ObjectGet("/global/iam/user/" + session.UserID)
 	if uobj.Error == nil {
 		uobj.JsonDecode(&user)
 	}
 
 	if user.Meta.ID != session.UserID {
-		rsp.Error = &types.ErrorMeta{idsapi.ErrCodeInvalidArgument, "User Not Found"}
+		rsp.Error = &types.ErrorMeta{iamapi.ErrCodeInvalidArgument, "User Not Found"}
 		return
 	}
 
 	if !pass.Check(req.Auth, user.Auth) {
-		rsp.Error = &types.ErrorMeta{idsapi.ErrCodeInvalidArgument, "Password can not match"}
+		rsp.Error = &types.ErrorMeta{iamapi.ErrCodeInvalidArgument, "Password can not match"}
 		return
 	}
 
 	user.Email = req.Email
 	user.Meta.Updated = utilx.TimeNow("atom")
 
-	store.BtAgent.ObjectSet("/global/ids/user/"+user.Meta.ID, user, &btapi.ObjectWriteOptions{
+	store.BtAgent.ObjectSet("/global/iam/user/"+user.Meta.ID, user, &btapi.ObjectWriteOptions{
 		PrevVersion: uobj.Meta.Version,
 	})
 
@@ -255,17 +255,17 @@ func (c User) PhotoSetAction() {
 
 	var (
 		rsp types.TypeMeta
-		req idsapi.UserPhotoSet
+		req iamapi.UserPhotoSet
 	)
 
 	defer c.RenderJson(&rsp)
 
 	if err := c.Request.JsonDecode(&req); err != nil {
-		rsp.Error = &types.ErrorMeta{idsapi.ErrCodeInvalidArgument, "Bad Request"}
+		rsp.Error = &types.ErrorMeta{iamapi.ErrCodeInvalidArgument, "Bad Request"}
 		return
 	}
 
-	session, err := idclient.SessionInstance(c.Session)
+	session, err := iamclient.SessionInstance(c.Session)
 
 	if err != nil || !session.IsLogin() {
 		rsp.Error = &types.ErrorMeta{"401", "Access Denied"}
@@ -275,13 +275,13 @@ func (c User) PhotoSetAction() {
 	//
 	img64 := strings.SplitAfter(req.Data, ";base64,")
 	if len(img64) != 2 {
-		rsp.Error = &types.ErrorMeta{idsapi.ErrCodeInvalidArgument, "Bad Request"}
+		rsp.Error = &types.ErrorMeta{iamapi.ErrCodeInvalidArgument, "Bad Request"}
 		return
 	}
 	imgreader := base64.NewDecoder(base64.StdEncoding, strings.NewReader(img64[1]))
 	imgsrc, _, err := image.Decode(imgreader)
 	if err != nil {
-		rsp.Error = &types.ErrorMeta{idsapi.ErrCodeInvalidArgument, err.Error()}
+		rsp.Error = &types.ErrorMeta{iamapi.ErrCodeInvalidArgument, err.Error()}
 		return
 	}
 	imgnew := imaging.Thumbnail(imgsrc, 96, 96, imaging.CatmullRom)
@@ -289,14 +289,14 @@ func (c User) PhotoSetAction() {
 	var imgbuf bytes.Buffer
 	err = png.Encode(&imgbuf, imgnew)
 	if err != nil {
-		rsp.Error = &types.ErrorMeta{idsapi.ErrCodeInvalidArgument, err.Error()}
+		rsp.Error = &types.ErrorMeta{iamapi.ErrCodeInvalidArgument, err.Error()}
 		return
 	}
 	imgphoto := base64.StdEncoding.EncodeToString(imgbuf.Bytes())
 
 	// profile
-	var profile idsapi.UserProfile
-	pobj := store.BtAgent.ObjectGet("/global/ids/user-profile/" + session.UserID)
+	var profile iamapi.UserProfile
+	pobj := store.BtAgent.ObjectGet("/global/iam/user-profile/" + session.UserID)
 	if pobj.Error == nil {
 		pobj.JsonDecode(&profile)
 	}
@@ -304,7 +304,7 @@ func (c User) PhotoSetAction() {
 	profile.Photo = "data:image/png;base64," + imgphoto
 	profile.PhotoSource = req.Data
 
-	store.BtAgent.ObjectSet("/global/ids/user-profile/"+session.UserID, profile, &btapi.ObjectWriteOptions{
+	store.BtAgent.ObjectSet("/global/iam/user-profile/"+session.UserID, profile, &btapi.ObjectWriteOptions{
 		PrevVersion: pobj.Meta.Version,
 	})
 
@@ -313,22 +313,22 @@ func (c User) PhotoSetAction() {
 
 func (c User) RoleListAction() {
 
-	ls := idsapi.UserRoleList{}
+	ls := iamapi.UserRoleList{}
 
 	defer c.RenderJson(&ls)
 
-	session, err := idclient.SessionInstance(c.Session)
+	session, err := iamclient.SessionInstance(c.Session)
 
 	if err != nil || !session.IsLogin() {
-		ls.Error = &types.ErrorMeta{idsapi.ErrCodeUnauthorized, "Access Denied"}
+		ls.Error = &types.ErrorMeta{iamapi.ErrCodeUnauthorized, "Access Denied"}
 		return
 	}
 
-	if objs := store.BtAgent.ObjectList("/global/ids/role/"); objs.Error == nil {
+	if objs := store.BtAgent.ObjectList("/global/iam/role/"); objs.Error == nil {
 
 		for _, obj := range objs.Items {
 
-			var role idsapi.UserRole
+			var role iamapi.UserRole
 			if err := obj.JsonDecode(&role); err == nil {
 
 				if role.IdxID <= 1000 || role.Meta.UserID == session.UserID {

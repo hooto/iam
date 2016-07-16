@@ -4,7 +4,7 @@
     
     <div class="navbar-header">
       <a class="navbar-brand" href="#">
-        <i class="ids-nav-logo"></i>
+        <i class="iam-nav-logo"></i>
         <span>lessFly Manager</span>
       </a>
     </div>
@@ -36,7 +36,7 @@ $("#etpntn a").click(function(event) {
     case "pkg-service/index":
     case "container/index":
         $(this).parent().addClass("active");
-        ids.ComLoader(uri);
+        iam.ComLoader(uri);
         break;
     }
 });

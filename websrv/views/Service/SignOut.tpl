@@ -28,7 +28,7 @@ function cookie_set(key, val, sec)
 cookie_set("access_token", "", -1);
 
 window.setTimeout(function() {
-    window.location = "/ids";
+    window.location = "/iam";
 }, 2000);
 
 </script>

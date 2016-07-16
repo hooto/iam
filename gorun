@@ -1,24 +1,13 @@
 #!/bin/bash
 
-echo "DIRs"
-find . -type d  | wc -l
-echo "FILEs"
-find . -type f  | wc -l
-echo "LINEs"
-find . -name "*.go" |xargs cat|grep -v ^$|wc -l
-echo "LINEs TPL"
-find . -name "*.tpl" |xargs cat|grep -v ^$|wc -l
-echo "DETAILs"
-find . -type f -name "*.go" | xargs wc -l | sort -n
-
 files=`find . -type f -name "*.go" |xargs`
 for file in $files; do
     gofmt -s -w ${file}
 done
 
-rm -f ./bin/lessids
+rm -f ./bin/lessos-iam
 
-go build -ldflags "-w -s" -o ./bin/lessids ./cmd/main.go 
+go build -ldflags "-w -s" -o ./bin/lessos-iam ./cmd/main.go 
 
-./bin/lessids -logtostderr=true
+./bin/lessos-iam -logtostderr=true
 

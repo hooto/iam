@@ -1,4 +1,4 @@
-// Copyright 2015 lessOS.com, All rights reserved.
+// Copyright 2014-2016 iam Author, All rights reserved.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -17,10 +17,10 @@ package login
 import (
 	"errors"
 
-	"github.com/lessos/lessids/idsapi"
+	"github.com/lessos/iam/iamapi"
 )
 
-func PassSetValidate(set idsapi.UserPasswordSet) error {
+func PassSetValidate(set iamapi.UserPasswordSet) error {
 
 	if len(set.NewPassword) < 8 || len(set.NewPassword) > 30 {
 		return errors.New("Password must be between 8 and 30 characters long")

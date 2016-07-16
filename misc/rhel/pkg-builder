@@ -19,7 +19,7 @@ if (!preg_match("/Version\ +\=\ +\"(.*)\"/", $ver, $mat)) {
 }
 $ver = $mat[1];
 
-$pkgname = "lessids";
+$pkgname = "lessiam";
 
 $cmd = "
 rm -rf /tmp/rpm-tmp*
@@ -34,10 +34,10 @@ mkdir -p /tmp/SOURCES/{$pkgname}-{$ver}/var
 mkdir -p /tmp/SOURCES/{$pkgname}-{$ver}/static
 mkdir -p /tmp/SOURCES/{$pkgname}-{$ver}/misc/rhel
 
-rm -f $basedir/bin/lessids*
+rm -f $basedir/bin/lessiam*
 
 cp -rp $basedir/static/jquery /tmp/SOURCES/{$pkgname}-{$ver}/static/
-cp -rp $basedir/static/ids /tmp/SOURCES/{$pkgname}-{$ver}/static/
+cp -rp $basedir/static/iam /tmp/SOURCES/{$pkgname}-{$ver}/static/
 cp -rp $basedir/static/twitter-bootstrap /tmp/SOURCES/{$pkgname}-{$ver}/static/
 
 mkdir -p /tmp/SOURCES/{$pkgname}-{$ver}/static/lessui/master
@@ -52,7 +52,7 @@ cp -rp $basedir/build /tmp/SOURCES/{$pkgname}-{$ver}/
 cp -rp $basedir/LICENSE /tmp/SOURCES/{$pkgname}-{$ver}/
 cp -rp $basedir/README.md /tmp/SOURCES/{$pkgname}-{$ver}/
 
-cp -rp $basedir/etc/lessids.conf.dist /tmp/SOURCES/{$pkgname}-{$ver}/etc/lessids.conf
+cp -rp $basedir/etc/lessiam.conf.dist /tmp/SOURCES/{$pkgname}-{$ver}/etc/lessiam.conf
 cp -rp $basedir/misc/rhel/init.d-scripts /tmp/SOURCES/{$pkgname}-{$ver}/misc/rhel/init.d-scripts
 
 cd /tmp/SOURCES
@@ -73,16 +73,16 @@ $mat = array(
     "/Source0:\ +(.*?)\n/",
 );
 $rep = array(
-    "Name: lessids\n",
+    "Name: lessiam\n",
     "Version: {$ver}\n",
     "Release: {$rel}\n",
-    "Source0: lessids-{$ver}.tar.gz\n",
+    "Source0: lessiam-{$ver}.tar.gz\n",
 );
 $spec = preg_replace($mat, $rep, $spec);
 $spec = str_replace('%{?dist}', '', $spec);
 $spec = preg_replace("/Release:\ +(.*?)\n/", "Release: $1%{?dist}\n", $spec);
 
-$specfile = "/tmp/lessids-{$ver}-rpm.spec";
+$specfile = "/tmp/lessiam-{$ver}-rpm.spec";
 file_put_contents($specfile, $spec);
 
 $cmd = "rpmbuild -ba $specfile";
@@ -102,7 +102,7 @@ if ($retint > 0) {
 }
 shell_exec($cmd);
 
-$cmd = "cp /tmp/RPMS/$arch/lessids-{$ver}*.rpm ~/";
+$cmd = "cp /tmp/RPMS/$arch/lessiam-{$ver}*.rpm ~/";
 shell_exec($cmd);
 
 die();

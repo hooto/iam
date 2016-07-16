@@ -10,31 +10,31 @@ body {
   color: #eee;
 }
 
-#ids-signup-box {
+#iam-signup-box {
   width: 500px;
   left: 50%;
   top: 20px;
   margin: 0 auto;
 }
 
-#ids-signup-form {
+#iam-signup-form {
   background-color: #f7f7f7;
   border-radius: 4px;
   padding: 30px 30px 20px 30px;
   /*box-shadow: 0px 2px 2px 0px #999;*/
 }
 
-.ids-signup-msg01 {
+.iam-signup-msg01 {
   font-size: 20px;
   padding: 40px 0;
   text-align: center;
 }
 
-#ids-signup-form .ilf-group {
+#iam-signup-form .ilf-group {
   padding: 0 0 10px 0; 
 }
 
-#ids-signup-form .ilf-input {
+#iam-signup-form .ilf-input {
   display: block;
   width: 100%;
   height: 40px;
@@ -50,13 +50,13 @@ body {
   transition: border-color ease-in-out .15s, box-shadow ease-in-out .15s;
 }
 
-#ids-signup-form .ilf-input:focus {
+#iam-signup-form .ilf-input:focus {
   border-color: #66afe9;
   outline: 0;
   box-shadow: inset 0 1px 1px rgba(0,0,0,.075), 0 0 8px rgba(102, 175, 233, .6);
 }
 
-#ids-signup-form .ilf-btn {
+#iam-signup-form .ilf-btn {
   width: 100%;
   height: 40px;
   display: inline-block;
@@ -81,45 +81,45 @@ body {
   border-color: #357ebd;
 }
 
-#ids-signup-form .ilf-btn:hover {
+#iam-signup-form .ilf-btn:hover {
   color: #fff;
   background-color: #3276b1;
   border-color: #285e8e;
 }
 
-#ids-signup-box .ilb-signup {
+#iam-signup-box .ilb-signup {
   margin: 20px 0;
   text-align: center;
   font-size: 15px;
 }
-#ids-signup-box .ilb-signup a {
+#iam-signup-box .ilb-signup a {
   font-size: 16px;
   color: #fff;
 }
 
-#ids-signup-box .ilb-footer {
+#iam-signup-box .ilb-footer {
   text-align: center;
   margin: 20px 0;
   font-size: 14px;
 }
-#ids-signup-box .ilb-footer a {
+#iam-signup-box .ilb-footer a {
   color: #777;
 }
-#ids-signup-box .ilb-footer img {
+#iam-signup-box .ilb-footer img {
   width: 16px;
   height: 16px;
 }
 </style>
 
-<div id="ids-signup-box">
+<div id="iam-signup-box">
 
-  <div class="ids-signup-msg01">{{T . "Create your Account"}}</div>
+  <div class="iam-signup-msg01">{{T . "Create your Account"}}</div>
 
-  <form id="ids-signup-form" action="#">
+  <form id="iam-signup-form" action="#">
 
     <input type="hidden" name="continue" value="{{.continue}}">
 
-    <div id="ids-signup-form-alert" class="alert hide ilf-group"></div>
+    <div id="iam-signup-form-alert" class="alert hide ilf-group"></div>
 
     {{if eq .user_reg_disable false }}
     <div class="ilf-group">
@@ -144,12 +144,12 @@ body {
   </form>
 
   <div class="ilb-signup">
-    <a href="/ids/service/login?continue={{.continue}}">Sign in with your Account</a>
+    <a href="/iam/service/login?continue={{.continue}}">Sign in with your Account</a>
   </div>
 
   <div class="ilb-footer">
-    <img src="/ids/~/ids/img/ids-s2-32.png"> 
-    <a href="http://www.lessos.com/p/lessids" target="_blank">lessOS Identity Server</a>
+    <img src="/iam/~/iam/img/iam-s2-32.png"> 
+    <a href="http://www.lessos.com/p/iam" target="_blank">lessOS IAM</a>
   </div>
 
 </div>
@@ -160,7 +160,7 @@ body {
 $("input[name=name]").focus();
 
 //
-$("#ids-signup-form").submit(function(event) {
+$("#iam-signup-form").submit(function(event) {
 
     event.preventDefault();
 
@@ -172,38 +172,38 @@ $("#ids-signup-form").submit(function(event) {
             "continue": $("input[name=continue]").val(),
         }
     } */
-    // console.log($("#ids-signup-form").serialize());
+    // console.log($("#iam-signup-form").serialize());
     
     $.ajax({
         type    : "POST",
-        url     : "/ids/reg/sign-up-reg",
-        data    : $("#ids-signup-form").serialize(),//JSON.stringify(req),
+        url     : "/iam/reg/sign-up-reg",
+        data    : $("#iam-signup-form").serialize(),//JSON.stringify(req),
         timeout : 3000,
         //contentType: "application/json; charset=utf-8",
         success : function(data) {
 
             // if (err) {
-            //     return l4i.InnerAlert("#ids-signup-form-alert", 'alert-danger', err);
+            //     return l4i.InnerAlert("#iam-signup-form-alert", 'alert-danger', err);
             // }
 
             if (data.error) {
-                return l4i.InnerAlert("#ids-signup-form-alert", 'alert-danger', data.error.message);
+                return l4i.InnerAlert("#iam-signup-form-alert", 'alert-danger', data.error.message);
             }
 
             if (data.kind != "User") {
-                return l4i.InnerAlert("#ids-signup-form-alert", 'alert-danger', "Unknown Error");
+                return l4i.InnerAlert("#iam-signup-form-alert", 'alert-danger', "Unknown Error");
             }
                 
-            l4i.InnerAlert("#ids-signup-form-alert", 'alert-success', "Successfully registration. Page redirecting");
+            l4i.InnerAlert("#iam-signup-form-alert", 'alert-success', "Successfully registration. Page redirecting");
             $(".ilf-group").hide(600);
 
             window.setTimeout(function(){
-                window.location = "/ids/service/login?continue={{.continue}}";
+                window.location = "/iam/service/login?continue={{.continue}}";
             }, 1500);
 
         },
         error: function(xhr, textStatus, error) {
-            l4i.InnerAlert("#ids-signup-form-alert", 'alert-danger', '{{T . "Internal Server Error"}}');
+            l4i.InnerAlert("#iam-signup-form-alert", 'alert-danger', '{{T . "Internal Server Error"}}');
         }
     });
 });

@@ -1,20 +1,20 @@
 #!/bin/bash
 #
-# Startup script for the lessids
+# Startup script for the lessiam
 #
 # chkconfig:   345 85 15
-# description: lessids
-# processname: lessids
+# description: lessiam
+# processname: lessiam
 # config:
 
 # Source function library.
 . /etc/rc.d/init.d/functions
 
 
-DAEMON=/opt/lessids/bin/lessids
-DAEMON_ARGS="--prefix=/opt/lessids"
-NAME=lessids
-APPUSER=lessids
+DAEMON=/opt/lessiam/bin/lessiam
+DAEMON_ARGS="--prefix=/opt/lessiam"
+NAME=lessiam
+APPUSER=lessiam
 
 set -e
 
@@ -22,7 +22,7 @@ case "$1" in
     start)
         echo -n -e "Starting $NAME ...\n" 
         
-        # Start lessids!
+        # Start lessiam!
         $DAEMON $DAEMON_ARGS > /dev/null 2>&1 &
         sleep 2
         echo -n -e "$NAME PID: "

@@ -1,4 +1,4 @@
-// Copyright 2015 lessOS.com, All rights reserved.
+// Copyright 2014-2016 iam Author, All rights reserved.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -19,10 +19,10 @@ import (
 	"strings"
 	"time"
 
-	"github.com/lessos/lessids/idsapi"
+	"github.com/lessos/iam/iamapi"
 )
 
-func PutValidate(set idsapi.UserProfile) (idsapi.UserProfile, error) {
+func PutValidate(set iamapi.UserProfile) (iamapi.UserProfile, error) {
 
 	set.Name = strings.TrimSpace(set.Name)
 	if len(set.Name) < 1 || len(set.Name) > 30 {

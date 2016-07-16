@@ -1,4 +1,4 @@
-// Copyright 2015 lessOS.com, All rights reserved.
+// Copyright 2014-2016 iam Author, All rights reserved.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -15,9 +15,9 @@
 package ctrl
 
 import (
+	"github.com/lessos/iam/config"
+	"github.com/lessos/iam/iamclient"
 	"github.com/lessos/lessgo/httpsrv"
-	"github.com/lessos/lessids/config"
-	"github.com/lessos/lessids/idclient"
 )
 
 type Index struct {
@@ -26,13 +26,13 @@ type Index struct {
 
 func (c Index) IndexAction() {
 
-	if !idclient.SessionIsLogin(c.Session) {
-		c.Redirect("/ids/service/login?continue=/ids")
+	if !iamclient.SessionIsLogin(c.Session) {
+		c.Redirect("/iam/service/login?continue=/iam")
 		return
 	}
 
 	if c.Params.Get("access_token") != "" {
-		c.Redirect("/ids")
+		c.Redirect("/iam")
 		return
 	}
 
@@ -41,23 +41,23 @@ func (c Index) IndexAction() {
 <head>
   <meta charset="utf-8">
   <title>` + config.Config.WebUiBannerTitle + `</title>
-  <link rel="shortcut icon" type="image/x-icon" href="/ids/~/ids/img/favicon.ico">
-  <script src="/ids/~/lessui/js/sea.js"></script>
-  <script src="/ids/~/ids/js/main.js"></script>
+  <link rel="shortcut icon" type="image/x-icon" href="/iam/~/iam/img/favicon.ico">
+  <script src="/iam/~/lessui/js/sea.js"></script>
+  <script src="/iam/~/iam/js/main.js"></script>
   <script type="text/javascript">
-    window.onload = ids.Boot();
+    window.onload = iam.Boot();
   </script>
 </head>
 <body id="body-content">
   <style>
-  ._ids_loading {
+  ._iam_loading {
     margin: 0;
     padding: 30px 40px;
     font-size: 48px;
     color: #000;
   }
   </style>
-  <div class="_ids_loading">loading</div>
+  <div class="_iam_loading">loading</div>
 </body>
 </html>`)
 }

@@ -7,7 +7,7 @@ import (
 
 	"github.com/lessos/lessgo/httpsrv"
 
-	"github.com/lessos/lessids/idsapi"
+	"github.com/lessos/iam/iamapi"
 )
 
 var (
@@ -43,7 +43,7 @@ func Validate(params *httpsrv.Params) error {
 	return nil
 }
 
-func ValidateEmail(user *idsapi.User) error {
+func ValidateEmail(user *iamapi.User) error {
 
 	user.Email = strings.ToLower(strings.TrimSpace(user.Email))
 	if matched := emailPattern.MatchString(user.Email); !matched {
@@ -53,7 +53,7 @@ func ValidateEmail(user *idsapi.User) error {
 	return nil
 }
 
-func ValidateUserID(user *idsapi.User) error {
+func ValidateUserID(user *iamapi.User) error {
 
 	user.Meta.ID = strings.ToLower(user.Meta.ID)
 	if matched := uidPattern.MatchString(user.Meta.ID); !matched {
@@ -63,7 +63,7 @@ func ValidateUserID(user *idsapi.User) error {
 	return nil
 }
 
-func ValidateUsername(user *idsapi.User) error {
+func ValidateUsername(user *iamapi.User) error {
 
 	user.Meta.Name = strings.ToLower(strings.TrimSpace(user.Meta.Name))
 	if len(user.Meta.Name) < 4 || len(user.Meta.Name) > 30 {

@@ -1,4 +1,4 @@
-// Copyright 2015 lessOS.com, All rights reserved.
+// Copyright 2014-2016 iam Author, All rights reserved.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -16,12 +16,12 @@ package v1
 
 import (
 	"github.com/lessos/bigtree/btapi"
+	"github.com/lessos/iam/iamapi"
+	"github.com/lessos/iam/store"
 	"github.com/lessos/lessgo/httpsrv"
 	"github.com/lessos/lessgo/types"
 	"github.com/lessos/lessgo/utils"
 	"github.com/lessos/lessgo/utilx"
-	"github.com/lessos/lessids/idsapi"
-	"github.com/lessos/lessids/store"
 )
 
 type AppAuth struct {
@@ -30,18 +30,18 @@ type AppAuth struct {
 
 func (c AppAuth) InfoAction() {
 
-	set := idsapi.AppAuthInfo{}
+	set := iamapi.AppAuthInfo{}
 
 	defer c.RenderJson(&set)
 
 	instid := c.Params.Get("instance_id")
 	if instid == "" {
-		set.Error = &types.ErrorMeta{idsapi.ErrCodeNotFound, "App Instance Not Found"}
+		set.Error = &types.ErrorMeta{iamapi.ErrCodeNotFound, "App Instance Not Found"}
 		return
 	}
 
-	var inst idsapi.AppInstance
-	if obj := store.BtAgent.ObjectGet("/global/ids/app-instance/" + instid); obj.Error == nil {
+	var inst iamapi.AppInstance
+	if obj := store.BtAgent.ObjectGet("/global/iam/app-instance/" + instid); obj.Error == nil {
 		obj.JsonDecode(&inst)
 	}
 
@@ -55,38 +55,38 @@ func (c AppAuth) InfoAction() {
 
 	} else {
 
-		set.Error = &types.ErrorMeta{idsapi.ErrCodeNotFound, "App Instance Not Found"}
+		set.Error = &types.ErrorMeta{iamapi.ErrCodeNotFound, "App Instance Not Found"}
 	}
 }
 
 func (c AppAuth) RegisterAction() {
 
-	set := idsapi.AppInstanceRegister{}
+	set := iamapi.AppInstanceRegister{}
 
 	defer c.RenderJson(&set)
 
 	if err := c.Request.JsonDecode(&set); err != nil {
-		set.Error = &types.ErrorMeta{idsapi.ErrCodeInvalidArgument, "Bad Argument"}
+		set.Error = &types.ErrorMeta{iamapi.ErrCodeInvalidArgument, "Bad Argument"}
 		return
 	}
 
 	// if set.Instance.Meta.ID == "" {
-	// 	set.Error = &types.ErrorMeta{idsapi.ErrCodeInvalidArgument, "Bad Argument"}
+	// 	set.Error = &types.ErrorMeta{iamapi.ErrCodeInvalidArgument, "Bad Argument"}
 	// 	return
 	// }
 	if len(set.AccessToken) < 30 {
-		set.Error = &types.ErrorMeta{idsapi.ErrCodeUnauthorized, "Unauthorized"}
+		set.Error = &types.ErrorMeta{iamapi.ErrCodeUnauthorized, "Unauthorized"}
 		return
 	}
 	set.AccessToken = set.AccessToken[:8] + "/" + set.AccessToken[9:]
 
-	var session idsapi.UserSession
-	if obj := store.BtAgent.ObjectGet("/global/ids/session/" + set.AccessToken); obj.Error == nil {
+	var session iamapi.UserSession
+	if obj := store.BtAgent.ObjectGet("/global/iam/session/" + set.AccessToken); obj.Error == nil {
 		obj.JsonDecode(&session)
 	}
 
 	if !session.IsLogin() {
-		set.Error = &types.ErrorMeta{idsapi.ErrCodeUnauthorized, "Unauthorized"}
+		set.Error = &types.ErrorMeta{iamapi.ErrCodeUnauthorized, "Unauthorized"}
 		return
 	}
 
@@ -95,7 +95,7 @@ func (c AppAuth) RegisterAction() {
 	}
 
 	// if !c.Session.AccessAllowed("sys.admin") {
-	//        set.Error = &types.ErrorMeta{idsapi.ErrCodeAccessDenied, "Unauthorized"}
+	//        set.Error = &types.ErrorMeta{iamapi.ErrCodeAccessDenied, "Unauthorized"}
 	// 	return
 	// }
 
@@ -103,10 +103,10 @@ func (c AppAuth) RegisterAction() {
 
 	var (
 		prevVersion uint64
-		prev        idsapi.AppInstance
+		prev        iamapi.AppInstance
 	)
 
-	if obj := store.BtAgent.ObjectGet("/global/ids/app-instance/" + set.Instance.Meta.ID); obj.Error == nil {
+	if obj := store.BtAgent.ObjectGet("/global/iam/app-instance/" + set.Instance.Meta.ID); obj.Error == nil {
 		obj.JsonDecode(&prev)
 		prevVersion = obj.Meta.Version
 	}
@@ -121,7 +121,7 @@ func (c AppAuth) RegisterAction() {
 	} else {
 
 		if prev.Meta.UserID != session.UserID {
-			set.Error = &types.ErrorMeta{idsapi.ErrCodeUnauthorized, "Unauthorized"}
+			set.Error = &types.ErrorMeta{iamapi.ErrCodeUnauthorized, "Unauthorized"}
 			return
 		}
 
@@ -130,15 +130,15 @@ func (c AppAuth) RegisterAction() {
 		set.Instance.Status = prev.Status
 	}
 
-	if obj := store.BtAgent.ObjectSet("/global/ids/app-instance/"+set.Instance.Meta.ID, set.Instance, &btapi.ObjectWriteOptions{
+	if obj := store.BtAgent.ObjectSet("/global/iam/app-instance/"+set.Instance.Meta.ID, set.Instance, &btapi.ObjectWriteOptions{
 		PrevVersion: prevVersion,
 	}); obj.Error != nil {
-		set.Error = &types.ErrorMeta{idsapi.ErrCodeInternalError, obj.Error.Message}
+		set.Error = &types.ErrorMeta{iamapi.ErrCodeInternalError, obj.Error.Message}
 		return
 	}
 
 	//
-	// q = base.NewQuerySet().From("ids_privilege").Limit(1000)
+	// q = base.NewQuerySet().From("iam_privilege").Limit(1000)
 	// q.Where.And("instance", req.Data.InstanceId)
 	// rs, err = dcn.Base.Query(q)
 	// if err != nil {
@@ -160,7 +160,7 @@ func (c AppAuth) RegisterAction() {
 	// 	if !isExist {
 	// 		frupd := base.NewFilter()
 	// 		frupd.And("instance", req.Data.InstanceId).And("privilege", prePriv.Field("privilege").String())
-	// 		dcn.Base.Delete("ids_privilege", frupd)
+	// 		dcn.Base.Delete("iam_privilege", frupd)
 	// 	}
 	// }
 
@@ -185,7 +185,7 @@ func (c AppAuth) RegisterAction() {
 	// 			"created":   base.TimeNow("datetime"),
 	// 		}
 
-	// 		if _, err := dcn.Base.Insert("ids_privilege", item); err != nil {
+	// 		if _, err := dcn.Base.Insert("iam_privilege", item); err != nil {
 	// 			rsp.Status = 500
 	// 			rsp.Message = "Can not write to database" + err.Error()
 	// 			return

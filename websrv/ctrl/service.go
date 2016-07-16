@@ -1,4 +1,4 @@
-// Copyright 2015 lessOS.com, All rights reserved.
+// Copyright 2014-2016 iam Author, All rights reserved.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -18,9 +18,9 @@ import (
 	"net/http"
 
 	"github.com/lessos/bigtree/btapi"
+	"github.com/lessos/iam/iamclient"
+	"github.com/lessos/iam/store"
 	"github.com/lessos/lessgo/httpsrv"
-	"github.com/lessos/lessids/idclient"
-	"github.com/lessos/lessids/store"
 )
 
 type Service struct {
@@ -48,7 +48,7 @@ func (c Service) LoginAction() {
 
 func (c Service) SignOutAction() {
 
-	c.Data["continue"] = "/ids"
+	c.Data["continue"] = "/iam"
 
 	if len(c.Params.Get("continue")) > 0 {
 		c.Data["continue"] = c.Params.Get("continue")
@@ -57,7 +57,7 @@ func (c Service) SignOutAction() {
 	token := c.Params.Get("access_token")
 
 	if len(token) < 30 {
-		session, _ := idclient.SessionInstance(c.Session)
+		session, _ := iamclient.SessionInstance(c.Session)
 		token = session.FullToken()
 	}
 
@@ -65,13 +65,13 @@ func (c Service) SignOutAction() {
 
 		token = token[:8] + "/" + token[9:]
 
-		store.BtAgent.ObjectDel("/global/ids/session/"+token, &btapi.ObjectWriteOptions{
+		store.BtAgent.ObjectDel("/global/iam/session/"+token, &btapi.ObjectWriteOptions{
 			Force: true,
 		})
 	}
 
 	http.SetCookie(c.Response.Out, &http.Cookie{
-		Name:   idclient.AccessTokenKey,
+		Name:   iamclient.AccessTokenKey,
 		Value:  "",
 		Path:   "/",
 		MaxAge: -1,

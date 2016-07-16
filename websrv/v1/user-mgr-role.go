@@ -1,4 +1,4 @@
-// Copyright 2015 lessOS.com, All rights reserved.
+// Copyright 2014-2016 iam Author, All rights reserved.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -20,27 +20,27 @@ import (
 	"github.com/lessos/lessgo/utils"
 	"github.com/lessos/lessgo/utilx"
 
-	"github.com/lessos/lessids/idclient"
-	"github.com/lessos/lessids/idsapi"
-	"github.com/lessos/lessids/store"
+	"github.com/lessos/iam/iamapi"
+	"github.com/lessos/iam/iamclient"
+	"github.com/lessos/iam/store"
 )
 
 func (c UserMgr) RoleListAction() {
 
-	ls := idsapi.UserRoleList{}
+	ls := iamapi.UserRoleList{}
 
 	defer c.RenderJson(&ls)
 
-	if !idclient.SessionAccessAllowed(c.Session, "user.admin", "df085c6dc6ff") {
-		ls.Error = &types.ErrorMeta{idsapi.ErrCodeAccessDenied, "Access Denied"}
+	if !iamclient.SessionAccessAllowed(c.Session, "user.admin", "df085c6dc6ff") {
+		ls.Error = &types.ErrorMeta{iamapi.ErrCodeAccessDenied, "Access Denied"}
 		return
 	}
 
-	if objs := store.BtAgent.ObjectList("/global/ids/role/"); objs.Error == nil {
+	if objs := store.BtAgent.ObjectList("/global/iam/role/"); objs.Error == nil {
 
 		for _, obj := range objs.Items {
 
-			var role idsapi.UserRole
+			var role iamapi.UserRole
 			if err := obj.JsonDecode(&role); err == nil {
 
 				ls.Items = append(ls.Items, role)
@@ -53,21 +53,21 @@ func (c UserMgr) RoleListAction() {
 
 func (c UserMgr) RoleEntryAction() {
 
-	set := idsapi.UserRole{}
+	set := iamapi.UserRole{}
 
 	defer c.RenderJson(&set)
 
-	if !idclient.SessionAccessAllowed(c.Session, "user.admin", "df085c6dc6ff") {
-		set.Error = &types.ErrorMeta{idsapi.ErrCodeAccessDenied, "Access Denied"}
+	if !iamclient.SessionAccessAllowed(c.Session, "user.admin", "df085c6dc6ff") {
+		set.Error = &types.ErrorMeta{iamapi.ErrCodeAccessDenied, "Access Denied"}
 		return
 	}
 
-	if obj := store.BtAgent.ObjectGet("/global/ids/role/" + c.Params.Get("roleid")); obj.Error == nil {
+	if obj := store.BtAgent.ObjectGet("/global/iam/role/" + c.Params.Get("roleid")); obj.Error == nil {
 		obj.JsonDecode(&set)
 	}
 
 	if set.Meta.ID == "" {
-		set.Error = &types.ErrorMeta{idsapi.ErrCodeInvalidArgument, "Role Not Found"}
+		set.Error = &types.ErrorMeta{iamapi.ErrCodeInvalidArgument, "Role Not Found"}
 		return
 	}
 
@@ -77,20 +77,20 @@ func (c UserMgr) RoleEntryAction() {
 func (c UserMgr) RoleSetAction() {
 
 	var (
-		prev        idsapi.UserRole
-		set         idsapi.UserRole
+		prev        iamapi.UserRole
+		set         iamapi.UserRole
 		prevVersion uint64
 	)
 
 	defer c.RenderJson(&set)
 
 	if err := c.Request.JsonDecode(&set); err != nil {
-		set.Error = &types.ErrorMeta{idsapi.ErrCodeInvalidArgument, "Bad Request"}
+		set.Error = &types.ErrorMeta{iamapi.ErrCodeInvalidArgument, "Bad Request"}
 		return
 	}
 
-	if !idclient.SessionAccessAllowed(c.Session, "user.admin", "df085c6dc6ff") {
-		set.Error = &types.ErrorMeta{idsapi.ErrCodeAccessDenied, "Access Denied"}
+	if !iamclient.SessionAccessAllowed(c.Session, "user.admin", "df085c6dc6ff") {
+		set.Error = &types.ErrorMeta{iamapi.ErrCodeAccessDenied, "Access Denied"}
 		return
 	}
 
@@ -103,13 +103,13 @@ func (c UserMgr) RoleSetAction() {
 
 	} else {
 
-		if obj := store.BtAgent.ObjectGet("/global/ids/role/" + set.Meta.ID); obj.Error == nil {
+		if obj := store.BtAgent.ObjectGet("/global/iam/role/" + set.Meta.ID); obj.Error == nil {
 			obj.JsonDecode(&prev)
 			prevVersion = obj.Meta.Version
 		}
 
 		if prev.Meta.ID != set.Meta.ID {
-			set.Error = &types.ErrorMeta{idsapi.ErrCodeInvalidArgument, "UserRole Not Found"}
+			set.Error = &types.ErrorMeta{iamapi.ErrCodeInvalidArgument, "UserRole Not Found"}
 			return
 		}
 
@@ -120,7 +120,7 @@ func (c UserMgr) RoleSetAction() {
 	set.Meta.Updated = utilx.TimeNow("atom")
 	// roleset["privileges"] = strings.Join(c.Params.Values["privileges"], ",")
 
-	if obj := store.BtAgent.ObjectSet("/global/ids/role/"+set.Meta.ID, set, &btapi.ObjectWriteOptions{
+	if obj := store.BtAgent.ObjectSet("/global/iam/role/"+set.Meta.ID, set, &btapi.ObjectWriteOptions{
 		PrevVersion: prevVersion,
 	}); obj.Error != nil {
 		set.Error = &types.ErrorMeta{"500", obj.Error.Message}

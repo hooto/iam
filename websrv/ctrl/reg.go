@@ -1,4 +1,4 @@
-// Copyright 2015 lessOS.com, All rights reserved.
+// Copyright 2014-2016 iam Author, All rights reserved.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -27,11 +27,11 @@ import (
 	"github.com/lessos/lessgo/utils"
 	"github.com/lessos/lessgo/utilx"
 
-	"github.com/lessos/lessids/base/login"
-	"github.com/lessos/lessids/base/signup"
-	"github.com/lessos/lessids/config"
-	"github.com/lessos/lessids/idsapi"
-	"github.com/lessos/lessids/store"
+	"github.com/lessos/iam/base/login"
+	"github.com/lessos/iam/base/signup"
+	"github.com/lessos/iam/config"
+	"github.com/lessos/iam/iamapi"
+	"github.com/lessos/iam/store"
 )
 
 type Reg struct {
@@ -49,36 +49,36 @@ func (c Reg) SignUpRegAction() {
 		types.TypeMeta
 		Continue string `json:"continue"`
 	}{
-		Continue: "/ids",
+		Continue: "/iam",
 	}
 
 	defer c.RenderJson(&rsp)
 
 	if config.UserRegistrationDisabled {
-		rsp.Error = &types.ErrorMeta{idsapi.ErrCodeAccessDenied, "The User Registration Disabled"}
+		rsp.Error = &types.ErrorMeta{iamapi.ErrCodeAccessDenied, "The User Registration Disabled"}
 		return
 	}
 
 	if err := signup.Validate(c.Params); err != nil {
-		rsp.Error = &types.ErrorMeta{idsapi.ErrCodeInvalidArgument, err.Error()}
+		rsp.Error = &types.ErrorMeta{iamapi.ErrCodeInvalidArgument, err.Error()}
 		return
 	}
 
 	uname := strings.TrimSpace(strings.ToLower(c.Params.Get("uname")))
 
-	var user idsapi.User
-	if obj := store.BtAgent.ObjectGet("/global/ids/user/" + utils.StringEncode16(uname, 8)); obj.Error == nil {
+	var user iamapi.User
+	if obj := store.BtAgent.ObjectGet("/global/iam/user/" + utils.StringEncode16(uname, 8)); obj.Error == nil {
 		obj.JsonDecode(&user)
 	}
 
 	if user.Meta.Name == uname {
-		rsp.Error = &types.ErrorMeta{idsapi.ErrCodeInvalidArgument, "The `Username` already exists, please choose another one"}
+		rsp.Error = &types.ErrorMeta{iamapi.ErrCodeInvalidArgument, "The `Username` already exists, please choose another one"}
 		return
 	}
 
 	auth, _ := pass.HashDefault(c.Params.Get("passwd"))
 
-	user = idsapi.User{
+	user = iamapi.User{
 		Meta: types.ObjectMeta{
 			ID:      utils.StringEncode16(uname, 8),
 			Name:    uname,
@@ -94,7 +94,7 @@ func (c Reg) SignUpRegAction() {
 		Timezone: "UTC",
 	}
 
-	if obj := store.BtAgent.ObjectSet("/global/ids/user/"+user.Meta.ID, user, nil); obj.Error != nil {
+	if obj := store.BtAgent.ObjectSet("/global/iam/user/"+user.Meta.ID, user, nil); obj.Error != nil {
 		rsp.Error = &types.ErrorMeta{"500", obj.Error.Message}
 		return
 	}
@@ -111,41 +111,41 @@ func (c Reg) ForgotPassPutAction() {
 		types.TypeMeta
 		Continue string `json:"continue"`
 	}{
-		Continue: "/ids",
+		Continue: "/iam",
 	}
 
 	defer c.RenderJson(&rsp)
 
 	uemail, err := login.EmailSetValidate(c.Params.Get("email"))
 	if err != nil {
-		rsp.Error = &types.ErrorMeta{idsapi.ErrCodeInvalidArgument, err.Error()}
+		rsp.Error = &types.ErrorMeta{iamapi.ErrCodeInvalidArgument, err.Error()}
 		return
 	}
 
 	if c.Params.Get("username") == "" {
-		rsp.Error = &types.ErrorMeta{idsapi.ErrCodeInvalidArgument, "User Not Found"}
+		rsp.Error = &types.ErrorMeta{iamapi.ErrCodeInvalidArgument, "User Not Found"}
 		return
 	}
 	userid := utils.StringEncode16(c.Params.Get("username"), 8)
 
-	var user idsapi.User
-	if obj := store.BtAgent.ObjectGet("/global/ids/user/" + userid); obj.Error == nil {
+	var user iamapi.User
+	if obj := store.BtAgent.ObjectGet("/global/iam/user/" + userid); obj.Error == nil {
 		obj.JsonDecode(&user)
 	}
 
 	if user.Meta.ID != userid || user.Email != uemail {
-		rsp.Error = &types.ErrorMeta{idsapi.ErrCodeInvalidArgument, "User Not Found"}
+		rsp.Error = &types.ErrorMeta{iamapi.ErrCodeInvalidArgument, "User Not Found"}
 		return
 	}
 
-	reset := idsapi.UserPasswordReset{
+	reset := iamapi.UserPasswordReset{
 		ID:      utils.StringNewRand(24),
 		UserID:  userid,
 		Email:   uemail,
 		Expired: utilx.TimeNowAdd("atom", "+3600s"),
 	}
 
-	if obj := store.BtAgent.ObjectSet("/global/ids/pwd-reset/"+reset.ID, reset, &btapi.ObjectWriteOptions{
+	if obj := store.BtAgent.ObjectSet("/global/iam/pwd-reset/"+reset.ID, reset, &btapi.ObjectWriteOptions{
 		Ttl: 3600000,
 	}); obj.Error != nil {
 		rsp.Error = &types.ErrorMeta{"500", obj.Error.Message}
@@ -154,7 +154,7 @@ func (c Reg) ForgotPassPutAction() {
 
 	mr, err := email.MailerPull("def")
 	if err != nil {
-		rsp.Error = &types.ErrorMeta{idsapi.ErrCodeInternalError, "Internal Server Error 001"}
+		rsp.Error = &types.ErrorMeta{iamapi.ErrCodeInternalError, "Internal Server Error 001"}
 		return
 	}
 
@@ -163,7 +163,7 @@ func (c Reg) ForgotPassPutAction() {
 <body>
 <div>You recently requested a password reset for your %s account. To create a new password, click on the link below:</div>
 <br>
-<a href="http://%s/ids/reg/pass-reset?id=%s">Reset My Password</a>
+<a href="http://%s/iam/reg/pass-reset?id=%s">Reset My Password</a>
 <br>
 <div>This request was made on %s.</div>
 <br>
@@ -183,7 +183,7 @@ func (c Reg) ForgotPassPutAction() {
 	}
 
 	if err != nil {
-		rsp.Error = &types.ErrorMeta{idsapi.ErrCodeInternalError, err.Error()}
+		rsp.Error = &types.ErrorMeta{iamapi.ErrCodeInternalError, err.Error()}
 	} else {
 		rsp.Kind = "UserAuth"
 	}
@@ -195,8 +195,8 @@ func (c Reg) PassResetAction() {
 		return
 	}
 
-	var reset idsapi.UserPasswordReset
-	if obj := store.BtAgent.ObjectGet("/global/ids/pwd-reset/" + c.Params.Get("id")); obj.Error == nil {
+	var reset iamapi.UserPasswordReset
+	if obj := store.BtAgent.ObjectGet("/global/iam/pwd-reset/" + c.Params.Get("id")); obj.Error == nil {
 		obj.JsonDecode(&reset)
 	}
 
@@ -214,41 +214,41 @@ func (c Reg) PassResetPutAction() {
 	defer c.RenderJson(&rsp)
 
 	if c.Params.Get("id") == "" {
-		rsp.Error = &types.ErrorMeta{idsapi.ErrCodeInvalidArgument, "Token can not be null"}
+		rsp.Error = &types.ErrorMeta{iamapi.ErrCodeInvalidArgument, "Token can not be null"}
 		return
 	}
 
-	if err := login.PassSetValidate(idsapi.UserPasswordSet{
+	if err := login.PassSetValidate(iamapi.UserPasswordSet{
 		NewPassword: c.Params.Get("passwd"),
 	}); err != nil {
-		rsp.Error = &types.ErrorMeta{idsapi.ErrCodeInvalidArgument, err.Error()}
+		rsp.Error = &types.ErrorMeta{iamapi.ErrCodeInvalidArgument, err.Error()}
 		return
 	}
 
-	var reset idsapi.UserPasswordReset
-	rsobj := store.BtAgent.ObjectGet("/global/ids/pwd-reset/" + c.Params.Get("id"))
+	var reset iamapi.UserPasswordReset
+	rsobj := store.BtAgent.ObjectGet("/global/iam/pwd-reset/" + c.Params.Get("id"))
 	if rsobj.Error == nil {
 		rsobj.JsonDecode(&reset)
 	}
 
 	if reset.ID != c.Params.Get("id") {
-		rsp.Error = &types.ErrorMeta{idsapi.ErrCodeInvalidArgument, "Token not found"}
+		rsp.Error = &types.ErrorMeta{iamapi.ErrCodeInvalidArgument, "Token not found"}
 		return
 	}
 
 	if reset.Email != c.Params.Get("email") {
-		rsp.Error = &types.ErrorMeta{idsapi.ErrCodeInvalidArgument, "Email is not valid"}
+		rsp.Error = &types.ErrorMeta{iamapi.ErrCodeInvalidArgument, "Email is not valid"}
 		return
 	}
 
-	var user idsapi.User
-	uobj := store.BtAgent.ObjectGet("/global/ids/user/" + reset.UserID)
+	var user iamapi.User
+	uobj := store.BtAgent.ObjectGet("/global/iam/user/" + reset.UserID)
 	if uobj.Error == nil {
 		uobj.JsonDecode(&user)
 	}
 
 	if user.Meta.ID != reset.UserID {
-		rsp.Error = &types.ErrorMeta{idsapi.ErrCodeInvalidArgument, "User Not Found"}
+		rsp.Error = &types.ErrorMeta{iamapi.ErrCodeInvalidArgument, "User Not Found"}
 		return
 	}
 
@@ -256,14 +256,14 @@ func (c Reg) PassResetPutAction() {
 	user.Auth, _ = pass.HashDefault(c.Params.Get("passwd"))
 	user.Meta.Updated = utilx.TimeNow("atom")
 
-	if obj := store.BtAgent.ObjectSet("/global/ids/user/"+user.Meta.ID, user, &btapi.ObjectWriteOptions{
+	if obj := store.BtAgent.ObjectSet("/global/iam/user/"+user.Meta.ID, user, &btapi.ObjectWriteOptions{
 		PrevVersion: uobj.Meta.Version,
 	}); obj.Error != nil {
 		rsp.Error = &types.ErrorMeta{"500", obj.Error.Message}
 		return
 	}
 
-	store.BtAgent.ObjectDel("/global/ids/pwd-reset/"+reset.ID, &btapi.ObjectWriteOptions{
+	store.BtAgent.ObjectDel("/global/iam/pwd-reset/"+reset.ID, &btapi.ObjectWriteOptions{
 		PrevVersion: rsobj.Meta.Version,
 	})
 

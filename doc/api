@@ -1,8 +1,8 @@
 
-/ids/service/login
+/iam/service/login
     text/html
     
-/ids/service/auth
+/iam/service/auth
     text/json
 
 

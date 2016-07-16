@@ -1,4 +1,4 @@
-// Copyright 2015 lessOS.com, All rights reserved.
+// Copyright 2014-2016 iam Author, All rights reserved.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -25,10 +25,10 @@ import (
 	"github.com/lessos/lessgo/utils"
 	"github.com/lessos/lessgo/utilx"
 
-	"github.com/lessos/lessids/base/signup"
-	"github.com/lessos/lessids/idclient"
-	"github.com/lessos/lessids/idsapi"
-	"github.com/lessos/lessids/store"
+	"github.com/lessos/iam/base/signup"
+	"github.com/lessos/iam/iamapi"
+	"github.com/lessos/iam/iamclient"
+	"github.com/lessos/iam/store"
 )
 
 const (
@@ -50,20 +50,20 @@ type UserMgr struct {
 
 func (c UserMgr) UserListAction() {
 
-	ls := idsapi.UserList{}
+	ls := iamapi.UserList{}
 
 	defer c.RenderJson(&ls)
 
-	if !idclient.SessionAccessAllowed(c.Session, "user.admin", "df085c6dc6ff") {
-		ls.Error = &types.ErrorMeta{idsapi.ErrCodeAccessDenied, "Access Denied"}
+	if !iamclient.SessionAccessAllowed(c.Session, "user.admin", "df085c6dc6ff") {
+		ls.Error = &types.ErrorMeta{iamapi.ErrCodeAccessDenied, "Access Denied"}
 		return
 	}
 
-	if objs := store.BtAgent.ObjectList("/global/ids/user/"); objs.Error == nil {
+	if objs := store.BtAgent.ObjectList("/global/iam/user/"); objs.Error == nil {
 
 		for _, obj := range objs.Items {
 
-			var user idsapi.User
+			var user iamapi.User
 			if err := obj.JsonDecode(&user); err == nil {
 				user.Auth = ""
 				ls.Items = append(ls.Items, user)
@@ -78,7 +78,7 @@ func (c UserMgr) UserListAction() {
 
 	// filter: query_text
 
-	// count, _ := dcn.Base.Count("ids_login", q.Where)
+	// count, _ := dcn.Base.Count("iam_login", q.Where)
 
 	// if page > 1 {
 	// 	q.Offset(int64((page - 1) * userMgrPageLimit))
@@ -93,29 +93,29 @@ func (c UserMgr) UserListAction() {
 
 func (c UserMgr) UserEntryAction() {
 
-	set := idsapi.User{}
+	set := iamapi.User{}
 
 	defer c.RenderJson(&set)
 
-	if !idclient.SessionAccessAllowed(c.Session, "user.admin", "df085c6dc6ff") {
-		set.Error = &types.ErrorMeta{idsapi.ErrCodeAccessDenied, "Access Denied"}
+	if !iamclient.SessionAccessAllowed(c.Session, "user.admin", "df085c6dc6ff") {
+		set.Error = &types.ErrorMeta{iamapi.ErrCodeAccessDenied, "Access Denied"}
 		return
 	}
 
-	if obj := store.BtAgent.ObjectGet("/global/ids/user/" + c.Params.Get("userid")); obj.Error == nil {
+	if obj := store.BtAgent.ObjectGet("/global/iam/user/" + c.Params.Get("userid")); obj.Error == nil {
 		obj.JsonDecode(&set)
 	}
 
 	// login
 	if set.Meta.ID == "" {
-		set.Error = &types.ErrorMeta{idsapi.ErrCodeInvalidArgument, "User Not Found"}
+		set.Error = &types.ErrorMeta{iamapi.ErrCodeInvalidArgument, "User Not Found"}
 		return
 	}
 	set.Auth = userMgrPasswdHidden
 
 	//
-	var profile idsapi.UserProfile
-	if obj := store.BtAgent.ObjectGet("/global/ids/user-profile/" + c.Params.Get("userid")); obj.Error == nil {
+	var profile iamapi.UserProfile
+	if obj := store.BtAgent.ObjectGet("/global/iam/user-profile/" + c.Params.Get("userid")); obj.Error == nil {
 		obj.JsonDecode(&profile)
 		profile.About = html.EscapeString(profile.About)
 	}
@@ -127,32 +127,32 @@ func (c UserMgr) UserEntryAction() {
 
 func (c UserMgr) UserSetAction() {
 
-	set := idsapi.User{}
+	set := iamapi.User{}
 
 	defer c.RenderJson(&set)
 
 	if err := c.Request.JsonDecode(&set); err != nil {
-		set.Error = &types.ErrorMeta{idsapi.ErrCodeInvalidArgument, "Bad Request"}
+		set.Error = &types.ErrorMeta{iamapi.ErrCodeInvalidArgument, "Bad Request"}
 		return
 	}
 
-	if !idclient.SessionAccessAllowed(c.Session, "user.admin", "df085c6dc6ff") {
-		set.Error = &types.ErrorMeta{idsapi.ErrCodeAccessDenied, "Access Denied"}
+	if !iamclient.SessionAccessAllowed(c.Session, "user.admin", "df085c6dc6ff") {
+		set.Error = &types.ErrorMeta{iamapi.ErrCodeAccessDenied, "Access Denied"}
 		return
 	}
 
 	if err := signup.ValidateEmail(&set); err != nil {
-		set.Error = &types.ErrorMeta{idsapi.ErrCodeInvalidArgument, err.Error()}
+		set.Error = &types.ErrorMeta{iamapi.ErrCodeInvalidArgument, err.Error()}
 		return
 	}
 
-	var prev idsapi.User
+	var prev iamapi.User
 	var prevVersion uint64
 
 	if set.Meta.ID == "" {
 
 		if err := signup.ValidateUsername(&set); err != nil {
-			set.Error = &types.ErrorMeta{idsapi.ErrCodeInvalidArgument, err.Error()}
+			set.Error = &types.ErrorMeta{iamapi.ErrCodeInvalidArgument, err.Error()}
 			return
 		}
 
@@ -167,14 +167,14 @@ func (c UserMgr) UserSetAction() {
 	}
 
 	//
-	if obj := store.BtAgent.ObjectGet("/global/ids/user/" + set.Meta.ID); obj.Error == nil {
+	if obj := store.BtAgent.ObjectGet("/global/iam/user/" + set.Meta.ID); obj.Error == nil {
 		obj.JsonDecode(&prev)
 		prevVersion = obj.Meta.Version
 	}
 
 	//
 	if err := signup.ValidateUserID(&set); err != nil {
-		set.Error = &types.ErrorMeta{idsapi.ErrCodeInvalidArgument, err.Error()}
+		set.Error = &types.ErrorMeta{iamapi.ErrCodeInvalidArgument, err.Error()}
 		return
 	}
 
@@ -204,7 +204,7 @@ func (c UserMgr) UserSetAction() {
 
 	set.Meta.Updated = utilx.TimeNow("atom")
 
-	if obj := store.BtAgent.ObjectSet("/global/ids/user/"+set.Meta.ID, set, &btapi.ObjectWriteOptions{
+	if obj := store.BtAgent.ObjectSet("/global/iam/user/"+set.Meta.ID, set, &btapi.ObjectWriteOptions{
 		PrevVersion: prevVersion,
 	}); obj.Error != nil {
 		set.Error = &types.ErrorMeta{"500", obj.Error.Message}
@@ -214,9 +214,9 @@ func (c UserMgr) UserSetAction() {
 	if set.Profile != nil {
 
 		prevVersion = 0
-		var profile idsapi.UserProfile
+		var profile iamapi.UserProfile
 
-		if obj := store.BtAgent.ObjectGet("/global/ids/user-profile/" + set.Meta.ID); obj.Error == nil {
+		if obj := store.BtAgent.ObjectGet("/global/iam/user-profile/" + set.Meta.ID); obj.Error == nil {
 
 			obj.JsonDecode(&profile)
 			prevVersion = obj.Meta.Version
@@ -234,7 +234,7 @@ func (c UserMgr) UserSetAction() {
 			}
 		}
 
-		if obj := store.BtAgent.ObjectSet("/global/ids/user-profile/"+set.Meta.ID, profile, &btapi.ObjectWriteOptions{
+		if obj := store.BtAgent.ObjectSet("/global/iam/user-profile/"+set.Meta.ID, profile, &btapi.ObjectWriteOptions{
 			PrevVersion: prevVersion,
 		}); obj.Error != nil {
 			set.Error = &types.ErrorMeta{"500", obj.Error.Message}

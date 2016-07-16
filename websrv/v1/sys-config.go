@@ -1,4 +1,4 @@
-// Copyright 2015 lessOS.com, All rights reserved.
+// Copyright 2014-2016 iam Author, All rights reserved.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -20,10 +20,10 @@ import (
 	"github.com/lessos/lessgo/httpsrv"
 	"github.com/lessos/lessgo/types"
 
-	"github.com/lessos/lessids/config"
-	"github.com/lessos/lessids/idclient"
-	"github.com/lessos/lessids/idsapi"
-	"github.com/lessos/lessids/store"
+	"github.com/lessos/iam/config"
+	"github.com/lessos/iam/iamapi"
+	"github.com/lessos/iam/iamclient"
+	"github.com/lessos/iam/store"
 )
 
 type SysConfig struct {
@@ -41,16 +41,16 @@ var (
 
 func (c SysConfig) GeneralAction() {
 
-	ls := idsapi.SysConfigList{}
+	ls := iamapi.SysConfigList{}
 
 	defer c.RenderJson(&ls)
 
-	if !idclient.SessionAccessAllowed(c.Session, "sys.admin", "df085c6dc6ff") {
-		ls.Error = &types.ErrorMeta{idsapi.ErrCodeAccessDenied, "Access Denied"}
+	if !iamclient.SessionAccessAllowed(c.Session, "sys.admin", "df085c6dc6ff") {
+		ls.Error = &types.ErrorMeta{iamapi.ErrCodeAccessDenied, "Access Denied"}
 		return
 	}
 
-	if objs := store.BtAgent.ObjectList("/global/ids/sys-config/"); objs.Error == nil {
+	if objs := store.BtAgent.ObjectList("/global/iam/sys-config/"); objs.Error == nil {
 
 		for _, obj := range objs.Items {
 
@@ -78,17 +78,17 @@ func (c SysConfig) GeneralAction() {
 
 func (c SysConfig) GeneralSetAction() {
 
-	sets := idsapi.SysConfigList{}
+	sets := iamapi.SysConfigList{}
 
 	defer c.RenderJson(&sets)
 
 	if err := c.Request.JsonDecode(&sets); err != nil || len(sets.Items) < 1 {
-		sets.Error = &types.ErrorMeta{idsapi.ErrCodeInvalidArgument, "Bad Request"}
+		sets.Error = &types.ErrorMeta{iamapi.ErrCodeInvalidArgument, "Bad Request"}
 		return
 	}
 
-	if !idclient.SessionAccessAllowed(c.Session, "sys.admin", "df085c6dc6ff") {
-		sets.Error = &types.ErrorMeta{idsapi.ErrCodeAccessDenied, "Access Denied"}
+	if !iamclient.SessionAccessAllowed(c.Session, "sys.admin", "df085c6dc6ff") {
+		sets.Error = &types.ErrorMeta{iamapi.ErrCodeAccessDenied, "Access Denied"}
 		return
 	}
 
@@ -107,11 +107,11 @@ func (c SysConfig) GeneralSetAction() {
 
 		var prevVersion uint64
 
-		if obj := store.BtAgent.ObjectGet("/global/ids/sys-config/" + v.Key); obj.Error == nil {
+		if obj := store.BtAgent.ObjectGet("/global/iam/sys-config/" + v.Key); obj.Error == nil {
 			prevVersion = obj.Meta.Version
 		}
 
-		if obj := store.BtAgent.ObjectSet("/global/ids/sys-config/"+v.Key, v.Val, &btapi.ObjectWriteOptions{
+		if obj := store.BtAgent.ObjectSet("/global/iam/sys-config/"+v.Key, v.Val, &btapi.ObjectWriteOptions{
 			PrevVersion: prevVersion,
 		}); obj.Error != nil {
 			sets.Error = &types.ErrorMeta{"500", obj.Error.Message}
@@ -126,16 +126,16 @@ func (c SysConfig) GeneralSetAction() {
 
 func (c SysConfig) MailerAction() {
 
-	ls := idsapi.SysConfigList{}
+	ls := iamapi.SysConfigList{}
 
 	defer c.RenderJson(&ls)
 
-	if !idclient.SessionAccessAllowed(c.Session, "sys.admin", "df085c6dc6ff") {
-		ls.Error = &types.ErrorMeta{idsapi.ErrCodeAccessDenied, "Access Denied"}
+	if !iamclient.SessionAccessAllowed(c.Session, "sys.admin", "df085c6dc6ff") {
+		ls.Error = &types.ErrorMeta{iamapi.ErrCodeAccessDenied, "Access Denied"}
 		return
 	}
 
-	if obj := store.BtAgent.ObjectGet("/global/ids/sys-config/mailer"); obj.Error == nil {
+	if obj := store.BtAgent.ObjectGet("/global/iam/sys-config/mailer"); obj.Error == nil {
 
 		ls.Items = ls.Items.Insert("mailer", obj.Data)
 	}

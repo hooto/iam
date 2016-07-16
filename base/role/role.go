@@ -1,4 +1,4 @@
-// Copyright 2015 lessOS.com, All rights reserved.
+// Copyright 2014-2016 iam Author, All rights reserved.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -18,9 +18,9 @@ import (
 	"sync"
 	"time"
 
+	"github.com/lessos/iam/iamapi"
+	"github.com/lessos/iam/store"
 	"github.com/lessos/lessgo/utils"
-	"github.com/lessos/lessids/idsapi"
-	"github.com/lessos/lessids/store"
 )
 
 var (
@@ -58,9 +58,9 @@ func instPerms(instanceid string) *perm_map {
 	}
 
 	//
-	if obj := store.BtAgent.ObjectGet("/global/ids/app-instance/" + instanceid); obj.Error == nil {
+	if obj := store.BtAgent.ObjectGet("/global/iam/app-instance/" + instanceid); obj.Error == nil {
 
-		var inst idsapi.AppInstance
+		var inst iamapi.AppInstance
 
 		if err := obj.JsonDecode(&inst); err == nil {
 
@@ -82,7 +82,7 @@ func instPerms(instanceid string) *perm_map {
 func AccessAllowed(owner string, roles []uint32, instanceid, privilege string) bool {
 
 	if instanceid == "" {
-		instanceid = utils.StringEncode16("lessids", 12)
+		instanceid = utils.StringEncode16("iam", 12)
 	}
 
 	p := instPerms(instanceid)

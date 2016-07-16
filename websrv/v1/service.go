@@ -1,4 +1,4 @@
-// Copyright 2015 lessOS.com, All rights reserved.
+// Copyright 2014-2016 iam Author, All rights reserved.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -29,9 +29,9 @@ import (
 	"github.com/lessos/lessgo/types"
 	"github.com/lessos/lessgo/utils"
 
-	"github.com/lessos/lessids/base/role"
-	"github.com/lessos/lessids/idsapi"
-	"github.com/lessos/lessids/store"
+	"github.com/lessos/iam/base/role"
+	"github.com/lessos/iam/iamapi"
+	"github.com/lessos/iam/store"
 )
 
 type Service struct {
@@ -55,8 +55,8 @@ func _url_host(requrl string) string {
 
 func (c Service) LoginAuthAction() {
 
-	rsp := idsapi.ServiceLoginAuth{
-		RedirectUri: "/ids",
+	rsp := iamapi.ServiceLoginAuth{
+		RedirectUri: "/iam",
 	}
 
 	defer c.RenderJson(&rsp)
@@ -68,8 +68,8 @@ func (c Service) LoginAuthAction() {
 		return
 	}
 
-	var user idsapi.User
-	if obj := store.BtAgent.ObjectGet("/global/ids/user/" + utils.StringEncode16(uname, 8)); obj.Error == nil {
+	var user iamapi.User
+	if obj := store.BtAgent.ObjectGet("/global/iam/user/" + utils.StringEncode16(uname, 8)); obj.Error == nil {
 		obj.JsonDecode(&user)
 	}
 
@@ -88,7 +88,7 @@ func (c Service) LoginAuthAction() {
 		addr = c.Request.RemoteAddr[:addridx]
 	}
 
-	session := idsapi.UserSession{
+	session := iamapi.UserSession{
 		AccessToken:  utils.StringNewRand(24),
 		RefreshToken: utils.StringNewRand(24),
 		UserID:       user.Meta.ID,
@@ -102,7 +102,7 @@ func (c Service) LoginAuthAction() {
 		Expired:      types.MetaTimeNow().Add("+864000s"),
 	}
 
-	skey := fmt.Sprintf("/global/ids/session/%s/%s", session.UserID, session.AccessToken)
+	skey := fmt.Sprintf("/global/iam/session/%s/%s", session.UserID, session.AccessToken)
 
 	if sobj := store.BtAgent.ObjectSet(skey, session, &btapi.ObjectWriteOptions{
 		Ttl: 86400000,
@@ -134,7 +134,7 @@ func (c Service) LoginAuthAction() {
 	rsp.AccessToken = session.FullToken()
 
 	http.SetCookie(c.Response.Out, &http.Cookie{
-		Name:     "_ids_at",
+		Name:     "_iam_at",
 		Value:    session.FullToken(),
 		Path:     "/",
 		HttpOnly: true,
@@ -146,29 +146,29 @@ func (c Service) LoginAuthAction() {
 
 func (c Service) AuthAction() {
 
-	rsp := idsapi.UserSession{}
+	rsp := iamapi.UserSession{}
 
 	defer c.RenderJson(&rsp)
 
 	token := c.Params.Get("access_token")
 	if len(token) < 30 {
-		rsp.Error = &types.ErrorMeta{idsapi.ErrCodeUnauthorized, "Unauthorized"}
+		rsp.Error = &types.ErrorMeta{iamapi.ErrCodeUnauthorized, "Unauthorized"}
 		return
 	}
 	token = token[:8] + "/" + token[9:]
 
-	if obj := store.BtAgent.ObjectGet("/global/ids/session/" + token); obj.Error == nil {
+	if obj := store.BtAgent.ObjectGet("/global/iam/session/" + token); obj.Error == nil {
 		obj.JsonDecode(&rsp)
 	}
 
 	if rsp.AccessToken == "" {
-		rsp.Error = &types.ErrorMeta{idsapi.ErrCodeUnauthorized, "Unauthorized"}
+		rsp.Error = &types.ErrorMeta{iamapi.ErrCodeUnauthorized, "Unauthorized"}
 		return
 	}
 
 	//
 	if rsp.Expired < types.MetaTimeNow() {
-		rsp.Error = &types.ErrorMeta{idsapi.ErrCodeUnauthorized, "Unauthorized"}
+		rsp.Error = &types.ErrorMeta{iamapi.ErrCodeUnauthorized, "Unauthorized"}
 		return
 	}
 
@@ -178,7 +178,7 @@ func (c Service) AuthAction() {
 	// 	addr = c.Request.RemoteAddr[:addridx]
 	// }
 	// if addr != rsp.ClientAddr {
-	// 	rsp.Error = &types.ErrorMeta{idsapi.ErrCodeUnauthorized, "Unauthorized"}
+	// 	rsp.Error = &types.ErrorMeta{iamapi.ErrCodeUnauthorized, "Unauthorized"}
 	// 	return
 	// }
 
@@ -188,57 +188,57 @@ func (c Service) AuthAction() {
 func (c Service) AccessAllowedAction() {
 
 	var (
-		req idsapi.UserAccessEntry
-		rsp idsapi.UserAccessEntry
+		req iamapi.UserAccessEntry
+		rsp iamapi.UserAccessEntry
 	)
 
 	defer c.RenderJson(&rsp)
 
 	if len(c.Request.RawBody) == 0 {
-		rsp.Error = &types.ErrorMeta{idsapi.ErrCodeUnauthorized, "Unauthorized"}
+		rsp.Error = &types.ErrorMeta{iamapi.ErrCodeUnauthorized, "Unauthorized"}
 		return
 	}
 
 	// fmt.Println("AccessAllowedAction", string(c.Request.RawBody))
 
 	if err := c.Request.JsonDecode(&req); err != nil {
-		rsp.Error = &types.ErrorMeta{idsapi.ErrCodeUnauthorized, err.Error()}
+		rsp.Error = &types.ErrorMeta{iamapi.ErrCodeUnauthorized, err.Error()}
 		return
 	}
 	if len(req.AccessToken) < 30 {
-		rsp.Error = &types.ErrorMeta{idsapi.ErrCodeUnauthorized, "Unauthorized"}
+		rsp.Error = &types.ErrorMeta{iamapi.ErrCodeUnauthorized, "Unauthorized"}
 		return
 	}
 	req.AccessToken = req.AccessToken[:8] + "/" + req.AccessToken[9:]
 
-	var session idsapi.UserSession
-	if obj := store.BtAgent.ObjectGet("/global/ids/session/" + req.AccessToken); obj.Error == nil {
+	var session iamapi.UserSession
+	if obj := store.BtAgent.ObjectGet("/global/iam/session/" + req.AccessToken); obj.Error == nil {
 		obj.JsonDecode(&session)
 	}
 
 	if session.AccessToken == "" {
-		rsp.Error = &types.ErrorMeta{idsapi.ErrCodeUnauthorized, "Unauthorized"}
+		rsp.Error = &types.ErrorMeta{iamapi.ErrCodeUnauthorized, "Unauthorized"}
 		return
 	}
 
 	//
 	if session.Expired < types.MetaTimeNow() {
-		rsp.Error = &types.ErrorMeta{idsapi.ErrCodeUnauthorized, "Unauthorized"}
+		rsp.Error = &types.ErrorMeta{iamapi.ErrCodeUnauthorized, "Unauthorized"}
 		return
 	}
 
 	//
-	addr := "0.0.0.0"
-	if addridx := strings.Index(c.Request.RemoteAddr, ":"); addridx > 0 {
-		addr = c.Request.RemoteAddr[:addridx]
-	}
-	if addr != session.ClientAddr {
-		rsp.Error = &types.ErrorMeta{idsapi.ErrCodeUnauthorized, "Unauthorized"}
-		return
-	}
+	// addr := "0.0.0.0"
+	// if addridx := strings.Index(c.Request.RemoteAddr, ":"); addridx > 0 {
+	// 	addr = c.Request.RemoteAddr[:addridx]
+	// }
+	// if addr != session.ClientAddr {
+	// 	rsp.Error = &types.ErrorMeta{iamapi.ErrCodeUnauthorized, "Unauthorized"}
+	// 	return
+	// }
 
 	if !role.AccessAllowed(session.UserID, session.Roles, req.InstanceID, req.Privilege) {
-		rsp.Error = &types.ErrorMeta{idsapi.ErrCodeUnauthorized, "Unauthorized"}
+		rsp.Error = &types.ErrorMeta{iamapi.ErrCodeUnauthorized, "Unauthorized"}
 		return
 	}
 
@@ -255,9 +255,9 @@ func (c Service) PhotoAction() {
 
 		uid := c.Request.RequestPath[14:]
 
-		var profile idsapi.UserProfile
+		var profile iamapi.UserProfile
 
-		if obj := store.BtAgent.ObjectGet("/global/ids/user-profile/" + uid); obj.Error == nil {
+		if obj := store.BtAgent.ObjectGet("/global/iam/user-profile/" + uid); obj.Error == nil {
 			if err := obj.JsonDecode(&profile); err == nil && len(profile.Photo) > 50 {
 				photo = profile.Photo
 			}

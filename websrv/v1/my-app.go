@@ -1,4 +1,4 @@
-// Copyright 2015 lessOS.com, All rights reserved.
+// Copyright 2014-2016 iam Author, All rights reserved.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -20,9 +20,9 @@ import (
 	"github.com/lessos/lessgo/types"
 	"github.com/lessos/lessgo/utilx"
 
-	"github.com/lessos/lessids/idclient"
-	"github.com/lessos/lessids/idsapi"
-	"github.com/lessos/lessids/store"
+	"github.com/lessos/iam/iamapi"
+	"github.com/lessos/iam/iamclient"
+	"github.com/lessos/iam/store"
 )
 
 const (
@@ -35,22 +35,22 @@ type MyApp struct {
 
 func (c MyApp) InstListAction() {
 
-	ls := idsapi.AppInstanceList{}
+	ls := iamapi.AppInstanceList{}
 
 	defer c.RenderJson(&ls)
 
-	session, err := idclient.SessionInstance(c.Session)
+	session, err := iamclient.SessionInstance(c.Session)
 
 	if err != nil || !session.IsLogin() {
-		ls.Error = &types.ErrorMeta{idsapi.ErrCodeUnauthorized, "Access Denied"}
+		ls.Error = &types.ErrorMeta{iamapi.ErrCodeUnauthorized, "Access Denied"}
 		return
 	}
 
-	if objs := store.BtAgent.ObjectList("/global/ids/app-instance/"); objs.Error == nil {
+	if objs := store.BtAgent.ObjectList("/global/iam/app-instance/"); objs.Error == nil {
 
 		for _, obj := range objs.Items {
 
-			var inst idsapi.AppInstance
+			var inst iamapi.AppInstance
 			if err := obj.JsonDecode(&inst); err == nil {
 
 				if inst.Meta.UserID == session.UserID {
@@ -65,29 +65,29 @@ func (c MyApp) InstListAction() {
 
 func (c MyApp) InstEntryAction() {
 
-	set := idsapi.AppInstance{}
+	set := iamapi.AppInstance{}
 
 	defer c.RenderJson(&set)
 
-	session, err := idclient.SessionInstance(c.Session)
+	session, err := iamclient.SessionInstance(c.Session)
 
 	if err != nil || !session.IsLogin() {
-		set.Error = &types.ErrorMeta{idsapi.ErrCodeUnauthorized, "Access Denied"}
+		set.Error = &types.ErrorMeta{iamapi.ErrCodeUnauthorized, "Access Denied"}
 		return
 	}
 
-	if obj := store.BtAgent.ObjectGet("/global/ids/app-instance/" + c.Params.Get("instid")); obj.Error == nil {
+	if obj := store.BtAgent.ObjectGet("/global/iam/app-instance/" + c.Params.Get("instid")); obj.Error == nil {
 		obj.JsonDecode(&set)
 	}
 
 	if set.Meta.ID == "" {
-		set.Error = &types.ErrorMeta{idsapi.ErrCodeInvalidArgument, "App Instance Not Found"}
+		set.Error = &types.ErrorMeta{iamapi.ErrCodeInvalidArgument, "App Instance Not Found"}
 		return
 	}
 
 	if set.Meta.UserID != session.UserID {
-		set = idsapi.AppInstance{}
-		set.Error = &types.ErrorMeta{idsapi.ErrCodeUnauthorized, "Access Denied"}
+		set = iamapi.AppInstance{}
+		set.Error = &types.ErrorMeta{iamapi.ErrCodeUnauthorized, "Access Denied"}
 		return
 	}
 
@@ -96,36 +96,36 @@ func (c MyApp) InstEntryAction() {
 
 func (c MyApp) InstSetAction() {
 
-	set := idsapi.AppInstance{}
+	set := iamapi.AppInstance{}
 
 	defer c.RenderJson(&set)
 
-	session, err := idclient.SessionInstance(c.Session)
+	session, err := iamclient.SessionInstance(c.Session)
 
 	if err != nil || !session.IsLogin() {
-		set.Error = &types.ErrorMeta{idsapi.ErrCodeUnauthorized, "Access Denied"}
+		set.Error = &types.ErrorMeta{iamapi.ErrCodeUnauthorized, "Access Denied"}
 		return
 	}
 
 	if err := c.Request.JsonDecode(&set); err != nil || set.Meta.ID == "" {
-		set.Error = &types.ErrorMeta{idsapi.ErrCodeInvalidArgument, "InvalidArgument"}
+		set.Error = &types.ErrorMeta{iamapi.ErrCodeInvalidArgument, "InvalidArgument"}
 		return
 	}
 
-	var prev idsapi.AppInstance
+	var prev iamapi.AppInstance
 	var prevVersion uint64
-	if obj := store.BtAgent.ObjectGet("/global/ids/app-instance/" + set.Meta.ID); obj.Error == nil {
+	if obj := store.BtAgent.ObjectGet("/global/iam/app-instance/" + set.Meta.ID); obj.Error == nil {
 		obj.JsonDecode(&prev)
 		prevVersion = obj.Meta.Version
 	}
 
 	if prev.Meta.ID == "" || prevVersion < 1 {
-		set.Error = &types.ErrorMeta{idsapi.ErrCodeInvalidArgument, "App Instance Not Found"}
+		set.Error = &types.ErrorMeta{iamapi.ErrCodeInvalidArgument, "App Instance Not Found"}
 		return
 	}
 
 	if prev.Meta.UserID != session.UserID {
-		set.Error = &types.ErrorMeta{idsapi.ErrCodeUnauthorized, "Access Denied"}
+		set.Error = &types.ErrorMeta{iamapi.ErrCodeUnauthorized, "Access Denied"}
 		return
 	}
 
@@ -135,10 +135,10 @@ func (c MyApp) InstSetAction() {
 		prev.AppTitle = set.AppTitle
 		prev.Url = set.Url
 
-		if obj := store.BtAgent.ObjectSet("/global/ids/app-instance/"+set.Meta.ID, prev, &btapi.ObjectWriteOptions{
+		if obj := store.BtAgent.ObjectSet("/global/iam/app-instance/"+set.Meta.ID, prev, &btapi.ObjectWriteOptions{
 			PrevVersion: prevVersion,
 		}); obj.Error != nil {
-			set.Error = &types.ErrorMeta{idsapi.ErrCodeInternalError, obj.Error.Message}
+			set.Error = &types.ErrorMeta{iamapi.ErrCodeInternalError, obj.Error.Message}
 			return
 		}
 	}

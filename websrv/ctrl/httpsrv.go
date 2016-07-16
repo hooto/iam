@@ -1,4 +1,4 @@
-// Copyright 2015 lessOS.com, All rights reserved.
+// Copyright 2014-2016 iam Author, All rights reserved.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -15,13 +15,13 @@
 package ctrl
 
 import (
+	"github.com/lessos/iam/config"
 	"github.com/lessos/lessgo/httpsrv"
-	"github.com/lessos/lessids/config"
 )
 
 func NewModule() httpsrv.Module {
 
-	module := httpsrv.NewModule("ids_ws")
+	module := httpsrv.NewModule("iam_ws")
 
 	module.RouteSet(httpsrv.Route{
 		Type:       httpsrv.RouteTypeStatic,

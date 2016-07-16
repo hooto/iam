@@ -1,4 +1,4 @@
-// Copyright 2015 lessOS.com, All rights reserved.
+// Copyright 2014-2016 iam Author, All rights reserved.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -31,18 +31,18 @@ func init() {
 	BtAgent = btagent.ApiAgent{}
 
 	// BtAgent, _ = btagent.NewAgent(btapi.DataAccessConfig{
-	// 	PathPoint: "/sys/ids",
+	// 	PathPoint: "/sys/iam",
 	// })
 
 	go func() {
 
 		for {
 
-			BtAgent.ObjectSet("global/ids/ids-test", "test", &btapi.ObjectWriteOptions{
+			BtAgent.ObjectSet("global/iam/iam-test", "test", &btapi.ObjectWriteOptions{
 				Ttl: 3000,
 			})
 
-			if rs := BtAgent.ObjectGet("global/ids/ids-test"); rs.Data == "test" {
+			if rs := BtAgent.ObjectGet("global/iam/iam-test"); rs.Data == "test" {
 
 				in := InitNew{}
 				in.Init()

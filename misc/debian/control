@@ -1,10 +1,10 @@
-Source: lessids
+Source: lessiam
 Section: Applications
 Priority: optional
 Maintainer: Eryx <evorui@gmail.com>
 Version: x.y.z
-Homepage: https://github.com/eryx/lessids
-Package: lessids
+Homepage: https://github.com/eryx/lessiam
+Package: lessiam
 Architecture: amd64
 Depends: adduser
 Description: lessCompute Identity Server - Enterprise PaaS Middleware

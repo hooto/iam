@@ -11,31 +11,31 @@ type AppAuth struct {
 
 // func (c AppAuth) RegisterAction() {
 
-// 	set := idsapi.AppInstanceRegister{}
+// 	set := iamapi.AppInstanceRegister{}
 
 // 	defer c.RenderJson(&set)
 
 // 	if err := c.Request.JsonDecode(&set); err != nil {
-// 		set.Error = &types.ErrorMeta{idsapi.ErrCodeInvalidArgument, "Bad Argument"}
+// 		set.Error = &types.ErrorMeta{iamapi.ErrCodeInvalidArgument, "Bad Argument"}
 // 	}
 
 // 	if set.Meta.ID == "" {
 
-// 		set.Error = &types.ErrorMeta{idsapi.ErrCodeInvalidArgument, "Bad Argument"}
+// 		set.Error = &types.ErrorMeta{iamapi.ErrCodeInvalidArgument, "Bad Argument"}
 
 // 	} else {
 
 // 	}
 
 // 	// if !c.Session.AccessAllowed("sys.admin") {
-// 	//     set.Error = &types.ErrorMeta{idsapi.ErrCodeAccessDenied, "Unauthorized"}
+// 	//     set.Error = &types.ErrorMeta{iamapi.ErrCodeAccessDenied, "Unauthorized"}
 // 	//     return
 // 	// }
 
 // 	// sess, err := c.Session.SessionFetch()
 
 // 	var prevVersion uint64
-// 	var prev idsapi.AppInstance
+// 	var prev iamapi.AppInstance
 
 // 	if obj := store.BtAgent.ObjectGet(btapi.ObjectPut{
 // 		Meta: btapi.ObjectMeta{
@@ -69,12 +69,12 @@ type AppAuth struct {
 // 		Data:        setjs,
 // 		PrevVersion: prevVersion,
 // 	}); obj.Error != nil {
-// 		set.Error = &types.ErrorMeta{idsapi.ErrCodeInternalError, obj.Error.Message}
+// 		set.Error = &types.ErrorMeta{iamapi.ErrCodeInternalError, obj.Error.Message}
 // 		return
 // 	}
 
 // 	//
-// 	// q = base.NewQuerySet().From("ids_privilege").Limit(1000)
+// 	// q = base.NewQuerySet().From("iam_privilege").Limit(1000)
 // 	// q.Where.And("instance", req.Data.InstanceId)
 // 	// rs, err = dcn.Base.Query(q)
 // 	// if err != nil {
@@ -96,7 +96,7 @@ type AppAuth struct {
 // 	//  if !isExist {
 // 	//      frupd := base.NewFilter()
 // 	//      frupd.And("instance", req.Data.InstanceId).And("privilege", prePriv.Field("privilege").String())
-// 	//      dcn.Base.Delete("ids_privilege", frupd)
+// 	//      dcn.Base.Delete("iam_privilege", frupd)
 // 	//  }
 // 	// }
 
@@ -121,7 +121,7 @@ type AppAuth struct {
 // 	//          "created":   base.TimeNow("datetime"),
 // 	//      }
 
-// 	//      if _, err := dcn.Base.Insert("ids_privilege", item); err != nil {
+// 	//      if _, err := dcn.Base.Insert("iam_privilege", item); err != nil {
 // 	//          rsp.Status = 500
 // 	//          rsp.Message = "Can not write to database" + err.Error()
 // 	//          return
