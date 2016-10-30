@@ -32,10 +32,11 @@ const (
 )
 
 var (
-	ServiceUrl = "http://127.0.0.1:9528/iam"
-	sessions   = map[string]iamapi.UserSession{}
-	nextClean  = time.Now()
-	locker     sync.Mutex
+	ServiceUrl         = "http://127.0.0.1:9528/iam"
+	ServiceUrlFrontend = ""
+	sessions           = map[string]iamapi.UserSession{}
+	nextClean          = time.Now()
+	locker             sync.Mutex
 )
 
 func Expired(ttl int) time.Time {
@@ -66,12 +67,26 @@ func innerExpiredClean() {
 }
 
 func LoginUrl(backurl string) string {
+
+	if ServiceUrlFrontend != "" {
+		return ServiceUrlFrontend + "/service/login?continue=" + backurl
+	}
+
 	return ServiceUrl + "/service/login?continue=" + backurl
 }
 
 func AuthServiceUrl(client_id, redirect_uri, state string) string {
+
+	if ServiceUrlFrontend != "" {
+		return auth_service_url(ServiceUrlFrontend, client_id, redirect_uri, state)
+	}
+
+	return auth_service_url(ServiceUrl, client_id, redirect_uri, state)
+}
+
+func auth_service_url(service_url, client_id, redirect_uri, state string) string {
 	return fmt.Sprintf("%s/service/login?response_type=token&client_id=%s&redirect_uri=%s&state=%s",
-		ServiceUrl, client_id, redirect_uri, state)
+		service_url, client_id, redirect_uri, state)
 }
 
 func SessionAccessToken(s *httpsrv.Session) string {

@@ -105,7 +105,7 @@ func (c Service) LoginAuthAction() {
 	skey := fmt.Sprintf("/global/iam/session/%s/%s", session.UserID, session.AccessToken)
 
 	if sobj := store.BtAgent.ObjectSet(skey, session, &btapi.ObjectWriteOptions{
-		Ttl: 86400000,
+		Ttl: 864000000,
 	}); sobj.Error != nil {
 		rsp.Error = &types.ErrorMeta{"500", sobj.Error.Message}
 		return

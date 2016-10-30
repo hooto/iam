@@ -56,21 +56,21 @@ func (c SysConfig) GeneralAction() {
 
 			switch obj.Meta.Name {
 			case "service_name", "webui_banner_title", "user_reg_disable":
-				ls.Items = ls.Items.Insert(obj.Meta.Name, obj.Data)
+				ls.Items.Set(obj.Meta.Name, obj.Data)
 			}
 		}
 	}
 
-	if val, ok := ls.Items.Fetch("service_name"); val == "" || !ok {
-		ls.Items = ls.Items.Insert("service_name", config.Config.ServiceName)
+	if val, ok := ls.Items.Get("service_name"); val.String() == "" || !ok {
+		ls.Items.Set("service_name", config.Config.ServiceName)
 	}
 
-	if val, ok := ls.Items.Fetch("webui_banner_title"); val == "" || !ok {
-		ls.Items = ls.Items.Insert("webui_banner_title", config.Config.WebUiBannerTitle)
+	if val, ok := ls.Items.Get("webui_banner_title"); val.String() == "" || !ok {
+		ls.Items.Set("webui_banner_title", config.Config.WebUiBannerTitle)
 	}
 
-	if val, ok := ls.Items.Fetch("user_reg_disable"); !ok || val == "" {
-		ls.Items = ls.Items.Insert("user_reg_disable", "0")
+	if val, ok := ls.Items.Get("user_reg_disable"); !ok || val.String() == "" {
+		ls.Items.Set("user_reg_disable", "0")
 	}
 
 	ls.Kind = "SysConfigList"
@@ -96,7 +96,7 @@ func (c SysConfig) GeneralSetAction() {
 
 		mat := false
 		for _, vk := range cfgGenKeys {
-			if vk == v.Key {
+			if vk == v.Name {
 				mat = true
 				break
 			}
@@ -107,11 +107,11 @@ func (c SysConfig) GeneralSetAction() {
 
 		var prevVersion uint64
 
-		if obj := store.BtAgent.ObjectGet("/global/iam/sys-config/" + v.Key); obj.Error == nil {
+		if obj := store.BtAgent.ObjectGet("/global/iam/sys-config/" + v.Name); obj.Error == nil {
 			prevVersion = obj.Meta.Version
 		}
 
-		if obj := store.BtAgent.ObjectSet("/global/iam/sys-config/"+v.Key, v.Val, &btapi.ObjectWriteOptions{
+		if obj := store.BtAgent.ObjectSet("/global/iam/sys-config/"+v.Name, v.Value, &btapi.ObjectWriteOptions{
 			PrevVersion: prevVersion,
 		}); obj.Error != nil {
 			sets.Error = &types.ErrorMeta{"500", obj.Error.Message}
@@ -137,11 +137,11 @@ func (c SysConfig) MailerAction() {
 
 	if obj := store.BtAgent.ObjectGet("/global/iam/sys-config/mailer"); obj.Error == nil {
 
-		ls.Items = ls.Items.Insert("mailer", obj.Data)
+		ls.Items.Set("mailer", obj.Data)
 	}
 
-	if val, ok := ls.Items.Fetch("mailer"); val == "" || !ok {
-		ls.Items = ls.Items.Insert("mailer", "{}")
+	if val, ok := ls.Items.Get("mailer"); val.String() == "" || !ok {
+		ls.Items.Set("mailer", "{}")
 	}
 
 	ls.Kind = "SysConfigList"

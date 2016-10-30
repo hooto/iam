@@ -188,7 +188,7 @@ type AppInstanceRegister struct {
 
 type SysConfigList struct {
 	types.TypeMeta `json:",inline"`
-	Items          types.LabelListMeta `json:"items,omitempty"`
+	Items          types.Labels `json:"items,omitempty"`
 }
 
 type SysConfigMailer struct {
