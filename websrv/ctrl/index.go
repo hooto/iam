@@ -1,4 +1,4 @@
-// Copyright 2014-2016 iam Author, All rights reserved.
+// Copyright 2014 lessos Authors, All rights reserved.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -15,8 +15,8 @@
 package ctrl
 
 import (
-	"github.com/lessos/iam/config"
-	"github.com/lessos/iam/iamclient"
+	"code.hooto.com/lessos/iam/config"
+	"code.hooto.com/lessos/iam/iamclient"
 	"github.com/lessos/lessgo/httpsrv"
 )
 
@@ -31,7 +31,7 @@ func (c Index) IndexAction() {
 		return
 	}
 
-	if c.Params.Get("access_token") != "" {
+	if c.Params.Get(iamclient.AccessTokenKey) != "" {
 		c.Redirect("/iam")
 		return
 	}

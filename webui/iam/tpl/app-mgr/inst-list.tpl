@@ -60,7 +60,7 @@
       <td>{[=l4i.TimeParseFormat(v.meta.created, "Y-m-d")]}</td>
       <td>{[=l4i.TimeParseFormat(v.meta.updated, "Y-m-d")]}</td>
       <td align="right">
-        <a href="#app-mgr/inst-set" onclick="iamappmgr.InstSetForm('{[=v.meta.id]}')" class="btn btn-default btn-xs">Setting</a>
+        <a href="#app-mgr/inst-set" onclick="iamAppMgr.InstSetForm('{[=v.meta.id]}')" class="btn btn-default btn-xs">Setting</a>
       </td>
     </tr>
 {[~]}

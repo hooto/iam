@@ -7,7 +7,7 @@ import (
 
 	"github.com/lessos/lessgo/httpsrv"
 
-	"github.com/lessos/iam/iamapi"
+	"code.hooto.com/lessos/iam/iamapi"
 )
 
 var (

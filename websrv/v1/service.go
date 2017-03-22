@@ -1,4 +1,4 @@
-// Copyright 2014-2016 iam Author, All rights reserved.
+// Copyright 2014 lessos Authors, All rights reserved.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -22,16 +22,15 @@ import (
 	"strings"
 	"time"
 
-	"github.com/lessos/bigtree/btapi"
-
+	"code.hooto.com/lynkdb/iomix/skv"
 	"github.com/lessos/lessgo/httpsrv"
 	"github.com/lessos/lessgo/pass"
 	"github.com/lessos/lessgo/types"
 	"github.com/lessos/lessgo/utils"
 
-	"github.com/lessos/iam/base/role"
-	"github.com/lessos/iam/iamapi"
-	"github.com/lessos/iam/store"
+	"code.hooto.com/lessos/iam/base/role"
+	"code.hooto.com/lessos/iam/iamapi"
+	"code.hooto.com/lessos/iam/store"
 )
 
 type Service struct {
@@ -69,8 +68,8 @@ func (c Service) LoginAuthAction() {
 	}
 
 	var user iamapi.User
-	if obj := store.BtAgent.ObjectGet("/global/iam/user/" + utils.StringEncode16(uname, 8)); obj.Error == nil {
-		obj.JsonDecode(&user)
+	if obj := store.PvGet("user/" + utils.StringEncode16(uname, 8)); obj.OK() {
+		obj.Decode(&user)
 	}
 
 	if user.Meta.Name != uname {
@@ -102,12 +101,12 @@ func (c Service) LoginAuthAction() {
 		Expired:      types.MetaTimeNow().Add("+864000s"),
 	}
 
-	skey := fmt.Sprintf("/global/iam/session/%s/%s", session.UserID, session.AccessToken)
+	skey := fmt.Sprintf("session/%s/%s", session.UserID, session.AccessToken)
 
-	if sobj := store.BtAgent.ObjectSet(skey, session, &btapi.ObjectWriteOptions{
+	if sobj := store.PvPut(skey, session, &skv.PvWriteOptions{
 		Ttl: 864000000,
-	}); sobj.Error != nil {
-		rsp.Error = &types.ErrorMeta{"500", sobj.Error.Message}
+	}); !sobj.OK() {
+		rsp.Error = &types.ErrorMeta{"500", sobj.Bytex().String()}
 		return
 	}
 
@@ -123,7 +122,7 @@ func (c Service) LoginAuthAction() {
 				rsp.RedirectUri += "&"
 			}
 
-			rsp.RedirectUri += "access_token=" + session.FullToken() + "&expires_in=864000"
+			rsp.RedirectUri += iamapi.AccessTokenKey + "=" + session.FullToken() + "&expires_in=864000"
 
 			if c.Params.Get("state") != "" {
 				rsp.RedirectUri += "&state=" + c.Params.Get("state")
@@ -150,15 +149,15 @@ func (c Service) AuthAction() {
 
 	defer c.RenderJson(&rsp)
 
-	token := c.Params.Get("access_token")
+	token := c.Params.Get(iamapi.AccessTokenKey)
 	if len(token) < 30 {
 		rsp.Error = &types.ErrorMeta{iamapi.ErrCodeUnauthorized, "Unauthorized"}
 		return
 	}
 	token = token[:8] + "/" + token[9:]
 
-	if obj := store.BtAgent.ObjectGet("/global/iam/session/" + token); obj.Error == nil {
-		obj.JsonDecode(&rsp)
+	if obj := store.PvGet("session/" + token); obj.OK() {
+		obj.Decode(&rsp)
 	}
 
 	if rsp.AccessToken == "" {
@@ -212,8 +211,8 @@ func (c Service) AccessAllowedAction() {
 	req.AccessToken = req.AccessToken[:8] + "/" + req.AccessToken[9:]
 
 	var session iamapi.UserSession
-	if obj := store.BtAgent.ObjectGet("/global/iam/session/" + req.AccessToken); obj.Error == nil {
-		obj.JsonDecode(&session)
+	if obj := store.PvGet("session/" + req.AccessToken); obj.OK() {
+		obj.Decode(&session)
 	}
 
 	if session.AccessToken == "" {
@@ -239,6 +238,7 @@ func (c Service) AccessAllowedAction() {
 
 	if !role.AccessAllowed(session.UserID, session.Roles, req.InstanceID, req.Privilege) {
 		rsp.Error = &types.ErrorMeta{iamapi.ErrCodeUnauthorized, "Unauthorized"}
+
 		return
 	}
 
@@ -257,8 +257,8 @@ func (c Service) PhotoAction() {
 
 		var profile iamapi.UserProfile
 
-		if obj := store.BtAgent.ObjectGet("/global/iam/user-profile/" + uid); obj.Error == nil {
-			if err := obj.JsonDecode(&profile); err == nil && len(profile.Photo) > 50 {
+		if obj := store.PvGet("user-profile/" + uid); obj.OK() {
+			if err := obj.Decode(&profile); err == nil && len(profile.Photo) > 50 {
 				photo = profile.Photo
 			}
 		}

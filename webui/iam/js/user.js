@@ -1,13 +1,13 @@
-var iamuser = {
+var iamUser = {
 
 }
 
-iamuser.Init = function()
+iamUser.Init = function()
 {
-    l4i.UrlEventRegister("user/overview", iamuser.Overview);
+    l4i.UrlEventRegister("user/overview", iamUser.Overview);
 }
 
-iamuser.Overview = function()
+iamUser.Overview = function()
 {
     // console.log("overview");
     seajs.use(["ep"], function(EventProxy) {
@@ -35,7 +35,7 @@ iamuser.Overview = function()
     });
 }
 
-iamuser.PassSetForm = function()
+iamUser.PassSetForm = function()
 {
     iam.TplCmd("user/pass-set", {
 
@@ -51,7 +51,7 @@ iamuser.PassSetForm = function()
                     onclick : "l4iModal.Close()",
                 }, {
                     title : "Save",
-                    onclick : "iamuser.PassSetCommit()",
+                    onclick : "iamUser.PassSetCommit()",
                     style   : "btn btn-primary",
                 }],
             });
@@ -59,7 +59,7 @@ iamuser.PassSetForm = function()
     });    
 }
 
-iamuser.PassSetCommit = function()
+iamUser.PassSetCommit = function()
 {
     var form = $("#iam-user-pass-set");
     
@@ -95,7 +95,7 @@ iamuser.PassSetCommit = function()
 }
 
 
-iamuser.EmailSetForm = function()
+iamUser.EmailSetForm = function()
 {
     seajs.use(["ep"], function(EventProxy) {
 
@@ -114,7 +114,7 @@ iamuser.EmailSetForm = function()
                     onclick : "l4iModal.Close()",
                 }, {
                     title : "Save",
-                    onclick : "iamuser.EmailSetCommit()",
+                    onclick : "iamUser.EmailSetCommit()",
                     style   : "btn btn-primary",
                 }],
             });
@@ -134,7 +134,7 @@ iamuser.EmailSetForm = function()
     });
 }
 
-iamuser.EmailSetCommit = function()
+iamUser.EmailSetCommit = function()
 {
     var form = $("#iam-user-email-set");
     
@@ -160,14 +160,14 @@ iamuser.EmailSetCommit = function()
 
             window.setTimeout(function(){
                 l4iModal.Close();
-                iamuser.Overview();
+                iamUser.Overview();
             }, 1000);
         },
     });
 }
 
 
-iamuser.ProfileSetForm = function()
+iamUser.ProfileSetForm = function()
 {
     seajs.use(["ep"], function(EventProxy) {
 
@@ -196,7 +196,7 @@ iamuser.ProfileSetForm = function()
                     onclick : "l4iModal.Close()",
                 }, {
                     title : "Save",
-                    onclick : "iamuser.ProfileSetCommit()",
+                    onclick : "iamUser.ProfileSetCommit()",
                     style   : "btn btn-primary",
                 }],
             });
@@ -216,7 +216,7 @@ iamuser.ProfileSetForm = function()
     });
 }
 
-iamuser.ProfileSetCommit = function()
+iamUser.ProfileSetCommit = function()
 {
     var form = $("#iam-user-profile-set");
     
@@ -243,13 +243,13 @@ iamuser.ProfileSetCommit = function()
 
             window.setTimeout(function(){
                 l4iModal.Close();
-                iamuser.Overview();
+                iamUser.Overview();
             }, 1000);
         },
     });
 }
 
-iamuser.PhotoSetForm = function(uuid)
+iamUser.PhotoSetForm = function(uuid)
 {
     iam.TplCmd("user/photo-set", {
 
@@ -266,7 +266,7 @@ iamuser.PhotoSetForm = function(uuid)
                     onclick : "l4iModal.Close()",
                 }, {
                     title : "Save",
-                    onclick : "iamuser.PhotoSetCommit()",
+                    onclick : "iamUser.PhotoSetCommit()",
                     style   : "btn btn-primary",
                 }],
             });
@@ -274,7 +274,7 @@ iamuser.PhotoSetForm = function(uuid)
     });
 }
 
-iamuser.PhotoSetCommit = function()
+iamUser.PhotoSetCommit = function()
 {
     var files = document.getElementById('iam-user-photo-set-file').files;
     
@@ -319,7 +319,7 @@ iamuser.PhotoSetCommit = function()
 
                         window.setTimeout(function(){
                             l4iModal.Close();
-                            iamuser.Overview();
+                            iamUser.Overview();
                         }, 1000);
                     },
                 });
@@ -331,7 +331,7 @@ iamuser.PhotoSetCommit = function()
     }
 }
 
-iamuser.SignOut = function()
+iamUser.SignOut = function()
 {
     // l4iCookie.Del("access_token");
     window.setTimeout(function(){    

@@ -162,7 +162,7 @@ body {
     <input type="hidden" name="redirect_uri" value="{{.redirect_uri}}">
     <input type="hidden" name="state" value="{{.state}}">
 
-    <img class="iam-user-ico-default"  src="/iam/~/iam/img/user-default.png">
+    <img class="iam-user-ico-default"  src="/iam/~/iam/img/user-default.svg">
 
     <div id="iam-login-form-alert" class="alert ilf-group {{if eq .alert_msg nil}}hide{{end}}">{{.alert_msg}}</div>
 

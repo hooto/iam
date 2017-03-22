@@ -1,4 +1,4 @@
-// Copyright 2014-2016 iam Author, All rights reserved.
+// Copyright 2014 lessos Authors, All rights reserved.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -15,18 +15,11 @@
 package config
 
 import (
-	"encoding/json"
 	"fmt"
-	"io/ioutil"
 	"os"
 	"path/filepath"
-	"regexp"
-	"strings"
-	"time"
 
-	"github.com/lessos/iam/iamapi"
-	"github.com/lessos/iam/store"
-	"github.com/lessos/lessgo/net/email"
+	"github.com/lessos/lessgo/encoding/json"
 )
 
 const (
@@ -40,114 +33,52 @@ var (
 	Prefix                   = "/opt/lessos/iam"
 	UserRegistrationDisabled = false
 	Config                   = ConfigCommon{
+		InstanceID:       "",
 		ServiceName:      "lessOS IAM Service",
 		WebUiBannerTitle: "Account Center",
 	}
 )
 
 type ConfigCommon struct {
-	Port             uint16 `json:"port"`
+	InstanceID       string `json:"instance_id"`
+	HttpPort         uint16 `json:"http_port,omitempty"`
 	ServiceName      string `json:"service_name"`
 	WebUiBannerTitle string
-	// Mailer           iamapi.SysConfigMailer `json:"mailer"`
-	// BtData btapi.DataAccessConfig `json:"btdata,omitempty"`
 }
 
 func Init(prefix string) error {
 
 	if prefix == "" {
-		prefix, err = filepath.Abs(filepath.Dir(os.Args[0]) + "/..")
-		if err == nil {
+		if prefix, err = filepath.Abs(filepath.Dir(os.Args[0]) + "/.."); err == nil {
 			Prefix = prefix
 		}
 	}
-	reg, _ := regexp.Compile("/+")
-	Prefix = "/" + strings.Trim(reg.ReplaceAllString(Prefix, "/"), "/")
+	Prefix = filepath.Clean(Prefix)
 
-	file := Prefix + "/etc/main.json"
+	file := Prefix + "/etc/iam_config.json"
 	if _, err := os.Stat(file); err != nil && os.IsNotExist(err) {
-		file = Prefix + "/etc/main.json.dev"
+		file = Prefix + "/etc/iam_config.json.dev"
 	}
 	if _, err := os.Stat(file); err != nil && os.IsNotExist(err) {
-		return fmt.Errorf("Error: config file is not exists %s", Prefix+"/etc/main.json")
+		return fmt.Errorf("Error: config file is not exists %s", Prefix+"/etc/iam_config.json")
 	}
 
-	fp, err := os.Open(file)
-	if err != nil {
-		return fmt.Errorf("Error: Can not open (%s)", file)
-	}
-	defer fp.Close()
-
-	cfgstr, err := ioutil.ReadAll(fp)
-	if err != nil {
-		return fmt.Errorf("Error: Can not read (%s)", file)
+	if Config.InstanceID == "" {
+		return fmt.Errorf("No InstanceID Found")
 	}
 
-	if err = json.Unmarshal(cfgstr, &Config); err != nil {
-		return fmt.Errorf("Error: config file invalid. (%s)", err.Error())
+	if err := json.DecodeFile(file, &Config); err != nil {
+		return err
 	}
-
-	InitConfig()
 
 	return InitConfig()
 }
 
 func InitConfig() error {
 
-	go func() {
-
-		for {
-
-			if store.Ready {
-				Config.Refresh()
-				break
-			}
-
-			time.Sleep(1e9)
-		}
-	}()
+	if Config.InstanceID == "" {
+		return fmt.Errorf("No InstanceID Found")
+	}
 
 	return nil
-}
-
-func (c *ConfigCommon) Refresh() {
-
-	//
-	var mailer iamapi.SysConfigMailer
-	if obj := store.BtAgent.ObjectGet("/global/iam/sys-config/mailer"); obj.Error == nil {
-
-		obj.JsonDecode(&mailer)
-
-		if mailer.SmtpHost != "" {
-
-			email.MailerRegister("def",
-				mailer.SmtpHost,
-				mailer.SmtpPort,
-				mailer.SmtpUser,
-				mailer.SmtpPass)
-		}
-	}
-
-	if obj := store.BtAgent.ObjectGet("/global/iam/sys-config/service_name"); obj.Error == nil {
-
-		if obj.Data != "" {
-			c.ServiceName = obj.Data
-		}
-	}
-
-	if obj := store.BtAgent.ObjectGet("/global/iam/sys-config/webui_banner_title"); obj.Error == nil {
-
-		if obj.Data != "" {
-			c.WebUiBannerTitle = obj.Data
-		}
-	}
-
-	if obj := store.BtAgent.ObjectGet("/global/iam/sys-config/user_reg_disable"); obj.Error == nil {
-
-		if obj.Data == "1" {
-			UserRegistrationDisabled = true
-		} else {
-			UserRegistrationDisabled = false
-		}
-	}
 }

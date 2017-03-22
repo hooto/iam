@@ -1,4 +1,4 @@
-// Copyright 2014-2016 iam Author, All rights reserved.
+// Copyright 2014 lessos Authors, All rights reserved.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -15,12 +15,12 @@
 package v1
 
 import (
-	"github.com/lessos/bigtree/btapi"
-	"github.com/lessos/iam/iamapi"
-	"github.com/lessos/iam/store"
+	"code.hooto.com/lessos/iam/iamapi"
+	"code.hooto.com/lessos/iam/store"
+	"code.hooto.com/lynkdb/iomix/skv"
+	"github.com/lessos/lessgo/crypto/idhash"
 	"github.com/lessos/lessgo/httpsrv"
 	"github.com/lessos/lessgo/types"
-	"github.com/lessos/lessgo/utils"
 	"github.com/lessos/lessgo/utilx"
 )
 
@@ -41,8 +41,8 @@ func (c AppAuth) InfoAction() {
 	}
 
 	var inst iamapi.AppInstance
-	if obj := store.BtAgent.ObjectGet("/global/iam/app-instance/" + instid); obj.Error == nil {
-		obj.JsonDecode(&inst)
+	if obj := store.PvGet("app-instance/" + instid); obj.OK() {
+		obj.Decode(&inst)
 	}
 
 	if inst.Meta.ID == instid {
@@ -81,8 +81,8 @@ func (c AppAuth) RegisterAction() {
 	set.AccessToken = set.AccessToken[:8] + "/" + set.AccessToken[9:]
 
 	var session iamapi.UserSession
-	if obj := store.BtAgent.ObjectGet("/global/iam/session/" + set.AccessToken); obj.Error == nil {
-		obj.JsonDecode(&session)
+	if obj := store.PvGet("session/" + set.AccessToken); obj.OK() {
+		obj.Decode(&session)
 	}
 
 	if !session.IsLogin() {
@@ -91,7 +91,7 @@ func (c AppAuth) RegisterAction() {
 	}
 
 	if set.Instance.Meta.ID == "" {
-		set.Instance.Meta.ID = utils.StringNewRand(12)
+		set.Instance.Meta.ID = idhash.RandHexString(16)
 	}
 
 	// if !c.Session.AccessAllowed("sys.admin") {
@@ -106,9 +106,9 @@ func (c AppAuth) RegisterAction() {
 		prev        iamapi.AppInstance
 	)
 
-	if obj := store.BtAgent.ObjectGet("/global/iam/app-instance/" + set.Instance.Meta.ID); obj.Error == nil {
-		obj.JsonDecode(&prev)
-		prevVersion = obj.Meta.Version
+	if obj := store.PvGet("app-instance/" + set.Instance.Meta.ID); obj.OK() {
+		obj.Decode(&prev)
+		prevVersion = obj.Meta().Version
 	}
 
 	if prev.Meta.ID == "" {
@@ -130,10 +130,10 @@ func (c AppAuth) RegisterAction() {
 		set.Instance.Status = prev.Status
 	}
 
-	if obj := store.BtAgent.ObjectSet("/global/iam/app-instance/"+set.Instance.Meta.ID, set.Instance, &btapi.ObjectWriteOptions{
+	if obj := store.PvPut("app-instance/"+set.Instance.Meta.ID, set.Instance, &skv.PvWriteOptions{
 		PrevVersion: prevVersion,
-	}); obj.Error != nil {
-		set.Error = &types.ErrorMeta{iamapi.ErrCodeInternalError, obj.Error.Message}
+	}); !obj.OK() {
+		set.Error = &types.ErrorMeta{iamapi.ErrCodeInternalError, obj.Bytex().String()}
 		return
 	}
 

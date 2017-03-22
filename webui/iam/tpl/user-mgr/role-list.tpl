@@ -17,7 +17,7 @@
     <td align="right">
       <button type="button" 
         class="btn btn-primary btn-sm" 
-        onclick="iamusrmgr.RoleSetForm()">
+        onclick="iamUserMgr.RoleSetForm()">
         New Role
       </button>
     </td>
@@ -53,7 +53,7 @@
       <td>{[=l4i.TimeParseFormat(v.meta.created, "Y-m-d")]}</td>
       <td>{[=l4i.TimeParseFormat(v.meta.updated, "Y-m-d")]}</td>
       <td align="right">
-        <a href="#user-mgr/role-set" onclick="iamusrmgr.RoleSetForm('{[=v.meta.id]}')" class="btn btn-default btn-xs">Setting</a>
+        <a href="#user-mgr/role-set" onclick="iamUserMgr.RoleSetForm('{[=v.meta.id]}')" class="btn btn-default btn-xs">Setting</a>
       </td>
     </tr>
 {[~]}

@@ -1,4 +1,4 @@
-// Copyright 2014-2016 iam Author, All rights reserved.
+// Copyright 2014 lessos Authors, All rights reserved.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -21,18 +21,18 @@ import (
 	"image/png"
 	"strings"
 
+	"code.hooto.com/lynkdb/iomix/skv"
 	"github.com/eryx/imaging"
-	"github.com/lessos/bigtree/btapi"
 	"github.com/lessos/lessgo/httpsrv"
 	"github.com/lessos/lessgo/pass"
 	"github.com/lessos/lessgo/types"
 	"github.com/lessos/lessgo/utilx"
 
-	"github.com/lessos/iam/base/login"
-	"github.com/lessos/iam/base/profile"
-	"github.com/lessos/iam/iamapi"
-	"github.com/lessos/iam/iamclient"
-	"github.com/lessos/iam/store"
+	"code.hooto.com/lessos/iam/base/login"
+	"code.hooto.com/lessos/iam/base/profile"
+	"code.hooto.com/lessos/iam/iamapi"
+	"code.hooto.com/lessos/iam/iamclient"
+	"code.hooto.com/lessos/iam/store"
 )
 
 type User struct {
@@ -53,21 +53,21 @@ func (c User) ProfileAction() {
 	}
 
 	// profile
-	if obj := store.BtAgent.ObjectGet("/global/iam/user-profile/" + session.UserID); obj.Error == nil {
-		obj.JsonDecode(&rsp)
+	if obj := store.PvGet("user-profile/" + session.UserID); obj.OK() {
+		obj.Decode(&rsp)
 	}
 
 	if rsp.Name == "" {
 
 		rsp.Name = session.Name
 
-		store.BtAgent.ObjectSet("/global/iam/user-profile/"+session.UserID, rsp, nil)
+		store.PvPut("user-profile/"+session.UserID, rsp, nil)
 	}
 
 	// login
 	var user iamapi.User
-	if obj := store.BtAgent.ObjectGet("/global/iam/user/" + session.UserID); obj.Error == nil {
-		obj.JsonDecode(&user)
+	if obj := store.PvGet("user/" + session.UserID); obj.OK() {
+		obj.Decode(&user)
 	}
 
 	if user.Meta.ID != session.UserID {
@@ -112,9 +112,9 @@ func (c User) ProfileSetAction() {
 
 	// login
 	var user iamapi.User
-	uobj := store.BtAgent.ObjectGet("/global/iam/user/" + session.UserID)
-	if uobj.Error == nil {
-		uobj.JsonDecode(&user)
+	uobj := store.PvGet("user/" + session.UserID)
+	if uobj.OK() {
+		uobj.Decode(&user)
 	}
 
 	if user.Meta.ID != session.UserID {
@@ -123,23 +123,23 @@ func (c User) ProfileSetAction() {
 	}
 	user.Name = req.Name
 
-	store.BtAgent.ObjectSet("/global/iam/user/"+session.UserID, user, &btapi.ObjectWriteOptions{
-		PrevVersion: uobj.Meta.Version,
+	store.PvPut("user/"+session.UserID, user, &skv.PvWriteOptions{
+		PrevVersion: uobj.Meta().Version,
 	})
 
 	// profile
 	var profile iamapi.UserProfile
-	pobj := store.BtAgent.ObjectGet("/global/iam/user-profile/" + session.UserID)
-	if pobj.Error == nil {
-		pobj.JsonDecode(&profile)
+	pobj := store.PvGet("user-profile/" + session.UserID)
+	if pobj.OK() {
+		pobj.Decode(&profile)
 	}
 
 	profile.Name = req.Name
 	profile.Birthday = req.Birthday
 	profile.About = req.About
 
-	store.BtAgent.ObjectSet("/global/iam/user-profile/"+session.UserID, profile, &btapi.ObjectWriteOptions{
-		PrevVersion: pobj.Meta.Version,
+	store.PvPut("user-profile/"+session.UserID, profile, &skv.PvWriteOptions{
+		PrevVersion: pobj.Meta().Version,
 	})
 
 	rsp.Kind = "UserProfile"
@@ -172,9 +172,9 @@ func (c User) PassSetAction() {
 	}
 
 	var user iamapi.User
-	uobj := store.BtAgent.ObjectGet("/global/iam/user/" + session.UserID)
-	if uobj.Error == nil {
-		uobj.JsonDecode(&user)
+	uobj := store.PvGet("user/" + session.UserID)
+	if uobj.OK() {
+		uobj.Decode(&user)
 	}
 
 	if user.Meta.ID != session.UserID {
@@ -190,8 +190,8 @@ func (c User) PassSetAction() {
 	user.Meta.Updated = utilx.TimeNow("atom")
 	user.Auth, _ = pass.HashDefault(req.NewPassword)
 
-	store.BtAgent.ObjectSet("/global/iam/user/"+user.Meta.ID, user, &btapi.ObjectWriteOptions{
-		PrevVersion: uobj.Meta.Version,
+	store.PvPut("user/"+user.Meta.ID, user, &skv.PvWriteOptions{
+		PrevVersion: uobj.Meta().Version,
 	})
 
 	rsp.Kind = "UserPassword"
@@ -226,9 +226,9 @@ func (c User) EmailSetAction() {
 	}
 
 	var user iamapi.User
-	uobj := store.BtAgent.ObjectGet("/global/iam/user/" + session.UserID)
-	if uobj.Error == nil {
-		uobj.JsonDecode(&user)
+	uobj := store.PvGet("user/" + session.UserID)
+	if uobj.OK() {
+		uobj.Decode(&user)
 	}
 
 	if user.Meta.ID != session.UserID {
@@ -244,8 +244,8 @@ func (c User) EmailSetAction() {
 	user.Email = req.Email
 	user.Meta.Updated = utilx.TimeNow("atom")
 
-	store.BtAgent.ObjectSet("/global/iam/user/"+user.Meta.ID, user, &btapi.ObjectWriteOptions{
-		PrevVersion: uobj.Meta.Version,
+	store.PvPut("user/"+user.Meta.ID, user, &skv.PvWriteOptions{
+		PrevVersion: uobj.Meta().Version,
 	})
 
 	rsp.Kind = "UserEmail"
@@ -296,16 +296,16 @@ func (c User) PhotoSetAction() {
 
 	// profile
 	var profile iamapi.UserProfile
-	pobj := store.BtAgent.ObjectGet("/global/iam/user-profile/" + session.UserID)
-	if pobj.Error == nil {
-		pobj.JsonDecode(&profile)
+	pobj := store.PvGet("user-profile/" + session.UserID)
+	if pobj.OK() {
+		pobj.Decode(&profile)
 	}
 
 	profile.Photo = "data:image/png;base64," + imgphoto
 	profile.PhotoSource = req.Data
 
-	store.BtAgent.ObjectSet("/global/iam/user-profile/"+session.UserID, profile, &btapi.ObjectWriteOptions{
-		PrevVersion: pobj.Meta.Version,
+	store.PvPut("user-profile/"+session.UserID, profile, &skv.PvWriteOptions{
+		PrevVersion: pobj.Meta().Version,
 	})
 
 	rsp.Kind = "UserPhoto"
@@ -324,12 +324,14 @@ func (c User) RoleListAction() {
 		return
 	}
 
-	if objs := store.BtAgent.ObjectList("/global/iam/role/"); objs.Error == nil {
+	// TODO page
+	if objs := store.PvScan("role/", "", "", 1000); objs.OK() {
 
-		for _, obj := range objs.Items {
+		rss := objs.KvList()
+		for _, obj := range rss {
 
 			var role iamapi.UserRole
-			if err := obj.JsonDecode(&role); err == nil {
+			if err := obj.Decode(&role); err == nil {
 
 				if role.IdxID <= 1000 || role.Meta.UserID == session.UserID {
 					ls.Items = append(ls.Items, role)

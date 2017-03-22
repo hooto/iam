@@ -1,4 +1,4 @@
-// Copyright 2014-2016 iam Author, All rights reserved.
+// Copyright 2014 lessos Authors, All rights reserved.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -15,14 +15,15 @@
 package v1
 
 import (
-	"github.com/lessos/bigtree/btapi"
+	"code.hooto.com/lynkdb/iomix/skv"
 	"github.com/lessos/lessgo/types"
 	"github.com/lessos/lessgo/utils"
 	"github.com/lessos/lessgo/utilx"
 
-	"github.com/lessos/iam/iamapi"
-	"github.com/lessos/iam/iamclient"
-	"github.com/lessos/iam/store"
+	"code.hooto.com/lessos/iam/config"
+	"code.hooto.com/lessos/iam/iamapi"
+	"code.hooto.com/lessos/iam/iamclient"
+	"code.hooto.com/lessos/iam/store"
 )
 
 func (c UserMgr) RoleListAction() {
@@ -31,17 +32,18 @@ func (c UserMgr) RoleListAction() {
 
 	defer c.RenderJson(&ls)
 
-	if !iamclient.SessionAccessAllowed(c.Session, "user.admin", "df085c6dc6ff") {
+	if !iamclient.SessionAccessAllowed(c.Session, "user.admin", config.Config.InstanceID) {
 		ls.Error = &types.ErrorMeta{iamapi.ErrCodeAccessDenied, "Access Denied"}
 		return
 	}
 
-	if objs := store.BtAgent.ObjectList("/global/iam/role/"); objs.Error == nil {
+	if objs := store.PvScan("role/", "", "", 10000); objs.OK() {
 
-		for _, obj := range objs.Items {
+		rss := objs.KvList()
+		for _, obj := range rss {
 
 			var role iamapi.UserRole
-			if err := obj.JsonDecode(&role); err == nil {
+			if err := obj.Decode(&role); err == nil {
 
 				ls.Items = append(ls.Items, role)
 			}
@@ -57,13 +59,13 @@ func (c UserMgr) RoleEntryAction() {
 
 	defer c.RenderJson(&set)
 
-	if !iamclient.SessionAccessAllowed(c.Session, "user.admin", "df085c6dc6ff") {
+	if !iamclient.SessionAccessAllowed(c.Session, "user.admin", config.Config.InstanceID) {
 		set.Error = &types.ErrorMeta{iamapi.ErrCodeAccessDenied, "Access Denied"}
 		return
 	}
 
-	if obj := store.BtAgent.ObjectGet("/global/iam/role/" + c.Params.Get("roleid")); obj.Error == nil {
-		obj.JsonDecode(&set)
+	if obj := store.PvGet("role/" + c.Params.Get("roleid")); obj.OK() {
+		obj.Decode(&set)
 	}
 
 	if set.Meta.ID == "" {
@@ -89,7 +91,7 @@ func (c UserMgr) RoleSetAction() {
 		return
 	}
 
-	if !iamclient.SessionAccessAllowed(c.Session, "user.admin", "df085c6dc6ff") {
+	if !iamclient.SessionAccessAllowed(c.Session, "user.admin", config.Config.InstanceID) {
 		set.Error = &types.ErrorMeta{iamapi.ErrCodeAccessDenied, "Access Denied"}
 		return
 	}
@@ -103,9 +105,9 @@ func (c UserMgr) RoleSetAction() {
 
 	} else {
 
-		if obj := store.BtAgent.ObjectGet("/global/iam/role/" + set.Meta.ID); obj.Error == nil {
-			obj.JsonDecode(&prev)
-			prevVersion = obj.Meta.Version
+		if obj := store.PvGet("role/" + set.Meta.ID); obj.OK() {
+			obj.Decode(&prev)
+			prevVersion = obj.Meta().Version
 		}
 
 		if prev.Meta.ID != set.Meta.ID {
@@ -120,10 +122,10 @@ func (c UserMgr) RoleSetAction() {
 	set.Meta.Updated = utilx.TimeNow("atom")
 	// roleset["privileges"] = strings.Join(c.Params.Values["privileges"], ",")
 
-	if obj := store.BtAgent.ObjectSet("/global/iam/role/"+set.Meta.ID, set, &btapi.ObjectWriteOptions{
+	if obj := store.PvPut("role/"+set.Meta.ID, set, &skv.PvWriteOptions{
 		PrevVersion: prevVersion,
-	}); obj.Error != nil {
-		set.Error = &types.ErrorMeta{"500", obj.Error.Message}
+	}); !obj.OK() {
+		set.Error = &types.ErrorMeta{"500", obj.Bytex().String()}
 		return
 	}
 

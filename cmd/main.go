@@ -1,4 +1,4 @@
-// Copyright 2014-2016 iam Author, All rights reserved.
+// Copyright 2014 lessos Authors, All rights reserved.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -22,9 +22,9 @@ import (
 
 	"github.com/lessos/lessgo/httpsrv"
 
-	"github.com/lessos/iam/config"
-	"github.com/lessos/iam/websrv/ctrl"
-	"github.com/lessos/iam/websrv/v1"
+	"code.hooto.com/lessos/iam/config"
+	"code.hooto.com/lessos/iam/websrv/ctrl"
+	"code.hooto.com/lessos/iam/websrv/v1"
 )
 
 var flagPrefix = flag.String("prefix", "", "the prefix folder path")
@@ -41,8 +41,8 @@ func main() {
 	}
 
 	//
-	httpsrv.GlobalService.Config.HttpPort = config.Config.Port
-	// httpsrv.GlobalService.Config.LessIdsServiceUrl = fmt.Sprintf("http://127.0.0.1:%d/iam", config.Config.Port)
+	httpsrv.GlobalService.Config.HttpPort = config.Config.HttpPort
+	// httpsrv.GlobalService.Config.LessIdsServiceUrl = fmt.Sprintf("http://127.0.0.1:%d/iam", config.Config.HttpPort)
 
 	httpsrv.GlobalService.ModuleRegister("/iam/v1", v1.NewModule())
 	httpsrv.GlobalService.ModuleRegister("/iam/", ctrl.NewModule())

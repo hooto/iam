@@ -17,7 +17,7 @@
     <td align="right">
       <button type="button" 
         class="btn btn-primary btn-sm" 
-        onclick="iamusrmgr.UserSetForm()">
+        onclick="iamUserMgr.UserSetForm()">
         New User
       </button>
     </td>
@@ -66,7 +66,7 @@
       <td>{[=l4i.TimeParseFormat(v.meta.created, "Y-m-d")]}</td>
       <td>{[=l4i.TimeParseFormat(v.meta.updated, "Y-m-d")]}</td>
       <td align="right">
-        <a href="#user-mgr/user-set" onclick="iamusrmgr.UserSetForm('{[=v.meta.id]}')" 
+        <a href="#user-mgr/user-set" onclick="iamUserMgr.UserSetForm('{[=v.meta.id]}')" 
           class="btn btn-default btn-xs">Setting</a>
       </td>
     </tr>

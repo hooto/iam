@@ -1,4 +1,4 @@
-var iamappmgr = {
+var iamAppMgr = {
     statusls : [{
         status: 1, title: "Active",
     }, {
@@ -17,23 +17,23 @@ var iamappmgr = {
     },
 }
 
-iamappmgr.Init = function()
+iamAppMgr.Init = function()
 {
-    l4i.UrlEventRegister("app-mgr/index", iamappmgr.Index);
-    l4i.UrlEventRegister("app-mgr/inst-list", iamappmgr.InstList);
+    l4i.UrlEventRegister("app-mgr/index", iamAppMgr.Index);
+    l4i.UrlEventRegister("app-mgr/inst-list", iamAppMgr.InstList);
 }
 
-iamappmgr.Index = function()
+iamAppMgr.Index = function()
 {
     iam.TplCmd("app-mgr/index", {
         callback: function(err, data) {
             $("#com-content").html(data);
-            iamappmgr.InstList();
+            iamAppMgr.InstList();
         },
     });
 }
 
-iamappmgr.InstList = function()
+iamAppMgr.InstList = function()
 {
     seajs.use(["ep"], function(EventProxy) {
 
@@ -43,7 +43,7 @@ iamappmgr.InstList = function()
                 return;
             }
 
-            data._statusls = iamusrmgr.statusls;
+            data._statusls = iamUserMgr.statusls;
 
             for (var i in data.items) {
 
@@ -88,7 +88,7 @@ iamappmgr.InstList = function()
     });
 }
 
-iamappmgr.InstSetForm = function(instid)
+iamAppMgr.InstSetForm = function(instid)
 {
     seajs.use(["ep"], function(EventProxy) {
 
@@ -103,7 +103,7 @@ iamappmgr.InstSetForm = function(instid)
             }
             data._privilegeNumber = data.privileges.length;
             
-            data._statusls = iamappmgr.statusls;
+            data._statusls = iamAppMgr.statusls;
             data._roles = l4i.Clone(roles);
 
             for (var i in data.privileges) {
@@ -127,7 +127,7 @@ iamappmgr.InstSetForm = function(instid)
                     onclick : "l4iModal.Close()",
                 }, {
                     title : "Save",
-                    onclick : "iamappmgr.InstSetCommit()",
+                    onclick : "iamAppMgr.InstSetCommit()",
                     style   : "btn btn-primary",
                 }],
             });
@@ -137,12 +137,12 @@ iamappmgr.InstSetForm = function(instid)
             alert("Error: Please try again later");
         });
 
-        if (iamappmgr.roles) {
-            ep.emit("roles", iamappmgr.roles)
+        if (iamAppMgr.roles) {
+            ep.emit("roles", iamAppMgr.roles)
         } else {
             iam.ApiCmd("user-mgr/role-list?status=0", {
                 callback: function(err, roles) {
-                    iamappmgr.roles = roles;
+                    iamAppMgr.roles = roles;
                     ep.emit("roles", roles);
                 },
             });
@@ -155,7 +155,7 @@ iamappmgr.InstSetForm = function(instid)
             });
         
         } else {
-            ep.emit("data", l4i.Clone(iamappmgr.appinstdef));
+            ep.emit("data", l4i.Clone(iamAppMgr.appinstdef));
         }
 
         iam.TplCmd("app-mgr/inst-set", {
@@ -164,11 +164,11 @@ iamappmgr.InstSetForm = function(instid)
     });
 }
 
-iamappmgr.InstSetCommit = function()
+iamAppMgr.InstSetCommit = function()
 {
     var form = $("#iam-appmgr-instset");
     
-    var req = l4i.Clone(iamappmgr.appinstdef)
+    var req = l4i.Clone(iamAppMgr.appinstdef)
 
     req.meta.id = form.find("input[name=instid]").val();
     req.app_title = form.find("input[name=app_title]").val();
@@ -207,7 +207,7 @@ iamappmgr.InstSetCommit = function()
 
             window.setTimeout(function(){
                 l4iModal.Close();
-                iamappmgr.InstList();
+                iamAppMgr.InstList();
             }, 1000);
         },
     });

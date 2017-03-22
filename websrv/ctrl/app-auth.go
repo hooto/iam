@@ -37,13 +37,13 @@ type AppAuth struct {
 // 	var prevVersion uint64
 // 	var prev iamapi.AppInstance
 
-// 	if obj := store.BtAgent.ObjectGet(btapi.ObjectPut{
+// 	if obj := store.PvGet(btapi.ObjectPut{
 // 		Meta: btapi.ObjectMeta{
 // 			Path: "/app-instance/" + set.Meta.ID,
 // 		},
 // 	}); obj.Error == nil {
 // 		obj.JsonDecode(&prev)
-// 		prevVersion = obj.Meta.Version
+// 		prevVersion = obj.Meta().Version
 // 	}
 
 // 	if prev.Meta.ID == "" {
@@ -62,7 +62,7 @@ type AppAuth struct {
 
 // 	setjs, _ := utils.JsonEncode(set)
 
-// 	if obj := store.BtAgent.ObjectSet(btapi.ObjectPut{
+// 	if obj := store.PvPut(btapi.ObjectPut{
 // 		Meta: btapi.ObjectMeta{
 // 			Path: "/app-instance/" + set.Meta.ID,
 // 		},

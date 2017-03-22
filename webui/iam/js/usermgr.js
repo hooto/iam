@@ -1,4 +1,4 @@
-var iamusrmgr = {
+var iamUserMgr = {
     roles : null,
     statusls : [{
         status: 1, title: "Active",
@@ -34,24 +34,24 @@ var iamusrmgr = {
     },
 }
 
-iamusrmgr.Init = function()
+iamUserMgr.Init = function()
 {
-    l4i.UrlEventRegister("user-mgr/index", iamusrmgr.Index);
-    l4i.UrlEventRegister("user-mgr/user-list", iamusrmgr.UserList);
-    l4i.UrlEventRegister("user-mgr/role-list", iamusrmgr.RoleList);
+    l4i.UrlEventRegister("user-mgr/index", iamUserMgr.Index);
+    l4i.UrlEventRegister("user-mgr/user-list", iamUserMgr.UserList);
+    l4i.UrlEventRegister("user-mgr/role-list", iamUserMgr.RoleList);
 }
 
-iamusrmgr.Index = function()
+iamUserMgr.Index = function()
 {
     iam.TplCmd("user-mgr/index", {
         callback: function(err, data) {
             $("#com-content").html(data);
-            iamusrmgr.UserList();
+            iamUserMgr.UserList();
         },
     });
 }
 
-iamusrmgr.UserList = function()
+iamUserMgr.UserList = function()
 {
     //     var uri = "query_text="+ $("#query_text").val();
     // uri += "&page="+ page;
@@ -65,7 +65,7 @@ iamusrmgr.UserList = function()
             }
 
             data._roles = roles;
-            data._statusls = iamusrmgr.statusls;
+            data._statusls = iamUserMgr.statusls;
 
             $("#work-content").html(tpl);
 
@@ -91,12 +91,12 @@ iamusrmgr.UserList = function()
             callback: ep.done('data'),
         });
 
-        if (iamusrmgr.roles) {
-            ep.emit("roles", iamusrmgr.roles)
+        if (iamUserMgr.roles) {
+            ep.emit("roles", iamUserMgr.roles)
         } else {
             iam.ApiCmd("user-mgr/role-list", {
                 callback: function(err, data) {
-                    iamusrmgr.roles = data;
+                    iamUserMgr.roles = data;
                     ep.emit("roles", data);
                 },
             });
@@ -108,7 +108,7 @@ iamusrmgr.UserList = function()
     });
 }
 
-iamusrmgr.UserSetForm = function(userid)
+iamUserMgr.UserSetForm = function(userid)
 {
     seajs.use(["ep"], function(EventProxy) {
 
@@ -126,6 +126,10 @@ iamusrmgr.UserSetForm = function(userid)
 
             if (!data.name) {
                 data.name = "";
+            }
+
+            if (!data.email) {
+                data.email = "";
             }
 
             if (!data.profile.birthday) {
@@ -149,7 +153,7 @@ iamusrmgr.UserSetForm = function(userid)
                 }
             }
 
-            data._statusls = iamusrmgr.statusls; 
+            data._statusls = iamUserMgr.statusls; 
 
             l4iModal.Open({
                 tplsrc  : tpl,
@@ -162,7 +166,7 @@ iamusrmgr.UserSetForm = function(userid)
                     onclick : "l4iModal.Close()",
                 }, {
                     title : "Save",
-                    onclick : "iamusrmgr.UserSetCommit()",
+                    onclick : "iamUserMgr.UserSetCommit()",
                     style   : "btn btn-primary",
                 }],
             });
@@ -172,12 +176,12 @@ iamusrmgr.UserSetForm = function(userid)
             alert("Error: Please try again later");
         });
 
-        if (iamusrmgr.roles) {
-            ep.emit("roles", iamusrmgr.roles)
+        if (iamUserMgr.roles) {
+            ep.emit("roles", iamUserMgr.roles)
         } else {
             iam.ApiCmd("user-mgr/role-list", {
                 callback: function(err, roles) {
-                    iamusrmgr.roles = roles;
+                    iamUserMgr.roles = roles;
                     ep.emit("roles", roles);
                 },
             });
@@ -190,7 +194,7 @@ iamusrmgr.UserSetForm = function(userid)
             });
         
         } else {
-            ep.emit("data", l4i.Clone(iamusrmgr.userdef));
+            ep.emit("data", l4i.Clone(iamUserMgr.userdef));
         }
 
         iam.TplCmd("user-mgr/user-set", {
@@ -199,11 +203,11 @@ iamusrmgr.UserSetForm = function(userid)
     });
 }
 
-iamusrmgr.UserSetCommit = function()
+iamUserMgr.UserSetCommit = function()
 {
     var form = $("#iam-usermgr-userset");
     
-    var req = l4i.Clone(iamusrmgr.userdef)
+    var req = l4i.Clone(iamUserMgr.userdef)
 
     req.meta.id = form.find("input[name=userid]").val();
     if (req.meta.id == "") {
@@ -247,14 +251,14 @@ iamusrmgr.UserSetCommit = function()
 
             window.setTimeout(function(){
                 l4iModal.Close();
-                iamusrmgr.UserList();
+                iamUserMgr.UserList();
             }, 1000);
         },
     });
 }
 
 // Role
-iamusrmgr.RoleList = function()
+iamUserMgr.RoleList = function()
 {
     seajs.use(["ep"], function(EventProxy) {
 
@@ -266,7 +270,7 @@ iamusrmgr.RoleList = function()
 
             $("#work-content").html(tpl);
 
-            roles._statusls = iamusrmgr.statusls;
+            roles._statusls = iamUserMgr.statusls;
 
             l4iTemplate.Render({
                 dstid  : "iam-usermgr-rolelist",
@@ -289,7 +293,7 @@ iamusrmgr.RoleList = function()
     });
 }
 
-iamusrmgr.RoleSetForm = function(roleid)
+iamUserMgr.RoleSetForm = function(roleid)
 {
     seajs.use(["ep"], function(EventProxy) {
 
@@ -305,7 +309,7 @@ iamusrmgr.RoleSetForm = function(roleid)
                 data._form_title = "Role Setting";
             }
 
-            data._statusls = iamusrmgr.statusls;
+            data._statusls = iamUserMgr.statusls;
 
             l4iModal.Open({
                 tplsrc  : tpl,
@@ -318,7 +322,7 @@ iamusrmgr.RoleSetForm = function(roleid)
                     onclick : "l4iModal.Close()",
                 }, {
                     title : "Save",
-                    onclick : "iamusrmgr.RoleSetCommit()",
+                    onclick : "iamUserMgr.RoleSetCommit()",
                     style   : "btn btn-primary",
                 }],
             });
@@ -335,7 +339,7 @@ iamusrmgr.RoleSetForm = function(roleid)
             });
         
         } else {
-            ep.emit("data", l4i.Clone(iamusrmgr.roledef));
+            ep.emit("data", l4i.Clone(iamUserMgr.roledef));
         }
 
         iam.TplCmd("user-mgr/role-set", {
@@ -344,7 +348,7 @@ iamusrmgr.RoleSetForm = function(roleid)
     });
 }
 
-iamusrmgr.RoleSetCommit = function()
+iamUserMgr.RoleSetCommit = function()
 {
     var form = $("#iam-usermgr-roleset");
     
@@ -374,7 +378,7 @@ iamusrmgr.RoleSetCommit = function()
 
             window.setTimeout(function(){
                 l4iModal.Close();
-                iamusrmgr.RoleList();
+                iamUserMgr.RoleList();
             }, 1000);
         },
     });

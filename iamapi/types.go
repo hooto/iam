@@ -1,4 +1,4 @@
-// Copyright 2014-2016 iam Author, All rights reserved.
+// Copyright 2014 lessos Authors, All rights reserved.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -16,6 +16,10 @@ package iamapi
 
 import (
 	"github.com/lessos/lessgo/types"
+)
+
+const (
+	AccessTokenKey = "_iam_at"
 )
 
 const (

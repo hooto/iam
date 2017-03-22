@@ -25,7 +25,7 @@ function cookie_set(key, val, sec)
     document.cookie = key + "=" + val + expires + "; path=/";
 }
 
-cookie_set("access_token", "", -1);
+cookie_set("{{.access_token_key}}", "", -1);
 
 window.setTimeout(function() {
     window.location = "/iam";

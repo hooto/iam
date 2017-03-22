@@ -1,4 +1,4 @@
-// Copyright 2014-2016 iam Author, All rights reserved.
+// Copyright 2014 lessos Authors, All rights reserved.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -19,7 +19,7 @@ import (
 	"strings"
 	"time"
 
-	"github.com/lessos/bigtree/btapi"
+	"code.hooto.com/lynkdb/iomix/skv"
 	"github.com/lessos/lessgo/httpsrv"
 	"github.com/lessos/lessgo/net/email"
 	"github.com/lessos/lessgo/pass"
@@ -27,11 +27,11 @@ import (
 	"github.com/lessos/lessgo/utils"
 	"github.com/lessos/lessgo/utilx"
 
-	"github.com/lessos/iam/base/login"
-	"github.com/lessos/iam/base/signup"
-	"github.com/lessos/iam/config"
-	"github.com/lessos/iam/iamapi"
-	"github.com/lessos/iam/store"
+	"code.hooto.com/lessos/iam/base/login"
+	"code.hooto.com/lessos/iam/base/signup"
+	"code.hooto.com/lessos/iam/config"
+	"code.hooto.com/lessos/iam/iamapi"
+	"code.hooto.com/lessos/iam/store"
 )
 
 type Reg struct {
@@ -67,8 +67,8 @@ func (c Reg) SignUpRegAction() {
 	uname := strings.TrimSpace(strings.ToLower(c.Params.Get("uname")))
 
 	var user iamapi.User
-	if obj := store.BtAgent.ObjectGet("/global/iam/user/" + utils.StringEncode16(uname, 8)); obj.Error == nil {
-		obj.JsonDecode(&user)
+	if obj := store.PvGet("user/" + utils.StringEncode16(uname, 8)); obj.OK() {
+		obj.Decode(&user)
 	}
 
 	if user.Meta.Name == uname {
@@ -94,8 +94,8 @@ func (c Reg) SignUpRegAction() {
 		Timezone: "UTC",
 	}
 
-	if obj := store.BtAgent.ObjectSet("/global/iam/user/"+user.Meta.ID, user, nil); obj.Error != nil {
-		rsp.Error = &types.ErrorMeta{"500", obj.Error.Message}
+	if obj := store.PvPut("user/"+user.Meta.ID, user, nil); !obj.OK() {
+		rsp.Error = &types.ErrorMeta{"500", obj.Bytex().String()}
 		return
 	}
 
@@ -129,8 +129,8 @@ func (c Reg) ForgotPassPutAction() {
 	userid := utils.StringEncode16(c.Params.Get("username"), 8)
 
 	var user iamapi.User
-	if obj := store.BtAgent.ObjectGet("/global/iam/user/" + userid); obj.Error == nil {
-		obj.JsonDecode(&user)
+	if obj := store.PvGet("user/" + userid); obj.OK() {
+		obj.Decode(&user)
 	}
 
 	if user.Meta.ID != userid || user.Email != uemail {
@@ -145,10 +145,10 @@ func (c Reg) ForgotPassPutAction() {
 		Expired: utilx.TimeNowAdd("atom", "+3600s"),
 	}
 
-	if obj := store.BtAgent.ObjectSet("/global/iam/pwd-reset/"+reset.ID, reset, &btapi.ObjectWriteOptions{
+	if obj := store.PvPut("pwd-reset/"+reset.ID, reset, &skv.PvWriteOptions{
 		Ttl: 3600000,
-	}); obj.Error != nil {
-		rsp.Error = &types.ErrorMeta{"500", obj.Error.Message}
+	}); !obj.OK() {
+		rsp.Error = &types.ErrorMeta{"500", obj.Bytex().String()}
 		return
 	}
 
@@ -196,8 +196,8 @@ func (c Reg) PassResetAction() {
 	}
 
 	var reset iamapi.UserPasswordReset
-	if obj := store.BtAgent.ObjectGet("/global/iam/pwd-reset/" + c.Params.Get("id")); obj.Error == nil {
-		obj.JsonDecode(&reset)
+	if obj := store.PvGet("pwd-reset/" + c.Params.Get("id")); obj.OK() {
+		obj.Decode(&reset)
 	}
 
 	if reset.ID != c.Params.Get("id") {
@@ -226,9 +226,9 @@ func (c Reg) PassResetPutAction() {
 	}
 
 	var reset iamapi.UserPasswordReset
-	rsobj := store.BtAgent.ObjectGet("/global/iam/pwd-reset/" + c.Params.Get("id"))
-	if rsobj.Error == nil {
-		rsobj.JsonDecode(&reset)
+	rsobj := store.PvGet("pwd-reset/" + c.Params.Get("id"))
+	if rsobj.OK() {
+		rsobj.Decode(&reset)
 	}
 
 	if reset.ID != c.Params.Get("id") {
@@ -242,9 +242,9 @@ func (c Reg) PassResetPutAction() {
 	}
 
 	var user iamapi.User
-	uobj := store.BtAgent.ObjectGet("/global/iam/user/" + reset.UserID)
-	if uobj.Error == nil {
-		uobj.JsonDecode(&user)
+	uobj := store.PvGet("user/" + reset.UserID)
+	if uobj.OK() {
+		uobj.Decode(&user)
 	}
 
 	if user.Meta.ID != reset.UserID {
@@ -256,15 +256,15 @@ func (c Reg) PassResetPutAction() {
 	user.Auth, _ = pass.HashDefault(c.Params.Get("passwd"))
 	user.Meta.Updated = utilx.TimeNow("atom")
 
-	if obj := store.BtAgent.ObjectSet("/global/iam/user/"+user.Meta.ID, user, &btapi.ObjectWriteOptions{
-		PrevVersion: uobj.Meta.Version,
-	}); obj.Error != nil {
-		rsp.Error = &types.ErrorMeta{"500", obj.Error.Message}
+	if obj := store.PvPut("user/"+user.Meta.ID, user, &skv.PvWriteOptions{
+		PrevVersion: uobj.Meta().Version,
+	}); !obj.OK() {
+		rsp.Error = &types.ErrorMeta{"500", obj.Bytex().String()}
 		return
 	}
 
-	store.BtAgent.ObjectDel("/global/iam/pwd-reset/"+reset.ID, &btapi.ObjectWriteOptions{
-		PrevVersion: rsobj.Meta.Version,
+	store.PvDel("pwd-reset/"+reset.ID, &skv.PvWriteOptions{
+		PrevVersion: rsobj.Meta().Version,
 	})
 
 	rsp.Kind = "UserAuth"

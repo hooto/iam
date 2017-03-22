@@ -1,25 +1,25 @@
-var iamsys = {
+var iamSys = {
 
 }
 
-iamsys.Init = function()
+iamSys.Init = function()
 {
-    l4i.UrlEventRegister("sys-mgr/index", iamsys.Index);
-    l4i.UrlEventRegister("sys-mgr/general-set", iamsys.GeneralSet);
-    l4i.UrlEventRegister("sys-mgr/mailer-set", iamsys.MailerSet);
+    l4i.UrlEventRegister("sys-mgr/index", iamSys.Index);
+    l4i.UrlEventRegister("sys-mgr/general-set", iamSys.GeneralSet);
+    l4i.UrlEventRegister("sys-mgr/mailer-set", iamSys.MailerSet);
 }
 
-iamsys.Index = function()
+iamSys.Index = function()
 {
     iam.TplCmd("sys-mgr/index", {
         callback: function(err, data) {
             $("#com-content").html(data);
-            iamsys.GeneralSet();
+            iamSys.GeneralSet();
         },
     });
 }
 
-iamsys.GeneralSet = function()
+iamSys.GeneralSet = function()
 {
     seajs.use(["ep"], function(EventProxy) {
 
@@ -31,7 +31,7 @@ iamsys.GeneralSet = function()
 
             data._items = {};
             for (var i in data.items) {
-                data._items[data.items[i]["key"]] = data.items[i]["val"];
+                data._items[data.items[i]["name"]] = data.items[i]["value"];
             }
 
             l4iTemplate.Render({
@@ -55,7 +55,7 @@ iamsys.GeneralSet = function()
     });
 }
 
-iamsys.GeneralSetCommit = function()
+iamSys.GeneralSetCommit = function()
 {
     var form = $("#iam-sysmgr-generalset");
 
@@ -66,14 +66,14 @@ iamsys.GeneralSetCommit = function()
     
     var req = {
         items : [{
-            key: "service_name",
-            val: form.find("input[name=service_name]").val(),
+            name: "service_name",
+            value: form.find("input[name=service_name]").val(),
         }, {
-            key: "webui_banner_title",
-            val: form.find("input[name=webui_banner_title]").val(),
+            name: "webui_banner_title",
+            value: form.find("input[name=webui_banner_title]").val(),
         }, {
-            key: "user_reg_disable",
-            val: user_reg_disable,
+            name: "user_reg_disable",
+            value: user_reg_disable,
         }],
     };
 
@@ -95,14 +95,14 @@ iamsys.GeneralSetCommit = function()
             l4i.InnerAlert("#iam-sysmgr-generalset-alert", 'alert-success', "Successfully updated");
 
             // window.setTimeout(function(){
-            //     iamsys.GeneralSet();
+            //     iamSys.GeneralSet();
             // }, 1000);
         },
     });
 }
 
 
-iamsys.MailerSet = function(name)
+iamSys.MailerSet = function(name)
 {
     seajs.use(["ep"], function(EventProxy) {
 
@@ -112,9 +112,12 @@ iamsys.MailerSet = function(name)
                 return;
             }
 
-            var mailer = JSON.parse(data.items[0].val);
-            if (!mailer) {
-                mailer = {}
+            var mailer = {}
+			if (data.items[0].value && data.items[0].value.length > 2) {
+                mailer = JSON.parse(data.items[0].value);
+				if (!mailer) {
+                    mailer = {};
+				}
             }
 
             if (!mailer.smtp_host) {
@@ -155,7 +158,7 @@ iamsys.MailerSet = function(name)
 }
 
 
-iamsys.MailerSetCommit = function()
+iamSys.MailerSetCommit = function()
 {
     var form = $("#iam-sysmgr-mailerset");
     
@@ -168,8 +171,8 @@ iamsys.MailerSetCommit = function()
 
     var req = {
         items : [{
-            key: "mailer",
-            val: JSON.stringify(mailer),
+            name: "mailer",
+            value: JSON.stringify(mailer),
         }],
     };
 
@@ -189,7 +192,7 @@ iamsys.MailerSetCommit = function()
             l4i.InnerAlert("#iam-sysmgr-mailerset-alert", 'alert-success', "Successfully updated");
 
             // window.setTimeout(function(){
-            //     iamsys.GeneralSet();
+            //     iamSys.GeneralSet();
             // }, 1000);
         },
     });

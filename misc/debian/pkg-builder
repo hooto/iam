@@ -80,7 +80,7 @@ chmod +rx /tmp/{$pkgname}/etc/init.d/lessiam
 cp -rp $basedir/misc /tmp/{$pkgname}/opt/lessiam/
 cp -rp $basedir/static/jquery /tmp/{$pkgname}/opt/lessiam/static/
 cp -rp $basedir/static/iam /tmp/{$pkgname}/opt/lessiam/static/
-cp -rp $basedir/static/twitter-bootstrap /tmp/{$pkgname}/opt/lessiam/static/
+cp -rp $basedir/static/twbs /tmp/{$pkgname}/opt/lessiam/static/
 
 mkdir -p /tmp/{$pkgname}/opt/lessiam/static/lessui/master
 cp -rp $basedir/static/lessui/master/img /tmp/{$pkgname}/opt/lessiam/static/lessui/master/

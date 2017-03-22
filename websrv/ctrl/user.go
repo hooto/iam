@@ -1,4 +1,4 @@
-// Copyright 2014-2016 iam Author, All rights reserved.
+// Copyright 2014 lessos Authors, All rights reserved.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -15,8 +15,8 @@
 package ctrl
 
 import (
-	"github.com/lessos/iam/config"
-	"github.com/lessos/iam/iamclient"
+	"code.hooto.com/lessos/iam/config"
+	"code.hooto.com/lessos/iam/iamclient"
 	"github.com/lessos/lessgo/httpsrv"
 )
 
@@ -32,14 +32,14 @@ func (c User) PanelInfoAction() {
 		{"path": "#my-app/index", "title": "My Applications"},
 	}
 
-	if iamclient.SessionAccessAllowed(c.Session, "user.admin", "df085c6dc6ff") {
+	if iamclient.SessionAccessAllowed(c.Session, "user.admin", config.Config.InstanceID) {
 		nav = append(nav, map[string]string{
 			"path":  "#user-mgr/index",
 			"title": "User Manage",
 		})
 	}
 
-	if iamclient.SessionAccessAllowed(c.Session, "sys.admin", "df085c6dc6ff") {
+	if iamclient.SessionAccessAllowed(c.Session, "sys.admin", config.Config.InstanceID) {
 
 		nav = append(nav, map[string]string{
 			"path":  "#app-mgr/index",

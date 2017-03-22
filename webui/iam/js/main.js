@@ -15,7 +15,7 @@ iam.Boot = function()
     });
 
     seajs.use([
-        iam.baseui +"twitter-bootstrap/css/bootstrap.min.css",
+        iam.baseui +"twbs/css/bootstrap.min.css",
         iam.baseui +"jquery/jquery.min.js",
         iam.baseui +"lessui/js/BrowserDetect.js",
     ], function() {
@@ -39,7 +39,7 @@ iam.Boot = function()
             
             seajs.use([
                 iam.baseui +"iam/css/main.css?_="+ Math.random(),
-                iam.baseui +"twitter-bootstrap/js/bootstrap.min.js",
+                iam.baseui +"twbs/js/bootstrap.min.js",
                 iam.baseui +"iam/js/mgr.js?_="+ Math.random(),
                 iam.baseui +"iam/js/user.js?_="+ Math.random(),
                 iam.baseui +"iam/js/myapp.js?_="+ Math.random(),
@@ -47,14 +47,14 @@ iam.Boot = function()
                 iam.baseui +"iam/js/usermgr.js?_="+ Math.random(),
                 iam.baseui +"iam/js/appmgr.js?_="+ Math.random(),
             ], function() {
-                iammgr.Index();
+                iamMgr.Index();
                 
-                iamuser.Init();
-                iammyapp.Init();
+                iamUser.Init();
+                iamMyApp.Init();
 
-                iamsys.Init();
-                iamusrmgr.Init();
-                iamappmgr.Init();
+                iamSys.Init();
+                iamUserMgr.Init();
+                iamAppMgr.Init();
             });
         });        
     });
@@ -78,9 +78,9 @@ iam.Ajax = function(url, options)
     url += Math.random();
 
     //
-    if (l4iCookie.Get("access_token")) {
-        url += "&access_token="+ l4iCookie.Get("access_token");
-    }
+    //if (l4iCookie.Get("access_token")) {
+    //    url += "&access_token="+ l4iCookie.Get("access_token");
+    //}
     
     //
     if (options.method === undefined) {

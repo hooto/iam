@@ -1,4 +1,4 @@
-// Copyright 2014-2016 iam Author, All rights reserved.
+// Copyright 2014 lessos Authors, All rights reserved.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -17,7 +17,7 @@ package login
 import (
 	"errors"
 
-	"github.com/lessos/iam/iamapi"
+	"code.hooto.com/lessos/iam/iamapi"
 )
 
 func PassSetValidate(set iamapi.UserPasswordSet) error {

@@ -1,4 +1,4 @@
-// Copyright 2014-2016 iam Author, All rights reserved.
+// Copyright 2014 lessos Authors, All rights reserved.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -20,18 +20,19 @@ import (
 	"sync"
 	"time"
 
-	"github.com/lessos/iam/iamapi"
+	"code.hooto.com/lessos/iam/iamapi"
+	"github.com/lessos/lessgo/encoding/json"
 	"github.com/lessos/lessgo/httpsrv"
 	"github.com/lessos/lessgo/net/httpclient"
 	"github.com/lessos/lessgo/types"
-	"github.com/lessos/lessgo/utils"
 )
 
 const (
-	AccessTokenKey = "_iam_at"
+	AccessTokenKey = iamapi.AccessTokenKey
 )
 
 var (
+	InstanceID         = ""
 	ServiceUrl         = "http://127.0.0.1:9528/iam"
 	ServiceUrlFrontend = ""
 	sessions           = map[string]iamapi.UserSession{}
@@ -135,7 +136,12 @@ func Instance(token string) (session iamapi.UserSession, err error) {
 		return session, nil
 	}
 
-	hc := httpclient.Get(ServiceUrl + "/v1/service/auth?access_token=" + token)
+	hc := httpclient.Get(fmt.Sprintf(
+		"%s/v1/service/auth?%s=%s",
+		ServiceUrl,
+		AccessTokenKey,
+		token,
+	))
 	defer hc.Close()
 
 	var us iamapi.UserSession
@@ -177,7 +183,7 @@ func _access_allowed(privilege, token, instanceid string) bool {
 		Privilege:   privilege,
 	}
 
-	js, _ := utils.JsonEncode(req)
+	js, _ := json.Encode(req, "")
 	hc := httpclient.Post(ServiceUrl + "/v1/service/access-allowed")
 	hc.Header("contentType", "application/json; charset=utf-8")
 	hc.Body(js)

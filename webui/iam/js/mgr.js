@@ -1,8 +1,8 @@
-var iammgr = {
+var iamMgr = {
 
 }
 
-iammgr.NavAction = function(uri)
+iamMgr.NavAction = function(uri)
 {
     switch (uri) {
     case "user/my":
@@ -24,7 +24,7 @@ iammgr.NavAction = function(uri)
 // });
 }
 
-iammgr.Index = function()
+iamMgr.Index = function()
 {
     seajs.use(["ep"], function(EventProxy) {
 
@@ -35,7 +35,7 @@ iammgr.Index = function()
                 tplsrc : tpl,
                 data   : data,
                 success : function() {
-                    iamuser.Overview();
+                    iamUser.Overview();
                 },
             });
         });

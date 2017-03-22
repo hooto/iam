@@ -1,4 +1,4 @@
-// Copyright 2014-2016 iam Author, All rights reserved.
+// Copyright 2014 lessos Authors, All rights reserved.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -15,44 +15,228 @@
 package store
 
 import (
-	"time"
+	"fmt"
+	"strings"
 
-	"github.com/lessos/bigtree/btagent"
-	"github.com/lessos/bigtree/btapi"
+	"code.hooto.com/lessos/iam/config"
+	"code.hooto.com/lessos/iam/iamapi"
+	"code.hooto.com/lynkdb/iomix/skv"
+	"github.com/lessos/lessgo/crypto/idhash"
+	"github.com/lessos/lessgo/crypto/phash"
+	"github.com/lessos/lessgo/net/email"
+	"github.com/lessos/lessgo/types"
+	"github.com/lessos/lessgo/utilx"
 )
 
 var (
-	Ready   bool
-	BtAgent btagent.ApiAgent
+	path_prefix           = ""
+	Data                  skv.Connector
+	def_sysadmin          = "sysadmin"
+	def_sysadmin_password = "changeme"
 )
 
-func init() {
+func PvGet(path string) *skv.Result {
+	return Data.PvGet(PathPrefixAppend(path))
+}
 
-	BtAgent = btagent.ApiAgent{}
+func PvPut(path string, v interface{}, opts *skv.PvWriteOptions) *skv.Result {
+	return Data.PvPut(PathPrefixAppend(path), v, opts)
+}
 
-	// BtAgent, _ = btagent.NewAgent(btapi.DataAccessConfig{
-	// 	PathPoint: "/sys/iam",
-	// })
+func PvDel(path string, opts *skv.PvWriteOptions) *skv.Result {
+	return Data.PvDel(PathPrefixAppend(path), opts)
+}
 
-	go func() {
+func PvScan(path, offset, cutset string, limit int) *skv.Result {
+	return Data.PvScan(PathPrefixAppend(path), offset, cutset, limit)
+}
 
-		for {
+func PathPrefixSet(path string) {
+	path_prefix = path
+}
 
-			BtAgent.ObjectSet("global/iam/iam-test", "test", &btapi.ObjectWriteOptions{
-				Ttl: 3000,
-			})
+func PathPrefixAppend(path string) string {
 
-			if rs := BtAgent.ObjectGet("global/iam/iam-test"); rs.Data == "test" {
+	if path_prefix == "" {
+		return path
+	}
 
-				in := InitNew{}
-				in.Init()
+	return path_prefix + "/" + path
+}
 
-				Ready = true
+func Init() error {
 
-				break
+	if Data == nil {
+		return fmt.Errorf("iam.store connect not ready")
+	}
+
+	if rs := Data.PvPut(PathPrefixAppend("iam-test"), "test", &skv.PvWriteOptions{
+		Ttl: 3000,
+	}); !rs.OK() {
+		return fmt.Errorf("iam.store connect not ready")
+	}
+
+	if rs := Data.PvGet(PathPrefixAppend("iam-test")); !rs.OK() ||
+		rs.Bytex().String() != "test" {
+		return fmt.Errorf("iam.store connect not ready")
+	}
+
+	return nil
+}
+
+func InitData() (err error) {
+
+	if err := Init(); err != nil {
+		return err
+	}
+
+	if len(config.Config.InstanceID) < 16 {
+		return fmt.Errorf("No InstanceID Setup")
+	}
+
+	//
+	role := iamapi.UserRole{
+		Meta: types.ObjectMeta{
+			ID:      idhash.HashToHexString([]byte("1"), 8),
+			Name:    "Administrator",
+			UserID:  idhash.HashToHexString([]byte(def_sysadmin), 8),
+			Created: utilx.TimeNow("atom"),
+			Updated: utilx.TimeNow("atom"),
+		},
+		IdxID:  1,
+		Desc:   "Root System Administrator",
+		Status: 1,
+	}
+	PvPut(fmt.Sprintf("role/%s", role.Meta.ID), role, nil)
+
+	//
+	role.Meta.ID = idhash.HashToHexString([]byte("100"), 8)
+	role.Meta.Name = "Member"
+	role.IdxID = 100
+	role.Desc = "Universal Member"
+	PvPut(fmt.Sprintf("role/%s", role.Meta.ID), role, nil)
+
+	//
+	role.Meta.ID = idhash.HashToHexString([]byte("1000"), 8)
+	role.Meta.Name = "Anonymous"
+	role.IdxID = 1000
+	role.Desc = "Anonymous Member"
+	PvPut(fmt.Sprintf("role/%s", role.Meta.ID), role, nil)
+
+	//
+	ps := []iamapi.AppPrivilege{
+		{
+			Privilege: "sys.admin",
+			Roles:     []uint32{1},
+			Desc:      "System Management",
+		},
+		{
+			Privilege: "user.admin",
+			Roles:     []uint32{1},
+			Desc:      "User Management",
+		},
+	}
+
+	inst := iamapi.AppInstance{
+		Meta: types.ObjectMeta{
+			ID:      config.Config.InstanceID,
+			UserID:  idhash.HashToHexString([]byte(def_sysadmin), 8),
+			Created: utilx.TimeNow("atom"),
+			Updated: utilx.TimeNow("atom"),
+		},
+		AppID:      "iam",
+		AppTitle:   "lessOS IAM Service",
+		Status:     1,
+		Url:        "",
+		Privileges: ps,
+	}
+	PvPut("app-instance/"+inst.Meta.ID, inst, nil)
+
+	// privilege
+	rps := map[uint32][]string{}
+	for _, v := range ps {
+
+		for _, rid := range v.Roles {
+
+			if _, ok := rps[rid]; !ok {
+				rps[rid] = []string{}
 			}
 
-			time.Sleep(1e9)
+			rps[rid] = append(rps[rid], v.Privilege)
 		}
-	}()
+	}
+
+	for rid, v := range rps {
+		PvPut(fmt.Sprintf("role-privilege/%d/%s", rid, inst.Meta.ID), strings.Join(v, ","), nil)
+	}
+
+	// Init Super SysAdmin Account
+	if rs := PvGet("user/sysadmin"); rs.NotFound() {
+
+		sysadm := iamapi.User{
+			Meta: types.ObjectMeta{
+				ID:      idhash.HashToHexString([]byte(def_sysadmin), 8),
+				Name:    def_sysadmin,
+				Created: utilx.TimeNow("atom"),
+				Updated: utilx.TimeNow("atom"),
+			},
+			Name:   "System Administrator",
+			Email:  "",
+			Roles:  []uint32{1, 100},
+			Status: 1,
+		}
+
+		sysadm.Auth, err = phash.Generate(def_sysadmin_password)
+		if err != nil {
+			return err
+		}
+
+		PvPut("user/"+sysadm.Meta.ID, sysadm, nil)
+	}
+
+	return nil
+}
+
+func SysConfigRefresh() {
+
+	//
+	var mailer iamapi.SysConfigMailer
+	if obj := PvGet("sys-config/mailer"); obj.OK() {
+
+		obj.Decode(&mailer)
+
+		if mailer.SmtpHost != "" {
+
+			email.MailerRegister(
+				"def",
+				mailer.SmtpHost,
+				mailer.SmtpPort,
+				mailer.SmtpUser,
+				mailer.SmtpPass,
+			)
+		}
+	}
+
+	if obj := PvGet("sys-config/service_name"); obj.OK() {
+
+		if obj.Bytex().String() != "" {
+			config.Config.ServiceName = obj.Bytex().String()
+		}
+	}
+
+	if obj := PvGet("sys-config/webui_banner_title"); obj.OK() {
+
+		if obj.Bytex().String() != "" {
+			config.Config.WebUiBannerTitle = obj.Bytex().String()
+		}
+	}
+
+	if obj := PvGet("sys-config/user_reg_disable"); obj.OK() {
+
+		if obj.Bytex().String() == "1" {
+			config.UserRegistrationDisabled = true
+		} else {
+			config.UserRegistrationDisabled = false
+		}
+	}
 }

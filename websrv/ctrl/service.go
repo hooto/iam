@@ -1,4 +1,4 @@
-// Copyright 2014-2016 iam Author, All rights reserved.
+// Copyright 2014 lessos Authors, All rights reserved.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -17,9 +17,8 @@ package ctrl
 import (
 	"net/http"
 
-	"github.com/lessos/bigtree/btapi"
-	"github.com/lessos/iam/iamclient"
-	"github.com/lessos/iam/store"
+	"code.hooto.com/lessos/iam/iamclient"
+	"code.hooto.com/lessos/iam/store"
 	"github.com/lessos/lessgo/httpsrv"
 )
 
@@ -49,12 +48,13 @@ func (c Service) LoginAction() {
 func (c Service) SignOutAction() {
 
 	c.Data["continue"] = "/iam"
+	c.Data["access_token_key"] = iamclient.AccessTokenKey
 
 	if len(c.Params.Get("continue")) > 0 {
 		c.Data["continue"] = c.Params.Get("continue")
 	}
 
-	token := c.Params.Get("access_token")
+	token := c.Params.Get(iamclient.AccessTokenKey)
 
 	if len(token) < 30 {
 		session, _ := iamclient.SessionInstance(c.Session)
@@ -65,9 +65,7 @@ func (c Service) SignOutAction() {
 
 		token = token[:8] + "/" + token[9:]
 
-		store.BtAgent.ObjectDel("/global/iam/session/"+token, &btapi.ObjectWriteOptions{
-			Force: true,
-		})
+		store.PvDel("session/"+token, nil)
 	}
 
 	http.SetCookie(c.Response.Out, &http.Cookie{

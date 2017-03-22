@@ -1,4 +1,4 @@
-// Copyright 2014-2016 iam Author, All rights reserved.
+// Copyright 2014 lessos Authors, All rights reserved.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -15,15 +15,15 @@
 package v1
 
 import (
-	"github.com/lessos/bigtree/btapi"
-
+	"code.hooto.com/lynkdb/iomix/skv"
 	"github.com/lessos/lessgo/httpsrv"
 	"github.com/lessos/lessgo/types"
 	"github.com/lessos/lessgo/utilx"
 
-	"github.com/lessos/iam/iamapi"
-	"github.com/lessos/iam/iamclient"
-	"github.com/lessos/iam/store"
+	"code.hooto.com/lessos/iam/config"
+	"code.hooto.com/lessos/iam/iamapi"
+	"code.hooto.com/lessos/iam/iamclient"
+	"code.hooto.com/lessos/iam/store"
 )
 
 const (
@@ -40,17 +40,19 @@ func (c AppMgr) InstListAction() {
 
 	defer c.RenderJson(&ls)
 
-	if !iamclient.SessionAccessAllowed(c.Session, "sys.admin", "df085c6dc6ff") {
+	if !iamclient.SessionAccessAllowed(c.Session, "sys.admin", config.Config.InstanceID) {
 		ls.Error = &types.ErrorMeta{iamapi.ErrCodeAccessDenied, "Access Denied"}
 		return
 	}
 
-	if objs := store.BtAgent.ObjectList("/global/iam/app-instance/"); objs.Error == nil {
+	// TODO page
+	if objs := store.PvScan("app-instance", "", "", 1000); objs.OK() {
 
-		for _, obj := range objs.Items {
+		rss := objs.KvList()
+		for _, obj := range rss {
 
 			var inst iamapi.AppInstance
-			if err := obj.JsonDecode(&inst); err == nil {
+			if err := obj.Decode(&inst); err == nil {
 
 				ls.Items = append(ls.Items, inst)
 			}
@@ -68,13 +70,13 @@ func (c AppMgr) InstEntryAction() {
 
 	defer c.RenderJson(&set)
 
-	if !iamclient.SessionAccessAllowed(c.Session, "sys.admin", "df085c6dc6ff") {
+	if !iamclient.SessionAccessAllowed(c.Session, "sys.admin", config.Config.InstanceID) {
 		set.Error = &types.ErrorMeta{iamapi.ErrCodeAccessDenied, "Access Denied"}
 		return
 	}
 
-	if obj := store.BtAgent.ObjectGet("/global/iam/app-instance/" + c.Params.Get("instid")); obj.Error == nil {
-		obj.JsonDecode(&set)
+	if obj := store.PvGet("app-instance/" + c.Params.Get("instid")); obj.OK() {
+		obj.Decode(&set)
 	}
 
 	if set.Meta.ID == "" {
@@ -91,7 +93,7 @@ func (c AppMgr) InstSetAction() {
 
 	defer c.RenderJson(&set)
 
-	if !iamclient.SessionAccessAllowed(c.Session, "sys.admin", "df085c6dc6ff") {
+	if !iamclient.SessionAccessAllowed(c.Session, "sys.admin", config.Config.InstanceID) {
 		set.Error = &types.ErrorMeta{iamapi.ErrCodeAccessDenied, "Access Denied"}
 		return
 	}
@@ -103,9 +105,9 @@ func (c AppMgr) InstSetAction() {
 
 	var prev iamapi.AppInstance
 	var prevVersion uint64
-	if obj := store.BtAgent.ObjectGet("/global/iam/app-instance/" + set.Meta.ID); obj.Error == nil {
-		obj.JsonDecode(&prev)
-		prevVersion = obj.Meta.Version
+	if obj := store.PvGet("app-instance/" + set.Meta.ID); obj.OK() {
+		obj.Decode(&prev)
+		prevVersion = obj.Meta().Version
 	}
 
 	if prev.Meta.ID == "" || prevVersion < 1 {
@@ -118,10 +120,10 @@ func (c AppMgr) InstSetAction() {
 		prev.AppTitle = set.AppTitle
 		prev.Url = set.Url
 
-		if obj := store.BtAgent.ObjectSet("/global/iam/app-instance/"+set.Meta.ID, prev, &btapi.ObjectWriteOptions{
+		if obj := store.PvPut("app-instance/"+set.Meta.ID, prev, &skv.PvWriteOptions{
 			PrevVersion: prevVersion,
-		}); obj.Error != nil {
-			set.Error = &types.ErrorMeta{iamapi.ErrCodeInternalError, obj.Error.Message}
+		}); !obj.OK() {
+			set.Error = &types.ErrorMeta{iamapi.ErrCodeInternalError, obj.Bytex().String()}
 			return
 		}
 	}

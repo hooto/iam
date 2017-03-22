@@ -38,7 +38,7 @@ rm -f $basedir/bin/lessiam*
 
 cp -rp $basedir/static/jquery /tmp/SOURCES/{$pkgname}-{$ver}/static/
 cp -rp $basedir/static/iam /tmp/SOURCES/{$pkgname}-{$ver}/static/
-cp -rp $basedir/static/twitter-bootstrap /tmp/SOURCES/{$pkgname}-{$ver}/static/
+cp -rp $basedir/static/twbs /tmp/SOURCES/{$pkgname}-{$ver}/static/
 
 mkdir -p /tmp/SOURCES/{$pkgname}-{$ver}/static/lessui/master
 cp -rp $basedir/static/lessui/master/img /tmp/SOURCES/{$pkgname}-{$ver}/static/lessui/master/

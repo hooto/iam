@@ -17,7 +17,7 @@
     </td>
     <td align="right">
       <div id="iam-userbox">
-        <span class="btn btn-default btn-xs iam-userbox-signout" onclick="iamuser.SignOut()">Sign Out</span>
+        <span class="btn btn-default btn-xs iam-userbox-signout" onclick="iamUser.SignOut()">Sign Out</span>
         <img class="iam-userbox-ico" src="/iam/~/iam/img/user-default.png">
       </div>
     </td>

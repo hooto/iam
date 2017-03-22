@@ -1,4 +1,4 @@
-// Copyright 2014-2016 iam Author, All rights reserved.
+// Copyright 2014 lessos Authors, All rights reserved.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -18,17 +18,18 @@ import (
 	"html"
 	"time"
 
-	"github.com/lessos/bigtree/btapi"
+	"code.hooto.com/lynkdb/iomix/skv"
 	"github.com/lessos/lessgo/httpsrv"
 	"github.com/lessos/lessgo/pass"
 	"github.com/lessos/lessgo/types"
 	"github.com/lessos/lessgo/utils"
 	"github.com/lessos/lessgo/utilx"
 
-	"github.com/lessos/iam/base/signup"
-	"github.com/lessos/iam/iamapi"
-	"github.com/lessos/iam/iamclient"
-	"github.com/lessos/iam/store"
+	"code.hooto.com/lessos/iam/base/signup"
+	"code.hooto.com/lessos/iam/config"
+	"code.hooto.com/lessos/iam/iamapi"
+	"code.hooto.com/lessos/iam/iamclient"
+	"code.hooto.com/lessos/iam/store"
 )
 
 const (
@@ -54,17 +55,19 @@ func (c UserMgr) UserListAction() {
 
 	defer c.RenderJson(&ls)
 
-	if !iamclient.SessionAccessAllowed(c.Session, "user.admin", "df085c6dc6ff") {
+	if !iamclient.SessionAccessAllowed(c.Session, "user.admin", config.Config.InstanceID) {
 		ls.Error = &types.ErrorMeta{iamapi.ErrCodeAccessDenied, "Access Denied"}
 		return
 	}
 
-	if objs := store.BtAgent.ObjectList("/global/iam/user/"); objs.Error == nil {
+	// TODO page
+	if rs := store.PvScan("user", "", "", 1000); rs.OK() {
 
-		for _, obj := range objs.Items {
+		rss := rs.KvList()
+		for _, obj := range rss {
 
 			var user iamapi.User
-			if err := obj.JsonDecode(&user); err == nil {
+			if err := obj.Decode(&user); err == nil {
 				user.Auth = ""
 				ls.Items = append(ls.Items, user)
 			}
@@ -97,13 +100,13 @@ func (c UserMgr) UserEntryAction() {
 
 	defer c.RenderJson(&set)
 
-	if !iamclient.SessionAccessAllowed(c.Session, "user.admin", "df085c6dc6ff") {
+	if !iamclient.SessionAccessAllowed(c.Session, "user.admin", config.Config.InstanceID) {
 		set.Error = &types.ErrorMeta{iamapi.ErrCodeAccessDenied, "Access Denied"}
 		return
 	}
 
-	if obj := store.BtAgent.ObjectGet("/global/iam/user/" + c.Params.Get("userid")); obj.Error == nil {
-		obj.JsonDecode(&set)
+	if obj := store.PvGet("user/" + c.Params.Get("userid")); obj.OK() {
+		obj.Decode(&set)
 	}
 
 	// login
@@ -115,8 +118,8 @@ func (c UserMgr) UserEntryAction() {
 
 	//
 	var profile iamapi.UserProfile
-	if obj := store.BtAgent.ObjectGet("/global/iam/user-profile/" + c.Params.Get("userid")); obj.Error == nil {
-		obj.JsonDecode(&profile)
+	if obj := store.PvGet("user-profile/" + c.Params.Get("userid")); obj.OK() {
+		obj.Decode(&profile)
 		profile.About = html.EscapeString(profile.About)
 	}
 
@@ -136,7 +139,7 @@ func (c UserMgr) UserSetAction() {
 		return
 	}
 
-	if !iamclient.SessionAccessAllowed(c.Session, "user.admin", "df085c6dc6ff") {
+	if !iamclient.SessionAccessAllowed(c.Session, "user.admin", config.Config.InstanceID) {
 		set.Error = &types.ErrorMeta{iamapi.ErrCodeAccessDenied, "Access Denied"}
 		return
 	}
@@ -167,9 +170,9 @@ func (c UserMgr) UserSetAction() {
 	}
 
 	//
-	if obj := store.BtAgent.ObjectGet("/global/iam/user/" + set.Meta.ID); obj.Error == nil {
-		obj.JsonDecode(&prev)
-		prevVersion = obj.Meta.Version
+	if obj := store.PvGet("user/" + set.Meta.ID); obj.OK() {
+		obj.Decode(&prev)
+		prevVersion = obj.Meta().Version
 	}
 
 	//
@@ -204,10 +207,10 @@ func (c UserMgr) UserSetAction() {
 
 	set.Meta.Updated = utilx.TimeNow("atom")
 
-	if obj := store.BtAgent.ObjectSet("/global/iam/user/"+set.Meta.ID, set, &btapi.ObjectWriteOptions{
+	if obj := store.PvPut("user/"+set.Meta.ID, set, &skv.PvWriteOptions{
 		PrevVersion: prevVersion,
-	}); obj.Error != nil {
-		set.Error = &types.ErrorMeta{"500", obj.Error.Message}
+	}); !obj.OK() {
+		set.Error = &types.ErrorMeta{"500", obj.Bytex().String()}
 		return
 	}
 
@@ -216,10 +219,10 @@ func (c UserMgr) UserSetAction() {
 		prevVersion = 0
 		var profile iamapi.UserProfile
 
-		if obj := store.BtAgent.ObjectGet("/global/iam/user-profile/" + set.Meta.ID); obj.Error == nil {
+		if obj := store.PvGet("user-profile/" + set.Meta.ID); obj.OK() {
 
-			obj.JsonDecode(&profile)
-			prevVersion = obj.Meta.Version
+			obj.Decode(&profile)
+			prevVersion = obj.Meta().Version
 
 			if _, err := time.Parse("2006-01-02", set.Profile.Birthday); err == nil {
 				profile.Birthday = set.Profile.Birthday
@@ -234,10 +237,10 @@ func (c UserMgr) UserSetAction() {
 			}
 		}
 
-		if obj := store.BtAgent.ObjectSet("/global/iam/user-profile/"+set.Meta.ID, profile, &btapi.ObjectWriteOptions{
+		if obj := store.PvPut("user-profile/"+set.Meta.ID, profile, &skv.PvWriteOptions{
 			PrevVersion: prevVersion,
-		}); obj.Error != nil {
-			set.Error = &types.ErrorMeta{"500", obj.Error.Message}
+		}); !obj.OK() {
+			set.Error = &types.ErrorMeta{"500", obj.Bytex().String()}
 			return
 		}
 	}

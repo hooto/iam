@@ -1,4 +1,4 @@
-var iammyapp = {
+var iamMyApp = {
     statusls : [{
         status: 1, title: "Active",
     }, {
@@ -17,33 +17,34 @@ var iammyapp = {
     },
 }
 
-iammyapp.Init = function()
+iamMyApp.Init = function()
 {
-    l4i.UrlEventRegister("my-app/index", iammyapp.Index);
-    l4i.UrlEventRegister("my-app/inst-list", iammyapp.InstList);
+    l4i.UrlEventRegister("my-app/index", iamMyApp.Index);
+    l4i.UrlEventRegister("my-app/inst-list", iamMyApp.InstList);
 }
 
-iammyapp.Index = function()
+iamMyApp.Index = function()
 {
     iam.TplCmd("my-app/index", {
         callback: function(err, data) {
             $("#com-content").html(data);
-            iammyapp.InstList();
+            iamMyApp.InstList();
         },
     });
 }
 
-iammyapp.InstList = function()
+iamMyApp.InstList = function()
 {
     seajs.use(["ep"], function(EventProxy) {
 
         var ep = EventProxy.create('tpl', 'data', function (tpl, data) {
 
             if (!data || !data.items) {
+                $("#work-content").text("There are currently no applications available");
                 return;
             }
 
-            data._statusls = iamusrmgr.statusls;
+            data._statusls = iamUserMgr.statusls;
 
             for (var i in data.items) {
 
@@ -88,7 +89,7 @@ iammyapp.InstList = function()
     });
 }
 
-iammyapp.InstSetForm = function(instid)
+iamMyApp.InstSetForm = function(instid)
 {
     seajs.use(["ep"], function(EventProxy) {
 
@@ -103,7 +104,7 @@ iammyapp.InstSetForm = function(instid)
             }
             data._privilegeNumber = data.privileges.length;
             
-            data._statusls = iammyapp.statusls;
+            data._statusls = iamMyApp.statusls;
             data._roles = l4i.Clone(roles);
 
             for (var i in data.privileges) {
@@ -127,7 +128,7 @@ iammyapp.InstSetForm = function(instid)
                     onclick : "l4iModal.Close()",
                 }, {
                     title : "Save",
-                    onclick : "iammyapp.InstSetCommit()",
+                    onclick : "iamMyApp.InstSetCommit()",
                     style   : "btn btn-primary",
                 }],
             });
@@ -137,12 +138,12 @@ iammyapp.InstSetForm = function(instid)
             alert("Error: Please try again later");
         });
 
-        if (iammyapp.roles) {
-            ep.emit("roles", iammyapp.roles)
+        if (iamMyApp.roles) {
+            ep.emit("roles", iamMyApp.roles)
         } else {
             iam.ApiCmd("user/role-list?status=0", {
                 callback: function(err, roles) {
-                    iammyapp.roles = roles;
+                    iamMyApp.roles = roles;
                     ep.emit("roles", roles);
                 },
             });
@@ -155,7 +156,7 @@ iammyapp.InstSetForm = function(instid)
             });
         
         } else {
-            ep.emit("data", l4i.Clone(iammyapp.appinstdef));
+            ep.emit("data", l4i.Clone(iamMyApp.appinstdef));
         }
 
         iam.TplCmd("my-app/inst-set", {
@@ -164,11 +165,11 @@ iammyapp.InstSetForm = function(instid)
     });
 }
 
-iammyapp.InstSetCommit = function()
+iamMyApp.InstSetCommit = function()
 {
     var form = $("#iam-myapp-instset");
     
-    var req = l4i.Clone(iammyapp.appinstdef)
+    var req = l4i.Clone(iamMyApp.appinstdef)
 
     req.meta.id = form.find("input[name=instid]").val();
     req.app_title = form.find("input[name=app_title]").val();
@@ -207,7 +208,7 @@ iammyapp.InstSetCommit = function()
 
             window.setTimeout(function(){
                 l4iModal.Close();
-                iammyapp.InstList();
+                iamMyApp.InstList();
             }, 1000);
         },
     });

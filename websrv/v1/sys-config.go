@@ -1,4 +1,4 @@
-// Copyright 2014-2016 iam Author, All rights reserved.
+// Copyright 2014 lessos Authors, All rights reserved.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -15,15 +15,15 @@
 package v1
 
 import (
-	"github.com/lessos/bigtree/btapi"
+	"code.hooto.com/lynkdb/iomix/skv"
 
 	"github.com/lessos/lessgo/httpsrv"
 	"github.com/lessos/lessgo/types"
 
-	"github.com/lessos/iam/config"
-	"github.com/lessos/iam/iamapi"
-	"github.com/lessos/iam/iamclient"
-	"github.com/lessos/iam/store"
+	"code.hooto.com/lessos/iam/config"
+	"code.hooto.com/lessos/iam/iamapi"
+	"code.hooto.com/lessos/iam/iamclient"
+	"code.hooto.com/lessos/iam/store"
 )
 
 type SysConfig struct {
@@ -45,18 +45,19 @@ func (c SysConfig) GeneralAction() {
 
 	defer c.RenderJson(&ls)
 
-	if !iamclient.SessionAccessAllowed(c.Session, "sys.admin", "df085c6dc6ff") {
+	if !iamclient.SessionAccessAllowed(c.Session, "sys.admin", config.Config.InstanceID) {
 		ls.Error = &types.ErrorMeta{iamapi.ErrCodeAccessDenied, "Access Denied"}
 		return
 	}
 
-	if objs := store.BtAgent.ObjectList("/global/iam/sys-config/"); objs.Error == nil {
+	if objs := store.PvScan("sys-config/", "", "", 1000); objs.OK() {
 
-		for _, obj := range objs.Items {
+		rss := objs.KvList()
+		for _, obj := range rss {
 
-			switch obj.Meta.Name {
+			switch obj.Meta().Name {
 			case "service_name", "webui_banner_title", "user_reg_disable":
-				ls.Items.Set(obj.Meta.Name, obj.Data)
+				ls.Items.Set(obj.Meta().Name, obj.Bytex().String())
 			}
 		}
 	}
@@ -87,7 +88,7 @@ func (c SysConfig) GeneralSetAction() {
 		return
 	}
 
-	if !iamclient.SessionAccessAllowed(c.Session, "sys.admin", "df085c6dc6ff") {
+	if !iamclient.SessionAccessAllowed(c.Session, "sys.admin", config.Config.InstanceID) {
 		sets.Error = &types.ErrorMeta{iamapi.ErrCodeAccessDenied, "Access Denied"}
 		return
 	}
@@ -107,19 +108,19 @@ func (c SysConfig) GeneralSetAction() {
 
 		var prevVersion uint64
 
-		if obj := store.BtAgent.ObjectGet("/global/iam/sys-config/" + v.Name); obj.Error == nil {
-			prevVersion = obj.Meta.Version
+		if obj := store.PvGet("sys-config/" + v.Name); obj.OK() {
+			prevVersion = obj.Meta().Version
 		}
 
-		if obj := store.BtAgent.ObjectSet("/global/iam/sys-config/"+v.Name, v.Value, &btapi.ObjectWriteOptions{
+		if obj := store.PvPut("sys-config/"+v.Name, v.Value, &skv.PvWriteOptions{
 			PrevVersion: prevVersion,
-		}); obj.Error != nil {
-			sets.Error = &types.ErrorMeta{"500", obj.Error.Message}
+		}); !obj.OK() {
+			sets.Error = &types.ErrorMeta{"500", obj.Bytex().String()}
 			return
 		}
 	}
 
-	config.Config.Refresh()
+	store.SysConfigRefresh()
 
 	sets.Kind = "SysConfigList"
 }
@@ -130,12 +131,12 @@ func (c SysConfig) MailerAction() {
 
 	defer c.RenderJson(&ls)
 
-	if !iamclient.SessionAccessAllowed(c.Session, "sys.admin", "df085c6dc6ff") {
+	if !iamclient.SessionAccessAllowed(c.Session, "sys.admin", config.Config.InstanceID) {
 		ls.Error = &types.ErrorMeta{iamapi.ErrCodeAccessDenied, "Access Denied"}
 		return
 	}
 
-	if obj := store.BtAgent.ObjectGet("/global/iam/sys-config/mailer"); obj.Error == nil {
+	if obj := store.PvGet("sys-config/mailer"); obj.OK() {
 
 		ls.Items.Set("mailer", obj.Data)
 	}
