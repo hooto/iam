@@ -17,7 +17,7 @@ iam.Boot = function()
     seajs.use([
         iam.baseui +"twbs/css/bootstrap.min.css",
         iam.baseui +"jquery/jquery.min.js",
-        iam.baseui +"lessui/js/BrowserDetect.js",
+        iam.baseui +"lessui/js/browser-detect.js",
     ], function() {
 
         var browser = BrowserDetect.browser;

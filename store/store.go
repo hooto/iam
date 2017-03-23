@@ -16,6 +16,7 @@ package store
 
 import (
 	"fmt"
+	"regexp"
 	"strings"
 
 	"code.hooto.com/lessos/iam/config"
@@ -33,6 +34,7 @@ var (
 	Data                  skv.Connector
 	def_sysadmin          = "sysadmin"
 	def_sysadmin_password = "changeme"
+	app_inst_id_re        = regexp.MustCompile("^[0-9a-f]{16}$")
 )
 
 func PvGet(path string) *skv.Result {
@@ -144,6 +146,7 @@ func InitData() (err error) {
 			Created: utilx.TimeNow("atom"),
 			Updated: utilx.TimeNow("atom"),
 		},
+		Version:    config.Version,
 		AppID:      "iam",
 		AppTitle:   "lessOS IAM Service",
 		Status:     1,
@@ -152,23 +155,27 @@ func InitData() (err error) {
 	}
 	PvPut("app-instance/"+inst.Meta.ID, inst, nil)
 
-	// privilege
-	rps := map[uint32][]string{}
-	for _, v := range ps {
+	AppInstanceRegister(inst)
 
-		for _, rid := range v.Roles {
+	/*
+		// privilege
+		rps := map[uint32][]string{}
+		for _, v := range ps {
 
-			if _, ok := rps[rid]; !ok {
-				rps[rid] = []string{}
+			for _, rid := range v.Roles {
+
+				if _, ok := rps[rid]; !ok {
+					rps[rid] = []string{}
+				}
+
+				rps[rid] = append(rps[rid], v.Privilege)
 			}
-
-			rps[rid] = append(rps[rid], v.Privilege)
 		}
-	}
 
-	for rid, v := range rps {
-		PvPut(fmt.Sprintf("role-privilege/%d/%s", rid, inst.Meta.ID), strings.Join(v, ","), nil)
-	}
+		for rid, v := range rps {
+			PvPut(fmt.Sprintf("role-privilege/%d/%s", rid, inst.Meta.ID), strings.Join(v, ","), nil)
+		}
+	*/
 
 	// Init Super SysAdmin Account
 	if rs := PvGet("user/sysadmin"); rs.NotFound() {
@@ -239,4 +246,69 @@ func SysConfigRefresh() {
 			config.UserRegistrationDisabled = false
 		}
 	}
+}
+
+func AppInstanceRegister(inst iamapi.AppInstance) error {
+
+	if !app_inst_id_re.MatchString(inst.Meta.ID) {
+		return fmt.Errorf("Invalid meta.id (%s)", inst.Meta.ID)
+	}
+
+	if rs := PvGet("user/" + inst.Meta.UserID); rs.NotFound() {
+		inst.Meta.UserID = idhash.HashToHexString([]byte(def_sysadmin), 8)
+	}
+
+	var prev iamapi.AppInstance
+	if rs := PvGet("app-instance/" + inst.Meta.ID); rs.OK() {
+		rs.Decode(&prev)
+	}
+
+	if prev.Meta.ID == "" {
+		inst.Meta.Created = utilx.TimeNow("atom")
+		inst.Meta.Updated = utilx.TimeNow("atom")
+		PvPut("app-instance/"+inst.Meta.ID, inst, nil)
+	} else {
+
+		prev.Meta.Updated = utilx.TimeNow("atom")
+
+		if inst.Version != "" && inst.Version != prev.Version {
+			prev.Version = inst.Version
+		}
+
+		if inst.AppTitle != "" && inst.AppTitle != prev.AppTitle {
+			prev.AppTitle = inst.AppTitle
+		}
+
+		if inst.Status != prev.Status {
+			prev.Status = inst.Status
+		}
+
+		if inst.Url != "" && inst.Url != prev.Url {
+			prev.Url = inst.Url
+		}
+
+		PvPut("app-instance/"+prev.Meta.ID, prev, nil)
+
+		// TODO remove unused privileges
+	}
+
+	// privilege
+	rps := map[uint32][]string{}
+	for _, v := range inst.Privileges {
+
+		for _, rid := range v.Roles {
+
+			if _, ok := rps[rid]; !ok {
+				rps[rid] = []string{}
+			}
+
+			rps[rid] = append(rps[rid], v.Privilege)
+		}
+	}
+
+	for rid, v := range rps {
+		PvPut(fmt.Sprintf("role-privilege/%d/%s", rid, inst.Meta.ID), strings.Join(v, ","), nil)
+	}
+
+	return nil
 }
