@@ -21,6 +21,7 @@ import (
 	"code.hooto.com/lessos/iam/iamapi"
 	"code.hooto.com/lessos/iam/store"
 	"github.com/lessos/lessgo/crypto/idhash"
+	// "github.com/lessos/lessgo/logger"
 )
 
 var (
@@ -80,6 +81,8 @@ func instPerms(instanceid string) *perm_map {
 }
 
 func AccessAllowed(owner string, roles []uint32, instanceid, privilege string) bool {
+
+	// fmt.Println("owner", owner, "roles", roles, "instanceid", instanceid, "privilege", privilege)
 
 	if instanceid == "" {
 		instanceid = idhash.HashToHexString([]byte("iam"), 16)

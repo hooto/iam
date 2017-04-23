@@ -33,6 +33,7 @@ const (
 
 var (
 	InstanceID         = ""
+	InstanceOwner      = ""
 	ServiceUrl         = "http://127.0.0.1:9528/iam"
 	ServiceUrlFrontend = ""
 	sessions           = map[string]iamapi.UserSession{}

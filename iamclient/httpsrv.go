@@ -60,11 +60,13 @@ func (c Auth) LoginAction() {
 
 type AuthSession struct {
 	types.TypeMeta `json:",inline"`
-	UserID         string `json:"userid"`
-	UserName       string `json:"username"`
-	Name           string `json:"name"`
-	IamUrl         string `json:"iam_url"`
-	PhotoUrl       string `json:"photo_url"`
+	UserID         string   `json:"userid"`
+	UserName       string   `json:"username"`
+	Name           string   `json:"name"`
+	IamUrl         string   `json:"iam_url"`
+	PhotoUrl       string   `json:"photo_url"`
+	InstanceOwner  bool     `json:"instance_owner,omitempty"`
+	Roles          []uint32 `json:"roles,omitempty"`
 }
 
 func (c Auth) SessionAction() {
@@ -80,6 +82,12 @@ func (c Auth) SessionAction() {
 		set.UserName = session.UserName
 		set.Name = session.Name
 		set.PhotoUrl = ServiceUrl + "/v1/service/photo/" + session.UserID
+		set.Roles = session.Roles
+
+		if InstanceOwner == set.UserID {
+			set.InstanceOwner = true
+		}
+
 		set.Kind = "AuthSession"
 
 	} else {
