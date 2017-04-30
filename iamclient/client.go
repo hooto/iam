@@ -68,27 +68,28 @@ func innerExpiredClean() {
 	nextClean = time.Now().Add(time.Second * 60)
 }
 
-func LoginUrl(backurl string) string {
+func service_prefix() string {
 
 	if ServiceUrlFrontend != "" {
-		return ServiceUrlFrontend + "/service/login?continue=" + backurl
+		return ServiceUrlFrontend
 	}
 
-	return ServiceUrl + "/service/login?continue=" + backurl
+	return ServiceUrl
+}
+
+func LoginUrl(backurl string) string {
+	return service_prefix() + "/service/login?continue=" + backurl
 }
 
 func AuthServiceUrl(client_id, redirect_uri, state string) string {
-
-	if ServiceUrlFrontend != "" {
-		return auth_service_url(ServiceUrlFrontend, client_id, redirect_uri, state)
-	}
-
-	return auth_service_url(ServiceUrl, client_id, redirect_uri, state)
+	return auth_service_url(service_prefix(), client_id, redirect_uri, state)
 }
 
 func auth_service_url(service_url, client_id, redirect_uri, state string) string {
-	return fmt.Sprintf("%s/service/login?response_type=token&client_id=%s&redirect_uri=%s&state=%s",
-		service_url, client_id, redirect_uri, state)
+	return fmt.Sprintf(
+		"%s/service/login?response_type=token&client_id=%s&redirect_uri=%s&state=%s",
+		service_url, client_id, redirect_uri, state,
+	)
 }
 
 func SessionAccessToken(s *httpsrv.Session) string {
@@ -96,7 +97,6 @@ func SessionAccessToken(s *httpsrv.Session) string {
 }
 
 func SesionSet(s *httpsrv.Session) error {
-
 	return nil
 }
 

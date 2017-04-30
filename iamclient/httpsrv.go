@@ -72,8 +72,8 @@ type AuthSession struct {
 func (c Auth) SessionAction() {
 
 	set := AuthSession{
-		IamUrl:   ServiceUrl,
-		PhotoUrl: ServiceUrl + "/v1/service/photo/guest",
+		IamUrl:   service_prefix(),
+		PhotoUrl: service_prefix() + "/v1/service/photo/guest",
 	}
 
 	if session, err := SessionInstance(c.Session); err == nil {
@@ -81,7 +81,7 @@ func (c Auth) SessionAction() {
 		set.UserID = session.UserID
 		set.UserName = session.UserName
 		set.Name = session.Name
-		set.PhotoUrl = ServiceUrl + "/v1/service/photo/" + session.UserID
+		set.PhotoUrl = service_prefix() + "/v1/service/photo/" + session.UserID
 		set.Roles = session.Roles
 
 		if InstanceOwner == set.UserID {
