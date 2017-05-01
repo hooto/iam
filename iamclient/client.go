@@ -39,6 +39,8 @@ var (
 	sessions           = map[string]iamapi.UserSession{}
 	nextClean          = time.Now()
 	locker             sync.Mutex
+	c_roles                  = iamapi.UserRoleList{}
+	c_roles_tto        int64 = 0
 )
 
 func Expired(ttl int) time.Time {
@@ -196,4 +198,39 @@ func _access_allowed(privilege, token, instanceid string) bool {
 	}
 
 	return true
+}
+
+func RoleList(token string) (*iamapi.UserRoleList, error) {
+
+	if ServiceUrl == "" || token == "" {
+		return nil, errors.New("Unauthorized")
+	}
+
+	if c_roles_tto > time.Now().UTC().Unix() {
+		return &c_roles, nil
+	}
+
+	hc := httpclient.Get(fmt.Sprintf(
+		"%s/v1/user/role-list",
+		ServiceUrl,
+	))
+	defer hc.Close()
+
+	var rls iamapi.UserRoleList
+
+	if err := hc.ReplyJson(&rls); err != nil {
+		return nil, err
+	}
+
+	if rls.Error != nil || rls.Kind != "UserRoleList" {
+		return nil, errors.New("Network ")
+	}
+
+	c_roles_tto = time.Now().UTC().Unix() + 600
+
+	locker.Lock()
+	c_roles = rls
+	locker.Unlock()
+
+	return &c_roles, nil
 }

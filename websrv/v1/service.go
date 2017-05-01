@@ -63,7 +63,7 @@ func (c Service) LoginAuthAction() {
 	uname := strings.TrimSpace(strings.ToLower(c.Params.Get("uname")))
 
 	if uname == "" || c.Params.Get("passwd") == "" {
-		rsp.Error = &types.ErrorMeta{"400", "Bad Request"}
+		rsp.Error = types.NewErrorMeta("400", "Bad Request")
 		return
 	}
 
@@ -73,12 +73,12 @@ func (c Service) LoginAuthAction() {
 	}
 
 	if user.Meta.Name != uname {
-		rsp.Error = &types.ErrorMeta{"400", "Username or Password can not match"}
+		rsp.Error = types.NewErrorMeta("400", "Username or Password can not match")
 		return
 	}
 
 	if !pass.Check(c.Params.Get("passwd"), user.Auth) {
-		rsp.Error = &types.ErrorMeta{"400", "Username or Password can not match"}
+		rsp.Error = types.NewErrorMeta("400", "Username or Password can not match")
 		return
 	}
 
@@ -106,7 +106,7 @@ func (c Service) LoginAuthAction() {
 	if sobj := store.PvPut(skey, session, &skv.PvWriteOptions{
 		Ttl: 864000000,
 	}); !sobj.OK() {
-		rsp.Error = &types.ErrorMeta{"500", sobj.Bytex().String()}
+		rsp.Error = types.NewErrorMeta("500", sobj.Bytex().String())
 		return
 	}
 
@@ -151,7 +151,7 @@ func (c Service) AuthAction() {
 
 	token := c.Params.Get(iamapi.AccessTokenKey)
 	if len(token) < 30 {
-		rsp.Error = &types.ErrorMeta{iamapi.ErrCodeUnauthorized, "Unauthorized"}
+		rsp.Error = types.NewErrorMeta(iamapi.ErrCodeUnauthorized, "Unauthorized")
 		return
 	}
 	token = token[:8] + "/" + token[9:]
@@ -161,13 +161,13 @@ func (c Service) AuthAction() {
 	}
 
 	if rsp.AccessToken == "" {
-		rsp.Error = &types.ErrorMeta{iamapi.ErrCodeUnauthorized, "Unauthorized"}
+		rsp.Error = types.NewErrorMeta(iamapi.ErrCodeUnauthorized, "Unauthorized")
 		return
 	}
 
 	//
 	if rsp.Expired < types.MetaTimeNow() {
-		rsp.Error = &types.ErrorMeta{iamapi.ErrCodeUnauthorized, "Unauthorized"}
+		rsp.Error = types.NewErrorMeta(iamapi.ErrCodeUnauthorized, "Unauthorized")
 		return
 	}
 
@@ -177,7 +177,7 @@ func (c Service) AuthAction() {
 	// 	addr = c.Request.RemoteAddr[:addridx]
 	// }
 	// if addr != rsp.ClientAddr {
-	// 	rsp.Error = &types.ErrorMeta{iamapi.ErrCodeUnauthorized, "Unauthorized"}
+	// 	rsp.Error = types.NewErrorMeta(iamapi.ErrCodeUnauthorized, "Unauthorized")
 	// 	return
 	// }
 
@@ -194,18 +194,18 @@ func (c Service) AccessAllowedAction() {
 	defer c.RenderJson(&rsp)
 
 	if len(c.Request.RawBody) == 0 {
-		rsp.Error = &types.ErrorMeta{iamapi.ErrCodeUnauthorized, "Unauthorized"}
+		rsp.Error = types.NewErrorMeta(iamapi.ErrCodeUnauthorized, "Unauthorized")
 		return
 	}
 
 	// fmt.Println("AccessAllowedAction", string(c.Request.RawBody))
 
 	if err := c.Request.JsonDecode(&req); err != nil {
-		rsp.Error = &types.ErrorMeta{iamapi.ErrCodeUnauthorized, err.Error()}
+		rsp.Error = types.NewErrorMeta(iamapi.ErrCodeUnauthorized, err.Error())
 		return
 	}
 	if len(req.AccessToken) < 30 {
-		rsp.Error = &types.ErrorMeta{iamapi.ErrCodeUnauthorized, "Unauthorized"}
+		rsp.Error = types.NewErrorMeta(iamapi.ErrCodeUnauthorized, "Unauthorized")
 		return
 	}
 	req.AccessToken = req.AccessToken[:8] + "/" + req.AccessToken[9:]
@@ -216,13 +216,13 @@ func (c Service) AccessAllowedAction() {
 	}
 
 	if session.AccessToken == "" {
-		rsp.Error = &types.ErrorMeta{iamapi.ErrCodeUnauthorized, "Unauthorized"}
+		rsp.Error = types.NewErrorMeta(iamapi.ErrCodeUnauthorized, "Unauthorized")
 		return
 	}
 
 	//
 	if session.Expired < types.MetaTimeNow() {
-		rsp.Error = &types.ErrorMeta{iamapi.ErrCodeUnauthorized, "Unauthorized"}
+		rsp.Error = types.NewErrorMeta(iamapi.ErrCodeUnauthorized, "Unauthorized")
 		return
 	}
 
@@ -232,13 +232,12 @@ func (c Service) AccessAllowedAction() {
 	// 	addr = c.Request.RemoteAddr[:addridx]
 	// }
 	// if addr != session.ClientAddr {
-	// 	rsp.Error = &types.ErrorMeta{iamapi.ErrCodeUnauthorized, "Unauthorized"}
+	// 	rsp.Error = types.NewErrorMeta(iamapi.ErrCodeUnauthorized, "Unauthorized")
 	// 	return
 	// }
 
 	if !role.AccessAllowed(session.UserID, session.Roles, req.InstanceID, req.Privilege) {
-		rsp.Error = &types.ErrorMeta{iamapi.ErrCodeUnauthorized, "Unauthorized"}
-
+		rsp.Error = types.NewErrorMeta(iamapi.ErrCodeUnauthorized, "Unauthorized")
 		return
 	}
 

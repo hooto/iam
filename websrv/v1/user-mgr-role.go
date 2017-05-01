@@ -16,6 +16,7 @@ package v1
 
 import (
 	"code.hooto.com/lynkdb/iomix/skv"
+	iox_utils "code.hooto.com/lynkdb/iomix/utils"
 	"github.com/lessos/lessgo/types"
 	"github.com/lessos/lessgo/utils"
 	"github.com/lessos/lessgo/utilx"
@@ -32,10 +33,10 @@ func (c UserMgr) RoleListAction() {
 
 	defer c.RenderJson(&ls)
 
-	if !iamclient.SessionAccessAllowed(c.Session, "user.admin", config.Config.InstanceID) {
-		ls.Error = &types.ErrorMeta{iamapi.ErrCodeAccessDenied, "Access Denied"}
-		return
-	}
+	// if !iamclient.SessionAccessAllowed(c.Session, "user.admin", config.Config.InstanceID) {
+	// 	ls.Error = types.NewErrorMeta(iamapi.ErrCodeAccessDenied, "Access Denied")
+	// 	return
+	// }
 
 	if objs := store.PvScan("role/", "", "", 10000); objs.OK() {
 
@@ -44,6 +45,10 @@ func (c UserMgr) RoleListAction() {
 
 			var role iamapi.UserRole
 			if err := obj.Decode(&role); err == nil {
+
+				if role.IdxID == 1000 {
+					continue
+				}
 
 				ls.Items = append(ls.Items, role)
 			}
@@ -59,17 +64,17 @@ func (c UserMgr) RoleEntryAction() {
 
 	defer c.RenderJson(&set)
 
-	if !iamclient.SessionAccessAllowed(c.Session, "user.admin", config.Config.InstanceID) {
-		set.Error = &types.ErrorMeta{iamapi.ErrCodeAccessDenied, "Access Denied"}
-		return
-	}
+	// if !iamclient.SessionAccessAllowed(c.Session, "user.admin", config.Config.InstanceID) {
+	// 	set.Error = types.NewErrorMeta(iamapi.ErrCodeAccessDenied, "Access Denied")
+	// 	return
+	// }
 
 	if obj := store.PvGet("role/" + c.Params.Get("roleid")); obj.OK() {
 		obj.Decode(&set)
 	}
 
 	if set.Meta.ID == "" {
-		set.Error = &types.ErrorMeta{iamapi.ErrCodeInvalidArgument, "Role Not Found"}
+		set.Error = types.NewErrorMeta(iamapi.ErrCodeInvalidArgument, "Role Not Found")
 		return
 	}
 
@@ -87,19 +92,46 @@ func (c UserMgr) RoleSetAction() {
 	defer c.RenderJson(&set)
 
 	if err := c.Request.JsonDecode(&set); err != nil {
-		set.Error = &types.ErrorMeta{iamapi.ErrCodeInvalidArgument, "Bad Request"}
+		set.Error = types.NewErrorMeta(iamapi.ErrCodeInvalidArgument, "Bad Request")
 		return
 	}
 
 	if !iamclient.SessionAccessAllowed(c.Session, "user.admin", config.Config.InstanceID) {
-		set.Error = &types.ErrorMeta{iamapi.ErrCodeAccessDenied, "Access Denied"}
+		set.Error = types.NewErrorMeta(iamapi.ErrCodeAccessDenied, "Access Denied")
+		return
+	}
+
+	if set.Meta.Name == "" {
+		set.Error = types.NewErrorMeta(iamapi.ErrCodeInvalidArgument, "Bad Request")
 		return
 	}
 
 	if set.Meta.ID == "" {
 
+		last_id := uint32(0)
+
+		if objs := store.PvRevScan("role/", "", "", 1); objs.OK() {
+
+			rss := objs.KvList()
+			for _, obj := range rss {
+
+				var last_role iamapi.UserRole
+				if err := obj.Decode(&last_role); err == nil {
+					last_id = last_role.IdxID
+				}
+			}
+		}
+
+		if last_id < 1000 {
+			set.Error = types.NewErrorMeta("500", "Server Error")
+			return
+		}
+
+		last_id++
+
 		//
-		set.Meta.ID = utils.StringNewRand(8)
+		set.Meta.ID = iox_utils.BytesToHexString(iox_utils.Uint32ToBytes(last_id))
+		set.IdxID = last_id
 		set.Meta.Created = utilx.TimeNow("atom")
 		set.Meta.UserID = utils.StringEncode16("sysadmin", 8)
 
@@ -111,12 +143,13 @@ func (c UserMgr) RoleSetAction() {
 		}
 
 		if prev.Meta.ID != set.Meta.ID {
-			set.Error = &types.ErrorMeta{iamapi.ErrCodeInvalidArgument, "UserRole Not Found"}
+			set.Error = types.NewErrorMeta(iamapi.ErrCodeInvalidArgument, "UserRole Not Found")
 			return
 		}
 
-		set.Meta.Created = prev.Meta.Updated
-		set.Meta.UserID = prev.Meta.UserID
+		prev.Meta.Name = set.Meta.Name
+		prev.Desc = set.Desc
+		set = prev
 	}
 
 	set.Meta.Updated = utilx.TimeNow("atom")
@@ -125,7 +158,7 @@ func (c UserMgr) RoleSetAction() {
 	if obj := store.PvPut("role/"+set.Meta.ID, set, &skv.PvWriteOptions{
 		PrevVersion: prevVersion,
 	}); !obj.OK() {
-		set.Error = &types.ErrorMeta{"500", obj.Bytex().String()}
+		set.Error = types.NewErrorMeta("500", obj.Bytex().String())
 		return
 	}
 

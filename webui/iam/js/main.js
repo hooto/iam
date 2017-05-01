@@ -4,20 +4,32 @@ var iam = {
     basetpl : "/iam/~/iam/tpl/",
     api     : "/iam/v1/",
     mgrapi  : "/iam/",
+    Session : null,
+    debug   : true,
+    OpToolActive: null,
+}
+
+iam.debug_uri = function()
+{
+    if (!iam.debug) {
+        return "";
+    }
+    return "?_="+ Math.random(); 
 }
 
 iam.Boot = function()
 {
     seajs.config({
+        base: iam.base,
         alias: {
-            ep: iam.baseui +"lessui/js/eventproxy.js"
+            ep: "~/lessui/js/eventproxy.js"
         },
     });
 
     seajs.use([
-        iam.baseui +"twbs/css/bootstrap.min.css",
-        iam.baseui +"jquery/jquery.min.js",
-        iam.baseui +"lessui/js/browser-detect.js",
+        "~/twbs/css/bootstrap.min.css",
+        "~/jquery/jquery.min.js",
+        "~/lessui/js/browser-detect.js",
     ], function() {
 
         var browser = BrowserDetect.browser;
@@ -33,110 +45,158 @@ iam.Boot = function()
         }
 
         seajs.use([
-            iam.baseui +"lessui/js/lessui.js",
-            iam.baseui +"lessui/css/lessui.min.css",
+            "~/lessui/js/lessui.js",
+            "~/lessui/css/lessui.css",
+            "~/purecss/css/pure.css",
         ], function() {
             
             seajs.use([
-                iam.baseui +"iam/css/main.css?_="+ Math.random(),
-                iam.baseui +"twbs/js/bootstrap.min.js",
-                iam.baseui +"iam/js/mgr.js?_="+ Math.random(),
-                iam.baseui +"iam/js/user.js?_="+ Math.random(),
-                iam.baseui +"iam/js/myapp.js?_="+ Math.random(),
-                iam.baseui +"iam/js/sys.js?_="+ Math.random(),
-                iam.baseui +"iam/js/usermgr.js?_="+ Math.random(),
-                iam.baseui +"iam/js/appmgr.js?_="+ Math.random(),
-            ], function() {
-                iamMgr.Index();
-                
-                iamUser.Init();
-                iamMyApp.Init();
-
-                iamSys.Init();
-                iamUserMgr.Init();
-                iamAppMgr.Init();
-            });
+                "~/iam/css/main.css"+ iam.debug_uri(),
+                "~/twbs/js/bootstrap.min.js",
+                "~/iam/js/mgr.js"+ iam.debug_uri(),
+                "~/iam/js/user.js"+ iam.debug_uri(),
+                "~/iam/js/myapp.js"+ iam.debug_uri(),
+                "~/iam/js/sys.js"+ iam.debug_uri(),
+                "~/iam/js/usermgr.js"+ iam.debug_uri(),
+                "~/iam/js/appmgr.js"+ iam.debug_uri(),
+            ], iam.load_index);
         });        
     });
 }
 
-iam.Ajax = function(url, options)
+iam.load_index = function()
 {
-    options = options || {};
+    l4i.debug = iam.debug;
 
-    //
-    if (url.substr(0, 1) != "/" && url.substr(0, 4) != "http") {
-        url = bt.base + url;
-    }
+    seajs.use(["ep"], function (EventProxy) {
 
-    //
-    if (/\?/.test(url)) {
-        url += "&_=";
-    } else {
-        url += "?_=";
-    }
-    url += Math.random();
+        var ep = EventProxy.create("tpl", "session", "pinfo", function (tpl, session, pinfo) {
 
-    //
-    //if (l4iCookie.Get("access_token")) {
-    //    url += "&access_token="+ l4iCookie.Get("access_token");
-    //}
-    
-    //
-    if (options.method === undefined) {
-        options.method = "GET";
-    }
-
-    //
-    if (options.timeout === undefined) {
-        options.timeout = 10000;
-    }
-
-    //
-    $.ajax({
-        url     : url,
-        type    : options.method,
-        data    : options.data,
-        timeout : options.timeout,
-        success : function(rsp) {
-            if (typeof options.callback === "function") {
-                options.callback(null, rsp);
+            if (!session || session.username == "") {
+                return alert("Network is unreachable, Please try again later");
             }
-            if (typeof options.success === "function") {
-                options.success(rsp);
+            iam.Session = session;
+
+            if (!pinfo.topnav) {
+                pinfo.topnav = [];
             }
-        },
-        error: function(xhr, textStatus, error) {
-            // console.log(xhr.responseText);
-            if (typeof options.callback === "function") {
-                options.callback(xhr.responseText, null);
+            if (!pinfo.webui_banner_title) {
+                pinfo.webui_banner_title = "Account Center";
             }
-            if (typeof options.error === "function") {
-                options.error(xhr, textStatus, error);
+
+            // console.log(pinfo);
+
+            l4i.UrlEventRegister("index", iamUser.Overview, "iam-topbar-nav-menus");
+
+            for (var i in pinfo.topnav) {
+                switch (pinfo.topnav[i].path) {
+                case "my-app/index":
+                    l4i.UrlEventRegister("my-app/index", iamMyApp.Index, "iam-topbar-nav-menus");
+                    break;
+
+                case "user-mgr/index":
+                    l4i.UrlEventRegister("user-mgr/index", iamUserMgr.Index, "iam-topbar-nav-menus");
+                    break;
+
+                case "app-mgr/index":
+                    l4i.UrlEventRegister("app-mgr/index", iamAppMgr.Index, "iam-topbar-nav-menus");
+                    break;
+
+                case "sys-mgr/index":
+                    l4i.UrlEventRegister("sys-mgr/index", iamSys.Index, "iam-topbar-nav-menus");
+                    break;
+                }
             }
-        }
+
+            l4iTemplate.Render({
+                dstid  : "body-content",
+                tplsrc : tpl,
+                data   : {
+                    pinfo:   pinfo,
+                    session: session,
+                },
+                success : function() {
+                    l4i.UrlEventHandler("index", true);
+                },
+            });
+        });
+
+        ep.fail(function (err) {
+            if (err && err == "AuthSession") {
+                iam.AlertUserLogin();
+            } else {
+                alert("Network is unreachable, Please try again later");
+            }
+        });
+
+        l4i.Ajax(iam.base +"auth/session", {
+            nocache: true,
+            callback: function(err, data) {
+                if (!data || data.kind != "AuthSession") {
+                    return ep.emit('error', "AuthSession");
+                }
+                ep.emit("session", data);
+            },
+        });
+
+        iam.MgrApiCmd("user/panel-info", {
+            callback: ep.done('pinfo'),
+        });
+
+        iam.TplCmd("index", {
+            callback: ep.done("tpl"),
+        });
     });
 }
 
+iam.AlertUserLogin = function()
+{
+    l4iAlert.Open("warn", "You are not logged in, or your login session has expired. Please sign in again", {
+        close: false,
+        buttons: [{
+            title: "SIGN IN",
+            href: iam.base +"auth/login",
+        }],
+    });
+}
 
 iam.ApiCmd = function(url, options)
 {
-    iam.Ajax(iam.api + url, options);
+    iam.api_cmd(iam.api + url, options);
 }
 
 iam.MgrApiCmd = function(url, options)
 {
-    iam.Ajax(iam.mgrapi + url, options);
+    iam.api_cmd(iam.mgrapi + url, options);
+}
+
+iam.api_cmd = function(url, options)
+{
+    var appcb = null;
+    if (options.callback) {
+        appcb = options.callback;
+    }
+    options.callback = function(err, data) {
+        if (err == "Unauthorized") {
+            return iam.AlertUserLogin();
+        }
+        if (appcb) {
+            appcb(err, data);
+        }
+    }
+    options.nocache = true;
+
+    l4i.Ajax(url, options);
 }
 
 iam.TplCmd = function(url, options)
 {
-    iam.Ajax(iam.basetpl + url +".tpl", options);
+    l4i.Ajax(iam.basetpl + url +".tpl", options);
 }
 
 iam.Loader = function(target, uri)
 {
-    iam.Ajax(iam.basetpl + uri +".tpl", {
+    l4i.Ajax(iam.basetpl + uri +".tpl", {
         callback: function(err, data) {
             $(target).html(data);
         }
@@ -156,4 +216,22 @@ iam.ComLoader = function(uri)
 iam.WorkLoader = function(uri)
 {
     iam.Loader("#work-content", uri);
+}
+
+iam.OpToolsRefresh = function(div_target)
+{
+    if (!div_target || typeof div_target == "string" && div_target == iam.OpToolActive) {
+        return;
+    }
+
+    $("#iam-module-navbar-optools").empty();
+
+    if (typeof div_target == "string") {
+
+        var opt = $("#work-content").find(div_target);
+        if (opt) {
+            $("#iam-module-navbar-optools").html(opt.html());
+            iam.OpToolActive = div_target;
+        }
+    }
 }

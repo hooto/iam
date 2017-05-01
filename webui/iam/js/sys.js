@@ -2,19 +2,16 @@ var iamSys = {
 
 }
 
-iamSys.Init = function()
-{
-    l4i.UrlEventRegister("sys-mgr/index", iamSys.Index);
-    l4i.UrlEventRegister("sys-mgr/general-set", iamSys.GeneralSet);
-    l4i.UrlEventRegister("sys-mgr/mailer-set", iamSys.MailerSet);
-}
-
 iamSys.Index = function()
 {
+    iam.OpToolActive = null;
     iam.TplCmd("sys-mgr/index", {
         callback: function(err, data) {
             $("#com-content").html(data);
-            iamSys.GeneralSet();
+            l4i.UrlEventClean("iam-module-navbar-menus");
+            l4i.UrlEventRegister("sys-mgr/general-set", iamSys.GeneralSet, "iam-module-navbar-menus");
+            l4i.UrlEventRegister("sys-mgr/mailer-set", iamSys.MailerSet, "iam-module-navbar-menus");
+            l4i.UrlEventHandler("sys-mgr/general-set", true);
         },
     });
 }
@@ -113,11 +110,11 @@ iamSys.MailerSet = function(name)
             }
 
             var mailer = {}
-			if (data.items[0].value && data.items[0].value.length > 2) {
+            if (data.items[0].value && data.items[0].value.length > 2) {
                 mailer = JSON.parse(data.items[0].value);
-				if (!mailer) {
+                if (!mailer) {
                     mailer = {};
-				}
+                }
             }
 
             if (!mailer.smtp_host) {
@@ -161,6 +158,9 @@ iamSys.MailerSet = function(name)
 iamSys.MailerSetCommit = function()
 {
     var form = $("#iam-sysmgr-mailerset");
+    if (!form) {
+        return;
+    }
     
     var mailer = {
         "smtp_host": form.find("input[name=mailer_smtp_host]").val(),

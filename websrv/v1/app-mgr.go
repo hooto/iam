@@ -15,6 +15,8 @@
 package v1
 
 import (
+	"strings"
+
 	"code.hooto.com/lynkdb/iomix/skv"
 	"github.com/lessos/lessgo/httpsrv"
 	"github.com/lessos/lessgo/types"
@@ -41,9 +43,13 @@ func (c AppMgr) InstListAction() {
 	defer c.RenderJson(&ls)
 
 	if !iamclient.SessionAccessAllowed(c.Session, "sys.admin", config.Config.InstanceID) {
-		ls.Error = &types.ErrorMeta{iamapi.ErrCodeAccessDenied, "Access Denied"}
+		ls.Error = types.NewErrorMeta(iamapi.ErrCodeAccessDenied, "Access Denied")
 		return
 	}
+
+	var (
+		qt = strings.ToLower(c.Params.Get("qry_text"))
+	)
 
 	// TODO page
 	if objs := store.PvScan("app-instance", "", "", 1000); objs.OK() {
@@ -53,6 +59,11 @@ func (c AppMgr) InstListAction() {
 
 			var inst iamapi.AppInstance
 			if err := obj.Decode(&inst); err == nil {
+
+				if qt != "" && (!strings.Contains(inst.AppID, qt) &&
+					!strings.Contains(inst.AppTitle, qt)) {
+					continue
+				}
 
 				ls.Items = append(ls.Items, inst)
 			}
@@ -71,7 +82,7 @@ func (c AppMgr) InstEntryAction() {
 	defer c.RenderJson(&set)
 
 	if !iamclient.SessionAccessAllowed(c.Session, "sys.admin", config.Config.InstanceID) {
-		set.Error = &types.ErrorMeta{iamapi.ErrCodeAccessDenied, "Access Denied"}
+		set.Error = types.NewErrorMeta(iamapi.ErrCodeAccessDenied, "Access Denied")
 		return
 	}
 
@@ -80,7 +91,7 @@ func (c AppMgr) InstEntryAction() {
 	}
 
 	if set.Meta.ID == "" {
-		set.Error = &types.ErrorMeta{iamapi.ErrCodeInvalidArgument, "App Instance Not Found"}
+		set.Error = types.NewErrorMeta(iamapi.ErrCodeInvalidArgument, "App Instance Not Found")
 		return
 	}
 
@@ -94,12 +105,12 @@ func (c AppMgr) InstSetAction() {
 	defer c.RenderJson(&set)
 
 	if !iamclient.SessionAccessAllowed(c.Session, "sys.admin", config.Config.InstanceID) {
-		set.Error = &types.ErrorMeta{iamapi.ErrCodeAccessDenied, "Access Denied"}
+		set.Error = types.NewErrorMeta(iamapi.ErrCodeAccessDenied, "Access Denied")
 		return
 	}
 
 	if err := c.Request.JsonDecode(&set); err != nil || set.Meta.ID == "" {
-		set.Error = &types.ErrorMeta{iamapi.ErrCodeInvalidArgument, "InvalidArgument"}
+		set.Error = types.NewErrorMeta(iamapi.ErrCodeInvalidArgument, "InvalidArgument")
 		return
 	}
 
@@ -111,7 +122,7 @@ func (c AppMgr) InstSetAction() {
 	}
 
 	if prev.Meta.ID == "" || prevVersion < 1 {
-		set.Error = &types.ErrorMeta{iamapi.ErrCodeInvalidArgument, "App Instance Not Found"}
+		set.Error = types.NewErrorMeta(iamapi.ErrCodeInvalidArgument, "App Instance Not Found")
 		return
 	}
 
@@ -123,7 +134,7 @@ func (c AppMgr) InstSetAction() {
 		if obj := store.PvPut("app-instance/"+set.Meta.ID, prev, &skv.PvWriteOptions{
 			PrevVersion: prevVersion,
 		}); !obj.OK() {
-			set.Error = &types.ErrorMeta{iamapi.ErrCodeInternalError, obj.Bytex().String()}
+			set.Error = types.NewErrorMeta(iamapi.ErrCodeInternalError, obj.Bytex().String())
 			return
 		}
 	}

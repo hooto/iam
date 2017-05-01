@@ -37,99 +37,100 @@ import (
 
 type User struct {
 	*httpsrv.Controller
+	us iamapi.UserSession
+}
+
+func (c *User) Init() int {
+
+	//
+	c.us, _ = iamclient.SessionInstance(c.Session)
+
+	if !c.us.IsLogin() {
+		c.Response.Out.WriteHeader(401)
+		c.RenderJson(types.NewTypeErrorMeta(iamapi.ErrCodeUnauthorized, "Unauthorized"))
+		return 1
+	}
+
+	return 0
 }
 
 func (c User) ProfileAction() {
 
-	rsp := iamapi.UserProfile{}
+	set := iamapi.UserProfile{}
 
-	defer c.RenderJson(&rsp)
-
-	session, err := iamclient.SessionInstance(c.Session)
-
-	if err != nil || !session.IsLogin() {
-		rsp.Error = &types.ErrorMeta{"401", "Access Denied"}
-		return
-	}
+	defer c.RenderJson(&set)
 
 	// profile
-	if obj := store.PvGet("user-profile/" + session.UserID); obj.OK() {
-		obj.Decode(&rsp)
+	if obj := store.PvGet("user-profile/" + c.us.UserID); obj.OK() {
+		obj.Decode(&set)
 	}
 
-	if rsp.Name == "" {
+	if set.Name == "" {
 
-		rsp.Name = session.Name
+		set.Name = c.us.Name
 
-		store.PvPut("user-profile/"+session.UserID, rsp, nil)
+		store.PvPut("user-profile/"+c.us.UserID, set, nil)
 	}
 
 	// login
 	var user iamapi.User
-	if obj := store.PvGet("user/" + session.UserID); obj.OK() {
+	if obj := store.PvGet("user/" + c.us.UserID); obj.OK() {
 		obj.Decode(&user)
 	}
 
-	if user.Meta.ID != session.UserID {
-		rsp.Error = &types.ErrorMeta{"401", "Access Denied"}
+	if user.Meta.ID != c.us.UserID {
+		set.Error = types.NewErrorMeta("401", "Access Denied")
 		return
 	}
 
-	rsp.Login.Meta = user.Meta
-	rsp.Login.Name = user.Name
-	rsp.Login.Email = user.Email
-	rsp.Name = user.Name
+	set.Login.Meta = user.Meta
+	set.Login.Name = user.Name
+	set.Login.Email = user.Email
+	set.Name = user.Name
 
-	rsp.Kind = "UserProfile"
+	set.Kind = "UserProfile"
 }
 
 func (c User) ProfileSetAction() {
 
 	var (
-		rsp types.TypeMeta
+		set types.TypeMeta
 		req iamapi.UserProfile
 		err error
 	)
 
-	defer c.RenderJson(&rsp)
+	defer c.RenderJson(&set)
 
 	if err := c.Request.JsonDecode(&req); err != nil {
-		rsp.Error = &types.ErrorMeta{iamapi.ErrCodeInvalidArgument, "Bad Request"}
+		set.Error = types.NewErrorMeta(iamapi.ErrCodeInvalidArgument, "Bad Request")
 		return
 	}
 
 	if req, err = profile.PutValidate(req); err != nil {
-		rsp.Error = &types.ErrorMeta{iamapi.ErrCodeInvalidArgument, err.Error()}
-		return
-	}
-
-	session, err := iamclient.SessionInstance(c.Session)
-
-	if err != nil || !session.IsLogin() {
-		rsp.Error = &types.ErrorMeta{"401", "Access Denied"}
+		set.Error = types.NewErrorMeta(iamapi.ErrCodeInvalidArgument, err.Error())
 		return
 	}
 
 	// login
 	var user iamapi.User
-	uobj := store.PvGet("user/" + session.UserID)
+	uobj := store.PvGet("user/" + c.us.UserID)
 	if uobj.OK() {
 		uobj.Decode(&user)
 	}
 
-	if user.Meta.ID != session.UserID {
-		rsp.Error = &types.ErrorMeta{"404", "User Not Found"}
+	if user.Meta.ID != c.us.UserID {
+		set.Error = types.NewErrorMeta("404", "User Not Found")
 		return
 	}
 	user.Name = req.Name
 
-	store.PvPut("user/"+session.UserID, user, &skv.PvWriteOptions{
+	store.PvPut("user/"+c.us.UserID, user, &skv.PvWriteOptions{
 		PrevVersion: uobj.Meta().Version,
 	})
 
 	// profile
 	var profile iamapi.UserProfile
-	pobj := store.PvGet("user-profile/" + session.UserID)
+	pobj := store.PvGet("user-profile/" + c.us.UserID)
 	if pobj.OK() {
 		pobj.Decode(&profile)
 	}
@@ -138,52 +139,45 @@ func (c User) ProfileSetAction() {
 	profile.Birthday = req.Birthday
 	profile.About = req.About
 
-	store.PvPut("user-profile/"+session.UserID, profile, &skv.PvWriteOptions{
+	store.PvPut("user-profile/"+c.us.UserID, profile, &skv.PvWriteOptions{
 		PrevVersion: pobj.Meta().Version,
 	})
 
-	rsp.Kind = "UserProfile"
+	set.Kind = "UserProfile"
 }
 
 func (c User) PassSetAction() {
 
 	var (
-		rsp types.TypeMeta
+		set types.TypeMeta
 		req iamapi.UserPasswordSet
 	)
 
-	defer c.RenderJson(&rsp)
+	defer c.RenderJson(&set)
 
 	if err := c.Request.JsonDecode(&req); err != nil {
-		rsp.Error = &types.ErrorMeta{iamapi.ErrCodeInvalidArgument, "Bad Request"}
+		set.Error = types.NewErrorMeta(iamapi.ErrCodeInvalidArgument, "Bad Request")
 		return
 	}
 
 	if err := login.PassSetValidate(req); err != nil {
-		rsp.Error = &types.ErrorMeta{iamapi.ErrCodeInvalidArgument, err.Error()}
-		return
-	}
-
-	session, err := iamclient.SessionInstance(c.Session)
-
-	if err != nil || !session.IsLogin() {
-		rsp.Error = &types.ErrorMeta{"401", "Access Denied"}
+		set.Error = types.NewErrorMeta(iamapi.ErrCodeInvalidArgument, err.Error())
 		return
 	}
 
 	var user iamapi.User
-	uobj := store.PvGet("user/" + session.UserID)
+	uobj := store.PvGet("user/" + c.us.UserID)
 	if uobj.OK() {
 		uobj.Decode(&user)
 	}
 
-	if user.Meta.ID != session.UserID {
-		rsp.Error = &types.ErrorMeta{iamapi.ErrCodeInvalidArgument, "User Not Found"}
+	if user.Meta.ID != c.us.UserID {
+		set.Error = types.NewErrorMeta(iamapi.ErrCodeInvalidArgument, "User Not Found")
 		return
 	}
 
 	if !pass.Check(req.CurrentPassword, user.Auth) {
-		rsp.Error = &types.ErrorMeta{iamapi.ErrCodeInvalidArgument, "Current Password can not match"}
+		set.Error = types.NewErrorMeta(iamapi.ErrCodeInvalidArgument, "Current Password can not match")
 		return
 	}
 
@@ -194,50 +188,43 @@ func (c User) PassSetAction() {
 		PrevVersion: uobj.Meta().Version,
 	})
 
-	rsp.Kind = "UserPassword"
+	set.Kind = "UserPassword"
 }
 
 func (c User) EmailSetAction() {
 
 	var (
-		rsp types.TypeMeta
+		set types.TypeMeta
 		req iamapi.UserEmailSet
 	)
 
-	defer c.RenderJson(&rsp)
+	defer c.RenderJson(&set)
 
 	if err := c.Request.JsonDecode(&req); err != nil {
-		rsp.Error = &types.ErrorMeta{iamapi.ErrCodeInvalidArgument, "Bad Request"}
+		set.Error = types.NewErrorMeta(iamapi.ErrCodeInvalidArgument, "Bad Request")
 		return
 	}
 
 	if email, err := login.EmailSetValidate(req.Email); err != nil {
-		rsp.Error = &types.ErrorMeta{iamapi.ErrCodeInvalidArgument, err.Error()}
+		set.Error = types.NewErrorMeta(iamapi.ErrCodeInvalidArgument, err.Error())
 		return
 	} else {
 		req.Email = email
 	}
 
-	session, err := iamclient.SessionInstance(c.Session)
-
-	if err != nil || !session.IsLogin() {
-		rsp.Error = &types.ErrorMeta{"401", "Access Denied"}
-		return
-	}
-
 	var user iamapi.User
-	uobj := store.PvGet("user/" + session.UserID)
+	uobj := store.PvGet("user/" + c.us.UserID)
 	if uobj.OK() {
 		uobj.Decode(&user)
 	}
 
-	if user.Meta.ID != session.UserID {
-		rsp.Error = &types.ErrorMeta{iamapi.ErrCodeInvalidArgument, "User Not Found"}
+	if user.Meta.ID != c.us.UserID {
+		set.Error = types.NewErrorMeta(iamapi.ErrCodeInvalidArgument, "User Not Found")
 		return
 	}
 
 	if !pass.Check(req.Auth, user.Auth) {
-		rsp.Error = &types.ErrorMeta{iamapi.ErrCodeInvalidArgument, "Password can not match"}
+		set.Error = types.NewErrorMeta(iamapi.ErrCodeInvalidArgument, "Password can not match")
 		return
 	}
 
@@ -248,40 +235,33 @@ func (c User) EmailSetAction() {
 		PrevVersion: uobj.Meta().Version,
 	})
 
-	rsp.Kind = "UserEmail"
+	set.Kind = "UserEmail"
 }
 
 func (c User) PhotoSetAction() {
 
 	var (
-		rsp types.TypeMeta
+		set types.TypeMeta
 		req iamapi.UserPhotoSet
 	)
 
-	defer c.RenderJson(&rsp)
+	defer c.RenderJson(&set)
 
 	if err := c.Request.JsonDecode(&req); err != nil {
-		rsp.Error = &types.ErrorMeta{iamapi.ErrCodeInvalidArgument, "Bad Request"}
-		return
-	}
-
-	session, err := iamclient.SessionInstance(c.Session)
-
-	if err != nil || !session.IsLogin() {
-		rsp.Error = &types.ErrorMeta{"401", "Access Denied"}
+		set.Error = types.NewErrorMeta(iamapi.ErrCodeInvalidArgument, "Bad Request")
 		return
 	}
 
 	//
 	img64 := strings.SplitAfter(req.Data, ";base64,")
 	if len(img64) != 2 {
-		rsp.Error = &types.ErrorMeta{iamapi.ErrCodeInvalidArgument, "Bad Request"}
+		set.Error = types.NewErrorMeta(iamapi.ErrCodeInvalidArgument, "Bad Request")
 		return
 	}
 	imgreader := base64.NewDecoder(base64.StdEncoding, strings.NewReader(img64[1]))
 	imgsrc, _, err := image.Decode(imgreader)
 	if err != nil {
-		rsp.Error = &types.ErrorMeta{iamapi.ErrCodeInvalidArgument, err.Error()}
+		set.Error = types.NewErrorMeta(iamapi.ErrCodeInvalidArgument, err.Error())
 		return
 	}
 	imgnew := imaging.Thumbnail(imgsrc, 96, 96, imaging.CatmullRom)
@@ -289,14 +269,14 @@ func (c User) PhotoSetAction() {
 	var imgbuf bytes.Buffer
 	err = png.Encode(&imgbuf, imgnew)
 	if err != nil {
-		rsp.Error = &types.ErrorMeta{iamapi.ErrCodeInvalidArgument, err.Error()}
+		set.Error = types.NewErrorMeta(iamapi.ErrCodeInvalidArgument, err.Error())
 		return
 	}
 	imgphoto := base64.StdEncoding.EncodeToString(imgbuf.Bytes())
 
 	// profile
 	var profile iamapi.UserProfile
-	pobj := store.PvGet("user-profile/" + session.UserID)
+	pobj := store.PvGet("user-profile/" + c.us.UserID)
 	if pobj.OK() {
 		pobj.Decode(&profile)
 	}
@@ -304,25 +284,17 @@ func (c User) PhotoSetAction() {
 	profile.Photo = "data:image/png;base64," + imgphoto
 	profile.PhotoSource = req.Data
 
-	store.PvPut("user-profile/"+session.UserID, profile, &skv.PvWriteOptions{
+	store.PvPut("user-profile/"+c.us.UserID, profile, &skv.PvWriteOptions{
 		PrevVersion: pobj.Meta().Version,
 	})
 
-	rsp.Kind = "UserPhoto"
+	set.Kind = "UserPhoto"
 }
 
 func (c User) RoleListAction() {
 
-	ls := iamapi.UserRoleList{}
-
-	defer c.RenderJson(&ls)
-
-	session, err := iamclient.SessionInstance(c.Session)
-
-	if err != nil || !session.IsLogin() {
-		ls.Error = &types.ErrorMeta{iamapi.ErrCodeUnauthorized, "Access Denied"}
-		return
-	}
+	sets := iamapi.UserRoleList{}
+	defer c.RenderJson(&sets)
 
 	// TODO page
 	if objs := store.PvScan("role/", "", "", 1000); objs.OK() {
@@ -333,12 +305,16 @@ func (c User) RoleListAction() {
 			var role iamapi.UserRole
 			if err := obj.Decode(&role); err == nil {
 
-				if role.IdxID <= 1000 || role.Meta.UserID == session.UserID {
-					ls.Items = append(ls.Items, role)
+				if role.IdxID == 1 {
+					continue
+				}
+
+				if role.IdxID <= 1000 || role.Meta.UserID == c.us.UserID {
+					sets.Items = append(sets.Items, role)
 				}
 			}
 		}
 	}
 
-	ls.Kind = "UserRoleList"
+	sets.Kind = "UserRoleList"
 }

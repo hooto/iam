@@ -34,27 +34,29 @@ var iamUserMgr = {
     },
 }
 
-iamUserMgr.Init = function()
-{
-    l4i.UrlEventRegister("user-mgr/index", iamUserMgr.Index);
-    l4i.UrlEventRegister("user-mgr/user-list", iamUserMgr.UserList);
-    l4i.UrlEventRegister("user-mgr/role-list", iamUserMgr.RoleList);
-}
-
 iamUserMgr.Index = function()
 {
+    iam.OpToolActive = null;
     iam.TplCmd("user-mgr/index", {
         callback: function(err, data) {
             $("#com-content").html(data);
-            iamUserMgr.UserList();
+            l4i.UrlEventClean("iam-module-navbar-menus");
+            l4i.UrlEventRegister("user-mgr/user-list", iamUserMgr.UserList, "iam-module-navbar-menus");
+            l4i.UrlEventRegister("user-mgr/role-list", iamUserMgr.RoleList, "iam-module-navbar-menus");
+            l4i.UrlEventHandler("user-mgr/user-list", true);
         },
     });
 }
 
 iamUserMgr.UserList = function()
 {
-    //     var uri = "query_text="+ $("#query_text").val();
-    // uri += "&page="+ page;
+    var uri = "";
+    if (document.getElementById("iam_usermgr_list_qry_text")) {
+        var qt = $("#iam_usermgr_list_qry_text").val();
+        if (qt && qt.length > 0) {
+            uri = "?qry_text="+ qt;
+        }
+    }
 
     seajs.use(["ep"], function(EventProxy) {
 
@@ -64,10 +66,20 @@ iamUserMgr.UserList = function()
                 return;
             }
 
+            iamUserMgr.roles = l4i.Clone(roles);
+
             data._roles = roles;
             data._statusls = iamUserMgr.statusls;
 
+            for (var i in data.items) {
+
+                if (!data.items[i].email) {
+                    data.items[i].email = "";
+                }
+            }
+
             $("#work-content").html(tpl);
+            iam.OpToolsRefresh("#iam-usermgr-list-optools");
 
             l4iTemplate.Render({
                 dstid  : "iam-usermgr-list",
@@ -87,7 +99,7 @@ iamUserMgr.UserList = function()
             alert("Error: Please try again later");
         });
 
-        iam.ApiCmd("user-mgr/user-list", {
+        iam.ApiCmd("user-mgr/user-list"+ uri, {
             callback: ep.done('data'),
         });
 
@@ -95,12 +107,9 @@ iamUserMgr.UserList = function()
             ep.emit("roles", iamUserMgr.roles)
         } else {
             iam.ApiCmd("user-mgr/role-list", {
-                callback: function(err, data) {
-                    iamUserMgr.roles = data;
-                    ep.emit("roles", data);
-                },
+                callback: ep.done('roles'),
             });
-        }        
+        }
 
         iam.TplCmd("user-mgr/user-list", {
             callback: ep.done('tpl'),           
@@ -269,6 +278,14 @@ iamUserMgr.RoleList = function()
             }
 
             $("#work-content").html(tpl);
+            iam.OpToolsRefresh("#iam-usermgr-rolelist-optools");
+
+            for (var i in roles.items) {
+
+                if (!roles.items[i].desc) {
+                    roles.items[i].desc = "";
+                }
+            }
 
             roles._statusls = iamUserMgr.statusls;
 
@@ -293,7 +310,7 @@ iamUserMgr.RoleList = function()
     });
 }
 
-iamUserMgr.RoleSetForm = function(roleid)
+iamUserMgr.RoleSet = function(roleid)
 {
     seajs.use(["ep"], function(EventProxy) {
 
@@ -307,6 +324,10 @@ iamUserMgr.RoleSetForm = function(roleid)
                 data._form_title = "New Role";
             } else {
                 data._form_title = "Role Setting";
+            }
+
+            if (!data.desc) {
+                data.desc = "";
             }
 
             data._statusls = iamUserMgr.statusls;

@@ -1,13 +1,9 @@
-<style type="text/css">
-#iam-usermgr-nav li a {
-  padding: 5px 10px;
-  margin-bottom: 10px;
-}
-</style>
-
-<div id="iam-usermgr-nav" class="iam-subnav">
-  <a class="l4i-nav-item active" href="#user-mgr/user-list">Users</a>
-  <a class="l4i-nav-item" href="#user-mgr/role-list">Role Settings</a>
+<div id="iam-module-navbar">
+  <ul id="iam-module-navbar-menus" class="iam-module-nav">
+    <li><a class="l4i-nav-item" href="#user-mgr/user-list">Users</a></li>
+    <li><a class="l4i-nav-item" href="#user-mgr/role-list">Role Settings</a></li>
+  </ul>
+  <ul id="iam-module-navbar-optools" class="iam-module-nav iam-nav-right"></ul>
 </div>
 
-<div id="work-content" class="iam-user-panel">loading</div>
+<div id="work-content" class="">loading</div>

@@ -70,15 +70,15 @@ type UserAccessEntry struct {
 
 type User struct {
 	types.TypeMeta `json:",inline"`
-	Meta           types.ObjectMeta `json:"meta,omitempty"`
-	Email          string           `json:"email,omitempty"`
-	Name           string           `json:"name,omitempty"`
-	Auth           string           `json:"auth,omitempty"`
-	Timezone       string           `json:"timezone,omitempty"`
-	Roles          []uint32         `json:"roles,omitempty"`
-	Groups         []uint32         `json:"groups,omitempty"`
-	Status         uint8            `json:"status"`
-	Profile        *UserProfile     `json:"profile,omitempty"`
+	Meta           types.ObjectMeta  `json:"meta,omitempty"`
+	Email          string            `json:"email,omitempty"`
+	Name           string            `json:"name,omitempty"`
+	Auth           string            `json:"auth,omitempty"`
+	Timezone       string            `json:"timezone,omitempty"`
+	Roles          types.ArrayUint32 `json:"roles,omitempty"`
+	Groups         []uint32          `json:"groups,omitempty"`
+	Status         uint8             `json:"status"`
+	Profile        *UserProfile      `json:"profile,omitempty"`
 }
 
 type UserList struct {

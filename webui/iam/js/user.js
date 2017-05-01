@@ -2,11 +2,6 @@ var iamUser = {
 
 }
 
-iamUser.Init = function()
-{
-    l4i.UrlEventRegister("user/overview", iamUser.Overview);
-}
-
 iamUser.Overview = function()
 {
     // console.log("overview");
@@ -100,6 +95,10 @@ iamUser.EmailSetForm = function()
     seajs.use(["ep"], function(EventProxy) {
 
         var ep = EventProxy.create('tpl', 'data', function (tpl, data) {
+
+            if (!data.login.email) {
+                data.login.email = "";
+            }
 
             l4iModal.Open({
                 tplsrc  : tpl,

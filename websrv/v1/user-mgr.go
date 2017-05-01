@@ -16,6 +16,8 @@ package v1
 
 import (
 	"html"
+	"sort"
+	"strings"
 	"time"
 
 	"code.hooto.com/lynkdb/iomix/skv"
@@ -56,9 +58,13 @@ func (c UserMgr) UserListAction() {
 	defer c.RenderJson(&ls)
 
 	if !iamclient.SessionAccessAllowed(c.Session, "user.admin", config.Config.InstanceID) {
-		ls.Error = &types.ErrorMeta{iamapi.ErrCodeAccessDenied, "Access Denied"}
+		ls.Error = types.NewErrorMeta(iamapi.ErrCodeAccessDenied, "Access Denied")
 		return
 	}
+
+	var (
+		qt = strings.ToLower(c.Params.Get("qry_text"))
+	)
 
 	// TODO page
 	if rs := store.PvScan("user", "", "", 1000); rs.OK() {
@@ -68,6 +74,12 @@ func (c UserMgr) UserListAction() {
 
 			var user iamapi.User
 			if err := obj.Decode(&user); err == nil {
+
+				if qt != "" && (!strings.Contains(user.Meta.Name, qt) &&
+					!strings.Contains(user.Email, qt)) {
+					continue
+				}
+
 				user.Auth = ""
 				ls.Items = append(ls.Items, user)
 			}
@@ -101,7 +113,7 @@ func (c UserMgr) UserEntryAction() {
 	defer c.RenderJson(&set)
 
 	if !iamclient.SessionAccessAllowed(c.Session, "user.admin", config.Config.InstanceID) {
-		set.Error = &types.ErrorMeta{iamapi.ErrCodeAccessDenied, "Access Denied"}
+		set.Error = types.NewErrorMeta(iamapi.ErrCodeAccessDenied, "Access Denied")
 		return
 	}
 
@@ -111,7 +123,7 @@ func (c UserMgr) UserEntryAction() {
 
 	// login
 	if set.Meta.ID == "" {
-		set.Error = &types.ErrorMeta{iamapi.ErrCodeInvalidArgument, "User Not Found"}
+		set.Error = types.NewErrorMeta(iamapi.ErrCodeInvalidArgument, "User Not Found")
 		return
 	}
 	set.Auth = userMgrPasswdHidden
@@ -135,17 +147,17 @@ func (c UserMgr) UserSetAction() {
 	defer c.RenderJson(&set)
 
 	if err := c.Request.JsonDecode(&set); err != nil {
-		set.Error = &types.ErrorMeta{iamapi.ErrCodeInvalidArgument, "Bad Request"}
+		set.Error = types.NewErrorMeta(iamapi.ErrCodeInvalidArgument, "Bad Request")
 		return
 	}
 
 	if !iamclient.SessionAccessAllowed(c.Session, "user.admin", config.Config.InstanceID) {
-		set.Error = &types.ErrorMeta{iamapi.ErrCodeAccessDenied, "Access Denied"}
+		set.Error = types.NewErrorMeta(iamapi.ErrCodeAccessDenied, "Access Denied")
 		return
 	}
 
 	if err := signup.ValidateEmail(&set); err != nil {
-		set.Error = &types.ErrorMeta{iamapi.ErrCodeInvalidArgument, err.Error()}
+		set.Error = types.NewErrorMeta(iamapi.ErrCodeInvalidArgument, err.Error())
 		return
 	}
 
@@ -155,7 +167,7 @@ func (c UserMgr) UserSetAction() {
 	if set.Meta.ID == "" {
 
 		if err := signup.ValidateUsername(&set); err != nil {
-			set.Error = &types.ErrorMeta{iamapi.ErrCodeInvalidArgument, err.Error()}
+			set.Error = types.NewErrorMeta(iamapi.ErrCodeInvalidArgument, err.Error())
 			return
 		}
 
@@ -177,7 +189,7 @@ func (c UserMgr) UserSetAction() {
 
 	//
 	if err := signup.ValidateUserID(&set); err != nil {
-		set.Error = &types.ErrorMeta{iamapi.ErrCodeInvalidArgument, err.Error()}
+		set.Error = types.NewErrorMeta(iamapi.ErrCodeInvalidArgument, err.Error())
 		return
 	}
 
@@ -200,17 +212,22 @@ func (c UserMgr) UserSetAction() {
 			prev.Name = set.Name
 		}
 
+		if len(set.Roles) > 0 && !set.Roles.Equal(prev.Roles) {
+			prev.Roles = set.Roles
+		}
+
 		prev.Profile = set.Profile
 
 		set = prev
 	}
 
 	set.Meta.Updated = utilx.TimeNow("atom")
+	sort.Sort(set.Roles)
 
 	if obj := store.PvPut("user/"+set.Meta.ID, set, &skv.PvWriteOptions{
 		PrevVersion: prevVersion,
 	}); !obj.OK() {
-		set.Error = &types.ErrorMeta{"500", obj.Bytex().String()}
+		set.Error = types.NewErrorMeta("500", obj.Bytex().String())
 		return
 	}
 
@@ -240,7 +257,7 @@ func (c UserMgr) UserSetAction() {
 		if obj := store.PvPut("user-profile/"+set.Meta.ID, profile, &skv.PvWriteOptions{
 			PrevVersion: prevVersion,
 		}); !obj.OK() {
-			set.Error = &types.ErrorMeta{"500", obj.Bytex().String()}
+			set.Error = types.NewErrorMeta("500", obj.Bytex().String())
 			return
 		}
 	}

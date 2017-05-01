@@ -36,7 +36,7 @@ func (c AppAuth) InfoAction() {
 
 	instid := c.Params.Get("instance_id")
 	if instid == "" {
-		set.Error = &types.ErrorMeta{iamapi.ErrCodeNotFound, "App Instance Not Found"}
+		set.Error = types.NewErrorMeta(iamapi.ErrCodeNotFound, "App Instance Not Found")
 		return
 	}
 
@@ -55,7 +55,7 @@ func (c AppAuth) InfoAction() {
 
 	} else {
 
-		set.Error = &types.ErrorMeta{iamapi.ErrCodeNotFound, "App Instance Not Found"}
+		set.Error = types.NewErrorMeta(iamapi.ErrCodeNotFound, "App Instance Not Found")
 	}
 }
 
@@ -66,16 +66,16 @@ func (c AppAuth) RegisterAction() {
 	defer c.RenderJson(&set)
 
 	if err := c.Request.JsonDecode(&set); err != nil {
-		set.Error = &types.ErrorMeta{iamapi.ErrCodeInvalidArgument, "Bad Argument"}
+		set.Error = types.NewErrorMeta(iamapi.ErrCodeInvalidArgument, "Bad Argument")
 		return
 	}
 
 	// if set.Instance.Meta.ID == "" {
-	// 	set.Error = &types.ErrorMeta{iamapi.ErrCodeInvalidArgument, "Bad Argument"}
+	// 	set.Error = types.NewErrorMeta(iamapi.ErrCodeInvalidArgument, "Bad Argument")
 	// 	return
 	// }
 	if len(set.AccessToken) < 30 {
-		set.Error = &types.ErrorMeta{iamapi.ErrCodeUnauthorized, "Unauthorized"}
+		set.Error = types.NewErrorMeta(iamapi.ErrCodeUnauthorized, "Unauthorized")
 		return
 	}
 	set.AccessToken = set.AccessToken[:8] + "/" + set.AccessToken[9:]
@@ -86,7 +86,7 @@ func (c AppAuth) RegisterAction() {
 	}
 
 	if !session.IsLogin() {
-		set.Error = &types.ErrorMeta{iamapi.ErrCodeUnauthorized, "Unauthorized"}
+		set.Error = types.NewErrorMeta(iamapi.ErrCodeUnauthorized, "Unauthorized")
 		return
 	}
 
@@ -95,7 +95,7 @@ func (c AppAuth) RegisterAction() {
 	}
 
 	// if !c.Session.AccessAllowed("sys.admin") {
-	//        set.Error = &types.ErrorMeta{iamapi.ErrCodeAccessDenied, "Unauthorized"}
+	//        set.Error = types.NewErrorMeta(iamapi.ErrCodeAccessDenied, "Unauthorized")
 	// 	return
 	// }
 
@@ -121,7 +121,7 @@ func (c AppAuth) RegisterAction() {
 	} else {
 
 		if prev.Meta.UserID != session.UserID {
-			set.Error = &types.ErrorMeta{iamapi.ErrCodeUnauthorized, "Unauthorized"}
+			set.Error = types.NewErrorMeta(iamapi.ErrCodeUnauthorized, "Unauthorized")
 			return
 		}
 
@@ -133,7 +133,7 @@ func (c AppAuth) RegisterAction() {
 	if obj := store.PvPut("app-instance/"+set.Instance.Meta.ID, set.Instance, &skv.PvWriteOptions{
 		PrevVersion: prevVersion,
 	}); !obj.OK() {
-		set.Error = &types.ErrorMeta{iamapi.ErrCodeInternalError, obj.Bytex().String()}
+		set.Error = types.NewErrorMeta(iamapi.ErrCodeInternalError, obj.Bytex().String())
 		return
 	}
 

@@ -19,9 +19,21 @@ import (
 	"strings"
 	"time"
 
+	"code.hooto.com/lessos/iam/iamapi"
 	"github.com/lessos/lessgo/httpsrv"
 	"github.com/lessos/lessgo/types"
 )
+
+type AuthSession struct {
+	types.TypeMeta `json:",inline"`
+	UserID         string   `json:"userid"`
+	UserName       string   `json:"username"`
+	Name           string   `json:"name"`
+	IamUrl         string   `json:"iam_url"`
+	PhotoUrl       string   `json:"photo_url"`
+	InstanceOwner  bool     `json:"instance_owner,omitempty"`
+	Roles          []uint32 `json:"roles,omitempty"`
+}
 
 type Auth struct {
 	*httpsrv.Controller
@@ -58,17 +70,6 @@ func (c Auth) LoginAction() {
 	))
 }
 
-type AuthSession struct {
-	types.TypeMeta `json:",inline"`
-	UserID         string   `json:"userid"`
-	UserName       string   `json:"username"`
-	Name           string   `json:"name"`
-	IamUrl         string   `json:"iam_url"`
-	PhotoUrl       string   `json:"photo_url"`
-	InstanceOwner  bool     `json:"instance_owner,omitempty"`
-	Roles          []uint32 `json:"roles,omitempty"`
-}
-
 func (c Auth) SessionAction() {
 
 	set := AuthSession{
@@ -91,7 +92,7 @@ func (c Auth) SessionAction() {
 		set.Kind = "AuthSession"
 
 	} else {
-		set.Error = &types.ErrorMeta{"401", err.Error()}
+		set.Error = types.NewErrorMeta("401", "Unauthorized")
 	}
 
 	c.RenderJson(set)
@@ -122,4 +123,22 @@ func (c Auth) SignOutAction() {
 	}
 
 	c.Redirect(referer + "_iam_out=1")
+}
+
+func (c Auth) RoleListAction() {
+
+	var sets iamapi.UserRoleList
+	defer c.RenderJson(&sets)
+
+	session, err := SessionInstance(c.Session)
+	if err != nil || session.UserID != "" {
+		sets.Error = types.NewErrorMeta("401", "Unauthorized")
+		return
+	}
+
+	if rs, err := RoleList(session.AccessToken); err != nil {
+		sets.Error = types.NewErrorMeta("500", err.Error())
+	} else {
+		sets = *rs
+	}
 }

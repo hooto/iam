@@ -1,4 +1,4 @@
-<table width="100%" style="margin-top:10px">
+<table width="100%" style="margin-top:30px">
 <tr>
 
   <td width="40%">
@@ -33,9 +33,9 @@
           <td class="iup-subtitle">Email</td> 
           <td>
             <ul> 
-			  {[if (it.login.email) {]}
+              {[if (it.login.email) {]}
               <li>{[=it.login.email]}</li> 
-			  {[}]}
+              {[}]}
               <li><a class="iam-useridx-click" href="#email-set" onclick="iamUser.EmailSetForm()">Change</a></li> 
             </ul>
           </td>

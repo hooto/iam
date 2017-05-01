@@ -16,6 +16,7 @@ package ctrl
 
 import (
 	"code.hooto.com/lessos/iam/config"
+	"code.hooto.com/lessos/iam/iamclient"
 	"github.com/lessos/lessgo/httpsrv"
 )
 
@@ -36,6 +37,7 @@ func NewModule() httpsrv.Module {
 	module.ControllerRegister(new(Reg))
 	module.ControllerRegister(new(User))
 	module.ControllerRegister(new(AppAuth))
+	module.ControllerRegister(new(iamclient.Auth))
 
 	// // TODO auto config
 	// httpsrv.Config.I18n(config.Config.Prefix + "/i18n/en.json")

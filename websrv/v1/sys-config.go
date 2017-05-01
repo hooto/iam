@@ -46,7 +46,7 @@ func (c SysConfig) GeneralAction() {
 	defer c.RenderJson(&ls)
 
 	if !iamclient.SessionAccessAllowed(c.Session, "sys.admin", config.Config.InstanceID) {
-		ls.Error = &types.ErrorMeta{iamapi.ErrCodeAccessDenied, "Access Denied"}
+		ls.Error = types.NewErrorMeta(iamapi.ErrCodeAccessDenied, "Access Denied")
 		return
 	}
 
@@ -84,12 +84,12 @@ func (c SysConfig) GeneralSetAction() {
 	defer c.RenderJson(&sets)
 
 	if err := c.Request.JsonDecode(&sets); err != nil || len(sets.Items) < 1 {
-		sets.Error = &types.ErrorMeta{iamapi.ErrCodeInvalidArgument, "Bad Request"}
+		sets.Error = types.NewErrorMeta(iamapi.ErrCodeInvalidArgument, "Bad Request")
 		return
 	}
 
 	if !iamclient.SessionAccessAllowed(c.Session, "sys.admin", config.Config.InstanceID) {
-		sets.Error = &types.ErrorMeta{iamapi.ErrCodeAccessDenied, "Access Denied"}
+		sets.Error = types.NewErrorMeta(iamapi.ErrCodeAccessDenied, "Access Denied")
 		return
 	}
 
@@ -115,7 +115,7 @@ func (c SysConfig) GeneralSetAction() {
 		if obj := store.PvPut("sys-config/"+v.Name, v.Value, &skv.PvWriteOptions{
 			PrevVersion: prevVersion,
 		}); !obj.OK() {
-			sets.Error = &types.ErrorMeta{"500", obj.Bytex().String()}
+			sets.Error = types.NewErrorMeta("500", obj.Bytex().String())
 			return
 		}
 	}
@@ -132,13 +132,12 @@ func (c SysConfig) MailerAction() {
 	defer c.RenderJson(&ls)
 
 	if !iamclient.SessionAccessAllowed(c.Session, "sys.admin", config.Config.InstanceID) {
-		ls.Error = &types.ErrorMeta{iamapi.ErrCodeAccessDenied, "Access Denied"}
+		ls.Error = types.NewErrorMeta(iamapi.ErrCodeAccessDenied, "Access Denied")
 		return
 	}
 
 	if obj := store.PvGet("sys-config/mailer"); obj.OK() {
-
-		ls.Items.Set("mailer", obj.Data)
+		ls.Items.Set("mailer", obj.Bytex().String())
 	}
 
 	if val, ok := ls.Items.Get("mailer"); val.String() == "" || !ok {

@@ -29,25 +29,25 @@ func (c User) PanelInfoAction() {
 	rsp := map[string]interface{}{}
 	//
 	nav := []map[string]string{
-		{"path": "#my-app/index", "title": "My Applications"},
+		{"path": "my-app/index", "title": "My Authorized Apps"},
 	}
 
 	if iamclient.SessionAccessAllowed(c.Session, "user.admin", config.Config.InstanceID) {
 		nav = append(nav, map[string]string{
-			"path":  "#user-mgr/index",
-			"title": "User Manage",
+			"path":  "user-mgr/index",
+			"title": "Accounts",
 		})
 	}
 
 	if iamclient.SessionAccessAllowed(c.Session, "sys.admin", config.Config.InstanceID) {
 
 		nav = append(nav, map[string]string{
-			"path":  "#app-mgr/index",
-			"title": "Applications",
+			"path":  "app-mgr/index",
+			"title": "Authorized Apps",
 		})
 		nav = append(nav, map[string]string{
-			"path":  "#sys-mgr/index",
-			"title": "System Settings",
+			"path":  "sys-mgr/index",
+			"title": "Sys Settings",
 		})
 	}
 

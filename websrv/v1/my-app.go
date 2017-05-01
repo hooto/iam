@@ -31,6 +31,21 @@ const (
 
 type MyApp struct {
 	*httpsrv.Controller
+	us iamapi.UserSession
+}
+
+func (c *MyApp) Init() int {
+
+	//
+	c.us, _ = iamclient.SessionInstance(c.Session)
+
+	if !c.us.IsLogin() {
+		c.Response.Out.WriteHeader(401)
+		c.RenderJson(types.NewTypeErrorMeta(iamapi.ErrCodeUnauthorized, "Unauthorized"))
+		return 1
+	}
+
+	return 0
 }
 
 func (c MyApp) InstListAction() {
@@ -38,13 +53,6 @@ func (c MyApp) InstListAction() {
 	ls := iamapi.AppInstanceList{}
 
 	defer c.RenderJson(&ls)
-
-	session, err := iamclient.SessionInstance(c.Session)
-
-	if err != nil || !session.IsLogin() {
-		ls.Error = &types.ErrorMeta{iamapi.ErrCodeUnauthorized, "Access Denied"}
-		return
-	}
 
 	if objs := store.PvScan("app-instance/", "", "", 1000); objs.OK() {
 
@@ -54,7 +62,7 @@ func (c MyApp) InstListAction() {
 			var inst iamapi.AppInstance
 			if err := obj.Decode(&inst); err == nil {
 
-				if inst.Meta.UserID == session.UserID {
+				if inst.Meta.UserID == c.us.UserID {
 					ls.Items = append(ls.Items, inst)
 				}
 			}
@@ -70,25 +78,18 @@ func (c MyApp) InstEntryAction() {
 
 	defer c.RenderJson(&set)
 
-	session, err := iamclient.SessionInstance(c.Session)
-
-	if err != nil || !session.IsLogin() {
-		set.Error = &types.ErrorMeta{iamapi.ErrCodeUnauthorized, "Access Denied"}
-		return
-	}
-
 	if obj := store.PvGet("app-instance/" + c.Params.Get("instid")); obj.OK() {
 		obj.Decode(&set)
 	}
 
 	if set.Meta.ID == "" {
-		set.Error = &types.ErrorMeta{iamapi.ErrCodeInvalidArgument, "App Instance Not Found"}
+		set.Error = types.NewErrorMeta(iamapi.ErrCodeInvalidArgument, "App Instance Not Found")
 		return
 	}
 
-	if set.Meta.UserID != session.UserID {
+	if set.Meta.UserID != c.us.UserID {
 		set = iamapi.AppInstance{}
-		set.Error = &types.ErrorMeta{iamapi.ErrCodeUnauthorized, "Access Denied"}
+		set.Error = types.NewErrorMeta(iamapi.ErrCodeUnauthorized, "Access Denied")
 		return
 	}
 
@@ -101,15 +102,8 @@ func (c MyApp) InstSetAction() {
 
 	defer c.RenderJson(&set)
 
-	session, err := iamclient.SessionInstance(c.Session)
-
-	if err != nil || !session.IsLogin() {
-		set.Error = &types.ErrorMeta{iamapi.ErrCodeUnauthorized, "Access Denied"}
-		return
-	}
-
 	if err := c.Request.JsonDecode(&set); err != nil || set.Meta.ID == "" {
-		set.Error = &types.ErrorMeta{iamapi.ErrCodeInvalidArgument, "InvalidArgument"}
+		set.Error = types.NewErrorMeta(iamapi.ErrCodeInvalidArgument, "InvalidArgument")
 		return
 	}
 
@@ -121,12 +115,12 @@ func (c MyApp) InstSetAction() {
 	}
 
 	if prev.Meta.ID == "" || prevVersion < 1 {
-		set.Error = &types.ErrorMeta{iamapi.ErrCodeInvalidArgument, "App Instance Not Found"}
+		set.Error = types.NewErrorMeta(iamapi.ErrCodeInvalidArgument, "App Instance Not Found")
 		return
 	}
 
-	if prev.Meta.UserID != session.UserID {
-		set.Error = &types.ErrorMeta{iamapi.ErrCodeUnauthorized, "Access Denied"}
+	if prev.Meta.UserID != c.us.UserID {
+		set.Error = types.NewErrorMeta(iamapi.ErrCodeUnauthorized, "Access Denied")
 		return
 	}
 
@@ -139,7 +133,7 @@ func (c MyApp) InstSetAction() {
 		if obj := store.PvPut("app-instance/"+set.Meta.ID, prev, &skv.PvWriteOptions{
 			PrevVersion: prevVersion,
 		}); !obj.OK() {
-			set.Error = &types.ErrorMeta{iamapi.ErrCodeInternalError, obj.Bytex().String()}
+			set.Error = types.NewErrorMeta(iamapi.ErrCodeInternalError, obj.Bytex().String())
 			return
 		}
 	}

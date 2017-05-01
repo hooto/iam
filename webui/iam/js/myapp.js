@@ -17,12 +17,6 @@ var iamMyApp = {
     },
 }
 
-iamMyApp.Init = function()
-{
-    l4i.UrlEventRegister("my-app/index", iamMyApp.Index);
-    l4i.UrlEventRegister("my-app/inst-list", iamMyApp.InstList);
-}
-
 iamMyApp.Index = function()
 {
     iam.TplCmd("my-app/index", {
@@ -54,6 +48,10 @@ iamMyApp.InstList = function()
 
                 if (!data.items[i].version) {
                     data.items[i].version = "";
+                }
+
+                if (!data.items[i].app_title) {
+                    data.items[i].app_title = "";
                 }
 
                 data.items[i]._privilegeNumber = data.items[i].privileges.length;
@@ -115,6 +113,10 @@ iamMyApp.InstSetForm = function(instid)
 
             if (!data.url) {
                 data.url = "";
+            }
+
+            if (!data.app_title) {
+                data.app_title = "";
             }
 
             l4iModal.Open({

@@ -22,6 +22,7 @@ import (
 	"code.hooto.com/lessos/iam/config"
 	"code.hooto.com/lessos/iam/iamapi"
 	"code.hooto.com/lynkdb/iomix/skv"
+	iox_utils "code.hooto.com/lynkdb/iomix/utils"
 	"github.com/lessos/lessgo/crypto/idhash"
 	"github.com/lessos/lessgo/crypto/phash"
 	"github.com/lessos/lessgo/net/email"
@@ -51,6 +52,10 @@ func PvDel(path string, opts *skv.PvWriteOptions) *skv.Result {
 
 func PvScan(path, offset, cutset string, limit int) *skv.Result {
 	return Data.PvScan(PathPrefixAppend(path), offset, cutset, limit)
+}
+
+func PvRevScan(path, offset, cutset string, limit int) *skv.Result {
+	return Data.PvRevScan(PathPrefixAppend(path), offset, cutset, limit)
 }
 
 func PathPrefixSet(path string) {
@@ -99,7 +104,7 @@ func InitData() (err error) {
 	//
 	role := iamapi.UserRole{
 		Meta: types.ObjectMeta{
-			ID:      idhash.HashToHexString([]byte("1"), 8),
+			ID:      iox_utils.BytesToHexString(iox_utils.Uint32ToBytes(1)),
 			Name:    "Administrator",
 			UserID:  idhash.HashToHexString([]byte(def_sysadmin), 8),
 			Created: utilx.TimeNow("atom"),
@@ -112,16 +117,16 @@ func InitData() (err error) {
 	PvPut(fmt.Sprintf("role/%s", role.Meta.ID), role, nil)
 
 	//
-	role.Meta.ID = idhash.HashToHexString([]byte("100"), 8)
-	role.Meta.Name = "Member"
 	role.IdxID = 100
+	role.Meta.ID = iox_utils.BytesToHexString(iox_utils.Uint32ToBytes(role.IdxID))
+	role.Meta.Name = "Member"
 	role.Desc = "Universal Member"
 	PvPut(fmt.Sprintf("role/%s", role.Meta.ID), role, nil)
 
 	//
-	role.Meta.ID = idhash.HashToHexString([]byte("1000"), 8)
-	role.Meta.Name = "Anonymous"
 	role.IdxID = 1000
+	role.Meta.ID = iox_utils.BytesToHexString(iox_utils.Uint32ToBytes(role.IdxID))
+	role.Meta.Name = "Anonymous"
 	role.Desc = "Anonymous Member"
 	PvPut(fmt.Sprintf("role/%s", role.Meta.ID), role, nil)
 

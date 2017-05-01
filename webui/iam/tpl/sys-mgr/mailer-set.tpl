@@ -1,15 +1,6 @@
-<style>
-.page-header {
-	margin: 10px 0;
-	font-height: 100%;
-}
-</style>
+<div class="iam-div-light" style="padding:5px 10px">
 
-<div class="page-header">
-  <h2>Mailer Settings <small></small></h2>
-</div>
-
-<div id="iam-sysmgr-mailerset-alert" class="alert hide"></div>
+  <div id="iam-sysmgr-mailerset-alert" class="alert hide"></div>
 
   <div id="iam-sysmgr-mailerset" class="form-horizontal">
    
@@ -80,8 +71,10 @@
 
     <div class="form-group">
       <div class="col-sm-offset-3 col-sm-4">
-        <button type="submit" class="btn btn-primary" onclick="iamSys.MailerSetCommit()">Save</button>
+        <button type="submit" class="pure-button pure-button-primary" onclick="iamSys.MailerSetCommit()">Save</button>
       </div>
     </div>
 
   </div>
+
+</div>

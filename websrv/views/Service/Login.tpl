@@ -215,15 +215,19 @@ window.onload = function()
 
         var alertid = "#iam-login-form-alert";
 
-        iam.Ajax("/iam/v1/service/login-auth", {
+        l4i.Ajax("/iam/v1/service/login-auth", {
             type    : "POST",
             data    : $(this).serialize(),
             timeout : 3000,
-            success : function(rsj) {
+            callback : function(err, rsj) {
 
-                if (!rsj || !rsj.kind || rsj.kind != "ServiceLoginAuth") {
+                if (err || !rsj || !rsj.kind || rsj.kind != "ServiceLoginAuth") {
 
-                    if (rsj.error) {
+                    if (err) {
+                        return l4i.InnerAlert(alertid, 'alert-danger', err);
+                    }
+
+                    if (rsj && rsj.error) {
                         return l4i.InnerAlert(alertid, 'alert-danger', rsj.error.message);
                     }
 
@@ -237,9 +241,6 @@ window.onload = function()
                     window.location = rsj.redirect_uri;
                 }, 1500);
             },
-            error: function(xhr, textStatus, error) {
-                l4i.InnerAlert(alertid, 'alert-danger', '{{T . "Internal Server Error"}}');
-            }
         });
     });
 }

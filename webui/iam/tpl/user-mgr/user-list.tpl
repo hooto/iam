@@ -4,28 +4,9 @@
 }
 </style>
 
-<table width="100%">
-  <tr>
-    <td>
-      <form id="iam-usermgr-list-query" action="#" class="form-inlines">
-        <input id="query_text" type="text"
-          class="form-control iam-input-query" 
-          placeholder="Enter to search" 
-          value="">
-      </form>
-    </td>
-    <td align="right">
-      <button type="button" 
-        class="btn btn-primary btn-sm" 
-        onclick="iamUserMgr.UserSetForm()">
-        New User
-      </button>
-    </td>
-  </tr>
-</table>
-
 <div id="iam-usermgr-list-alert" class="hide" style="margin:20px 0;"></div>
 
+<div class="iam-div-light">
 <table class="table table-hover">
   <thead>
     <tr>
@@ -42,34 +23,37 @@
   <tbody id="iam-usermgr-list"></tbody>
 </table>
 <div id="iam-usermgr-list-pager"></div>
+</div>
 
 <script id="iam-usermgr-list-tpl" type="text/html">
 {[~it.items :v]}
-    <tr>
-      <td>{[=v.meta.name]}</td>
-      <td>{[=v.name]}</td>
-      <td>{[=v.email]}</td>
-      <td>
-        {[~it._statusls :sv]}
-        {[ if (v.status == sv.status) { ]}{[=sv.title]}{[ } ]}
-        {[~]}
-      </td>
-      <td>
-        {[~v.roles :rv]}
-        {[~it._roles.items :drv]}
-        {[ if (drv.idxid == rv) { ]}
-        <div>{[=drv.meta.name]}</div>
-        {[ } ]}
-        {[~]}
-        {[~]}
-      </td>
-      <td>{[=l4i.TimeParseFormat(v.meta.created, "Y-m-d")]}</td>
-      <td>{[=l4i.TimeParseFormat(v.meta.updated, "Y-m-d")]}</td>
-      <td align="right">
-        <a href="#user-mgr/user-set" onclick="iamUserMgr.UserSetForm('{[=v.meta.id]}')" 
-          class="btn btn-default btn-xs">Setting</a>
-      </td>
-    </tr>
+<tr>
+  <td>{[=v.meta.name]}</td>
+  <td>{[=v.name]}</td>
+  <td>{[=v.email]}</td>
+  <td>
+    {[~it._statusls :sv]}
+    {[ if (v.status == sv.status) { ]}{[=sv.title]}{[ } ]}
+    {[~]}
+  </td>
+  <td>
+    {[~v.roles :rv]}
+    {[~it._roles.items :drv]}
+    {[ if (drv.idxid == rv) { ]}
+    <div>{[=drv.meta.name]}</div>
+    {[ } ]}
+    {[~]}
+    {[~]}
+  </td>
+  <td>{[=l4i.TimeParseFormat(v.meta.created, "Y-m-d")]}</td>
+  <td>{[=l4i.TimeParseFormat(v.meta.updated, "Y-m-d")]}</td>
+  <td align="right">
+    <button class="pure-button button-xsmall"
+      onclick="iamUserMgr.UserSetForm('{[=v.meta.id]}')">
+      Setting
+    </button>
+  </td>
+</tr>
 {[~]}
 </script>
 
@@ -85,4 +69,21 @@
   <li><a href="#{[=it.LastPageNumber]}">Last</a></li>
   {[ } ]}
 </ul>
+</script>
+
+
+<script type="text/html" id="iam-usermgr-list-optools">
+<li>
+  <form id="iam-usermgr-list-query" action="#" onsubmit="iamUserMgr.UserList()" class="form-inlines">
+    <input id="iam_usermgr_list_qry_text" type="text"
+      class="form-control iam-query-input" 
+      placeholder="Press Enter to Search" 
+      value="">
+  </form>
+</li>
+<li class="iam-btn iam-btn-primary">
+  <a href="#" onclick="iamUserMgr.UserSetForm()">
+     New User
+  </a>
+</li>
 </script>

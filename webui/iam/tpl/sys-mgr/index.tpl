@@ -1,13 +1,9 @@
-<style type="text/css">
-#iam-sys-config-nav li a {
-  padding: 5px 10px;
-  margin-bottom: 10px;
-}
-</style>
-
-<div id="iam-sys-config-nav" class="iam-subnav">
-  <a class="l4i-nav-item active" href="#sys-mgr/general-set">General Settings</a>
-  <a class="l4i-nav-item" href="#sys-mgr/mailer-set">Mailer Settings</a>
+<div id="iam-module-navbar">
+  <ul id="iam-module-navbar-menus" class="iam-module-nav">
+    <li><a class="l4i-nav-item" href="#sys-mgr/general-set">General Settings</a></li>
+    <li><a class="l4i-nav-item" href="#sys-mgr/mailer-set">Mailer Settings</a></li>
+  </ul>
+  <ul id="iam-module-navbar-optools" class="iam-module-nav iam-nav-right"></ul>
 </div>
 
-<div id="work-content" class="iam-user-panel">loading</div>
+<div id="work-content" class="">loading</div>

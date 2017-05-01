@@ -17,24 +17,29 @@ var iamAppMgr = {
     },
 }
 
-iamAppMgr.Init = function()
-{
-    l4i.UrlEventRegister("app-mgr/index", iamAppMgr.Index);
-    l4i.UrlEventRegister("app-mgr/inst-list", iamAppMgr.InstList);
-}
-
 iamAppMgr.Index = function()
 {
+    iam.OpToolActive = null;
     iam.TplCmd("app-mgr/index", {
         callback: function(err, data) {
             $("#com-content").html(data);
-            iamAppMgr.InstList();
+            l4i.UrlEventClean("iam-module-navbar-menus");
+            l4i.UrlEventRegister("app-mgr/inst-list", iamAppMgr.InstList);
+            l4i.UrlEventHandler("app-mgr/inst-list", true);
         },
     });
 }
 
 iamAppMgr.InstList = function()
 {
+    var uri = "";
+    if (document.getElementById("iam_appmgr_instls_qry_text")) {
+        var qt = $("#iam_appmgr_instls_qry_text").val();
+        if (qt && qt.length > 0) {
+            uri = "?qry_text="+ qt;
+        }
+    }
+
     seajs.use(["ep"], function(EventProxy) {
 
         var ep = EventProxy.create('tpl', 'data', function (tpl, data) {
@@ -55,19 +60,24 @@ iamAppMgr.InstList = function()
                     data.items[i].version = "";
                 }
 
+                if (!data.items[i].app_title) {
+                    data.items[i].app_title = "";
+                }
+
                 data.items[i]._privilegeNumber = data.items[i].privileges.length;
             }
 
             $("#work-content").html(tpl);
+            iam.OpToolsRefresh("#iam-appmgr-instls-optools");
 
             l4iTemplate.Render({
-                dstid  : "iam-appmgr-insts",
-                tplid  : "iam-appmgr-insts-tpl",
+                dstid  : "iam-appmgr-instls",
+                tplid  : "iam-appmgr-instls-tpl",
                 data   : data,
                 success : function() {
                     l4iTemplate.Render({
-                        dstid  : "iam-appmgr-insts-pager",
-                        tplid  : "iam-appmgr-insts-pager-tpl",
+                        dstid  : "iam-appmgr-instls-pager",
+                        tplid  : "iam-appmgr-instls-pager-tpl",
                         data   : l4i.Pager(data.meta),
                     });
                 },
@@ -78,7 +88,7 @@ iamAppMgr.InstList = function()
             alert("Error: Please try again later");
         });
 
-        iam.ApiCmd("app-mgr/inst-list", {
+        iam.ApiCmd("app-mgr/inst-list"+ uri, {
             callback: ep.done('data'),
         });
 
