@@ -62,7 +62,6 @@ func (c AppAuth) InfoAction() {
 func (c AppAuth) RegisterAction() {
 
 	set := iamapi.AppInstanceRegister{}
-
 	defer c.RenderJson(&set)
 
 	if err := c.Request.JsonDecode(&set); err != nil {
@@ -194,4 +193,37 @@ func (c AppAuth) RegisterAction() {
 	// }
 
 	set.Kind = "AppInstanceRegister"
+}
+
+func (c AppAuth) RoleListAction() {
+
+	sets := iamapi.UserRoleList{}
+	defer c.RenderJson(&sets)
+
+	// TODO app<->role
+	if objs := store.PvScan("role/", "", "", 100); objs.OK() {
+
+		rss := objs.KvList()
+		for _, obj := range rss {
+
+			var role iamapi.UserRole
+			if err := obj.Decode(&role); err == nil {
+
+				if role.Meta == nil || role.Status == 0 || role.Id == 1 {
+					continue
+				}
+
+				sets.Items = append(sets.Items, iamapi.UserRole{
+					Meta: &types.ObjectMeta{
+						Name: role.Meta.Name,
+					},
+					Id:   role.Id,
+					Desc: role.Desc,
+				})
+			}
+		}
+	}
+
+	sets.Kind = "UserRoleList"
+
 }

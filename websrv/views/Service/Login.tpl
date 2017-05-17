@@ -184,7 +184,7 @@ body {
           <input name="persistent" type="checkbox" value="1" checked="{{.persistent_checked}}"> Stay signed in
         </div>
         <div class="ilf-help">
-        <a href="/iam/reg/forgot-pass">Forgot Password?</a>
+        <a href="/iam/reg/retrieve">Forgot Password?</a>
         </div>
       </div>
     </div>

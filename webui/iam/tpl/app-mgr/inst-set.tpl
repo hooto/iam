@@ -65,7 +65,7 @@
             {[ if (v.roles) { ]}
             {[~v.roles :rv]}
               {[~it._roles.items :drv]}
-              {[ if (rv == drv.idxid) { ]}
+              {[ if (rv == drv.id) { ]}
                 {[=drv.meta.name]}
               {[ } ]}
               {[~]}

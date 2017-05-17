@@ -46,7 +46,7 @@ func (c UserMgr) RoleListAction() {
 			var role iamapi.UserRole
 			if err := obj.Decode(&role); err == nil {
 
-				if role.IdxID == 1000 {
+				if role.Id == 1000 {
 					continue
 				}
 
@@ -117,7 +117,7 @@ func (c UserMgr) RoleSetAction() {
 
 				var last_role iamapi.UserRole
 				if err := obj.Decode(&last_role); err == nil {
-					last_id = last_role.IdxID
+					last_id = last_role.Id
 				}
 			}
 		}
@@ -131,7 +131,7 @@ func (c UserMgr) RoleSetAction() {
 
 		//
 		set.Meta.ID = iox_utils.BytesToHexString(iox_utils.Uint32ToBytes(last_id))
-		set.IdxID = last_id
+		set.Id = last_id
 		set.Meta.Created = utilx.TimeNow("atom")
 		set.Meta.UserID = utils.StringEncode16("sysadmin", 8)
 

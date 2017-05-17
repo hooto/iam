@@ -57,7 +57,6 @@ func (c Service) LoginAuthAction() {
 	rsp := iamapi.ServiceLoginAuth{
 		RedirectUri: "/iam",
 	}
-
 	defer c.RenderJson(&rsp)
 
 	uname := strings.TrimSpace(strings.ToLower(c.Params.Get("uname")))
@@ -104,7 +103,7 @@ func (c Service) LoginAuthAction() {
 	skey := fmt.Sprintf("session/%s/%s", session.UserID, session.AccessToken)
 
 	if sobj := store.PvPut(skey, session, &skv.PvWriteOptions{
-		Ttl: 864000000,
+		Ttl: 864000000, // 10 days
 	}); !sobj.OK() {
 		rsp.Error = types.NewErrorMeta("500", sobj.Bytex().String())
 		return

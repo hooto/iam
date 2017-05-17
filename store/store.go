@@ -103,29 +103,36 @@ func InitData() (err error) {
 
 	//
 	role := iamapi.UserRole{
-		Meta: types.ObjectMeta{
+		Meta: &types.ObjectMeta{
 			ID:      iox_utils.BytesToHexString(iox_utils.Uint32ToBytes(1)),
 			Name:    "Administrator",
 			UserID:  idhash.HashToHexString([]byte(def_sysadmin), 8),
 			Created: utilx.TimeNow("atom"),
 			Updated: utilx.TimeNow("atom"),
 		},
-		IdxID:  1,
+		Id:     1,
 		Desc:   "Root System Administrator",
 		Status: 1,
 	}
 	PvPut(fmt.Sprintf("role/%s", role.Meta.ID), role, nil)
 
 	//
-	role.IdxID = 100
-	role.Meta.ID = iox_utils.BytesToHexString(iox_utils.Uint32ToBytes(role.IdxID))
+	role.Id = 100
+	role.Meta.ID = iox_utils.BytesToHexString(iox_utils.Uint32ToBytes(role.Id))
 	role.Meta.Name = "Member"
 	role.Desc = "Universal Member"
 	PvPut(fmt.Sprintf("role/%s", role.Meta.ID), role, nil)
 
 	//
-	role.IdxID = 1000
-	role.Meta.ID = iox_utils.BytesToHexString(iox_utils.Uint32ToBytes(role.IdxID))
+	role.Id = 101
+	role.Meta.ID = iox_utils.BytesToHexString(iox_utils.Uint32ToBytes(role.Id))
+	role.Meta.Name = "Developer"
+	role.Desc = "Universal Developer"
+	PvPut(fmt.Sprintf("role/%s", role.Meta.ID), role, nil)
+
+	//
+	role.Id = 1000
+	role.Meta.ID = iox_utils.BytesToHexString(iox_utils.Uint32ToBytes(role.Id))
 	role.Meta.Name = "Anonymous"
 	role.Desc = "Anonymous Member"
 	PvPut(fmt.Sprintf("role/%s", role.Meta.ID), role, nil)

@@ -305,11 +305,11 @@ func (c User) RoleListAction() {
 			var role iamapi.UserRole
 			if err := obj.Decode(&role); err == nil {
 
-				if role.IdxID == 1 {
+				if role.Id == 1 {
 					continue
 				}
 
-				if role.IdxID <= 1000 || role.Meta.UserID == c.us.UserID {
+				if role.Id <= 1000 || role.Meta.UserID == c.us.UserID {
 					sets.Items = append(sets.Items, role)
 				}
 			}

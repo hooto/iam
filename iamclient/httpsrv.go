@@ -26,13 +26,13 @@ import (
 
 type AuthSession struct {
 	types.TypeMeta `json:",inline"`
-	UserID         string   `json:"userid"`
-	UserName       string   `json:"username"`
-	Name           string   `json:"name"`
-	IamUrl         string   `json:"iam_url"`
-	PhotoUrl       string   `json:"photo_url"`
-	InstanceOwner  bool     `json:"instance_owner,omitempty"`
-	Roles          []uint32 `json:"roles,omitempty"`
+	UserID         string            `json:"userid"`
+	UserName       string            `json:"username"`
+	Name           string            `json:"name"`
+	IamUrl         string            `json:"iam_url"`
+	PhotoUrl       string            `json:"photo_url"`
+	InstanceOwner  bool              `json:"instance_owner,omitempty"`
+	Roles          types.ArrayUint32 `json:"roles,omitempty"`
 }
 
 type Auth struct {
@@ -125,20 +125,14 @@ func (c Auth) SignOutAction() {
 	c.Redirect(referer + "_iam_out=1")
 }
 
-func (c Auth) RoleListAction() {
+func (c Auth) AppRoleListAction() {
 
-	var sets iamapi.UserRoleList
-	defer c.RenderJson(&sets)
-
-	session, err := SessionInstance(c.Session)
-	if err != nil || session.UserID != "" {
-		sets.Error = types.NewErrorMeta("401", "Unauthorized")
-		return
-	}
-
-	if rs, err := RoleList(session.AccessToken); err != nil {
-		sets.Error = types.NewErrorMeta("500", err.Error())
+	sets, err := AppRoleList(c.Session, "") // TODO appid
+	if err == nil {
+		c.RenderJson(sets)
+	} else if err != nil {
+		c.RenderJson(types.NewTypeErrorMeta("500", err.Error()))
 	} else {
-		sets = *rs
+		c.RenderJson(types.NewTypeErrorMeta(iamapi.ErrCodeUnauthorized, "Unauthorized"))
 	}
 }

@@ -116,7 +116,7 @@ body {
 
   <div class="iam-resetpass-msg01">{{T . "Reset your password"}}</div>
 
-  <form id="iam-resetpass-form" action="#forgot-pass">
+  <form id="iam-resetpass-form" action="#retrieve">
 
     <input type="hidden" name="continue" value="{{.continue}}">
 
@@ -167,7 +167,7 @@ $("#iam-resetpass-form").submit(function(event) {
 
     $.ajax({
         type    : "POST",
-        url     : "/iam/reg/forgot-pass-put",
+        url     : "/iam/reg/retrieve-put",
         data    : $("#iam-resetpass-form").serialize(),
         timeout : 3000,
         //contentType: "application/json; charset=utf-8",

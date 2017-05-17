@@ -24,7 +24,7 @@
 <script id="iam-usermgr-rolelist-tpl" type="text/html">
 {[~it.items :v]}
 <tr>
-  <td class="iam-monofont">{[=v.idxid]}</td>
+  <td class="iam-monofont">{[=v.id]}</td>
   <td>{[=v.meta.name]}</td>
   <td>{[=v.desc]}</td>
   <td>

@@ -43,12 +43,12 @@
       <div class="col-sm-10">
         {[~it._roles.items :v]}
         <span class="iam-form-checkbox">
-          {[ if (v.idxid == 100) { ]}
-            <input type="checkbox" name="roles" value="{[=v.idxid]}" checked="checked" onclick="return false"> {[=v.meta.name]}
+          {[ if (v.id == 100) { ]}
+            <input type="checkbox" name="roles" value="{[=v.id]}" checked="checked" onclick="return false"> {[=v.meta.name]}
           {[ } else if (v.checked) { ]}
-            <input type="checkbox" name="roles" value="{[=v.idxid]}" checked="checked"> {[=v.meta.name]}
+            <input type="checkbox" name="roles" value="{[=v.id]}" checked="checked"> {[=v.meta.name]}
           {[ } else { ]}
-            <input type="checkbox" name="roles" value="{[=v.idxid]}"> {[=v.meta.name]}          
+            <input type="checkbox" name="roles" value="{[=v.id]}"> {[=v.meta.name]}
           {[ } ]}
         </span>
         {[~]}

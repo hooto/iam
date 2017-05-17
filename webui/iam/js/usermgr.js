@@ -155,7 +155,7 @@ iamUserMgr.UserSetForm = function(userid)
                 data._roles.items[i].checked = false;
 
                 for (var j in data.roles) {
-                    if (data._roles.items[i].idxid == data.roles[j]) {
+                    if (data._roles.items[i].id == data.roles[j]) {
                         data._roles.items[i].checked = true;
                         break;
                     }

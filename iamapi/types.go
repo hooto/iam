@@ -39,18 +39,18 @@ type ServiceLoginAuth struct {
 
 type UserSession struct {
 	types.TypeMeta `json:",inline"`
-	AccessToken    string         `json:"access_token"`
-	RefreshToken   string         `json:"refresh_token,omitempty"`
-	UserID         string         `json:"userid"`
-	UserName       string         `json:"username"`
-	Name           string         `json:"name"`
-	Roles          []uint32       `json:"roles,omitempty"`
-	Groups         []uint32       `json:"groups,omitempty"`
-	Timezone       string         `json:"timezone"`
-	HostZone       string         `json:"host_zone,omitempty"`
-	ClientAddr     string         `json:"client_addr,omitempty"`
-	Created        types.MetaTime `json:"created"`
-	Expired        types.MetaTime `json:"expired"`
+	AccessToken    string            `json:"access_token"`
+	RefreshToken   string            `json:"refresh_token,omitempty"`
+	UserID         string            `json:"userid"`
+	UserName       string            `json:"username"`
+	Name           string            `json:"name"`
+	Roles          types.ArrayUint32 `json:"roles,omitempty"`
+	Groups         types.ArrayUint32 `json:"groups,omitempty"`
+	Timezone       string            `json:"timezone"`
+	HostZone       string            `json:"host_zone,omitempty"`
+	ClientAddr     string            `json:"client_addr,omitempty"`
+	Created        types.MetaTime    `json:"created"`
+	Expired        types.MetaTime    `json:"expired"`
 }
 
 func (s *UserSession) IsLogin() bool {
@@ -76,7 +76,7 @@ type User struct {
 	Auth           string            `json:"auth,omitempty"`
 	Timezone       string            `json:"timezone,omitempty"`
 	Roles          types.ArrayUint32 `json:"roles,omitempty"`
-	Groups         []uint32          `json:"groups,omitempty"`
+	Groups         types.ArrayUint32 `json:"groups,omitempty"`
 	Status         uint8             `json:"status"`
 	Profile        *UserProfile      `json:"profile,omitempty"`
 }
@@ -127,11 +127,11 @@ type UserPhotoSet struct {
 
 type UserRole struct {
 	types.TypeMeta `json:",inline"`
-	Meta           types.ObjectMeta `json:"meta,omitempty"`
-	IdxID          uint32           `json:"idxid"`
-	Status         uint8            `json:"status"`
-	Desc           string           `json:"desc,omitempty"`
-	Privileges     []string         `json:"privileges,omitempty"`
+	Meta           *types.ObjectMeta `json:"meta,omitempty"`
+	Id             uint32            `json:"id"`
+	Status         uint8             `json:"status,omitempty"`
+	Desc           string            `json:"desc,omitempty"`
+	Privileges     []string          `json:"privileges,omitempty"`
 }
 
 type UserRoleList struct {
@@ -153,10 +153,10 @@ type UserPrivilegeList struct {
 
 type AppPrivilege struct {
 	// ID        uint32   `json:"id,omitempty"`
-	Privilege string   `json:"privilege"`
-	Desc      string   `json:"desc,omitempty"`
-	Roles     []uint32 `json:"roles,omitempty"`
-	// ExtRoles  []uint32 `json:"extroles,omitempty"`
+	Privilege string            `json:"privilege"`
+	Desc      string            `json:"desc,omitempty"`
+	Roles     types.ArrayUint32 `json:"roles,omitempty"`
+	// ExtRoles  types.ArrayUint32 `json:"extroles,omitempty"`
 }
 
 type AppInstance struct {
@@ -202,7 +202,9 @@ type SysConfigMailer struct {
 	SmtpPass string `json:"smtp_pass"`
 }
 
+/*
 type AccessKey struct {
 	AccessKey string `json:"access_key"`
 	SecretKey string `json:"secret_key,omitempty"`
 }
+*/

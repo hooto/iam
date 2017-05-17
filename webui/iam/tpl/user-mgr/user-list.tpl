@@ -39,7 +39,7 @@
   <td>
     {[~v.roles :rv]}
     {[~it._roles.items :drv]}
-    {[ if (drv.idxid == rv) { ]}
+    {[ if (drv.id == rv) { ]}
     <div>{[=drv.meta.name]}</div>
     {[ } ]}
     {[~]}

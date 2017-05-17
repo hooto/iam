@@ -102,10 +102,10 @@ func (c Reg) SignUpRegAction() {
 	rsp.Kind = "User"
 }
 
-func (c Reg) ForgotPassAction() {
+func (c Reg) RetrieveAction() {
 }
 
-func (c Reg) ForgotPassPutAction() {
+func (c Reg) RetrievePutAction() {
 
 	rsp := struct {
 		types.TypeMeta

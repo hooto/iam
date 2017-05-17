@@ -36,11 +36,14 @@ var (
 	InstanceOwner      = ""
 	ServiceUrl         = "http://127.0.0.1:9528/iam"
 	ServiceUrlFrontend = ""
-	sessions           = map[string]iamapi.UserSession{}
-	nextClean          = time.Now()
-	locker             sync.Mutex
-	c_roles                  = iamapi.UserRoleList{}
-	c_roles_tto        int64 = 0
+)
+
+var (
+	sessions     = map[string]iamapi.UserSession{}
+	sessions_tto = time.Now()
+	locker       sync.Mutex
+	c_roles            = iamapi.UserRoleList{}
+	c_roles_tto  int64 = 0
 )
 
 func Expired(ttl int) time.Time {
@@ -49,7 +52,7 @@ func Expired(ttl int) time.Time {
 
 func innerExpiredClean() {
 
-	if nextClean.After(time.Now()) {
+	if sessions_tto.After(time.Now()) {
 		return
 	}
 
@@ -67,7 +70,7 @@ func innerExpiredClean() {
 		delete(sessions, k)
 	}
 
-	nextClean = time.Now().Add(time.Second * 60)
+	sessions_tto = time.Now().Add(time.Second * 60)
 }
 
 func service_prefix() string {
@@ -200,37 +203,36 @@ func _access_allowed(privilege, token, instanceid string) bool {
 	return true
 }
 
-func RoleList(token string) (*iamapi.UserRoleList, error) {
+func AppRoleList(s *httpsrv.Session, appid string) (*iamapi.UserRoleList, error) {
 
+	token := s.Get(AccessTokenKey)
 	if ServiceUrl == "" || token == "" {
 		return nil, errors.New("Unauthorized")
 	}
 
-	if c_roles_tto > time.Now().UTC().Unix() {
+	tnu := time.Now().UTC().Unix()
+	if c_roles_tto > tnu {
 		return &c_roles, nil
 	}
 
 	hc := httpclient.Get(fmt.Sprintf(
-		"%s/v1/user/role-list",
+		"%s/v1/app-auth/role-list?%s=%s&appid=%s",
 		ServiceUrl,
+		AccessTokenKey,
+		token,
+		appid,
 	))
 	defer hc.Close()
 
 	var rls iamapi.UserRoleList
-
 	if err := hc.ReplyJson(&rls); err != nil {
 		return nil, err
+	} else if rls.Error != nil || rls.Kind != "UserRoleList" {
+		return nil, errors.New("Network is unreachable, Please try again later")
 	}
 
-	if rls.Error != nil || rls.Kind != "UserRoleList" {
-		return nil, errors.New("Network ")
-	}
-
-	c_roles_tto = time.Now().UTC().Unix() + 600
-
-	locker.Lock()
+	c_roles_tto = tnu
 	c_roles = rls
-	locker.Unlock()
 
 	return &c_roles, nil
 }
