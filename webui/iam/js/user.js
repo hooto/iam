@@ -172,6 +172,9 @@ iamUser.ProfileSetForm = function()
 
         var ep = EventProxy.create('tpl', 'data', function (tpl, data) {
 
+            if (!data.meta.name) {
+                data.meta.name = "No Name";
+            }
             if (!data.login.name) {
                 data.login.name = data.meta.name;
             }

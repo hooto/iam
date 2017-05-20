@@ -202,9 +202,7 @@ type SysConfigMailer struct {
 	SmtpPass string `json:"smtp_pass"`
 }
 
-/*
 type AccessKey struct {
 	AccessKey string `json:"access_key"`
 	SecretKey string `json:"secret_key,omitempty"`
 }
-*/
