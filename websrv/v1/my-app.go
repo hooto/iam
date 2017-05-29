@@ -18,7 +18,6 @@ import (
 	"code.hooto.com/lynkdb/iomix/skv"
 	"github.com/lessos/lessgo/httpsrv"
 	"github.com/lessos/lessgo/types"
-	"github.com/lessos/lessgo/utilx"
 
 	"code.hooto.com/lessos/iam/iamapi"
 	"code.hooto.com/lessos/iam/iamclient"
@@ -54,7 +53,7 @@ func (c MyApp) InstListAction() {
 
 	defer c.RenderJson(&ls)
 
-	if objs := store.PvScan("app-instance/", "", "", 1000); objs.OK() {
+	if objs := store.PoScan("app-instance", []byte{}, []byte{}, 1000); objs.OK() {
 
 		rss := objs.KvList()
 		for _, obj := range rss {
@@ -62,7 +61,7 @@ func (c MyApp) InstListAction() {
 			var inst iamapi.AppInstance
 			if err := obj.Decode(&inst); err == nil {
 
-				if inst.Meta.UserID == c.us.UserID {
+				if inst.Meta.User == c.us.UserName {
 					ls.Items = append(ls.Items, inst)
 				}
 			}
@@ -78,7 +77,7 @@ func (c MyApp) InstEntryAction() {
 
 	defer c.RenderJson(&set)
 
-	if obj := store.PvGet("app-instance/" + c.Params.Get("instid")); obj.OK() {
+	if obj := store.PoGet("app-instance", c.Params.Get("instid")); obj.OK() {
 		obj.Decode(&set)
 	}
 
@@ -87,7 +86,7 @@ func (c MyApp) InstEntryAction() {
 		return
 	}
 
-	if set.Meta.UserID != c.us.UserID {
+	if set.Meta.User != c.us.UserName {
 		set = iamapi.AppInstance{}
 		set.Error = types.NewErrorMeta(iamapi.ErrCodeUnauthorized, "Access Denied")
 		return
@@ -99,7 +98,6 @@ func (c MyApp) InstEntryAction() {
 func (c MyApp) InstSetAction() {
 
 	set := iamapi.AppInstance{}
-
 	defer c.RenderJson(&set)
 
 	if err := c.Request.JsonDecode(&set); err != nil || set.Meta.ID == "" {
@@ -109,28 +107,28 @@ func (c MyApp) InstSetAction() {
 
 	var prev iamapi.AppInstance
 	var prevVersion uint64
-	if obj := store.PvGet("app-instance/" + set.Meta.ID); obj.OK() {
+	if obj := store.PoGet("app-instance", set.Meta.ID); obj.OK() {
 		obj.Decode(&prev)
 		prevVersion = obj.Meta().Version
 	}
 
-	if prev.Meta.ID == "" || prevVersion < 1 {
+	if prev.Meta.ID == "" {
 		set.Error = types.NewErrorMeta(iamapi.ErrCodeInvalidArgument, "App Instance Not Found")
 		return
 	}
 
-	if prev.Meta.UserID != c.us.UserID {
+	if prev.Meta.User != c.us.UserName {
 		set.Error = types.NewErrorMeta(iamapi.ErrCodeUnauthorized, "Access Denied")
 		return
 	}
 
 	if set.AppTitle != prev.AppTitle || set.Url != prev.Url {
 
-		prev.Meta.Updated = utilx.TimeNow("atom")
+		prev.Meta.Updated = types.MetaTimeNow()
 		prev.AppTitle = set.AppTitle
 		prev.Url = set.Url
 
-		if obj := store.PvPut("app-instance/"+set.Meta.ID, prev, &skv.PvWriteOptions{
+		if obj := store.PoPut("app-instance", set.Meta.ID, prev, &skv.PathWriteOptions{
 			PrevVersion: prevVersion,
 		}); !obj.OK() {
 			set.Error = types.NewErrorMeta(iamapi.ErrCodeInternalError, obj.Bytex().String())

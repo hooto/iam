@@ -60,6 +60,7 @@ func (c Service) LoginAuthAction() {
 	defer c.RenderJson(&rsp)
 
 	uname := strings.TrimSpace(strings.ToLower(c.Params.Get("uname")))
+	userid := iamapi.UserId(uname)
 
 	if uname == "" || c.Params.Get("passwd") == "" {
 		rsp.Error = types.NewErrorMeta("400", "Bad Request")
@@ -67,16 +68,17 @@ func (c Service) LoginAuthAction() {
 	}
 
 	var user iamapi.User
-	if obj := store.PvGet("user/" + utils.StringEncode16(uname, 8)); obj.OK() {
+	if obj := store.PoGet("user", userid); obj.OK() {
 		obj.Decode(&user)
 	}
 
-	if user.Meta.Name != uname {
+	if user.Name != uname {
 		rsp.Error = types.NewErrorMeta("400", "Username or Password can not match")
 		return
 	}
 
-	if !pass.Check(c.Params.Get("passwd"), user.Auth) {
+	if auth := user.Keys.Get(iamapi.UserKeyDefault); auth == nil ||
+		!pass.Check(c.Params.Get("passwd"), auth.String()) {
 		rsp.Error = types.NewErrorMeta("400", "Username or Password can not match")
 		return
 	}
@@ -89,25 +91,27 @@ func (c Service) LoginAuthAction() {
 	session := iamapi.UserSession{
 		AccessToken:  utils.StringNewRand(24),
 		RefreshToken: utils.StringNewRand(24),
-		UserID:       user.Meta.ID,
-		UserName:     user.Meta.Name,
-		Name:         user.Name,
+		UserName:     user.Name,
+		DisplayName:  user.DisplayName,
 		Roles:        user.Roles,
 		Groups:       user.Groups,
-		Timezone:     user.Timezone,
 		ClientAddr:   addr,
 		Created:      types.MetaTimeNow(),
 		Expired:      types.MetaTimeNow().Add("+864000s"),
 	}
 
-	skey := fmt.Sprintf("session/%s/%s", session.UserID, session.AccessToken)
+	token := iamapi.NewAccessTokenFrontend(session.UserName, session.AccessToken)
 
-	if sobj := store.PvPut(skey, session, &skv.PvWriteOptions{
+	skey := fmt.Sprintf("session/%s", token.SessionPath())
+
+	if sobj := store.PvPut(skey, session, &skv.PathWriteOptions{
 		Ttl: 864000000, // 10 days
 	}); !sobj.OK() {
 		rsp.Error = types.NewErrorMeta("500", sobj.Bytex().String())
 		return
 	}
+
+	rsp.AccessToken = token.String()
 
 	if len(c.Params.Get("redirect_uri")) > 0 {
 
@@ -121,7 +125,7 @@ func (c Service) LoginAuthAction() {
 				rsp.RedirectUri += "&"
 			}
 
-			rsp.RedirectUri += iamapi.AccessTokenKey + "=" + session.FullToken() + "&expires_in=864000"
+			rsp.RedirectUri += iamapi.AccessTokenKey + "=" + rsp.AccessToken + "&expires_in=864000"
 
 			if c.Params.Get("state") != "" {
 				rsp.RedirectUri += "&state=" + c.Params.Get("state")
@@ -129,11 +133,9 @@ func (c Service) LoginAuthAction() {
 		}
 	}
 
-	rsp.AccessToken = session.FullToken()
-
 	http.SetCookie(c.Response.Out, &http.Cookie{
 		Name:     "_iam_at",
-		Value:    session.FullToken(),
+		Value:    rsp.AccessToken,
 		Path:     "/",
 		HttpOnly: true,
 		Expires:  time.Now().Add(864000 * time.Second),
@@ -145,27 +147,20 @@ func (c Service) LoginAuthAction() {
 func (c Service) AuthAction() {
 
 	rsp := iamapi.UserSession{}
-
 	defer c.RenderJson(&rsp)
 
-	token := c.Params.Get(iamapi.AccessTokenKey)
-	if len(token) < 30 {
+	token := iamapi.AccessTokenFrontend(c.Params.Get(iamapi.AccessTokenKey))
+	if !token.Valid() {
 		rsp.Error = types.NewErrorMeta(iamapi.ErrCodeUnauthorized, "Unauthorized")
 		return
 	}
-	token = token[:8] + "/" + token[9:]
 
-	if obj := store.PvGet("session/" + token); obj.OK() {
+	if obj := store.PvGet("session/" + token.SessionPath()); obj.OK() {
 		obj.Decode(&rsp)
 	}
 
-	if rsp.AccessToken == "" {
-		rsp.Error = types.NewErrorMeta(iamapi.ErrCodeUnauthorized, "Unauthorized")
-		return
-	}
-
-	//
-	if rsp.Expired < types.MetaTimeNow() {
+	if rsp.AccessToken == "" ||
+		rsp.Expired < types.MetaTimeNow() {
 		rsp.Error = types.NewErrorMeta(iamapi.ErrCodeUnauthorized, "Unauthorized")
 		return
 	}
@@ -189,7 +184,6 @@ func (c Service) AccessAllowedAction() {
 		req iamapi.UserAccessEntry
 		rsp iamapi.UserAccessEntry
 	)
-
 	defer c.RenderJson(&rsp)
 
 	if len(c.Request.RawBody) == 0 {
@@ -203,24 +197,20 @@ func (c Service) AccessAllowedAction() {
 		rsp.Error = types.NewErrorMeta(iamapi.ErrCodeUnauthorized, err.Error())
 		return
 	}
-	if len(req.AccessToken) < 30 {
+
+	token := iamapi.AccessTokenFrontend(req.AccessToken)
+	if !token.Valid() {
 		rsp.Error = types.NewErrorMeta(iamapi.ErrCodeUnauthorized, "Unauthorized")
 		return
 	}
-	req.AccessToken = req.AccessToken[:8] + "/" + req.AccessToken[9:]
 
 	var session iamapi.UserSession
-	if obj := store.PvGet("session/" + req.AccessToken); obj.OK() {
+	if obj := store.PvGet("session/" + token.SessionPath()); obj.OK() {
 		obj.Decode(&session)
 	}
 
-	if session.AccessToken == "" {
-		rsp.Error = types.NewErrorMeta(iamapi.ErrCodeUnauthorized, "Unauthorized")
-		return
-	}
-
-	//
-	if session.Expired < types.MetaTimeNow() {
+	if session.AccessToken == "" ||
+		session.Expired < types.MetaTimeNow() {
 		rsp.Error = types.NewErrorMeta(iamapi.ErrCodeUnauthorized, "Unauthorized")
 		return
 	}
@@ -235,7 +225,7 @@ func (c Service) AccessAllowedAction() {
 	// 	return
 	// }
 
-	if !role.AccessAllowed(session.UserID, session.Roles, req.InstanceID, req.Privilege) {
+	if !role.AccessAllowed(session.UserId(), session.Roles, req.InstanceID, req.Privilege) {
 		rsp.Error = types.NewErrorMeta(iamapi.ErrCodeUnauthorized, "Unauthorized")
 		return
 	}
@@ -243,23 +233,32 @@ func (c Service) AccessAllowedAction() {
 	rsp.Kind = "UserAccessEntry"
 }
 
+var (
+	iam_v1_service_len = len("iam/v1/service/photo/")
+	iam_v1_service_def = "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAGAAAABgCAYAAADimHc4AAAAAXNSR0IArs4c6QAAAAZiS0dEAP8A/wD/oL2nkwAAAAlwSFlzAAALEwAACxMBAJqcGAAAAAd0SU1FB94EBRAHIE63lHIAAAAZdEVYdENvbW1lbnQAQ3JlYXRlZCB3aXRoIEdJTVBXgQ4XAAAFW0lEQVR42u2cwWtUVxSHv5moJBHEmBasMc0mdpGFRaHRRZMuBDe6qEVadaN0IVKIIoKC+jeopV10VWhRpF0FQSXZVpRsivgHhLGGlJYWQ+LCaJzpYs4j05d73ptJZua+ue988JhhZt49v3vOm3Pvu+/eC4ZhGIZhGIZhGIZhGIZhGIZhhE6hg7RuA/qB/cCnwBjwHlCU78vAP8BvwCPgd+BfYNHCvDEOAd8DM0ClwWNGzj1kbmycYeAZsFTj0LLyPu37JSlr2NyaTg9wNcGxjR7xc6+KDcPBx8ATxXHlBoJRTinjidgyathdh5Pjn78C5uR4Vee/ptbGbnN7lcE6cvwy8By4Iz0gjTH5zXM5J62NGMy780cTrth38noPOLGOsk/IubVluQIymlfnbwNKKanmc6BrAza6pIyk1FQSLbnjRo1T4vn/7yb3VnqkzHg7EL2/kTfnH0tw/jww0AKbA1K2FoRjeQrAbELO726h3e6ENmE2L86fcDggugqH2mB/SGkP3om2tlH04PzNwEGH7QLwq6SIVjMvtgoOfxwUjcGyS+n1LFAd6WwX+8Wmq1e0K+QAHFXuUJ960PJU0XI05ADcUXL/SQ9aTiptwZ12CfDxQKYSey141OJdT9HjP6FQU8l5jzrmHXqC7QUNKFdfyWMASjEtmtYgAtCjpMAHHgPwQEk5PSEGoKJ8/tZjAN42qLWjA1BUKulzTH5QcbjP9rFl9Cn9bp9jMLOKpr5Q7wNc/e4Fj3oWlPuSYHmpVLjLg5Yu5YJ4GXIArrB2HL4C3PWg5W7sQoj0XAk5AAdwTx3xcS9QUrQcCDkAO4AXjjT0FjjVRh2nxGY8/bwQjUFzU8m9c22q/A6x5WqLbpIDPqM6X9M1T+dcG+yfwz1PaEm05YKH6FMJT7fQ7mn06YsPyRGbcT8cL8tnZ1pg84yU7XoWXCHwR5EuxnE/nowcNAb0NsFOr5Tl6v5Gxzg5pEj14bhrKCC6KqeAfRuwsU/K0KaiVERDkRyzqDTI5Zqhij+AkQbKHJFzFhJyfhlbwvS/ICTN8a913M/ATuDD2LFTvqunjIo5fy2PUlJFIytlyimp7ZG5ey1bcM8ZbcYKmfgc0C3mbp29rH9NWNqxN0sV7cqY4z+RvvoPrD6TbdZMhWiM/0tgE/Aav7MxMkdtj6UdR9SzyjXdwLUmNrzrbZCv0dop8So+tyr4CvgaOBxLE4XY+0pM55/ANNVtCFbEiVE63UR1O4PDwAeOcl3lR0wDPwK/5OHKvwi8of4lqY+p7g8xBLwvjtbYJL8ZknMeU//S1TeiLVi2At+iLxmtff0LuNxE25elzHJKV7UiGreG5vyPqO7XkOb8B8CFFuq4IDbSgvBMNAdBL6srFJMaw2/a1Bh2i62kxj9aqdkbgvOXSR4KztK8oLjO5U4OgrYstPb1VgZ03krR2Kplsy0f17mvVCj622fpIch4TFtc8/1OGz+6ntLQZXHzpOGUDsL1TnH+JfR1uGWyvTnGKKvPpV33Cpey7vwxqnv3aJsldcK2YcPoGz69Inm7HO9jO1MJ3bojHZRCjyTUY8rX2FEaEwl5/yc6a5vMgmjW2oOJrAnuTxhnmevg+5i5hDGk/iwJLaFvOba9gwOwHX3Ls1JWRH7huNuNxJ4PYCjlvFK3Zam794Z3UvmLTme1sVpHHaeVOk76ruOI0ki9Bo4TDselTq66jvgUNqn0mWcIjxnl3mbSp6gVJT+GuMyzT6nrik9Ri468eI9wueeor9cpjmdZO7Yf8m60g6x9hnDW9x3jEeA28B2wh/DZI3W9LXUvYBiGYRiGYRiGYRiGYRiGYSTwHy11zABJLMguAAAAAElFTkSuQmCC"
+)
+
 func (c Service) PhotoAction() {
 
 	c.AutoRender = false
 
-	photo := "data:image/png;base64,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"
+	var photo string
 
-	if len(c.Request.RequestPath) > 14 {
+	if len(c.Request.RequestPath) > iam_v1_service_len {
 
-		uid := c.Request.RequestPath[14:]
+		uid := iamapi.UserId(c.Request.RequestPath[iam_v1_service_len:])
 
 		var profile iamapi.UserProfile
 
-		if obj := store.PvGet("user-profile/" + uid); obj.OK() {
+		if obj := store.PoGet("user-profile", uid); obj.OK() {
 			if err := obj.Decode(&profile); err == nil && len(profile.Photo) > 50 {
 				photo = profile.Photo
 			}
 		}
+	}
+
+	if photo == "" {
+		photo = iam_v1_service_def
 	}
 
 	body64 := strings.SplitAfter(photo, ";base64,")

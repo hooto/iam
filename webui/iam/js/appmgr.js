@@ -93,7 +93,7 @@ iamAppMgr.InstList = function()
         });
 
         iam.TplCmd("app-mgr/inst-list", {
-            callback: ep.done('tpl'),           
+            callback: ep.done('tpl'),
         });
     });
 }
@@ -112,7 +112,7 @@ iamAppMgr.InstSetForm = function(instid)
                 data.privileges = [];
             }
             data._privilegeNumber = data.privileges.length;
-            
+
             data._statusls = iamAppMgr.statusls;
             data._roles = l4i.Clone(roles);
 
@@ -159,37 +159,36 @@ iamAppMgr.InstSetForm = function(instid)
         }
 
         if (instid) {
-        
+
             iam.ApiCmd("app-mgr/inst-entry?instid="+ instid, {
                 callback: ep.done('data'),
             });
-        
+
         } else {
             ep.emit("data", l4i.Clone(iamAppMgr.appinstdef));
         }
 
         iam.TplCmd("app-mgr/inst-set", {
-            callback: ep.done('tpl'),           
+            callback: ep.done('tpl'),
         });
     });
 }
 
 iamAppMgr.InstSetCommit = function()
 {
-    var form = $("#iam-appmgr-instset");
-    
-    var req = l4i.Clone(iamAppMgr.appinstdef)
-
-    req.meta.id = form.find("input[name=instid]").val();
-    req.app_title = form.find("input[name=app_title]").val();
-    req.url = form.find("input[name=url]").val();
-
-    req.status = parseInt(form.find("input[name=status]:checked").val());
+    var form = $("#iam-appmgr-instset"),
+        alert_id = "#iam-appmgr-instset-alert",
+        req = l4i.Clone(iamAppMgr.appinstdef);
 
     try {
+        req.meta.id = form.find("input[name=instid]").val();
+        req.app_title = form.find("input[name=app_title]").val();
+        req.url = form.find("input[name=url]").val();
+
+        req.status = parseInt(form.find("input[name=status]:checked").val());
 
         // form.find("input[name=roles]:checked").each(function() {
-            
+
         //     var val = parseInt($(this).val());
         //     if (val > 0) {
         //         req.roles.push(val);
@@ -197,23 +196,23 @@ iamAppMgr.InstSetCommit = function()
         // });
 
     } catch (err) {
-        return l4i.InnerAlert("#iam-appmgr-instset-alert", 'alert-danger', err);
+        return l4i.InnerAlert(alert_id, 'alert-danger', err);
     }
 
     iam.ApiCmd("app-mgr/inst-set", {
         method : "PUT",
         data   : JSON.stringify(req),
         callback : function(err, data) {
-            
+
             if (err) {
-                return l4i.InnerAlert("#iam-appmgr-instset-alert", 'alert-danger', err);
+                return l4i.InnerAlert(alert_id, 'alert-danger', err);
             }
 
             if (!data || data.error) {
-                return l4i.InnerAlert("#iam-appmgr-instset-alert", 'alert-danger', data.error.message);
+                return l4i.InnerAlert(alert_id, 'alert-danger', data.error.message);
             }
 
-            l4i.InnerAlert("#iam-appmgr-instset-alert", 'alert-success', "Successfully updated");
+            l4i.InnerAlert(alert_id, 'alert-success', "Successfully updated");
 
             window.setTimeout(function(){
                 l4iModal.Close();

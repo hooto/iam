@@ -9,11 +9,11 @@
 </style>
 
 <div id="iam-myapp-instset-alert"></div>
-    
+
 <div id="iam-myapp-instset" class="form-horizontal" action="#">
-    
+
     <input type="hidden" name="instid" value="{[=it.meta.id]}">
-    
+
     <label class="iam-form-group-title">Application Information</label>
 
     <div class="form-group">

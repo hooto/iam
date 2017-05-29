@@ -26,13 +26,16 @@ import (
 
 type AuthSession struct {
 	types.TypeMeta `json:",inline"`
-	UserID         string            `json:"userid"`
 	UserName       string            `json:"username"`
-	Name           string            `json:"name"`
+	DisplayName    string            `json:"display_name"`
 	IamUrl         string            `json:"iam_url"`
 	PhotoUrl       string            `json:"photo_url"`
 	InstanceOwner  bool              `json:"instance_owner,omitempty"`
 	Roles          types.ArrayUint32 `json:"roles,omitempty"`
+}
+
+func (s *AuthSession) UserId() string {
+	return iamapi.UserId(s.UserName)
 }
 
 type Auth struct {
@@ -79,13 +82,12 @@ func (c Auth) SessionAction() {
 
 	if session, err := SessionInstance(c.Session); err == nil {
 
-		set.UserID = session.UserID
 		set.UserName = session.UserName
-		set.Name = session.Name
-		set.PhotoUrl = service_prefix() + "/v1/service/photo/" + session.UserID
+		set.DisplayName = session.DisplayName
+		set.PhotoUrl = service_prefix() + "/v1/service/photo/" + session.UserName
 		set.Roles = session.Roles
 
-		if InstanceOwner == set.UserID {
+		if InstanceOwner == set.UserName {
 			set.InstanceOwner = true
 		}
 

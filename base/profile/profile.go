@@ -24,9 +24,9 @@ import (
 
 func PutValidate(set iamapi.UserProfile) (iamapi.UserProfile, error) {
 
-	set.Name = strings.TrimSpace(set.Name)
-	if len(set.Name) < 1 || len(set.Name) > 30 {
-		return set, errors.New("Name must be between 1 and 30 characters long")
+	set.Login.DisplayName = strings.TrimSpace(set.Login.DisplayName)
+	if len(set.Login.DisplayName) < 1 || len(set.Login.DisplayName) > 30 {
+		return set, errors.New("DisplayName must be between 1 and 30 characters long")
 	}
 
 	if _, err := time.Parse("2006-01-02", set.Birthday); err != nil {

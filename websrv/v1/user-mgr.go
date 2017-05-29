@@ -24,8 +24,6 @@ import (
 	"github.com/lessos/lessgo/httpsrv"
 	"github.com/lessos/lessgo/pass"
 	"github.com/lessos/lessgo/types"
-	"github.com/lessos/lessgo/utils"
-	"github.com/lessos/lessgo/utilx"
 
 	"code.hooto.com/lessos/iam/base/signup"
 	"code.hooto.com/lessos/iam/config"
@@ -67,7 +65,7 @@ func (c UserMgr) UserListAction() {
 	)
 
 	// TODO page
-	if rs := store.PvScan("user", "", "", 1000); rs.OK() {
+	if rs := store.PoScan("user", []byte{}, []byte{}, 1000); rs.OK() {
 
 		rss := rs.KvList()
 		for _, obj := range rss {
@@ -75,12 +73,13 @@ func (c UserMgr) UserListAction() {
 			var user iamapi.User
 			if err := obj.Decode(&user); err == nil {
 
-				if qt != "" && (!strings.Contains(user.Meta.Name, qt) &&
+				if qt != "" && (!strings.Contains(user.Name, qt) &&
 					!strings.Contains(user.Email, qt)) {
 					continue
 				}
 
-				user.Auth = ""
+				user.Id = ""
+				user.Keys = nil
 				ls.Items = append(ls.Items, user)
 			}
 		}
@@ -108,8 +107,7 @@ func (c UserMgr) UserListAction() {
 
 func (c UserMgr) UserEntryAction() {
 
-	set := iamapi.User{}
-
+	set := iamapi.UserEntry{}
 	defer c.RenderJson(&set)
 
 	if !iamclient.SessionAccessAllowed(c.Session, "user.admin", config.Config.InstanceID) {
@@ -117,33 +115,43 @@ func (c UserMgr) UserEntryAction() {
 		return
 	}
 
-	if obj := store.PvGet("user/" + c.Params.Get("userid")); obj.OK() {
-		obj.Decode(&set)
+	userid := iamapi.UserId(c.Params.Get("username"))
+
+	if obj := store.PoGet("user", userid); obj.OK() {
+		obj.Decode(&set.Login)
 	}
 
 	// login
-	if set.Meta.ID == "" {
+	if set.Login.Name == "" {
 		set.Error = types.NewErrorMeta(iamapi.ErrCodeInvalidArgument, "User Not Found")
 		return
 	}
-	set.Auth = userMgrPasswdHidden
+	set.Login.Keys = types.KvPairs{}
+	set.Login.Keys.Set(iamapi.UserKeyDefault, userMgrPasswdHidden)
 
 	//
 	var profile iamapi.UserProfile
-	if obj := store.PvGet("user-profile/" + c.Params.Get("userid")); obj.OK() {
+	if obj := store.PoGet("user-profile", userid); obj.OK() {
 		obj.Decode(&profile)
-		profile.About = html.EscapeString(profile.About)
+		if profile.Login.Name == set.Login.Name {
+			set.Profile = &profile
+			set.Profile.About = html.EscapeString(set.Profile.About)
+			set.Profile.Photo = ""
+			set.Profile.PhotoSource = ""
+			set.Profile.Login = nil
+		}
 	}
 
-	set.Profile = &profile
+	if set.Profile == nil {
+		set.Profile = &iamapi.UserProfile{}
+	}
 
 	set.Kind = "User"
 }
 
 func (c UserMgr) UserSetAction() {
 
-	set := iamapi.User{}
-
+	set := iamapi.UserEntry{}
 	defer c.RenderJson(&set)
 
 	if err := c.Request.JsonDecode(&set); err != nil {
@@ -156,75 +164,67 @@ func (c UserMgr) UserSetAction() {
 		return
 	}
 
-	if err := signup.ValidateEmail(&set); err != nil {
+	if err := signup.ValidateUsername(&set.Login); err != nil {
 		set.Error = types.NewErrorMeta(iamapi.ErrCodeInvalidArgument, err.Error())
 		return
 	}
 
-	var prev iamapi.User
+	if err := signup.ValidateEmail(&set.Login); err != nil {
+		set.Error = types.NewErrorMeta(iamapi.ErrCodeInvalidArgument, err.Error())
+		return
+	}
+
+	set.Login.Id = iamapi.UserId(set.Login.Name)
+
+	if auth := set.Login.Keys.Get(iamapi.UserKeyDefault); auth != nil {
+
+		if auth.String() != userMgrPasswdHidden && auth.String() != "" {
+			authenc, _ := pass.HashDefault(auth.String())
+			set.Login.Keys.Set(iamapi.UserKeyDefault, authenc)
+		} else {
+			set.Login.Keys.Del(iamapi.UserKeyDefault)
+		}
+	}
+
+	var prev iamapi.UserEntry
 	var prevVersion uint64
 
-	if set.Meta.ID == "" {
-
-		if err := signup.ValidateUsername(&set); err != nil {
-			set.Error = types.NewErrorMeta(iamapi.ErrCodeInvalidArgument, err.Error())
-			return
-		}
-
-		set.Meta.ID = utils.StringEncode16(set.Meta.Name, 8)
-		set.Meta.Created = utilx.TimeNow("atom")
-	}
-
-	if set.Auth != userMgrPasswdHidden && set.Auth != "" {
-		set.Auth, _ = pass.HashDefault(set.Auth)
-	} else {
-		set.Auth = ""
-	}
-
 	//
-	if obj := store.PvGet("user/" + set.Meta.ID); obj.OK() {
-		obj.Decode(&prev)
+	if obj := store.PoGet("user", set.Login.Id); obj.OK() {
+		obj.Decode(&prev.Login)
 		prevVersion = obj.Meta().Version
 	}
 
 	//
-	if err := signup.ValidateUserID(&set); err != nil {
-		set.Error = types.NewErrorMeta(iamapi.ErrCodeInvalidArgument, err.Error())
-		return
+	if prev.Login.Id == set.Login.Id {
+
+		if set.Login.Email != "" {
+			prev.Login.Email = set.Login.Email
+		}
+
+		if auth := set.Login.Keys.Get(iamapi.UserKeyDefault); auth != nil {
+			prev.Login.Keys.Set(iamapi.UserKeyDefault, auth.String())
+		}
+
+		if set.Login.DisplayName != "" {
+			prev.Login.DisplayName = set.Login.DisplayName
+		}
+
+		if len(set.Login.Roles) > 0 && !set.Login.Roles.Equal(prev.Login.Roles) {
+			prev.Login.Roles = set.Login.Roles
+		}
+
+		// prev.Profile = set.Profile
+
+		set.Login = prev.Login
+	} else {
+		set.Login.Created = types.MetaTimeNow()
 	}
 
-	//
-	if prev.Meta.ID == set.Meta.ID {
+	set.Login.Updated = types.MetaTimeNow()
+	sort.Sort(set.Login.Roles)
 
-		if set.Email != "" {
-			prev.Email = set.Email
-		}
-
-		if set.Auth != "" {
-			prev.Auth = set.Auth
-		}
-
-		if set.Timezone != "" {
-			prev.Timezone = set.Timezone
-		}
-
-		if set.Name != "" {
-			prev.Name = set.Name
-		}
-
-		if len(set.Roles) > 0 && !set.Roles.Equal(prev.Roles) {
-			prev.Roles = set.Roles
-		}
-
-		prev.Profile = set.Profile
-
-		set = prev
-	}
-
-	set.Meta.Updated = utilx.TimeNow("atom")
-	sort.Sort(set.Roles)
-
-	if obj := store.PvPut("user/"+set.Meta.ID, set, &skv.PvWriteOptions{
+	if obj := store.PoPut("user", set.Login.Id, set.Login, &skv.PathWriteOptions{
 		PrevVersion: prevVersion,
 	}); !obj.OK() {
 		set.Error = types.NewErrorMeta("500", obj.Bytex().String())
@@ -236,7 +236,7 @@ func (c UserMgr) UserSetAction() {
 		prevVersion = 0
 		var profile iamapi.UserProfile
 
-		if obj := store.PvGet("user-profile/" + set.Meta.ID); obj.OK() {
+		if obj := store.PoGet("user-profile", set.Login.Id); obj.OK() {
 
 			obj.Decode(&profile)
 			prevVersion = obj.Meta().Version
@@ -248,13 +248,9 @@ func (c UserMgr) UserSetAction() {
 			if set.Profile.About != "" {
 				profile.About = set.Profile.About
 			}
-
-			if set.Name != "" {
-				profile.Name = set.Name
-			}
 		}
 
-		if obj := store.PvPut("user-profile/"+set.Meta.ID, profile, &skv.PvWriteOptions{
+		if obj := store.PoPut("user-profile", set.Login.Id, profile, &skv.PathWriteOptions{
 			PrevVersion: prevVersion,
 		}); !obj.OK() {
 			set.Error = types.NewErrorMeta("500", obj.Bytex().String())

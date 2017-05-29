@@ -22,12 +22,10 @@ import (
 	"code.hooto.com/lessos/iam/config"
 	"code.hooto.com/lessos/iam/iamapi"
 	"code.hooto.com/lynkdb/iomix/skv"
-	iox_utils "code.hooto.com/lynkdb/iomix/utils"
 	"github.com/lessos/lessgo/crypto/idhash"
 	"github.com/lessos/lessgo/crypto/phash"
 	"github.com/lessos/lessgo/net/email"
 	"github.com/lessos/lessgo/types"
-	"github.com/lessos/lessgo/utilx"
 )
 
 var (
@@ -38,15 +36,16 @@ var (
 	app_inst_id_re        = regexp.MustCompile("^[0-9a-f]{16}$")
 )
 
+//
 func PvGet(path string) *skv.Result {
 	return Data.PvGet(PathPrefixAppend(path))
 }
 
-func PvPut(path string, v interface{}, opts *skv.PvWriteOptions) *skv.Result {
+func PvPut(path string, v interface{}, opts *skv.PathWriteOptions) *skv.Result {
 	return Data.PvPut(PathPrefixAppend(path), v, opts)
 }
 
-func PvDel(path string, opts *skv.PvWriteOptions) *skv.Result {
+func PvDel(path string, opts *skv.PathWriteOptions) *skv.Result {
 	return Data.PvDel(PathPrefixAppend(path), opts)
 }
 
@@ -58,6 +57,28 @@ func PvRevScan(path, offset, cutset string, limit int) *skv.Result {
 	return Data.PvRevScan(PathPrefixAppend(path), offset, cutset, limit)
 }
 
+//
+func PoGet(path string, key interface{}) *skv.Result {
+	return Data.PoGet(PathPrefixAppend(path), key)
+}
+
+func PoPut(path string, key, value interface{}, opts *skv.PathWriteOptions) *skv.Result {
+	return Data.PoPut(PathPrefixAppend(path), key, value, opts)
+}
+
+func PoDel(path string, key interface{}, opts *skv.PathWriteOptions) *skv.Result {
+	return Data.PoDel(PathPrefixAppend(path), key, opts)
+}
+
+func PoScan(path string, offset, cutset interface{}, limit int) *skv.Result {
+	return Data.PoScan(PathPrefixAppend(path), offset, cutset, limit)
+}
+
+func PoRevScan(path string, offset, cutset interface{}, limit int) *skv.Result {
+	return Data.PoRevScan(PathPrefixAppend(path), offset, cutset, limit)
+}
+
+//
 func PathPrefixSet(path string) {
 	path_prefix = path
 }
@@ -77,13 +98,13 @@ func Init() error {
 		return fmt.Errorf("iam.store connect not ready")
 	}
 
-	if rs := Data.PvPut(PathPrefixAppend("iam-test"), "test", &skv.PvWriteOptions{
+	if rs := Data.PoPut(PathPrefixAppend("iam-test"), uint32(1234), "test", &skv.PathWriteOptions{
 		Ttl: 3000,
 	}); !rs.OK() {
 		return fmt.Errorf("iam.store connect not ready")
 	}
 
-	if rs := Data.PvGet(PathPrefixAppend("iam-test")); !rs.OK() ||
+	if rs := Data.PoGet(PathPrefixAppend("iam-test"), uint32(1234)); !rs.OK() ||
 		rs.Bytex().String() != "test" {
 		return fmt.Errorf("iam.store connect not ready")
 	}
@@ -103,39 +124,33 @@ func InitData() (err error) {
 
 	//
 	role := iamapi.UserRole{
-		Meta: &types.ObjectMeta{
-			ID:      iox_utils.BytesToHexString(iox_utils.Uint32ToBytes(1)),
-			Name:    "Administrator",
-			UserID:  idhash.HashToHexString([]byte(def_sysadmin), 8),
-			Created: utilx.TimeNow("atom"),
-			Updated: utilx.TimeNow("atom"),
-		},
-		Id:     1,
-		Desc:   "Root System Administrator",
-		Status: 1,
+		Id:      1,
+		Name:    "Administrator",
+		User:    def_sysadmin,
+		Desc:    "Root System Administrator",
+		Status:  1,
+		Created: types.MetaTimeNow(),
+		Updated: types.MetaTimeNow(),
 	}
-	PvPut(fmt.Sprintf("role/%s", role.Meta.ID), role, nil)
+	PoPut("role", role.Id, role, nil)
 
 	//
 	role.Id = 100
-	role.Meta.ID = iox_utils.BytesToHexString(iox_utils.Uint32ToBytes(role.Id))
-	role.Meta.Name = "Member"
+	role.Name = "Member"
 	role.Desc = "Universal Member"
-	PvPut(fmt.Sprintf("role/%s", role.Meta.ID), role, nil)
+	PoPut("role", role.Id, role, nil)
 
 	//
 	role.Id = 101
-	role.Meta.ID = iox_utils.BytesToHexString(iox_utils.Uint32ToBytes(role.Id))
-	role.Meta.Name = "Developer"
+	role.Name = "Developer"
 	role.Desc = "Universal Developer"
-	PvPut(fmt.Sprintf("role/%s", role.Meta.ID), role, nil)
+	PoPut("role", role.Id, role, nil)
 
 	//
 	role.Id = 1000
-	role.Meta.ID = iox_utils.BytesToHexString(iox_utils.Uint32ToBytes(role.Id))
-	role.Meta.Name = "Anonymous"
+	role.Name = "Anonymous"
 	role.Desc = "Anonymous Member"
-	PvPut(fmt.Sprintf("role/%s", role.Meta.ID), role, nil)
+	PoPut("role", role.Id, role, nil)
 
 	//
 	ps := []iamapi.AppPrivilege{
@@ -152,11 +167,11 @@ func InitData() (err error) {
 	}
 
 	inst := iamapi.AppInstance{
-		Meta: types.ObjectMeta{
+		Meta: types.InnerObjectMeta{
 			ID:      config.Config.InstanceID,
-			UserID:  idhash.HashToHexString([]byte(def_sysadmin), 8),
-			Created: utilx.TimeNow("atom"),
-			Updated: utilx.TimeNow("atom"),
+			User:    def_sysadmin,
+			Created: types.MetaTimeNow(),
+			Updated: types.MetaTimeNow(),
 		},
 		Version:    config.Version,
 		AppID:      "iam",
@@ -165,7 +180,7 @@ func InitData() (err error) {
 		Url:        "",
 		Privileges: ps,
 	}
-	PvPut("app-instance/"+inst.Meta.ID, inst, nil)
+	PoPut("app-instance", inst.Meta.ID, inst, nil)
 
 	AppInstanceRegister(inst)
 
@@ -185,32 +200,33 @@ func InitData() (err error) {
 		}
 
 		for rid, v := range rps {
-			PvPut(fmt.Sprintf("role-privilege/%d/%s", rid, inst.Meta.ID), strings.Join(v, ","), nil)
+			PoPut(fmt.Sprintf("role-privilege/%d/%s", rid, inst.Meta.ID), strings.Join(v, ","), nil)
 		}
 	*/
 
 	// Init Super SysAdmin Account
-	if rs := PvGet("user/sysadmin"); rs.NotFound() {
+	uid := idhash.HashToHexString([]byte(def_sysadmin), 8)
+	if rs := PoGet("user", uid); rs.NotFound() {
 
 		sysadm := iamapi.User{
-			Meta: types.ObjectMeta{
-				ID:      idhash.HashToHexString([]byte(def_sysadmin), 8),
-				Name:    def_sysadmin,
-				Created: utilx.TimeNow("atom"),
-				Updated: utilx.TimeNow("atom"),
-			},
-			Name:   "System Administrator",
-			Email:  "",
-			Roles:  []uint32{1, 100},
-			Status: 1,
+			Id:          uid,
+			Name:        def_sysadmin,
+			DisplayName: "System Administrator",
+			Email:       "",
+			Roles:       []uint32{1, 100},
+			Status:      1,
+			Created:     types.MetaTimeNow(),
+			Updated:     types.MetaTimeNow(),
 		}
 
-		sysadm.Auth, err = phash.Generate(def_sysadmin_password)
+		auth, err := phash.Generate(def_sysadmin_password)
 		if err != nil {
 			return err
 		}
 
-		PvPut("user/"+sysadm.Meta.ID, sysadm, nil)
+		sysadm.Keys.Set(iamapi.UserKeyDefault, auth)
+
+		PoPut("user", uid, sysadm, nil)
 	}
 
 	return nil
@@ -266,22 +282,22 @@ func AppInstanceRegister(inst iamapi.AppInstance) error {
 		return fmt.Errorf("Invalid meta.id (%s)", inst.Meta.ID)
 	}
 
-	if rs := PvGet("user/" + inst.Meta.UserID); rs.NotFound() {
-		inst.Meta.UserID = idhash.HashToHexString([]byte(def_sysadmin), 8)
+	if rs := PoGet("user", iamapi.UserId(def_sysadmin)); rs.NotFound() {
+		inst.Meta.User = def_sysadmin
 	}
 
 	var prev iamapi.AppInstance
-	if rs := PvGet("app-instance/" + inst.Meta.ID); rs.OK() {
+	if rs := PoGet("app-instance", inst.Meta.ID); rs.OK() {
 		rs.Decode(&prev)
 	}
 
 	if prev.Meta.ID == "" {
-		inst.Meta.Created = utilx.TimeNow("atom")
-		inst.Meta.Updated = utilx.TimeNow("atom")
-		PvPut("app-instance/"+inst.Meta.ID, inst, nil)
+		inst.Meta.Created = types.MetaTimeNow()
+		inst.Meta.Updated = types.MetaTimeNow()
+		PoPut("app-instance", inst.Meta.ID, inst, nil)
 	} else {
 
-		prev.Meta.Updated = utilx.TimeNow("atom")
+		prev.Meta.Updated = types.MetaTimeNow()
 
 		if inst.Version != "" && inst.Version != prev.Version {
 			prev.Version = inst.Version
@@ -299,7 +315,7 @@ func AppInstanceRegister(inst iamapi.AppInstance) error {
 			prev.Url = inst.Url
 		}
 
-		PvPut("app-instance/"+prev.Meta.ID, prev, nil)
+		PoPut("app-instance", prev.Meta.ID, prev, nil)
 
 		// TODO remove unused privileges
 	}
@@ -319,7 +335,7 @@ func AppInstanceRegister(inst iamapi.AppInstance) error {
 	}
 
 	for rid, v := range rps {
-		PvPut(fmt.Sprintf("role-privilege/%d/%s", rid, inst.Meta.ID), strings.Join(v, ","), nil)
+		PoPut(fmt.Sprintf("role-privilege/%d", rid), inst.Meta.ID, strings.Join(v, ","), nil)
 	}
 
 	return nil

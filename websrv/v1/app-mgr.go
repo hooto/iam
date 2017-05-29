@@ -20,7 +20,6 @@ import (
 	"code.hooto.com/lynkdb/iomix/skv"
 	"github.com/lessos/lessgo/httpsrv"
 	"github.com/lessos/lessgo/types"
-	"github.com/lessos/lessgo/utilx"
 
 	"code.hooto.com/lessos/iam/config"
 	"code.hooto.com/lessos/iam/iamapi"
@@ -39,7 +38,6 @@ type AppMgr struct {
 func (c AppMgr) InstListAction() {
 
 	ls := iamapi.AppInstanceList{}
-
 	defer c.RenderJson(&ls)
 
 	if !iamclient.SessionAccessAllowed(c.Session, "sys.admin", config.Config.InstanceID) {
@@ -52,7 +50,7 @@ func (c AppMgr) InstListAction() {
 	)
 
 	// TODO page
-	if objs := store.PvScan("app-instance", "", "", 1000); objs.OK() {
+	if objs := store.PoScan("app-instance", []byte{}, []byte{}, 1000); objs.OK() {
 
 		rss := objs.KvList()
 		for _, obj := range rss {
@@ -78,7 +76,6 @@ func (c AppMgr) InstListAction() {
 func (c AppMgr) InstEntryAction() {
 
 	set := iamapi.AppInstance{}
-
 	defer c.RenderJson(&set)
 
 	if !iamclient.SessionAccessAllowed(c.Session, "sys.admin", config.Config.InstanceID) {
@@ -86,7 +83,7 @@ func (c AppMgr) InstEntryAction() {
 		return
 	}
 
-	if obj := store.PvGet("app-instance/" + c.Params.Get("instid")); obj.OK() {
+	if obj := store.PoGet("app-instance", c.Params.Get("instid")); obj.OK() {
 		obj.Decode(&set)
 	}
 
@@ -101,7 +98,6 @@ func (c AppMgr) InstEntryAction() {
 func (c AppMgr) InstSetAction() {
 
 	set := iamapi.AppInstance{}
-
 	defer c.RenderJson(&set)
 
 	if !iamclient.SessionAccessAllowed(c.Session, "sys.admin", config.Config.InstanceID) {
@@ -116,22 +112,22 @@ func (c AppMgr) InstSetAction() {
 
 	var prev iamapi.AppInstance
 	var prevVersion uint64
-	if obj := store.PvGet("app-instance/" + set.Meta.ID); obj.OK() {
+	if obj := store.PoGet("app-instance", set.Meta.ID); obj.OK() {
 		obj.Decode(&prev)
 		prevVersion = obj.Meta().Version
 	}
 
-	if prev.Meta.ID == "" || prevVersion < 1 {
+	if prev.Meta.ID == "" {
 		set.Error = types.NewErrorMeta(iamapi.ErrCodeInvalidArgument, "App Instance Not Found")
 		return
 	}
 
 	if set.AppTitle != prev.AppTitle || set.Url != prev.Url {
-		prev.Meta.Updated = utilx.TimeNow("atom")
+		prev.Meta.Updated = types.MetaTimeNow()
 		prev.AppTitle = set.AppTitle
 		prev.Url = set.Url
 
-		if obj := store.PvPut("app-instance/"+set.Meta.ID, prev, &skv.PvWriteOptions{
+		if obj := store.PoPut("app-instance", set.Meta.ID, prev, &skv.PathWriteOptions{
 			PrevVersion: prevVersion,
 		}); !obj.OK() {
 			set.Error = types.NewErrorMeta(iamapi.ErrCodeInternalError, obj.Bytex().String())

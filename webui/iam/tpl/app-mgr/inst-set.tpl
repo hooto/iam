@@ -9,11 +9,11 @@
 </style>
 
 <div id="iam-appmgr-instset-alert"></div>
-    
+
 <div id="iam-appmgr-instset" class="form-horizontal" action="#">
-    
+
     <input type="hidden" name="instid" value="{[=it.meta.id]}">
-    
+
     <label class="iam-form-group-title">Application Information</label>
 
     <div class="form-group">
@@ -66,7 +66,7 @@
             {[~v.roles :rv]}
               {[~it._roles.items :drv]}
               {[ if (rv == drv.id) { ]}
-                {[=drv.meta.name]}
+                {[=drv.name]}
               {[ } ]}
               {[~]}
             {[~]}

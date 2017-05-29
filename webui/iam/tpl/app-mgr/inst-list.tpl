@@ -38,8 +38,8 @@
     {[ if (v.status == sv.status) { ]}{[=sv.title]}{[ } ]}
     {[~]}
   </td>
-  <td>{[=l4i.TimeParseFormat(v.meta.created, "Y-m-d")]}</td>
-  <td>{[=l4i.TimeParseFormat(v.meta.updated, "Y-m-d")]}</td>
+  <td>{[=l4i.MetaTimeParseFormat(v.meta.created, "Y-m-d")]}</td>
+  <td>{[=l4i.MetaTimeParseFormat(v.meta.updated, "Y-m-d")]}</td>
   <td align="right">
   <button class="pure-button button-xsmall"
       onclick="iamAppMgr.InstSetForm('{[=v.meta.id]}')">
@@ -69,8 +69,8 @@
 <li>
   <form action="#" onsubmit="iamAppMgr.InstList()" class="form-inlines">
     <input id="iam_appmgr_instls_qry_text" type="text"
-      class="form-control iam-query-input" 
-      placeholder="Press Enter to Search" 
+      class="form-control iam-query-input"
+      placeholder="Press Enter to Search"
       value="">
   </form>
 </li>

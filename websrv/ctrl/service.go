@@ -17,6 +17,7 @@ package ctrl
 import (
 	"net/http"
 
+	"code.hooto.com/lessos/iam/iamapi"
 	"code.hooto.com/lessos/iam/iamclient"
 	"code.hooto.com/lessos/iam/store"
 	"github.com/lessos/lessgo/httpsrv"
@@ -54,18 +55,14 @@ func (c Service) SignOutAction() {
 		c.Data["continue"] = c.Params.Get("continue")
 	}
 
-	token := c.Params.Get(iamclient.AccessTokenKey)
-
-	if len(token) < 30 {
+	token := iamapi.AccessTokenFrontend(c.Params.Get(iamclient.AccessTokenKey))
+	if !token.Valid() {
 		session, _ := iamclient.SessionInstance(c.Session)
-		token = session.FullToken()
+		token = iamapi.AccessTokenFrontend(session.FullToken())
 	}
 
-	if len(token) > 30 {
-
-		token = token[:8] + "/" + token[9:]
-
-		store.PvDel("session/"+token, nil)
+	if token.Valid() {
+		store.PvDel("session/"+token.SessionPath(), nil)
 	}
 
 	http.SetCookie(c.Response.Out, &http.Cookie{

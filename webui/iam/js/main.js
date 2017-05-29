@@ -14,7 +14,7 @@ iam.debug_uri = function()
     if (!iam.debug) {
         return "";
     }
-    return "?_="+ Math.random(); 
+    return "?_="+ Math.random();
 }
 
 iam.Boot = function()
@@ -49,7 +49,7 @@ iam.Boot = function()
             "~/lessui/css/lessui.css",
             "~/purecss/css/pure.css",
         ], function() {
-            
+        
             seajs.use([
                 "~/iam/css/main.css"+ iam.debug_uri(),
                 "~/twbs/js/bootstrap.min.js",
@@ -60,7 +60,7 @@ iam.Boot = function()
                 "~/iam/js/usermgr.js"+ iam.debug_uri(),
                 "~/iam/js/appmgr.js"+ iam.debug_uri(),
             ], iam.load_index);
-        });        
+        });    
     });
 }
 

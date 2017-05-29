@@ -9,6 +9,10 @@ iamUser.Overview = function()
 
         var ep = EventProxy.create('tpl', 'data', function (tpl, data) {
 
+            if (!data.login.display_name) {
+                data.login.display_name = data.login.name;
+            }
+
             l4iTemplate.Render({
                 dstid  : "com-content",
                 tplsrc : tpl,
@@ -19,13 +23,13 @@ iamUser.Overview = function()
         ep.fail(function(err) {
             alert("Error: Please try again later");
         });
-    
+
         iam.ApiCmd("user/profile", {
             callback: ep.done('data'),
         });
 
         iam.TplCmd("user/overview", {
-            callback: ep.done('tpl'),           
+            callback: ep.done('tpl'),
         });
     });
 }
@@ -35,7 +39,7 @@ iamUser.PassSetForm = function()
     iam.TplCmd("user/pass-set", {
 
         callback : function(err, tpl) {
-            
+
             l4iModal.Open({
                 tplsrc  : tpl,
                 width   : 500,
@@ -51,36 +55,37 @@ iamUser.PassSetForm = function()
                 }],
             });
         },
-    });    
+    });
 }
 
 iamUser.PassSetCommit = function()
 {
-    var form = $("#iam-user-pass-set");
-    
+    var form = $("#iam-user-pass-set"),
+        alert_id = "#iam-user-pass-set-alert";
+
     var req = {
-        currentPassword  : form.find("input[name=passwd_current]").val(),
-        newPassword : form.find("input[name=passwd_new]").val(),
+        current_password  : form.find("input[name=passwd_current]").val(),
+        new_password : form.find("input[name=passwd_new]").val(),
     };
 
-    if (req.newPassword != form.find("input[name=passwd_confirm]").val()) {
-        return l4i.InnerAlert("#iam-user-pass-set-alert", 'alert-danger', "Passwords do not match");
+    if (req.new_password != form.find("input[name=passwd_confirm]").val()) {
+        return l4i.InnerAlert(alert_id, 'alert-danger', "Passwords do not match");
     }
 
     iam.ApiCmd("user/pass-set", {
         method : "PUT",
         data   : JSON.stringify(req),
         callback : function(err, data) {
-            
+
             if (err) {
-                return l4i.InnerAlert("#iam-user-pass-set-alert", 'alert-danger', err);
+                return l4i.InnerAlert(alert_id, 'alert-danger', err);
             }
 
             if (!data || data.error) {
-                return l4i.InnerAlert("#iam-user-pass-set-alert", 'alert-danger', data.error.message);
+                return l4i.InnerAlert(alert_id, 'alert-danger', data.error.message);
             }
 
-            l4i.InnerAlert("#iam-user-pass-set-alert", 'alert-success', "Successfully updated");
+            l4i.InnerAlert(alert_id, 'alert-success', "Successfully updated");
 
             window.setTimeout(function(){
                 l4iModal.Close();
@@ -122,21 +127,22 @@ iamUser.EmailSetForm = function()
         ep.fail(function(err) {
             alert("Error: Please try again later");
         });
-    
+
         iam.ApiCmd("user/profile", {
             callback: ep.done('data'),
         });
 
         iam.TplCmd("user/email-set", {
-            callback: ep.done('tpl'),           
+            callback: ep.done('tpl'),
         });
     });
 }
 
 iamUser.EmailSetCommit = function()
 {
-    var form = $("#iam-user-email-set");
-    
+    var form = $("#iam-user-email-set"),
+        alert_id = "#iam-user-email-set-alert";
+
     var req = {
         email : form.find("input[name=email]").val(),
         auth  : form.find("input[name=auth]").val(),
@@ -146,16 +152,16 @@ iamUser.EmailSetCommit = function()
         method : "PUT",
         data   : JSON.stringify(req),
         callback : function(err, data) {
-            
+
             if (err) {
-                return l4i.InnerAlert("#iam-user-email-set-alert", 'alert-danger', err);
+                return l4i.InnerAlert(alert_id, 'alert-danger', err);
             }
 
             if (!data || data.error) {
-                return l4i.InnerAlert("#iam-user-email-set-alert", 'alert-danger', data.error.message);
+                return l4i.InnerAlert(alert_id, 'alert-danger', data.error.message);
             }
 
-            l4i.InnerAlert("#iam-user-email-set-alert", 'alert-success', "Successfully updated");
+            l4i.InnerAlert(alert_id, 'alert-success', "Successfully updated");
 
             window.setTimeout(function(){
                 l4iModal.Close();
@@ -172,11 +178,8 @@ iamUser.ProfileSetForm = function()
 
         var ep = EventProxy.create('tpl', 'data', function (tpl, data) {
 
-            if (!data.meta.name) {
-                data.meta.name = "No Name";
-            }
-            if (!data.login.name) {
-                data.login.name = data.meta.name;
+            if (!data.login.display_name) {
+                data.login.display_name = "No Name";
             }
 
             if (!data.birthday) {
@@ -207,23 +210,26 @@ iamUser.ProfileSetForm = function()
         ep.fail(function(err) {
             alert("Error: Please try again later");
         });
-    
+
         iam.ApiCmd("user/profile", {
             callback: ep.done('data'),
         });
 
         iam.TplCmd("user/profile-set", {
-            callback: ep.done('tpl'),           
+            callback: ep.done('tpl'),
         });
     });
 }
 
 iamUser.ProfileSetCommit = function()
 {
-    var form = $("#iam-user-profile-set");
-    
+    var form = $("#iam-user-profile-set"),
+        alert_id = "#iam-user-profile-set-alert";
+
     var req = {
-        name : form.find("input[name=name]").val(),
+        login: {
+            display_name : form.find("input[name=display_name]").val(),
+        },
         birthday : form.find("input[name=birthday]").val(),
         about  : form.find("textarea[name=about]").val(),
     };
@@ -232,16 +238,16 @@ iamUser.ProfileSetCommit = function()
         method : "PUT",
         data   : JSON.stringify(req),
         callback : function(err, data) {
-            
+
             if (err) {
-                return l4i.InnerAlert("#iam-user-profile-set-alert", 'alert-danger', err);
+                return l4i.InnerAlert(alert_id, 'alert-danger', err);
             }
 
             if (!data || data.error) {
-                return l4i.InnerAlert("#iam-user-profile-set-alert", 'alert-danger', data.error.message);
+                return l4i.InnerAlert(alert_id, 'alert-danger', data.error.message);
             }
 
-            l4i.InnerAlert("#iam-user-profile-set-alert", 'alert-success', "Successfully updated");
+            l4i.InnerAlert(alert_id, 'alert-success', "Successfully updated");
 
             window.setTimeout(function(){
                 l4iModal.Close();
@@ -251,17 +257,17 @@ iamUser.ProfileSetCommit = function()
     });
 }
 
-iamUser.PhotoSetForm = function(uuid)
+iamUser.PhotoSetForm = function(username)
 {
     iam.TplCmd("user/photo-set", {
 
         callback : function(err, tpl) {
-            
+
             l4iModal.Open({
                 tplsrc  : tpl,
                 width   : 600,
                 height  : 400,
-                data    : {login_id: uuid},
+                data    : {username: username},
                 title   : "Change Photo",
                 buttons : [{
                     title : "Cancel",
@@ -278,22 +284,23 @@ iamUser.PhotoSetForm = function(uuid)
 
 iamUser.PhotoSetCommit = function()
 {
-    var files = document.getElementById('iam-user-photo-set-file').files;
-    
+    var files = document.getElementById('iam-user-photo-set-file').files,
+        alert_id = "#iam-user-photo-set-alert";
+
     if (!files.length) {
-        return l4i.InnerAlert("#iam-user-photo-set-alert", "alert-danger", 'Please select a file!');
+        return l4i.InnerAlert(alert_id, "alert-danger", 'Please select a file!');
     }
 
     for (var i = 0, file; file = files[i]; ++i) {
-        
+
         if (file.size > 2 * 1024 * 1024) {
             return l4i.InnerAlert("iam-user-photo-set-alert", 'alert-danger', 'The file is too large to upload');
         }
-                
+
         var reader = new FileReader();
-        reader.onload = (function(file) {  
+        reader.onload = (function(file) {
             return function(e) {
-                
+
                 if (e.target.readyState != FileReader.DONE) {
                     return;
                 }
@@ -308,16 +315,16 @@ iamUser.PhotoSetCommit = function()
                     method : "PUT",
                     data   : JSON.stringify(req),
                     callback : function(err, data) {
-            
+
                         if (err) {
-                            return l4i.InnerAlert("#iam-user-photo-set-alert", 'alert-danger', err);
+                            return l4i.InnerAlert(alert_id, 'alert-danger', err);
                         }
 
                         if (!data || data.error) {
-                            return l4i.InnerAlert("#iam-user-photo-set-alert", 'alert-danger', data.error.message);
+                            return l4i.InnerAlert(alert_id, 'alert-danger', data.error.message);
                         }
 
-                        l4i.InnerAlert("#iam-user-photo-set-alert", 'alert-success', "Successfully updated");
+                        l4i.InnerAlert(alert_id, 'alert-success', "Successfully updated");
 
                         window.setTimeout(function(){
                             l4iModal.Close();
@@ -328,7 +335,7 @@ iamUser.PhotoSetCommit = function()
             };
 
         })(file);
-        
+
         reader.readAsDataURL(file);
     }
 }
@@ -336,7 +343,7 @@ iamUser.PhotoSetCommit = function()
 iamUser.SignOut = function()
 {
     // l4iCookie.Del("access_token");
-    window.setTimeout(function(){    
+    window.setTimeout(function(){
         window.location = "/iam/service/sign-out";
     }, 500);
 }

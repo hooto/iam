@@ -16,10 +16,7 @@ package v1
 
 import (
 	"code.hooto.com/lynkdb/iomix/skv"
-	iox_utils "code.hooto.com/lynkdb/iomix/utils"
 	"github.com/lessos/lessgo/types"
-	"github.com/lessos/lessgo/utils"
-	"github.com/lessos/lessgo/utilx"
 
 	"code.hooto.com/lessos/iam/config"
 	"code.hooto.com/lessos/iam/iamapi"
@@ -38,7 +35,7 @@ func (c UserMgr) RoleListAction() {
 	// 	return
 	// }
 
-	if objs := store.PvScan("role/", "", "", 10000); objs.OK() {
+	if objs := store.PoScan("role", []byte{}, []byte{}, 10000); objs.OK() {
 
 		rss := objs.KvList()
 		for _, obj := range rss {
@@ -61,7 +58,6 @@ func (c UserMgr) RoleListAction() {
 func (c UserMgr) RoleEntryAction() {
 
 	set := iamapi.UserRole{}
-
 	defer c.RenderJson(&set)
 
 	// if !iamclient.SessionAccessAllowed(c.Session, "user.admin", config.Config.InstanceID) {
@@ -69,11 +65,11 @@ func (c UserMgr) RoleEntryAction() {
 	// 	return
 	// }
 
-	if obj := store.PvGet("role/" + c.Params.Get("roleid")); obj.OK() {
+	if obj := store.PoGet("role", uint32(c.Params.Uint64("roleid"))); obj.OK() {
 		obj.Decode(&set)
 	}
 
-	if set.Meta.ID == "" {
+	if set.Id == 0 {
 		set.Error = types.NewErrorMeta(iamapi.ErrCodeInvalidArgument, "Role Not Found")
 		return
 	}
@@ -101,61 +97,56 @@ func (c UserMgr) RoleSetAction() {
 		return
 	}
 
-	if set.Meta.Name == "" {
+	if set.Name == "" {
 		set.Error = types.NewErrorMeta(iamapi.ErrCodeInvalidArgument, "Bad Request")
 		return
 	}
 
-	if set.Meta.ID == "" {
+	if set.Id == 0 {
 
-		last_id := uint32(0)
-
-		if objs := store.PvRevScan("role/", "", "", 1); objs.OK() {
+		if objs := store.PoRevScan("role", []byte{}, []byte{}, 1); objs.OK() {
 
 			rss := objs.KvList()
 			for _, obj := range rss {
 
 				var last_role iamapi.UserRole
 				if err := obj.Decode(&last_role); err == nil {
-					last_id = last_role.Id
+					set.Id = last_role.Id + 1
+					break
 				}
 			}
 		}
 
-		if last_id < 1000 {
+		if set.Id == 0 {
 			set.Error = types.NewErrorMeta("500", "Server Error")
 			return
 		}
 
-		last_id++
-
 		//
-		set.Meta.ID = iox_utils.BytesToHexString(iox_utils.Uint32ToBytes(last_id))
-		set.Id = last_id
-		set.Meta.Created = utilx.TimeNow("atom")
-		set.Meta.UserID = utils.StringEncode16("sysadmin", 8)
+		set.Created = types.MetaTimeNow()
+		set.User = "sysadmin"
 
 	} else {
 
-		if obj := store.PvGet("role/" + set.Meta.ID); obj.OK() {
+		if obj := store.PoGet("role", set.Id); obj.OK() {
 			obj.Decode(&prev)
 			prevVersion = obj.Meta().Version
 		}
 
-		if prev.Meta.ID != set.Meta.ID {
+		if prev.Id != set.Id {
 			set.Error = types.NewErrorMeta(iamapi.ErrCodeInvalidArgument, "UserRole Not Found")
 			return
 		}
 
-		prev.Meta.Name = set.Meta.Name
+		prev.Name = set.Name
 		prev.Desc = set.Desc
 		set = prev
 	}
 
-	set.Meta.Updated = utilx.TimeNow("atom")
+	set.Updated = types.MetaTimeNow()
 	// roleset["privileges"] = strings.Join(c.Params.Values["privileges"], ",")
 
-	if obj := store.PvPut("role/"+set.Meta.ID, set, &skv.PvWriteOptions{
+	if obj := store.PoPut("role", set.Id, set, &skv.PathWriteOptions{
 		PrevVersion: prevVersion,
 	}); !obj.OK() {
 		set.Error = types.NewErrorMeta("500", obj.Bytex().String())

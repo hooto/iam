@@ -11,30 +11,31 @@
 <div id="iam-usermgr-userset-alert"></div>
 
 <div id="iam-usermgr-userset" class="form-horizontal">
-    <input type="hidden" name="userid" value="{[=it.meta.id]}">
-    
+
     <label class="iam-form-group-title">Login Information (Required)</label>
 
-    {[ if (it.meta.id == "") { ]}
+    {[ if (it.login.name == "") { ]}
     <div class="form-group">
       <label class="col-sm-2 control-label">Username</label>
       <div class="col-sm-10">
-        <input type="text" class="form-control input-sm" name="username" value="{[=it.meta.name]}">
+        <input type="text" class="form-control input-sm" name="login_name" value="{[=it.login.name]}">
       </div>
     </div>
+    {[ } else {]}
+    <input type="hidden" name="login_name" value="{[=it.login.name]}">
     {[ } ]}
 
     <div class="form-group">
       <label class="col-sm-2 control-label">Email</label>
       <div class="col-sm-10">
-        <input type="text" class="form-control input-sm" name="email" value="{[=it.email]}">
+        <input type="text" class="form-control input-sm" name="login_email" value="{[=it.login.email]}">
       </div>
     </div>
 
     <div class="form-group">
       <label class="col-sm-2 control-label">Password</label>
       <div class="col-sm-10">
-        <input type="text" class="form-control input-sm" name="auth" value="{[=it.auth]}">
+        <input type="text" class="form-control input-sm" name="login_auth" value="{[=it.login._auth]}">
       </div>
     </div>
 
@@ -44,11 +45,11 @@
         {[~it._roles.items :v]}
         <span class="iam-form-checkbox">
           {[ if (v.id == 100) { ]}
-            <input type="checkbox" name="roles" value="{[=v.id]}" checked="checked" onclick="return false"> {[=v.meta.name]}
+            <input type="checkbox" name="login_roles" value="{[=v.id]}" checked="checked" onclick="return false"> {[=v.name]}
           {[ } else if (v.checked) { ]}
-            <input type="checkbox" name="roles" value="{[=v.id]}" checked="checked"> {[=v.meta.name]}
+            <input type="checkbox" name="login_roles" value="{[=v.id]}" checked="checked"> {[=v.name]}
           {[ } else { ]}
-            <input type="checkbox" name="roles" value="{[=v.id]}"> {[=v.meta.name]}
+            <input type="checkbox" name="login_roles" value="{[=v.id]}"> {[=v.name]}
           {[ } ]}
         </span>
         {[~]}
@@ -60,7 +61,7 @@
       <div class="col-sm-10">
         {[~it._statusls :v]}
           <span class="iam-form-checkbox">
-            <input type="radio" name="status" value="{[=v.status]}" {[ if (v.status == it.status) { ]}checked="checked"{[ } ]}> {[=v.title]}
+            <input type="radio" name="login_status" value="{[=v.status]}" {[ if (v.status == it.login.status) { ]}checked="checked"{[ } ]}> {[=v.title]}
           </span>
         {[~]}
       </div>
@@ -69,23 +70,23 @@
     <label class="iam-form-group-title">Profile Information (Optional)</label>
 
     <div class="form-group">
-      <label class="col-sm-2 control-label">Nickname</label>
+      <label class="col-sm-2 control-label">Display Name</label>
       <div class="col-sm-10">
-        <input type="text" class="form-control input-sm" name="name" value="{[=it.name]}">
+        <input type="text" class="form-control input-sm" name="login_display_name" value="{[=it.login.display_name]}">
       </div>
     </div>
 
     <div class="form-group">
       <label class="col-sm-2 control-label">Birthday</label>
       <div class="col-sm-10">
-        <input type="text" class="form-control input-sm" name="birthday" placeholder="Example : 1970-01-01" value="{[=it.profile.birthday]}">
+        <input type="text" class="form-control input-sm" name="profile_birthday" placeholder="Example : 1970-01-01" value="{[=it.profile.birthday]}">
       </div>
     </div>
 
     <div class="form-group">
       <label class="col-sm-2 control-label">About</label>
       <div class="col-sm-10">
-        <textarea class="form-control input-sm" rows="3" name="about">{[=it.profile.about]}</textarea>
+        <textarea class="form-control input-sm" rows="3" name="profile_about">{[=it.profile.about]}</textarea>
       </div>
     </div>
 

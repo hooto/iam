@@ -21,7 +21,6 @@ import (
 	"github.com/lessos/lessgo/crypto/idhash"
 	"github.com/lessos/lessgo/httpsrv"
 	"github.com/lessos/lessgo/types"
-	"github.com/lessos/lessgo/utilx"
 )
 
 type AppAuth struct {
@@ -41,7 +40,7 @@ func (c AppAuth) InfoAction() {
 	}
 
 	var inst iamapi.AppInstance
-	if obj := store.PvGet("app-instance/" + instid); obj.OK() {
+	if obj := store.PoGet("app-instance", instid); obj.OK() {
 		obj.Decode(&inst)
 	}
 
@@ -73,14 +72,14 @@ func (c AppAuth) RegisterAction() {
 	// 	set.Error = types.NewErrorMeta(iamapi.ErrCodeInvalidArgument, "Bad Argument")
 	// 	return
 	// }
-	if len(set.AccessToken) < 30 {
+	token := iamapi.AccessTokenFrontend(set.AccessToken)
+	if !token.Valid() {
 		set.Error = types.NewErrorMeta(iamapi.ErrCodeUnauthorized, "Unauthorized")
 		return
 	}
-	set.AccessToken = set.AccessToken[:8] + "/" + set.AccessToken[9:]
 
 	var session iamapi.UserSession
-	if obj := store.PvGet("session/" + set.AccessToken); obj.OK() {
+	if obj := store.PvGet("session/" + token.SessionPath()); obj.OK() {
 		obj.Decode(&session)
 	}
 
@@ -105,31 +104,31 @@ func (c AppAuth) RegisterAction() {
 		prev        iamapi.AppInstance
 	)
 
-	if obj := store.PvGet("app-instance/" + set.Instance.Meta.ID); obj.OK() {
+	if obj := store.PoGet("app-instance", set.Instance.Meta.ID); obj.OK() {
 		obj.Decode(&prev)
 		prevVersion = obj.Meta().Version
 	}
 
 	if prev.Meta.ID == "" {
 
-		set.Instance.Meta.Created = utilx.TimeNow("datetime")
-		set.Instance.Meta.Updated = utilx.TimeNow("datetime")
+		set.Instance.Meta.Created = types.MetaTimeNow()
+		set.Instance.Meta.Updated = types.MetaTimeNow()
 		set.Instance.Status = 1
-		set.Instance.Meta.UserID = session.UserID
+		set.Instance.Meta.User = session.UserName
 
 	} else {
 
-		if prev.Meta.UserID != session.UserID {
+		if prev.Meta.User != session.UserName {
 			set.Error = types.NewErrorMeta(iamapi.ErrCodeUnauthorized, "Unauthorized")
 			return
 		}
 
 		set.Instance.Meta.Created = prev.Meta.Created
-		set.Instance.Meta.UserID = prev.Meta.UserID
+		set.Instance.Meta.User = prev.Meta.User
 		set.Instance.Status = prev.Status
 	}
 
-	if obj := store.PvPut("app-instance/"+set.Instance.Meta.ID, set.Instance, &skv.PvWriteOptions{
+	if obj := store.PoPut("app-instance", set.Instance.Meta.ID, set.Instance, &skv.PathWriteOptions{
 		PrevVersion: prevVersion,
 	}); !obj.OK() {
 		set.Error = types.NewErrorMeta(iamapi.ErrCodeInternalError, obj.Bytex().String())
@@ -201,7 +200,7 @@ func (c AppAuth) RoleListAction() {
 	defer c.RenderJson(&sets)
 
 	// TODO app<->role
-	if objs := store.PvScan("role/", "", "", 100); objs.OK() {
+	if objs := store.PoScan("role", []byte{}, []byte{}, 100); objs.OK() {
 
 		rss := objs.KvList()
 		for _, obj := range rss {
@@ -209,14 +208,12 @@ func (c AppAuth) RoleListAction() {
 			var role iamapi.UserRole
 			if err := obj.Decode(&role); err == nil {
 
-				if role.Meta == nil || role.Status == 0 || role.Id == 1 {
+				if role.Status == 0 || role.Id == 1 {
 					continue
 				}
 
 				sets.Items = append(sets.Items, iamapi.UserRole{
-					Meta: &types.ObjectMeta{
-						Name: role.Meta.Name,
-					},
+					Name: role.Name,
 					Id:   role.Id,
 					Desc: role.Desc,
 				})

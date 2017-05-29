@@ -43,13 +43,13 @@ iamMgr.Index = function()
         ep.fail(function(err) {
             alert("Error: Please try again later");
         });
-    
+
         iam.MgrApiCmd("/user/panel-info", {
             callback: ep.done('data'),
         });
 
         iam.TplCmd("user/well", {
-            callback: ep.done('tpl'),           
+            callback: ep.done('tpl'),
         });
     });
 }

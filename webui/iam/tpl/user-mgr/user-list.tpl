@@ -11,7 +11,7 @@
   <thead>
     <tr>
       <th>Username</th>
-      <th>Name</th>
+      <th>Display Name</th>
       <th>Email</th>
       <th>Status</th>
       <th>Roles</th>
@@ -28,8 +28,8 @@
 <script id="iam-usermgr-list-tpl" type="text/html">
 {[~it.items :v]}
 <tr>
-  <td>{[=v.meta.name]}</td>
   <td>{[=v.name]}</td>
+  <td>{[=v.display_name]}</td>
   <td>{[=v.email]}</td>
   <td>
     {[~it._statusls :sv]}
@@ -40,16 +40,16 @@
     {[~v.roles :rv]}
     {[~it._roles.items :drv]}
     {[ if (drv.id == rv) { ]}
-    <div>{[=drv.meta.name]}</div>
+    <div>{[=drv.name]}</div>
     {[ } ]}
     {[~]}
     {[~]}
   </td>
-  <td>{[=l4i.TimeParseFormat(v.meta.created, "Y-m-d")]}</td>
-  <td>{[=l4i.TimeParseFormat(v.meta.updated, "Y-m-d")]}</td>
+  <td>{[=l4i.MetaTimeParseFormat(v.created, "Y-m-d")]}</td>
+  <td>{[=l4i.MetaTimeParseFormat(v.updated, "Y-m-d")]}</td>
   <td align="right">
     <button class="pure-button button-xsmall"
-      onclick="iamUserMgr.UserSetForm('{[=v.meta.id]}')">
+      onclick="iamUserMgr.UserSetForm('{[=v.name]}')">
       Setting
     </button>
   </td>

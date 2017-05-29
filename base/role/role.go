@@ -59,7 +59,7 @@ func instPerms(instanceid string) *perm_map {
 	}
 
 	//
-	if obj := store.PvGet("app-instance/" + instanceid); obj.OK() {
+	if obj := store.PoGet("app-instance", instanceid); obj.OK() {
 
 		var inst iamapi.AppInstance
 
@@ -68,7 +68,7 @@ func instPerms(instanceid string) *perm_map {
 			for _, ip := range inst.Privileges {
 
 				if len(ip.Roles) > 0 {
-					perm.owner = inst.Meta.UserID
+					perm.owner = inst.Meta.User
 					perm.maps[ip.Privilege] = ip.Roles
 				}
 			}

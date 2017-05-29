@@ -26,7 +26,6 @@ import (
 	"github.com/lessos/lessgo/httpsrv"
 	"github.com/lessos/lessgo/pass"
 	"github.com/lessos/lessgo/types"
-	"github.com/lessos/lessgo/utilx"
 
 	"code.hooto.com/lessos/iam/base/login"
 	"code.hooto.com/lessos/iam/base/profile"
@@ -57,36 +56,32 @@ func (c *User) Init() int {
 func (c User) ProfileAction() {
 
 	set := iamapi.UserProfile{}
-
 	defer c.RenderJson(&set)
 
 	// profile
-	if obj := store.PvGet("user-profile/" + c.us.UserID); obj.OK() {
+	if obj := store.PoGet("user-profile", c.us.UserId()); obj.OK() {
 		obj.Decode(&set)
 	}
 
-	if set.Name == "" {
+	if set.Login == nil || set.Login.Name == "" {
 
-		set.Name = c.us.Name
+		// login
+		var user iamapi.User
+		if obj := store.PoGet("user", c.us.UserId()); obj.OK() {
+			obj.Decode(&user)
+		}
 
-		store.PvPut("user-profile/"+c.us.UserID, set, nil)
+		if user.Name != c.us.UserName {
+			set.Error = types.NewErrorMeta(iamapi.ErrCodeNotFound, "User Not Found")
+			return
+		}
+
+		set.Login = &user
+		store.PoPut("user-profile", c.us.UserId(), set, nil)
 	}
 
-	// login
-	var user iamapi.User
-	if obj := store.PvGet("user/" + c.us.UserID); obj.OK() {
-		obj.Decode(&user)
-	}
-
-	if user.Meta.ID != c.us.UserID {
-		set.Error = types.NewErrorMeta("401", "Access Denied")
-		return
-	}
-
-	set.Login.Meta = user.Meta
-	set.Login.Name = user.Name
-	set.Login.Email = user.Email
-	set.Name = user.Name
+	set.Photo = ""
+	set.PhotoSource = ""
 
 	set.Kind = "UserProfile"
 }
@@ -98,7 +93,6 @@ func (c User) ProfileSetAction() {
 		req iamapi.UserProfile
 		err error
 	)
-
 	defer c.RenderJson(&set)
 
 	if err := c.Request.JsonDecode(&req); err != nil {
@@ -113,33 +107,35 @@ func (c User) ProfileSetAction() {
 
 	// login
 	var user iamapi.User
-	uobj := store.PvGet("user/" + c.us.UserID)
+	uobj := store.PoGet("user", c.us.UserId())
 	if uobj.OK() {
 		uobj.Decode(&user)
 	}
 
-	if user.Meta.ID != c.us.UserID {
+	if user.Name != c.us.UserName {
 		set.Error = types.NewErrorMeta("404", "User Not Found")
 		return
 	}
-	user.Name = req.Name
+	user.DisplayName = req.Login.DisplayName
 
-	store.PvPut("user/"+c.us.UserID, user, &skv.PvWriteOptions{
+	store.PoPut("user", c.us.UserId(), user, &skv.PathWriteOptions{
 		PrevVersion: uobj.Meta().Version,
 	})
 
 	// profile
 	var profile iamapi.UserProfile
-	pobj := store.PvGet("user-profile/" + c.us.UserID)
+	pobj := store.PoGet("user-profile", c.us.UserId())
 	if pobj.OK() {
 		pobj.Decode(&profile)
 	}
 
-	profile.Name = req.Name
 	profile.Birthday = req.Birthday
 	profile.About = req.About
 
-	store.PvPut("user-profile/"+c.us.UserID, profile, &skv.PvWriteOptions{
+	profile.Login = &user
+	profile.Login.Keys = nil
+
+	store.PoPut("user-profile", c.us.UserId(), profile, &skv.PathWriteOptions{
 		PrevVersion: pobj.Meta().Version,
 	})
 
@@ -152,7 +148,6 @@ func (c User) PassSetAction() {
 		set types.TypeMeta
 		req iamapi.UserPasswordSet
 	)
-
 	defer c.RenderJson(&set)
 
 	if err := c.Request.JsonDecode(&req); err != nil {
@@ -166,25 +161,27 @@ func (c User) PassSetAction() {
 	}
 
 	var user iamapi.User
-	uobj := store.PvGet("user/" + c.us.UserID)
+	uobj := store.PoGet("user", c.us.UserId())
 	if uobj.OK() {
 		uobj.Decode(&user)
 	}
 
-	if user.Meta.ID != c.us.UserID {
+	if user.Name != c.us.UserName {
 		set.Error = types.NewErrorMeta(iamapi.ErrCodeInvalidArgument, "User Not Found")
 		return
 	}
 
-	if !pass.Check(req.CurrentPassword, user.Auth) {
+	if auth := user.Keys.Get(iamapi.UserKeyDefault); auth == nil ||
+		!pass.Check(req.CurrentPassword, auth.String()) {
 		set.Error = types.NewErrorMeta(iamapi.ErrCodeInvalidArgument, "Current Password can not match")
 		return
 	}
 
-	user.Meta.Updated = utilx.TimeNow("atom")
-	user.Auth, _ = pass.HashDefault(req.NewPassword)
+	user.Updated = types.MetaTimeNow()
+	auth_key, _ := pass.HashDefault(req.NewPassword)
+	user.Keys.Set(iamapi.UserKeyDefault, auth_key)
 
-	store.PvPut("user/"+user.Meta.ID, user, &skv.PvWriteOptions{
+	store.PoPut("user", user.Id, user, &skv.PathWriteOptions{
 		PrevVersion: uobj.Meta().Version,
 	})
 
@@ -197,7 +194,6 @@ func (c User) EmailSetAction() {
 		set types.TypeMeta
 		req iamapi.UserEmailSet
 	)
-
 	defer c.RenderJson(&set)
 
 	if err := c.Request.JsonDecode(&req); err != nil {
@@ -213,27 +209,37 @@ func (c User) EmailSetAction() {
 	}
 
 	var user iamapi.User
-	uobj := store.PvGet("user/" + c.us.UserID)
+	uobj := store.PoGet("user", c.us.UserId())
 	if uobj.OK() {
 		uobj.Decode(&user)
 	}
 
-	if user.Meta.ID != c.us.UserID {
+	if user.Name != c.us.UserName {
 		set.Error = types.NewErrorMeta(iamapi.ErrCodeInvalidArgument, "User Not Found")
 		return
 	}
 
-	if !pass.Check(req.Auth, user.Auth) {
+	if auth := user.Keys.Get(iamapi.UserKeyDefault); auth == nil ||
+		!pass.Check(req.Auth, auth.String()) {
 		set.Error = types.NewErrorMeta(iamapi.ErrCodeInvalidArgument, "Password can not match")
 		return
 	}
 
 	user.Email = req.Email
-	user.Meta.Updated = utilx.TimeNow("atom")
-
-	store.PvPut("user/"+user.Meta.ID, user, &skv.PvWriteOptions{
+	user.Updated = types.MetaTimeNow()
+	store.PoPut("user", user.Id, user, &skv.PathWriteOptions{
 		PrevVersion: uobj.Meta().Version,
 	})
+
+	if rs := store.PoGet("user-profile", c.us.UserId()); rs.OK() {
+		var preprofile iamapi.UserProfile
+		if err := rs.Decode(&preprofile); err == nil {
+			preprofile.Login = &user
+			store.PoPut("user-profile", c.us.UserId(), preprofile, &skv.PathWriteOptions{
+				Force: true,
+			})
+		}
+	}
 
 	set.Kind = "UserEmail"
 }
@@ -244,20 +250,33 @@ func (c User) PhotoSetAction() {
 		set types.TypeMeta
 		req iamapi.UserPhotoSet
 	)
-
 	defer c.RenderJson(&set)
 
 	if err := c.Request.JsonDecode(&req); err != nil {
-		set.Error = types.NewErrorMeta(iamapi.ErrCodeInvalidArgument, "Bad Request")
+		set.Error = types.NewErrorMeta(iamapi.ErrCodeInvalidArgument, "InvalidArgument")
 		return
 	}
 
 	//
 	img64 := strings.SplitAfter(req.Data, ";base64,")
 	if len(img64) != 2 {
-		set.Error = types.NewErrorMeta(iamapi.ErrCodeInvalidArgument, "Bad Request")
+		set.Error = types.NewErrorMeta(iamapi.ErrCodeInvalidArgument, "InvalidArgument")
 		return
 	}
+
+	// profile
+	var profile iamapi.UserProfile
+	pobj := store.PoGet("user-profile", c.us.UserId())
+	if pobj.OK() {
+		pobj.Decode(&profile)
+	}
+
+	if profile.Login != nil && profile.Login.Name != "" && profile.Login.Name != c.us.UserName {
+		set.Error = types.NewErrorMeta(iamapi.ErrCodeInvalidArgument, "InvalidArgument")
+		return
+	}
+
+	//
 	imgreader := base64.NewDecoder(base64.StdEncoding, strings.NewReader(img64[1]))
 	imgsrc, _, err := image.Decode(imgreader)
 	if err != nil {
@@ -274,17 +293,10 @@ func (c User) PhotoSetAction() {
 	}
 	imgphoto := base64.StdEncoding.EncodeToString(imgbuf.Bytes())
 
-	// profile
-	var profile iamapi.UserProfile
-	pobj := store.PvGet("user-profile/" + c.us.UserID)
-	if pobj.OK() {
-		pobj.Decode(&profile)
-	}
-
 	profile.Photo = "data:image/png;base64," + imgphoto
 	profile.PhotoSource = req.Data
 
-	store.PvPut("user-profile/"+c.us.UserID, profile, &skv.PvWriteOptions{
+	store.PoPut("user-profile", c.us.UserId(), profile, &skv.PathWriteOptions{
 		PrevVersion: pobj.Meta().Version,
 	})
 
@@ -297,7 +309,7 @@ func (c User) RoleListAction() {
 	defer c.RenderJson(&sets)
 
 	// TODO page
-	if objs := store.PvScan("role/", "", "", 1000); objs.OK() {
+	if objs := store.PoScan("role", []byte{}, []byte{}, 1000); objs.OK() {
 
 		rss := objs.KvList()
 		for _, obj := range rss {
@@ -309,7 +321,7 @@ func (c User) RoleListAction() {
 					continue
 				}
 
-				if role.Id <= 1000 || role.Meta.UserID == c.us.UserID {
+				if role.Id <= 1000 || role.User == c.us.UserName {
 					sets.Items = append(sets.Items, role)
 				}
 			}

@@ -15,14 +15,16 @@
 package iamapi
 
 import (
+	"regexp"
+
+	"github.com/lessos/lessgo/crypto/idhash"
 	"github.com/lessos/lessgo/types"
 )
 
 const (
 	AccessTokenKey = "_iam_at"
-)
+	UserKeyDefault = "std"
 
-const (
 	ErrCodeAccessDenied    = "AccessDenied"
 	ErrCodeUnauthorized    = "Unauthorized" // Need to login and fetch a new access-token
 	ErrCodeInvalidArgument = "InvalidArgument"
@@ -30,6 +32,16 @@ const (
 	ErrCodeInternalError   = "InternalError"
 	ErrCodeNotFound        = "NotFound"
 )
+
+var (
+	UserNameRe2            = regexp.MustCompile("^[a-z]{1}[a-z0-9]{3,29}$")
+	UserEmailRe2           = regexp.MustCompile("^[_a-z0-9-]+(\\.[_a-z0-9-]+)*@[a-z0-9-]+(\\.[a-z0-9-]+)*(\\.[a-z]{2,10})$")
+	accessTokenFrontendRe2 = regexp.MustCompile("^[a-z0-9]{4,30}\\/[a-f0-9]{20,40}$")
+)
+
+func UserId(name string) string {
+	return idhash.HashToHexString([]byte(name), 8)
+}
 
 type ServiceLoginAuth struct {
 	types.TypeMeta `json:",inline"`
@@ -41,24 +53,25 @@ type UserSession struct {
 	types.TypeMeta `json:",inline"`
 	AccessToken    string            `json:"access_token"`
 	RefreshToken   string            `json:"refresh_token,omitempty"`
-	UserID         string            `json:"userid"`
 	UserName       string            `json:"username"`
-	Name           string            `json:"name"`
+	DisplayName    string            `json:"display_name,omitempty"`
 	Roles          types.ArrayUint32 `json:"roles,omitempty"`
 	Groups         types.ArrayUint32 `json:"groups,omitempty"`
-	Timezone       string            `json:"timezone"`
-	HostZone       string            `json:"host_zone,omitempty"`
 	ClientAddr     string            `json:"client_addr,omitempty"`
 	Created        types.MetaTime    `json:"created"`
 	Expired        types.MetaTime    `json:"expired"`
 }
 
 func (s *UserSession) IsLogin() bool {
-	return (s.UserID != "")
+	return (s.AccessToken != "")
 }
 
 func (s *UserSession) FullToken() string {
-	return s.UserID + "." + s.AccessToken
+	return s.UserName + "." + s.AccessToken
+}
+
+func (s *UserSession) UserId() string {
+	return UserId(s.UserName)
 }
 
 type UserAccessEntry struct {
@@ -70,15 +83,22 @@ type UserAccessEntry struct {
 
 type User struct {
 	types.TypeMeta `json:",inline"`
-	Meta           types.ObjectMeta  `json:"meta,omitempty"`
+	Id             string            `json:"id,omitempty"`
+	Name           string            `json:"name"`
 	Email          string            `json:"email,omitempty"`
-	Name           string            `json:"name,omitempty"`
-	Auth           string            `json:"auth,omitempty"`
-	Timezone       string            `json:"timezone,omitempty"`
+	DisplayName    string            `json:"display_name,omitempty"`
+	Keys           types.KvPairs     `json:"keys,omitempty"`
 	Roles          types.ArrayUint32 `json:"roles,omitempty"`
 	Groups         types.ArrayUint32 `json:"groups,omitempty"`
 	Status         uint8             `json:"status"`
-	Profile        *UserProfile      `json:"profile,omitempty"`
+	Created        types.MetaTime    `json:"created"`
+	Updated        types.MetaTime    `json:"updated"`
+}
+
+type UserEntry struct {
+	types.TypeMeta `json:",inline"`
+	Login          User         `json:"login,omitempty"`
+	Profile        *UserProfile `json:"profile,omitempty"`
 }
 
 type UserList struct {
@@ -89,25 +109,25 @@ type UserList struct {
 
 type UserProfile struct {
 	types.TypeMeta `json:",inline"`
-	Login          User   `json:"login,omitempty"`
-	Gender         uint8  `json:"gender,omitempty"`
-	Photo          string `json:"photo,omitempty"`
-	PhotoSource    string `json:"photoSource,omitempty"`
-	Name           string `json:"name,omitempty"`
-	Birthday       string `json:"birthday,omitempty"`
-	About          string `json:"about,omitempty"`
+	Login          *User          `json:"login,omitempty"`
+	Gender         uint8          `json:"gender,omitempty"`
+	Photo          string         `json:"photo,omitempty"`
+	PhotoSource    string         `json:"photo_source,omitempty"`
+	Birthday       string         `json:"birthday,omitempty"`
+	About          string         `json:"about,omitempty"`
+	Updated        types.MetaTime `json:"updated,omitempty"`
 }
 
 type UserPasswordSet struct {
 	types.TypeMeta  `json:",inline"`
-	CurrentPassword string `json:"currentPassword,omitempty"`
-	NewPassword     string `json:"newPassword,omitempty"`
+	CurrentPassword string `json:"current_password,omitempty"`
+	NewPassword     string `json:"new_password,omitempty"`
 }
 
 type UserPasswordReset struct {
 	types.TypeMeta `json:",inline"`
-	ID             string `json:"id,omitempty"`
-	UserID         string `json:"userid,omitempty"`
+	Id             string `json:"id,omitempty"`
+	UserName       string `json:"username,omitempty"`
 	Email          string `json:"email,omitempty"`
 	Expired        string `json:"expired,omitempty"`
 }
@@ -127,11 +147,14 @@ type UserPhotoSet struct {
 
 type UserRole struct {
 	types.TypeMeta `json:",inline"`
-	Meta           *types.ObjectMeta `json:"meta,omitempty"`
-	Id             uint32            `json:"id"`
-	Status         uint8             `json:"status,omitempty"`
-	Desc           string            `json:"desc,omitempty"`
-	Privileges     []string          `json:"privileges,omitempty"`
+	Id             uint32         `json:"id"`
+	Name           string         `json:"name"`
+	User           string         `json:"user,omitempty"`
+	Status         uint8          `json:"status,omitempty"`
+	Desc           string         `json:"desc,omitempty"`
+	Privileges     []string       `json:"privileges,omitempty"`
+	Created        types.MetaTime `json:"created,omitempty"`
+	Updated        types.MetaTime `json:"updated,omitempty"`
 }
 
 type UserRoleList struct {
@@ -141,9 +164,9 @@ type UserRoleList struct {
 
 type UserPrivilege struct {
 	types.TypeMeta `json:",inline"`
-	Meta           types.ObjectMeta `json:"meta,omitempty"`
-	Instance       string           `json:"instance"`
-	Desc           string           `json:"desc,omitempty"`
+	Meta           types.InnerObjectMeta `json:"meta,omitempty"`
+	Instance       string                `json:"instance"`
+	Desc           string                `json:"desc,omitempty"`
 }
 
 type UserPrivilegeList struct {
@@ -161,13 +184,13 @@ type AppPrivilege struct {
 
 type AppInstance struct {
 	types.TypeMeta `json:",inline"`
-	Meta           types.ObjectMeta `json:"meta,omitempty"`
-	AppID          string           `json:"app_id,omitempty"`
-	AppTitle       string           `json:"app_title,omitempty"`
-	Version        string           `json:"version,omitempty"`
-	Status         uint8            `json:"status,omitempty"`
-	Url            string           `json:"url,omitempty"`
-	Privileges     []AppPrivilege   `json:"privileges,omitempty"`
+	Meta           types.InnerObjectMeta `json:"meta,omitempty"`
+	AppID          string                `json:"app_id,omitempty"`
+	AppTitle       string                `json:"app_title,omitempty"`
+	Version        string                `json:"version,omitempty"`
+	Status         uint8                 `json:"status,omitempty"`
+	Url            string                `json:"url,omitempty"`
+	Privileges     []AppPrivilege        `json:"privileges,omitempty"`
 }
 
 type AppInstanceList struct {
@@ -205,4 +228,22 @@ type SysConfigMailer struct {
 type AccessKey struct {
 	AccessKey string `json:"access_key"`
 	SecretKey string `json:"secret_key,omitempty"`
+}
+
+type AccessTokenFrontend string
+
+func NewAccessTokenFrontend(username, tk string) AccessTokenFrontend {
+	return AccessTokenFrontend(username + "/" + tk)
+}
+
+func (t *AccessTokenFrontend) Valid() bool {
+	return accessTokenFrontendRe2.MatchString(string(*t))
+}
+
+func (t *AccessTokenFrontend) SessionPath() string {
+	return string(*t)
+}
+
+func (t *AccessTokenFrontend) String() string {
+	return string(*t)
 }

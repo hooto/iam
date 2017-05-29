@@ -42,7 +42,6 @@ var (
 func (c SysConfig) GeneralAction() {
 
 	ls := iamapi.SysConfigList{}
-
 	defer c.RenderJson(&ls)
 
 	if !iamclient.SessionAccessAllowed(c.Session, "sys.admin", config.Config.InstanceID) {
@@ -55,9 +54,9 @@ func (c SysConfig) GeneralAction() {
 		rss := objs.KvList()
 		for _, obj := range rss {
 
-			switch obj.Meta().Name {
+			switch string(obj.Key) {
 			case "service_name", "webui_banner_title", "user_reg_disable":
-				ls.Items.Set(obj.Meta().Name, obj.Bytex().String())
+				ls.Items.Set(string(obj.Key), obj.Bytex().String())
 			}
 		}
 	}
@@ -112,7 +111,7 @@ func (c SysConfig) GeneralSetAction() {
 			prevVersion = obj.Meta().Version
 		}
 
-		if obj := store.PvPut("sys-config/"+v.Name, v.Value, &skv.PvWriteOptions{
+		if obj := store.PvPut("sys-config/"+v.Name, v.Value, &skv.PathWriteOptions{
 			PrevVersion: prevVersion,
 		}); !obj.OK() {
 			sets.Error = types.NewErrorMeta("500", obj.Bytex().String())

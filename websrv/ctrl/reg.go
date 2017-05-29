@@ -65,13 +65,14 @@ func (c Reg) SignUpRegAction() {
 	}
 
 	uname := strings.TrimSpace(strings.ToLower(c.Params.Get("uname")))
+	userid := iamapi.UserId(uname)
 
 	var user iamapi.User
-	if obj := store.PvGet("user/" + utils.StringEncode16(uname, 8)); obj.OK() {
+	if obj := store.PoGet("user", userid); obj.OK() {
 		obj.Decode(&user)
 	}
 
-	if user.Meta.Name == uname {
+	if user.Name == uname {
 		rsp.Error = &types.ErrorMeta{iamapi.ErrCodeInvalidArgument, "The `Username` already exists, please choose another one"}
 		return
 	}
@@ -79,22 +80,19 @@ func (c Reg) SignUpRegAction() {
 	auth, _ := pass.HashDefault(c.Params.Get("passwd"))
 
 	user = iamapi.User{
-		Meta: types.ObjectMeta{
-			ID:      utils.StringEncode16(uname, 8),
-			Name:    uname,
-			Created: utilx.TimeNow("atom"),
-			Updated: utilx.TimeNow("atom"),
-		},
-		Email:    strings.TrimSpace(strings.ToLower(c.Params.Get("email"))),
-		Auth:     auth,
-		Name:     strings.Title(uname),
-		Status:   1,
-		Roles:    []uint32{100},
-		Groups:   []uint32{100},
-		Timezone: "UTC",
+		Id:          userid,
+		Name:        uname,
+		Created:     types.MetaTimeNow(),
+		Updated:     types.MetaTimeNow(),
+		Email:       strings.TrimSpace(strings.ToLower(c.Params.Get("email"))),
+		DisplayName: strings.Title(uname),
+		Status:      1,
+		Roles:       []uint32{100},
+		Groups:      []uint32{100},
 	}
+	user.Keys.Set(iamapi.UserKeyDefault, auth)
 
-	if obj := store.PvPut("user/"+user.Meta.ID, user, nil); !obj.OK() {
+	if obj := store.PoPut("user", user.Id, user, nil); !obj.OK() {
 		rsp.Error = &types.ErrorMeta{"500", obj.Bytex().String()}
 		return
 	}
@@ -126,26 +124,26 @@ func (c Reg) RetrievePutAction() {
 		rsp.Error = &types.ErrorMeta{iamapi.ErrCodeInvalidArgument, "User Not Found"}
 		return
 	}
-	userid := utils.StringEncode16(c.Params.Get("username"), 8)
+	userid := iamapi.UserId(c.Params.Get("username"))
 
 	var user iamapi.User
-	if obj := store.PvGet("user/" + userid); obj.OK() {
+	if obj := store.PoGet("user", userid); obj.OK() {
 		obj.Decode(&user)
 	}
 
-	if user.Meta.ID != userid || user.Email != uemail {
+	if user.Id != userid || user.Email != uemail {
 		rsp.Error = &types.ErrorMeta{iamapi.ErrCodeInvalidArgument, "User Not Found"}
 		return
 	}
 
 	reset := iamapi.UserPasswordReset{
-		ID:      utils.StringNewRand(24),
-		UserID:  userid,
-		Email:   uemail,
-		Expired: utilx.TimeNowAdd("atom", "+3600s"),
+		Id:       utils.StringNewRand(24),
+		UserName: user.Name,
+		Email:    uemail,
+		Expired:  utilx.TimeNowAdd("atom", "+3600s"),
 	}
 
-	if obj := store.PvPut("pwd-reset/"+reset.ID, reset, &skv.PvWriteOptions{
+	if obj := store.PoPut("pwd-reset", reset.Id, reset, &skv.PathWriteOptions{
 		Ttl: 3600000,
 	}); !obj.OK() {
 		rsp.Error = &types.ErrorMeta{"500", obj.Bytex().String()}
@@ -173,7 +171,7 @@ func (c Reg) RetrievePutAction() {
 <div>********************************************************</div>
 <div>Please do not reply to this message. Mail sent to this address cannot be answered.</div>
 </body>
-</html>`, config.Config.ServiceName, c.Request.Host, reset.ID, utilx.TimeNow("datetime"), config.Config.ServiceName)
+</html>`, config.Config.ServiceName, c.Request.Host, reset.Id, utilx.TimeNow("datetime"), config.Config.ServiceName)
 
 	err = mr.SendMail(c.Params.Get("email"), c.Translate("Reset your password"), body)
 
@@ -196,11 +194,11 @@ func (c Reg) PassResetAction() {
 	}
 
 	var reset iamapi.UserPasswordReset
-	if obj := store.PvGet("pwd-reset/" + c.Params.Get("id")); obj.OK() {
+	if obj := store.PoGet("pwd-reset", c.Params.Get("id")); obj.OK() {
 		obj.Decode(&reset)
 	}
 
-	if reset.ID != c.Params.Get("id") {
+	if reset.Id != c.Params.Get("id") {
 		return
 	}
 
@@ -226,12 +224,12 @@ func (c Reg) PassResetPutAction() {
 	}
 
 	var reset iamapi.UserPasswordReset
-	rsobj := store.PvGet("pwd-reset/" + c.Params.Get("id"))
+	rsobj := store.PoGet("pwd-reset", c.Params.Get("id"))
 	if rsobj.OK() {
 		rsobj.Decode(&reset)
 	}
 
-	if reset.ID != c.Params.Get("id") {
+	if reset.Id != c.Params.Get("id") {
 		rsp.Error = &types.ErrorMeta{iamapi.ErrCodeInvalidArgument, "Token not found"}
 		return
 	}
@@ -242,28 +240,30 @@ func (c Reg) PassResetPutAction() {
 	}
 
 	var user iamapi.User
-	uobj := store.PvGet("user/" + reset.UserID)
+	userid := iamapi.UserId(reset.UserName)
+	uobj := store.PoGet("user", userid)
 	if uobj.OK() {
 		uobj.Decode(&user)
 	}
 
-	if user.Meta.ID != reset.UserID {
+	if user.Id != userid {
 		rsp.Error = &types.ErrorMeta{iamapi.ErrCodeInvalidArgument, "User Not Found"}
 		return
 	}
 
-	user.Email = reset.Email
-	user.Auth, _ = pass.HashDefault(c.Params.Get("passwd"))
-	user.Meta.Updated = utilx.TimeNow("atom")
+	user.Updated = types.MetaTimeNow()
 
-	if obj := store.PvPut("user/"+user.Meta.ID, user, &skv.PvWriteOptions{
+	auth, _ := pass.HashDefault(c.Params.Get("passwd"))
+	user.Keys.Set(iamapi.UserKeyDefault, auth)
+
+	if obj := store.PoPut("user", user.Id, user, &skv.PathWriteOptions{
 		PrevVersion: uobj.Meta().Version,
 	}); !obj.OK() {
 		rsp.Error = &types.ErrorMeta{"500", obj.Bytex().String()}
 		return
 	}
 
-	store.PvDel("pwd-reset/"+reset.ID, &skv.PvWriteOptions{
+	store.PoDel("pwd-reset", reset.Id, &skv.PathWriteOptions{
 		PrevVersion: rsobj.Meta().Version,
 	})
 

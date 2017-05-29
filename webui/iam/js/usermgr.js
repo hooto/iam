@@ -5,30 +5,34 @@ var iamUserMgr = {
     }, {
         status: 2, title: "Banned",
     }],
-    userdef : {
+    userEntryDef : {
         kind : "User",
         _isnew : true,
-        meta : {
+        login: {
             id : "",
             name : "",
+            email : "",
+            display_name : "",
+            roles : [],
+            status : 1,
+            keys : [{
+                key: "std",
+                value: "",
+            }],
         },
-        email : "",
-        name : "",
-        roles : [],
-        status : 1,
-        auth : "",
         profile : {
-            name : "",
             birthday : "",
             about : "",
         },
     },
+    userProfileDef : {
+        birthday : "",
+        about : "",
+    },
     roledef : {
         kind : "UserRole",
-        meta : {
-            id : "",
-            name : "",
-        },
+        id : 0,
+        name : "",
         status : 1,
         desc : "",
     },
@@ -72,9 +76,11 @@ iamUserMgr.UserList = function()
             data._statusls = iamUserMgr.statusls;
 
             for (var i in data.items) {
-
                 if (!data.items[i].email) {
                     data.items[i].email = "";
+                }
+                if (!data.items[i].display_name) {
+                    data.items[i].display_name = "";
                 }
             }
 
@@ -112,12 +118,12 @@ iamUserMgr.UserList = function()
         }
 
         iam.TplCmd("user-mgr/user-list", {
-            callback: ep.done('tpl'),           
+            callback: ep.done('tpl'),
         });
     });
 }
 
-iamUserMgr.UserSetForm = function(userid)
+iamUserMgr.UserSetForm = function(username)
 {
     seajs.use(["ep"], function(EventProxy) {
 
@@ -133,25 +139,37 @@ iamUserMgr.UserSetForm = function(userid)
                 data._form_title = "User Setting";
             }
 
-            if (!data.name) {
-                data.name = "";
+            if (!data.login.display_name) {
+                data.login.display_name = "";
             }
 
-            if (!data.email) {
-                data.email = "";
+            if (!data.login.email) {
+                data.login.email = "";
             }
 
+            for (var i in data.login.keys) {
+                if (data.login.keys[i].key == "std") {
+                    data.login._auth = data.login.keys[i].value;
+                    break;
+                }
+            }
+            if (!data.login._auth) {
+                data.login._auth = "";
+            }
+
+            if (!data.profile) {
+                data.profile = l4i.Clone(iamUserMgr.userProfileDef);
+            }
             if (!data.profile.birthday) {
                 data.profile.birthday = "";
             }
-
             if (!data.profile.about) {
                 data.profile.about = "";
             }
 
             data._roles = l4i.Clone(roles);
             for (var i in data._roles.items) {
-                
+  
                 data._roles.items[i].checked = false;
 
                 for (var j in data.roles) {
@@ -162,7 +180,7 @@ iamUserMgr.UserSetForm = function(userid)
                 }
             }
 
-            data._statusls = iamUserMgr.statusls; 
+            data._statusls = iamUserMgr.statusls;
 
             l4iModal.Open({
                 tplsrc  : tpl,
@@ -196,67 +214,64 @@ iamUserMgr.UserSetForm = function(userid)
             });
         }
 
-        if (userid) {
-        
-            iam.ApiCmd("user-mgr/user-entry?userid="+ userid, {
+        if (username && username.length > 0) {
+            iam.ApiCmd("user-mgr/user-entry?username="+ username, {
                 callback: ep.done('data'),
             });
-        
         } else {
-            ep.emit("data", l4i.Clone(iamUserMgr.userdef));
+            ep.emit("data", l4i.Clone(iamUserMgr.userEntryDef));
         }
 
         iam.TplCmd("user-mgr/user-set", {
-            callback: ep.done('tpl'),           
+            callback: ep.done('tpl'),
         });
     });
 }
 
 iamUserMgr.UserSetCommit = function()
 {
-    var form = $("#iam-usermgr-userset");
-    
-    var req = l4i.Clone(iamUserMgr.userdef)
-
-    req.meta.id = form.find("input[name=userid]").val();
-    if (req.meta.id == "") {
-        req.meta.name = form.find("input[name=username]").val();
-    }
-    req.email = form.find("input[name=email]").val();
-    req.auth = form.find("input[name=auth]").val();
-    req.name = form.find("input[name=name]").val();
-
-    req.profile.birthday = form.find("input[name=birthday]").val();
-    req.profile.about = form.find("textarea[name=about]").val();
+    var form = $("#iam-usermgr-userset"),
+        alert_id = "#iam-usermgr-userset-alert",
+        req = l4i.Clone(iamUserMgr.userEntryDef);
 
     try {
 
-        form.find("input[name=roles]:checked").each(function() {
-            
+        req.login.name = form.find("input[name=login_name]").val();
+        req.login.email = form.find("input[name=login_email]").val();
+        req.login.keys = [{
+            key: "std",
+            value: form.find("input[name=login_auth]").val(),
+        }];
+        req.login.display_name = form.find("input[name=login_display_name]").val();
+
+        req.profile.birthday = form.find("input[name=profile_birthday]").val();
+        req.profile.about = form.find("textarea[name=profile_about]").val();
+
+        form.find("input[name=login_roles]:checked").each(function() {
             var val = parseInt($(this).val());
             if (val > 0) {
-                req.roles.push(val);
-            }            
+                req.login.roles.push(val);
+            }
         });
 
     } catch (err) {
-        return l4i.InnerAlert("#iam-usermgr-userset-alert", 'alert-danger', err);
+        return l4i.InnerAlert(alert_id, 'alert-danger', err);
     }
 
     iam.ApiCmd("user-mgr/user-set", {
         method : "PUT",
         data   : JSON.stringify(req),
         callback : function(err, data) {
-            
+
             if (err) {
-                return l4i.InnerAlert("#iam-usermgr-userset-alert", 'alert-danger', err);
+                return l4i.InnerAlert(alert_id, 'alert-danger', err);
             }
 
             if (!data || data.error) {
-                return l4i.InnerAlert("#iam-usermgr-userset-alert", 'alert-danger', data.error.message);
+                return l4i.InnerAlert(alert_id, 'alert-danger', data.error.message);
             }
 
-            l4i.InnerAlert("#iam-usermgr-userset-alert", 'alert-success', "Successfully updated");
+            l4i.InnerAlert(alert_id, 'alert-success', "Successfully updated");
 
             window.setTimeout(function(){
                 l4iModal.Close();
@@ -305,7 +320,7 @@ iamUserMgr.RoleList = function()
         });
 
         iam.TplCmd("user-mgr/role-list", {
-            callback: ep.done('tpl'),           
+            callback: ep.done('tpl'),
         });
     });
 }
@@ -354,30 +369,27 @@ iamUserMgr.RoleSet = function(roleid)
         });
 
         if (roleid) {
-        
             iam.ApiCmd("user-mgr/role-entry?roleid="+ roleid, {
                 callback: ep.done('data'),
             });
-        
         } else {
             ep.emit("data", l4i.Clone(iamUserMgr.roledef));
         }
 
         iam.TplCmd("user-mgr/role-set", {
-            callback: ep.done('tpl'),           
+            callback: ep.done('tpl'),
         });
     });
 }
 
 iamUserMgr.RoleSetCommit = function()
 {
-    var form = $("#iam-usermgr-roleset");
-    
+    var form = $("#iam-usermgr-roleset"),
+        alert_id = "#iam-usermgr-roleset-alert";
+
     var req = {
-        meta : {
-            id : form.find("input[name=roleid]").val(),
-            name : form.find("input[name=name]").val(),
-        },
+        id : parseInt(form.find("input[name=roleid]").val()),
+        name : form.find("input[name=name]").val(),
         status : parseInt(form.find("input[name=status]:checked").val()),
         desc : form.find("input[name=desc]").val(),
     }
@@ -386,16 +398,16 @@ iamUserMgr.RoleSetCommit = function()
         method : "PUT",
         data   : JSON.stringify(req),
         callback : function(err, data) {
-            
+
             if (err) {
-                return l4i.InnerAlert("#iam-usermgr-roleset-alert", 'alert-danger', err);
+                return l4i.InnerAlert(alert_id, 'alert-danger', err);
             }
 
             if (!data || data.error) {
-                return l4i.InnerAlert("#iam-usermgr-roleset-alert", 'alert-danger', data.error.message);
+                return l4i.InnerAlert(alert_id, 'alert-danger', data.error.message);
             }
 
-            l4i.InnerAlert("#iam-usermgr-roleset-alert", 'alert-success', "Successfully updated");
+            l4i.InnerAlert(alert_id, 'alert-success', "Successfully updated");
 
             window.setTimeout(function(){
                 l4iModal.Close();

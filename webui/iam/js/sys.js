@@ -41,26 +41,27 @@ iamSys.GeneralSet = function()
         ep.fail(function(err) {
             alert("Error: Please try again later");
         });
-    
+
         iam.ApiCmd("sys-config/general", {
             callback: ep.done('data'),
         });
 
         iam.TplCmd("sys-mgr/general-set", {
-            callback: ep.done('tpl'),           
+            callback: ep.done('tpl'),
         });
     });
 }
 
 iamSys.GeneralSetCommit = function()
 {
-    var form = $("#iam-sysmgr-generalset");
+    var form = $("#iam-sysmgr-generalset"),
+        alert_id = "#iam-sysmgr-generalset-alert";
 
     var user_reg_disable = "0";
     if (form.find("input[name=user_reg_disable]").is(":checked")) {
         user_reg_disable = "1";
     }
-    
+
     var req = {
         items : [{
             name: "service_name",
@@ -80,16 +81,16 @@ iamSys.GeneralSetCommit = function()
         method : "PUT",
         data   : JSON.stringify(req),
         callback : function(err, data) {
-            
+
             if (err) {
-                return l4i.InnerAlert("#iam-sysmgr-generalset-alert", 'alert-danger', err);
+                return l4i.InnerAlert(alert_id, 'alert-danger', err);
             }
 
             if (!data || data.error) {
-                return l4i.InnerAlert("#iam-sysmgr-generalset-alert", 'alert-danger', data.error.message);
+                return l4i.InnerAlert(alert_id, 'alert-danger', data.error.message);
             }
 
-            l4i.InnerAlert("#iam-sysmgr-generalset-alert", 'alert-success', "Successfully updated");
+            l4i.InnerAlert(alert_id, 'alert-success', "Successfully updated");
 
             // window.setTimeout(function(){
             //     iamSys.GeneralSet();
@@ -143,25 +144,26 @@ iamSys.MailerSet = function(name)
         ep.fail(function(err) {
             alert("Error: Please try again later");
         });
-    
+
         iam.ApiCmd("sys-config/mailer", {
             callback: ep.done('data'),
         });
 
         iam.TplCmd("sys-mgr/mailer-set", {
-            callback: ep.done('tpl'),           
+            callback: ep.done('tpl'),
         });
-    });  
+    });
 }
 
 
 iamSys.MailerSetCommit = function()
 {
-    var form = $("#iam-sysmgr-mailerset");
+    var form = $("#iam-sysmgr-mailerset"),
+        alert_id = "#iam-sysmgr-mailerset-alert";
     if (!form) {
         return;
     }
-    
+
     var mailer = {
         "smtp_host": form.find("input[name=mailer_smtp_host]").val(),
         "smtp_port": form.find("input[name=mailer_smtp_port]").val(),
@@ -180,16 +182,16 @@ iamSys.MailerSetCommit = function()
         method : "PUT",
         data   : JSON.stringify(req),
         callback : function(err, data) {
-            
+
             if (err) {
-                return l4i.InnerAlert("#iam-sysmgr-mailerset-alert", 'alert-danger', err);
+                return l4i.InnerAlert(alert_id, 'alert-danger', err);
             }
 
             if (!data || data.error) {
-                return l4i.InnerAlert("#iam-sysmgr-mailerset-alert", 'alert-danger', data.error.message);
+                return l4i.InnerAlert(alert_id, 'alert-danger', data.error.message);
             }
 
-            l4i.InnerAlert("#iam-sysmgr-mailerset-alert", 'alert-success', "Successfully updated");
+            l4i.InnerAlert(alert_id, 'alert-success', "Successfully updated");
 
             // window.setTimeout(function(){
             //     iamSys.GeneralSet();

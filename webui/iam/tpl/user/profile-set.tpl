@@ -9,9 +9,9 @@
 
   <table id="iam-user-profile-set" width="100%" style="">
     <tr>
-      <td width="120px"><strong>Name</strong></td>
+      <td width="120px"><strong>Display Name</strong></td>
       <td>
-        <input name="name" type="text" class="form-control" value="{[=it.login.name]}">
+        <input name="display_name" type="text" class="form-control" value="{[=it.login.display_name]}">
       </td>
     </tr>
     <tr>

@@ -53,14 +53,14 @@
 <div id="iam-usermgr-roleset-alert" class="alert hide"></div>
     
 <div id="iam-usermgr-roleset" class="form-horizontal">
-    <input type="hidden" name="roleid" value="{[=it.meta.id]}">
+    <input type="hidden" name="roleid" value="{[=it.id]}">
     
     <label class="iam-form-group-title">Role Information</label>
 
     <div class="form-group">
       <label class="col-sm-3 control-label">Name</label>
       <div class="col-sm-9">
-        <input type="text" class="form-control" name="name" value="{[=it.meta.name]}">
+        <input type="text" class="form-control" name="name" value="{[=it.name]}">
       </div>
     </div>
 
@@ -104,42 +104,3 @@
     {{end}} -->
 </div>
 
-<script>
-
-// //
-// $("#vukihr").submit(function(event) {
-
-//     event.preventDefault();
-    
-//     $("button[type=submit]", this).attr('disabled', 'disabled');
-
-//     $.ajax({
-//         type    : "POST",
-//         url     : "/iam/user-mgr/role-save",
-//         data    : $("#vukihr").serialize(),
-//         timeout : 3000,
-//         success : function(rsp) {
-
-//             var rsj = JSON.parse(rsp);
-
-//             if (rsj.status == 200) {
-                
-//                 lessAlert("#iam-usermgr-roleset-alert", 'alert-success', "Successfully saved");
-                
-//                 window.setTimeout(function(){
-//                     iamWorkLoader("user-mgr/role-list");
-//                 }, 1500);
-
-//             } else {
-//                 lessAlert("#iam-usermgr-roleset-alert", 'alert-danger', rsj.message);
-//                 $("button[type=submit]", this).removeAttr('disabled');
-//             }
-//         },
-//         error: function(xhr, textStatus, error) {
-//             lessAlert("#iam-usermgr-roleset-alert", 'alert-danger', '{{T . "Internal Server Error"}}');
-//             $("button[type=submit]", this).removeAttr('disabled');
-//         }
-//     });
-// });
-
-</script>

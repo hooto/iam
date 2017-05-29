@@ -3,7 +3,7 @@
   <div id="iam-sysmgr-mailerset-alert" class="alert hide"></div>
 
   <div id="iam-sysmgr-mailerset" class="form-horizontal">
-   
+
     <label class="iam-form-group-title">Email SMTP server settings</label>
 
     <div class="form-group">
@@ -57,7 +57,7 @@
 
     <!-- TODO <div class="form-group">
       <label class="col-sm-3">SMTP encryption</label>
-      <div class="col-sm-4">        
+      <div class="col-sm-4">
         <input type="text" class="form-control" name="" value="TODO" disabled>
       </div>
       <div class="col-sm-5">

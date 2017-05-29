@@ -29,13 +29,16 @@ iamMyApp.Index = function()
 
 iamMyApp.InstList = function()
 {
+    var alert_id = "#iam-myapp-insts-alert";
+
     seajs.use(["ep"], function(EventProxy) {
 
         var ep = EventProxy.create('tpl', 'data', function (tpl, data) {
 
+            $("#work-content").html(tpl);
+
             if (!data || !data.items) {
-                $("#work-content").text("There are currently no applications available");
-                return;
+                return l4i.InnerAlert(alert_id, 'alert-info', "<strong>No authorized applications</strong><br>You have no applications authorized to access your account.");
             }
 
             data._statusls = iamUserMgr.statusls;
@@ -56,8 +59,6 @@ iamMyApp.InstList = function()
 
                 data.items[i]._privilegeNumber = data.items[i].privileges.length;
             }
-
-            $("#work-content").html(tpl);
 
             l4iTemplate.Render({
                 dstid  : "iam-myapp-insts",
@@ -82,7 +83,7 @@ iamMyApp.InstList = function()
         });
 
         iam.TplCmd("my-app/inst-list", {
-            callback: ep.done('tpl'),           
+            callback: ep.done('tpl'),
         });
     });
 }
@@ -101,7 +102,7 @@ iamMyApp.InstSetForm = function(instid)
                 data.privileges = [];
             }
             data._privilegeNumber = data.privileges.length;
-            
+
             data._statusls = iamMyApp.statusls;
             data._roles = l4i.Clone(roles);
 
@@ -152,61 +153,59 @@ iamMyApp.InstSetForm = function(instid)
         }
 
         if (instid) {
-        
+
             iam.ApiCmd("my-app/inst-entry?instid="+ instid, {
                 callback: ep.done('data'),
             });
-        
+
         } else {
             ep.emit("data", l4i.Clone(iamMyApp.appinstdef));
         }
 
         iam.TplCmd("my-app/inst-set", {
-            callback: ep.done('tpl'),           
+            callback: ep.done('tpl'),
         });
     });
 }
 
 iamMyApp.InstSetCommit = function()
 {
-    var form = $("#iam-myapp-instset");
-    
-    var req = l4i.Clone(iamMyApp.appinstdef)
-
-    req.meta.id = form.find("input[name=instid]").val();
-    req.app_title = form.find("input[name=app_title]").val();
-    req.url = form.find("input[name=url]").val();
-
-    req.status = parseInt(form.find("input[name=status]:checked").val());
+    var form = $("#iam-myapp-instset"),
+        alert_id = "#iam-myapp-instset-alert",
+        req = l4i.Clone(iamMyApp.appinstdef);
 
     try {
+        req.meta.id = form.find("input[name=instid]").val();
+        req.app_title = form.find("input[name=app_title]").val();
+        req.url = form.find("input[name=url]").val();
 
+        req.status = parseInt(form.find("input[name=status]:checked").val());
         // form.find("input[name=roles]:checked").each(function() {
-            
+
         //     var val = parseInt($(this).val());
         //     if (val > 0) {
         //         req.roles.push(val);
-        //     }            
+        //     }
         // });
 
     } catch (err) {
-        return l4i.InnerAlert("#iam-myapp-instset-alert", 'alert-danger', err);
+        return l4i.InnerAlert(alert_id, 'alert-danger', err);
     }
 
     iam.ApiCmd("my-app/inst-set", {
         method : "PUT",
         data   : JSON.stringify(req),
         callback : function(err, data) {
-            
+
             if (err) {
-                return l4i.InnerAlert("#iam-myapp-instset-alert", 'alert-danger', err);
+                return l4i.InnerAlert(alert_id, 'alert-danger', err);
             }
 
             if (!data || data.error) {
-                return l4i.InnerAlert("#iam-myapp-instset-alert", 'alert-danger', data.error.message);
+                return l4i.InnerAlert(alert_id, 'alert-danger', data.error.message);
             }
 
-            l4i.InnerAlert("#iam-myapp-instset-alert", 'alert-success', "Successfully updated");
+            l4i.InnerAlert(alert_id, 'alert-success', "Successfully updated");
 
             window.setTimeout(function(){
                 l4iModal.Close();

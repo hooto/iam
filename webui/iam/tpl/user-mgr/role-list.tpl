@@ -25,18 +25,18 @@
 {[~it.items :v]}
 <tr>
   <td class="iam-monofont">{[=v.id]}</td>
-  <td>{[=v.meta.name]}</td>
+  <td>{[=v.name]}</td>
   <td>{[=v.desc]}</td>
   <td>
     {[~it._statusls :sv]}
     {[ if (v.status == sv.status) { ]}{[=sv.title]}{[ } ]}
     {[~]}
   </td>
-  <td>{[=l4i.TimeParseFormat(v.meta.created, "Y-m-d")]}</td>
-  <td>{[=l4i.TimeParseFormat(v.meta.updated, "Y-m-d")]}</td>
+  <td>{[=l4i.MetaTimeParseFormat(v.created, "Y-m-d")]}</td>
+  <td>{[=l4i.MetaTimeParseFormat(v.updated, "Y-m-d")]}</td>
   <td align="right">
     <button class="pure-button button-xsmall"
-      onclick="iamUserMgr.RoleSet('{[=v.meta.id]}')">
+      onclick="iamUserMgr.RoleSet('{[=v.id]}')">
       Setting
     </button>
   </td>
