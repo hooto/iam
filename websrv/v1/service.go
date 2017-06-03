@@ -146,22 +146,25 @@ func (c Service) LoginAuthAction() {
 
 func (c Service) AuthAction() {
 
-	rsp := iamapi.UserSession{}
-	defer c.RenderJson(&rsp)
+	var set struct {
+		types.TypeMeta
+		iamapi.UserSession
+	}
+	defer c.RenderJson(&set)
 
 	token := iamapi.AccessTokenFrontend(c.Params.Get(iamapi.AccessTokenKey))
 	if !token.Valid() {
-		rsp.Error = types.NewErrorMeta(iamapi.ErrCodeUnauthorized, "Unauthorized")
+		set.Error = types.NewErrorMeta(iamapi.ErrCodeUnauthorized, "Unauthorized")
 		return
 	}
 
 	if obj := store.PvGet("session/" + token.SessionPath()); obj.OK() {
-		obj.Decode(&rsp)
+		obj.Decode(&set.UserSession)
 	}
 
-	if rsp.AccessToken == "" ||
-		rsp.Expired < types.MetaTimeNow() {
-		rsp.Error = types.NewErrorMeta(iamapi.ErrCodeUnauthorized, "Unauthorized")
+	if set.AccessToken == "" ||
+		set.Expired < types.MetaTimeNow() {
+		set.Error = types.NewErrorMeta(iamapi.ErrCodeUnauthorized, "Unauthorized")
 		return
 	}
 
@@ -170,12 +173,12 @@ func (c Service) AuthAction() {
 	// if addridx := strings.Index(c.Request.RemoteAddr, ":"); addridx > 0 {
 	// 	addr = c.Request.RemoteAddr[:addridx]
 	// }
-	// if addr != rsp.ClientAddr {
-	// 	rsp.Error = types.NewErrorMeta(iamapi.ErrCodeUnauthorized, "Unauthorized")
+	// if addr != set.ClientAddr {
+	// 	set.Error = types.NewErrorMeta(iamapi.ErrCodeUnauthorized, "Unauthorized")
 	// 	return
 	// }
 
-	rsp.Kind = "UserSession"
+	set.Kind = "UserSession"
 }
 
 func (c Service) AccessAllowedAction() {

@@ -57,7 +57,10 @@ func (c UserMgr) RoleListAction() {
 
 func (c UserMgr) RoleEntryAction() {
 
-	set := iamapi.UserRole{}
+	var set struct {
+		types.TypeMeta
+		iamapi.UserRole
+	}
 	defer c.RenderJson(&set)
 
 	// if !iamclient.SessionAccessAllowed(c.Session, "user.admin", config.Config.InstanceID) {
@@ -66,7 +69,7 @@ func (c UserMgr) RoleEntryAction() {
 	// }
 
 	if obj := store.PoGet("role", uint32(c.Params.Uint64("roleid"))); obj.OK() {
-		obj.Decode(&set)
+		obj.Decode(&set.UserRole)
 	}
 
 	if set.Id == 0 {
@@ -80,14 +83,16 @@ func (c UserMgr) RoleEntryAction() {
 func (c UserMgr) RoleSetAction() {
 
 	var (
-		prev        iamapi.UserRole
-		set         iamapi.UserRole
+		prev iamapi.UserRole
+		set  struct {
+			types.TypeMeta
+			iamapi.UserRole
+		}
 		prevVersion uint64
 	)
-
 	defer c.RenderJson(&set)
 
-	if err := c.Request.JsonDecode(&set); err != nil {
+	if err := c.Request.JsonDecode(&set.UserRole); err != nil {
 		set.Error = types.NewErrorMeta(iamapi.ErrCodeInvalidArgument, "Bad Request")
 		return
 	}
@@ -140,7 +145,7 @@ func (c UserMgr) RoleSetAction() {
 
 		prev.Name = set.Name
 		prev.Desc = set.Desc
-		set = prev
+		set.UserRole = prev
 	}
 
 	set.Updated = types.MetaTimeNow()

@@ -37,7 +37,7 @@ type AppMgr struct {
 
 func (c AppMgr) InstListAction() {
 
-	ls := iamapi.AppInstanceList{}
+	ls := types.ObjectList{}
 	defer c.RenderJson(&ls)
 
 	if !iamclient.SessionAccessAllowed(c.Session, "sys.admin", config.Config.InstanceID) {
@@ -75,7 +75,10 @@ func (c AppMgr) InstListAction() {
 
 func (c AppMgr) InstEntryAction() {
 
-	set := iamapi.AppInstance{}
+	var set struct {
+		types.TypeMeta
+		iamapi.AppInstance
+	}
 	defer c.RenderJson(&set)
 
 	if !iamclient.SessionAccessAllowed(c.Session, "sys.admin", config.Config.InstanceID) {
@@ -84,7 +87,7 @@ func (c AppMgr) InstEntryAction() {
 	}
 
 	if obj := store.PoGet("app-instance", c.Params.Get("instid")); obj.OK() {
-		obj.Decode(&set)
+		obj.Decode(&set.AppInstance)
 	}
 
 	if set.Meta.ID == "" {
@@ -97,7 +100,10 @@ func (c AppMgr) InstEntryAction() {
 
 func (c AppMgr) InstSetAction() {
 
-	set := iamapi.AppInstance{}
+	var set struct {
+		types.TypeMeta
+		iamapi.AppInstance
+	}
 	defer c.RenderJson(&set)
 
 	if !iamclient.SessionAccessAllowed(c.Session, "sys.admin", config.Config.InstanceID) {
@@ -105,7 +111,7 @@ func (c AppMgr) InstSetAction() {
 		return
 	}
 
-	if err := c.Request.JsonDecode(&set); err != nil || set.Meta.ID == "" {
+	if err := c.Request.JsonDecode(&set.AppInstance); err != nil || set.Meta.ID == "" {
 		set.Error = types.NewErrorMeta(iamapi.ErrCodeInvalidArgument, "InvalidArgument")
 		return
 	}
@@ -123,6 +129,7 @@ func (c AppMgr) InstSetAction() {
 	}
 
 	if set.AppTitle != prev.AppTitle || set.Url != prev.Url {
+
 		prev.Meta.Updated = types.MetaTimeNow()
 		prev.AppTitle = set.AppTitle
 		prev.Url = set.Url

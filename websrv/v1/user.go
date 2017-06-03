@@ -55,12 +55,15 @@ func (c *User) Init() int {
 
 func (c User) ProfileAction() {
 
-	set := iamapi.UserProfile{}
+	var set struct {
+		types.TypeMeta
+		iamapi.UserProfile
+	}
 	defer c.RenderJson(&set)
 
 	// profile
 	if obj := store.PoGet("user-profile", c.us.UserId()); obj.OK() {
-		obj.Decode(&set)
+		obj.Decode(&set.UserProfile)
 	}
 
 	if set.Login == nil || set.Login.Name == "" {

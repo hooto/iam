@@ -49,8 +49,7 @@ func (c *MyApp) Init() int {
 
 func (c MyApp) InstListAction() {
 
-	ls := iamapi.AppInstanceList{}
-
+	ls := types.ObjectList{}
 	defer c.RenderJson(&ls)
 
 	if objs := store.PoScan("app-instance", []byte{}, []byte{}, 1000); objs.OK() {
@@ -73,12 +72,14 @@ func (c MyApp) InstListAction() {
 
 func (c MyApp) InstEntryAction() {
 
-	set := iamapi.AppInstance{}
-
+	var set struct {
+		types.TypeMeta
+		iamapi.AppInstance
+	}
 	defer c.RenderJson(&set)
 
 	if obj := store.PoGet("app-instance", c.Params.Get("instid")); obj.OK() {
-		obj.Decode(&set)
+		obj.Decode(&set.AppInstance)
 	}
 
 	if set.Meta.ID == "" {
@@ -87,7 +88,7 @@ func (c MyApp) InstEntryAction() {
 	}
 
 	if set.Meta.User != c.us.UserName {
-		set = iamapi.AppInstance{}
+		set.AppInstance = iamapi.AppInstance{}
 		set.Error = types.NewErrorMeta(iamapi.ErrCodeUnauthorized, "Access Denied")
 		return
 	}
@@ -97,10 +98,13 @@ func (c MyApp) InstEntryAction() {
 
 func (c MyApp) InstSetAction() {
 
-	set := iamapi.AppInstance{}
+	var set struct {
+		types.TypeMeta
+		iamapi.AppInstance
+	}
 	defer c.RenderJson(&set)
 
-	if err := c.Request.JsonDecode(&set); err != nil || set.Meta.ID == "" {
+	if err := c.Request.JsonDecode(&set.AppInstance); err != nil || set.Meta.ID == "" {
 		set.Error = types.NewErrorMeta(iamapi.ErrCodeInvalidArgument, "InvalidArgument")
 		return
 	}

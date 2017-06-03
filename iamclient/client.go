@@ -153,7 +153,7 @@ func Instance(token string) (session iamapi.UserSession, err error) {
 	var us iamapi.UserSession
 
 	err = hc.ReplyJson(&us)
-	if err != nil || us.Error != nil || us.Kind != "UserSession" {
+	if err != nil || us.UserName == "" {
 		return session, errors.New("Unauthorized")
 	}
 

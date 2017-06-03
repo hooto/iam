@@ -50,16 +50,15 @@ type ServiceLoginAuth struct {
 }
 
 type UserSession struct {
-	types.TypeMeta `json:",inline"`
-	AccessToken    string            `json:"access_token"`
-	RefreshToken   string            `json:"refresh_token,omitempty"`
-	UserName       string            `json:"username"`
-	DisplayName    string            `json:"display_name,omitempty"`
-	Roles          types.ArrayUint32 `json:"roles,omitempty"`
-	Groups         types.ArrayUint32 `json:"groups,omitempty"`
-	ClientAddr     string            `json:"client_addr,omitempty"`
-	Created        types.MetaTime    `json:"created"`
-	Expired        types.MetaTime    `json:"expired"`
+	AccessToken  string            `json:"access_token"`
+	RefreshToken string            `json:"refresh_token,omitempty"`
+	UserName     string            `json:"username"`
+	DisplayName  string            `json:"display_name,omitempty"`
+	Roles        types.ArrayUint32 `json:"roles,omitempty"`
+	Groups       types.ArrayUint32 `json:"groups,omitempty"`
+	ClientAddr   string            `json:"client_addr,omitempty"`
+	Created      types.MetaTime    `json:"created"`
+	Expired      types.MetaTime    `json:"expired"`
 }
 
 func (s *UserSession) IsLogin() bool {
@@ -67,7 +66,7 @@ func (s *UserSession) IsLogin() bool {
 }
 
 func (s *UserSession) FullToken() string {
-	return s.UserName + "." + s.AccessToken
+	return s.UserName + "/" + s.AccessToken
 }
 
 func (s *UserSession) UserId() string {
@@ -82,17 +81,16 @@ type UserAccessEntry struct {
 }
 
 type User struct {
-	types.TypeMeta `json:",inline"`
-	Id             string            `json:"id,omitempty"`
-	Name           string            `json:"name"`
-	Email          string            `json:"email,omitempty"`
-	DisplayName    string            `json:"display_name,omitempty"`
-	Keys           types.KvPairs     `json:"keys,omitempty"`
-	Roles          types.ArrayUint32 `json:"roles,omitempty"`
-	Groups         types.ArrayUint32 `json:"groups,omitempty"`
-	Status         uint8             `json:"status"`
-	Created        types.MetaTime    `json:"created"`
-	Updated        types.MetaTime    `json:"updated"`
+	Id          string            `json:"id,omitempty"`
+	Name        string            `json:"name"`
+	Email       string            `json:"email,omitempty"`
+	DisplayName string            `json:"display_name,omitempty"`
+	Keys        types.KvPairs     `json:"keys,omitempty"`
+	Roles       types.ArrayUint32 `json:"roles,omitempty"`
+	Groups      types.ArrayUint32 `json:"groups,omitempty"`
+	Status      uint8             `json:"status"`
+	Created     types.MetaTime    `json:"created"`
+	Updated     types.MetaTime    `json:"updated"`
 }
 
 type UserEntry struct {
@@ -108,14 +106,13 @@ type UserList struct {
 }
 
 type UserProfile struct {
-	types.TypeMeta `json:",inline"`
-	Login          *User          `json:"login,omitempty"`
-	Gender         uint8          `json:"gender,omitempty"`
-	Photo          string         `json:"photo,omitempty"`
-	PhotoSource    string         `json:"photo_source,omitempty"`
-	Birthday       string         `json:"birthday,omitempty"`
-	About          string         `json:"about,omitempty"`
-	Updated        types.MetaTime `json:"updated,omitempty"`
+	Login       *User          `json:"login,omitempty"`
+	Gender      uint8          `json:"gender,omitempty"`
+	Photo       string         `json:"photo,omitempty"`
+	PhotoSource string         `json:"photo_source,omitempty"`
+	Birthday    string         `json:"birthday,omitempty"`
+	About       string         `json:"about,omitempty"`
+	Updated     types.MetaTime `json:"updated,omitempty"`
 }
 
 type UserPasswordSet struct {
@@ -146,15 +143,14 @@ type UserPhotoSet struct {
 }
 
 type UserRole struct {
-	types.TypeMeta `json:",inline"`
-	Id             uint32         `json:"id"`
-	Name           string         `json:"name"`
-	User           string         `json:"user,omitempty"`
-	Status         uint8          `json:"status,omitempty"`
-	Desc           string         `json:"desc,omitempty"`
-	Privileges     []string       `json:"privileges,omitempty"`
-	Created        types.MetaTime `json:"created,omitempty"`
-	Updated        types.MetaTime `json:"updated,omitempty"`
+	Id         uint32         `json:"id"`
+	Name       string         `json:"name"`
+	User       string         `json:"user,omitempty"`
+	Status     uint8          `json:"status,omitempty"`
+	Desc       string         `json:"desc,omitempty"`
+	Privileges []string       `json:"privileges,omitempty"`
+	Created    types.MetaTime `json:"created,omitempty"`
+	Updated    types.MetaTime `json:"updated,omitempty"`
 }
 
 type UserRoleList struct {
@@ -183,14 +179,13 @@ type AppPrivilege struct {
 }
 
 type AppInstance struct {
-	types.TypeMeta `json:",inline"`
-	Meta           types.InnerObjectMeta `json:"meta,omitempty"`
-	AppID          string                `json:"app_id,omitempty"`
-	AppTitle       string                `json:"app_title,omitempty"`
-	Version        string                `json:"version,omitempty"`
-	Status         uint8                 `json:"status,omitempty"`
-	Url            string                `json:"url,omitempty"`
-	Privileges     []AppPrivilege        `json:"privileges,omitempty"`
+	Meta       types.InnerObjectMeta `json:"meta,omitempty"`
+	AppID      string                `json:"app_id,omitempty"`
+	AppTitle   string                `json:"app_title,omitempty"`
+	Version    string                `json:"version,omitempty"`
+	Status     uint8                 `json:"status,omitempty"`
+	Url        string                `json:"url,omitempty"`
+	Privileges []AppPrivilege        `json:"privileges,omitempty"`
 }
 
 type AppInstanceList struct {
