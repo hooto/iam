@@ -228,7 +228,7 @@ func (c Service) AccessAllowedAction() {
 	// 	return
 	// }
 
-	if !role.AccessAllowed(session.UserId(), session.Roles, req.InstanceID, req.Privilege) {
+	if !role.AccessAllowed(session.UserName, session.Roles, req.InstanceID, req.Privilege) {
 		rsp.Error = types.NewErrorMeta(iamapi.ErrCodeUnauthorized, "Unauthorized")
 		return
 	}
