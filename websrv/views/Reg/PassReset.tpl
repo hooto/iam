@@ -163,7 +163,7 @@ body {
   {{end}}
 
   <div class="ilb-reg-passreset">
-    <a href="/iam/service/login?continue={{.continue}}">Sign in with your Account</a>
+    <a href="/iam/service/login?continue={{.continue}}&redirect_token={{.redirect_token}}">Sign in with your Account</a>
   </div>
 
   <div class="ilb-footer">
@@ -205,7 +205,7 @@ $("#iam-reg-passreset-form").submit(function(event) {
             $(".ilf-group").hide(200);
 
             window.setTimeout(function(){
-                window.location = "/iam/service/login";
+                window.location = "/iam/service/login?redirect_token={{.redirect_token}}";
             }, 2000);
         },
         error: function(xhr, textStatus, error) {

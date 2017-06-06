@@ -29,20 +29,27 @@ type Service struct {
 
 func (c Service) LoginAction() {
 
-	if c.Params.Get("persistent") == "1" {
+	var rt iamapi.ServiceRedirectToken
+
+	if len(c.Params.Get("redirect_token")) > 20 {
+		rt = iamapi.ServiceRedirectTokenDecode(c.Params.Get("redirect_token"))
+	}
+
+	if rt.RedirectUri == "" && c.Params.Get("redirect_uri") != "" {
+		rt = iamapi.ServiceRedirectToken{
+			RedirectUri: c.Params.Get("redirect_uri"),
+			State:       c.Params.Get("state"),
+			ClientId:    c.Params.Get("client_id"),
+			Persistent:  int(c.Params.Int64("persistent")),
+		}
+	}
+
+	if rt.RedirectUri != "" {
+		c.Data["redirect_token"] = rt.Encode()
+	}
+
+	if rt.Persistent == 1 {
 		c.Data["persistent_checked"] = "checked"
-	}
-
-	if c.Params.Get("client_id") != "" {
-		c.Data["client_id"] = c.Params.Get("client_id")
-	}
-
-	if c.Params.Get("redirect_uri") != "" {
-		c.Data["redirect_uri"] = c.Params.Get("redirect_uri")
-	}
-
-	if c.Params.Get("state") != "" {
-		c.Data["state"] = c.Params.Get("state")
 	}
 }
 

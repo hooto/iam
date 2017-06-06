@@ -159,8 +159,7 @@ body {
 
   <form id="iam-login-form" onsubmit="return false;">
 
-    <input type="hidden" name="redirect_uri" value="{{.redirect_uri}}">
-    <input type="hidden" name="state" value="{{.state}}">
+    <input type="hidden" name="redirect_token" value="{{.redirect_token}}">
 
     <img class="iam-user-ico-default"  src="/iam/~/iam/img/user-default.svg">
 
@@ -184,14 +183,14 @@ body {
           <input name="persistent" type="checkbox" value="1" checked="{{.persistent_checked}}"> Stay signed in
         </div>
         <div class="ilf-help">
-        <a href="/iam/reg/retrieve">Forgot Password?</a>
+        <a href="/iam/reg/retrieve?redirect_token={{.redirect_token}}">Forgot Password?</a>
         </div>
       </div>
     </div>
   </form>
 
   <div class="ilb-signup">
-    <a href="/iam/reg/sign-up?redirect_uri={{.redirect_uri}}">Don't have an account? Create Account</a>
+    <a href="/iam/reg/sign-up?redirect_token={{.redirect_token}}">Don't have an account? Create Account</a>
   </div>
 
   <div class="ilb-footer">

@@ -41,6 +41,11 @@ type Reg struct {
 func (c Reg) SignUpAction() {
 	c.Data["continue"] = c.Params.Get("continue")
 	c.Data["user_reg_disable"] = config.UserRegistrationDisabled
+
+	if len(c.Params.Get("redirect_token")) > 20 &&
+		iamapi.ServiceRedirectTokenValid(c.Params.Get("redirect_token")) {
+		c.Data["redirect_token"] = c.Params.Get("redirect_token")
+	}
 }
 
 func (c Reg) SignUpRegAction() {
@@ -101,6 +106,11 @@ func (c Reg) SignUpRegAction() {
 }
 
 func (c Reg) RetrieveAction() {
+
+	if len(c.Params.Get("redirect_token")) > 20 &&
+		iamapi.ServiceRedirectTokenValid(c.Params.Get("redirect_token")) {
+		c.Data["redirect_token"] = c.Params.Get("redirect_token")
+	}
 }
 
 func (c Reg) RetrievePutAction() {
@@ -156,12 +166,18 @@ func (c Reg) RetrievePutAction() {
 		return
 	}
 
+	rtstr := ""
+	if len(c.Params.Get("redirect_token")) > 20 &&
+		iamapi.ServiceRedirectTokenValid(c.Params.Get("redirect_token")) {
+		rtstr = "&redirect_token=" + c.Params.Get("redirect_token")
+	}
+
 	// TODO tempate
 	body := fmt.Sprintf(`<html>
 <body>
 <div>You recently requested a password reset for your %s account. To create a new password, click on the link below:</div>
 <br>
-<a href="http://%s/iam/reg/pass-reset?id=%s">Reset My Password</a>
+<a href="http://%s/iam/reg/pass-reset?id=%s%s">Reset My Password</a>
 <br>
 <div>This request was made on %s.</div>
 <br>
@@ -171,7 +187,7 @@ func (c Reg) RetrievePutAction() {
 <div>********************************************************</div>
 <div>Please do not reply to this message. Mail sent to this address cannot be answered.</div>
 </body>
-</html>`, config.Config.ServiceName, c.Request.Host, reset.Id, utilx.TimeNow("datetime"), config.Config.ServiceName)
+</html>`, config.Config.ServiceName, c.Request.Host, reset.Id, rtstr, utilx.TimeNow("datetime"), config.Config.ServiceName)
 
 	err = mr.SendMail(c.Params.Get("email"), c.Translate("Reset your password"), body)
 
@@ -203,6 +219,11 @@ func (c Reg) PassResetAction() {
 	}
 
 	c.Data["pass_reset_id"] = c.Params.Get("id")
+
+	if len(c.Params.Get("redirect_token")) > 20 &&
+		iamapi.ServiceRedirectTokenValid(c.Params.Get("redirect_token")) {
+		c.Data["redirect_token"] = c.Params.Get("redirect_token")
+	}
 }
 
 func (c Reg) PassResetPutAction() {

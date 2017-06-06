@@ -15,9 +15,11 @@
 package iamapi
 
 import (
+	"encoding/base64"
 	"regexp"
 
 	"github.com/lessos/lessgo/crypto/idhash"
+	"github.com/lessos/lessgo/encoding/json"
 	"github.com/lessos/lessgo/types"
 )
 
@@ -41,12 +43,6 @@ var (
 
 func UserId(name string) string {
 	return idhash.HashToHexString([]byte(name), 8)
-}
-
-type ServiceLoginAuth struct {
-	types.TypeMeta `json:",inline"`
-	RedirectUri    string `json:"redirect_uri,omitempty"`
-	AccessToken    string `json:"access_token,omitempty"`
 }
 
 type UserSession struct {
@@ -241,4 +237,48 @@ func (t *AccessTokenFrontend) SessionPath() string {
 
 func (t *AccessTokenFrontend) String() string {
 	return string(*t)
+}
+
+type ServiceLoginAuth struct {
+	types.TypeMeta `json:",inline"`
+	RedirectUri    string `json:"redirect_uri,omitempty"`
+	AccessToken    string `json:"access_token,omitempty"`
+}
+
+type ServiceRedirectToken struct {
+	RedirectUri string `json:"uri,omitempty"`
+	State       string `json:"state,omitempty"`
+	ClientId    string `json:"cid,omitempty"`
+	Persistent  int    `json:"pt,omitempty"`
+}
+
+func ServiceRedirectTokenValid(tokenstr string) bool {
+	if _, err := base64.StdEncoding.DecodeString(tokenstr); err == nil {
+		return true
+	}
+	return false
+}
+
+func (s *ServiceRedirectToken) Encode() string {
+
+	if len(s.RedirectUri) > 200 {
+		s.RedirectUri = s.RedirectUri[:200]
+	}
+	if len(s.State) > 100 {
+		s.State = s.State[:100]
+	}
+	if len(s.ClientId) > 40 {
+		s.ClientId = s.ClientId[:40]
+	}
+
+	js, _ := json.Encode(s, "")
+	return base64.StdEncoding.EncodeToString(js)
+}
+
+func ServiceRedirectTokenDecode(tokenstr string) ServiceRedirectToken {
+	var token ServiceRedirectToken
+	if jsb, err := base64.StdEncoding.DecodeString(tokenstr); err == nil {
+		json.Decode(jsb, &token)
+	}
+	return token
 }

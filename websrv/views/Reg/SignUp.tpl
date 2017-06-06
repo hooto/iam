@@ -144,7 +144,7 @@ body {
   </form>
 
   <div class="ilb-signup">
-    <a href="/iam/service/login?continue={{.continue}}">Sign in with your Account</a>
+    <a href="/iam/service/login?continue={{.continue}}&redirect_token={{.redirect_token}}">Sign in with your Account</a>
   </div>
 
   <div class="ilb-footer">
@@ -198,7 +198,7 @@ $("#iam-signup-form").submit(function(event) {
             $(".ilf-group").hide(600);
 
             window.setTimeout(function(){
-                window.location = "/iam/service/login?continue={{.continue}}";
+                window.location = "/iam/service/login?continue={{.continue}}&redirect_uri={{.redirect_token}}";
             }, 1500);
 
         },

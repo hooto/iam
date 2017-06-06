@@ -113,28 +113,33 @@ func (c Service) LoginAuthAction() {
 
 	rsp.AccessToken = token.String()
 
-	if len(c.Params.Get("redirect_uri")) > 0 {
+	if len(c.Params.Get("redirect_token")) > 20 {
 
-		rsp.RedirectUri = c.Params.Get("redirect_uri")
+		rt := iamapi.ServiceRedirectTokenDecode(c.Params.Get("redirect_token"))
 
-		if _url_host(rsp.RedirectUri) != _url_host(c.Request.URL.Host) {
+		if len(rt.RedirectUri) > 0 {
 
-			if strings.Index(rsp.RedirectUri, "?") == -1 {
-				rsp.RedirectUri += "?"
-			} else {
-				rsp.RedirectUri += "&"
-			}
+			rsp.RedirectUri = rt.RedirectUri
 
-			rsp.RedirectUri += iamapi.AccessTokenKey + "=" + rsp.AccessToken + "&expires_in=864000"
+			if _url_host(rsp.RedirectUri) != _url_host(c.Request.URL.Host) {
 
-			if c.Params.Get("state") != "" {
-				rsp.RedirectUri += "&state=" + c.Params.Get("state")
+				if strings.Index(rsp.RedirectUri, "?") == -1 {
+					rsp.RedirectUri += "?"
+				} else {
+					rsp.RedirectUri += "&"
+				}
+
+				rsp.RedirectUri += iamapi.AccessTokenKey + "=" + rsp.AccessToken + "&expires_in=864000"
+
+				if len(rt.State) > 0 {
+					rsp.RedirectUri += "&state=" + rt.State
+				}
 			}
 		}
 	}
 
 	http.SetCookie(c.Response.Out, &http.Cookie{
-		Name:     "_iam_at",
+		Name:     iamapi.AccessTokenKey,
 		Value:    rsp.AccessToken,
 		Path:     "/",
 		HttpOnly: true,
