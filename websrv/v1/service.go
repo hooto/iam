@@ -132,7 +132,7 @@ func (c Service) LoginAuthAction() {
 				rsp.RedirectUri += iamapi.AccessTokenKey + "=" + rsp.AccessToken + "&expires_in=864000"
 
 				if len(rt.State) > 0 {
-					rsp.RedirectUri += "&state=" + rt.State
+					rsp.RedirectUri += "&state=" + url.QueryEscape(rt.State)
 				}
 			}
 		}

@@ -17,6 +17,7 @@ package iamclient
 import (
 	"errors"
 	"fmt"
+	"net/url"
 	"sync"
 	"time"
 
@@ -93,7 +94,7 @@ func AuthServiceUrl(client_id, redirect_uri, state string) string {
 func auth_service_url(service_url, client_id, redirect_uri, state string) string {
 	return fmt.Sprintf(
 		"%s/service/login?response_type=token&client_id=%s&redirect_uri=%s&state=%s",
-		service_url, client_id, redirect_uri, state,
+		service_url, client_id, url.QueryEscape(redirect_uri), url.QueryEscape(state),
 	)
 }
 
