@@ -75,11 +75,12 @@ iamAppMgr.InstList = function()
                 tplid  : "iam-appmgr-instls-tpl",
                 data   : data,
                 success : function() {
-                    l4iTemplate.Render({
-                        dstid  : "iam-appmgr-instls-pager",
-                        tplid  : "iam-appmgr-instls-pager-tpl",
-                        data   : l4i.Pager(data.meta),
-                    });
+                    // TODO
+                    // l4iTemplate.Render({
+                    //     dstid  : "iam-appmgr-instls-pager",
+                    //     tplid  : "iam-appmgr-instls-pager-tpl",
+                    //     data   : l4i.Pager(data.meta),
+                    // });
                 },
             });
         });

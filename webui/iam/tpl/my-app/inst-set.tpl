@@ -65,10 +65,12 @@
             {[~v.roles :rv]}
               {[~it._roles.items :drv]}
               {[ if (rv == drv.id) { ]}
-                {[=drv.meta.name]}
+                {[=drv.name]}
               {[ } ]}
               {[~]}
             {[~]}
+            {[ } else { ]}
+              Owner
             {[ } ]}
             </td>
           </tr>
