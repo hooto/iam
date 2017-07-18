@@ -124,7 +124,11 @@ func (c Auth) SignOutAction() {
 		referer += "?"
 	}
 
-	c.Redirect(referer + "_iam_out=1")
+	if !strings.Contains(referer, "_iam_out=1=") {
+		referer += "_iam_out=1"
+	}
+
+	c.Redirect(referer)
 }
 
 func (c Auth) AppRoleListAction() {
