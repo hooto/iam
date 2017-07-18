@@ -66,6 +66,15 @@ func (c Auth) LoginAction() {
 		referer = c.Request.Referer()
 	}
 
+	if strings.Contains(referer, "_iam_out=1") {
+		referer = strings.TrimRightFunc(strings.Replace(referer, "_iam_out=1", "", 1), func(c rune) bool {
+			if c == '?' || c == '&' {
+				return true
+			}
+			return false
+		})
+	}
+
 	c.Redirect(AuthServiceUrl(
 		InstanceID,
 		c.UrlModuleBase("auth/cb"),
@@ -124,7 +133,7 @@ func (c Auth) SignOutAction() {
 		referer += "?"
 	}
 
-	if !strings.Contains(referer, "_iam_out=1=") {
+	if !strings.Contains(referer, "_iam_out=1") {
 		referer += "_iam_out=1"
 	}
 
