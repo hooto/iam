@@ -1,22 +1,54 @@
-{{template "Common/HtmlHeader.tpl" .}}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <title>IAM Service</title>
+  <script src="/iam/~/jquery/jquery.min.js"></script>
+  <script src="/iam/~/lessui/js/lessui.js"></script>
+  <link rel="stylesheet" href="/iam/~/twbs/css/bootstrap.min.css" type="text/css">
+  <link rel="shortcut icon" href="/iam/~/iam/img/favicon.ico" type="image/x-icon">
+</head>
+<body>
 
 <style type="text/css">
-body {
-  margin: 0 !important;
+* {
+  margin: 0;
   padding: 0;
-  position: relative;
+}
+
+html,
+body {
+  height: 100%;
+}
+
+body {
+  margin: 0 auto !important;
+  padding: 0;
   font-size: 13px;
   font-family: Arial, sans-serif;
   background-color: #222;
-  /*background-color: #07c;*/
   color: #eee;
+  min-width: 500px;
+  display: block;
+}
+
+#iam-login-frame {
+  width: 100%;
+  height: 100%;
+  position: relative;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  min-width: 500px;
+  min-height: 400px;
 }
 
 #iam-login-box {
   width: 360px;
-  /*position: absolute;*/
+  position: absolute;
   left: 50%;
-  top: 20px;
+  top: 50%;
+  transform: translate(-50%, -50%);
   color: #555;
   margin: 0 auto;
 }
@@ -25,7 +57,6 @@ body {
   background-color: #f7f7f7;
   border-radius: 4px;
   padding: 20px 30px 20px 30px;
-  /*box-shadow: 0px 2px 2px 0px #999;*/
 }
 
 .iam-login-msg01 {
@@ -46,7 +77,7 @@ body {
   background-color: #dfdfdf;
 }
 
-#iam-login-form .ilf-group {
+#iam-login-form .iam-input-row {
   padding: 0 0 10px 0; 
 }
 
@@ -103,13 +134,13 @@ body {
   border-color: #285e8e;
 }
 
-#iam-login-form .ilf-checkbox {
+#iam-login-form .iam-input-row-checkbox {
   display: inline-block;
   min-height: 20px;
   font-weight: normal;
   color: #555;
 }
-#iam-login-form .ilf-checkbox input[type="checkbox"] {
+#iam-login-form .iam-input-row-checkbox input[type="checkbox"] {
   float: left;
   margin: 3px 5px 0 0;
   padding: 0;
@@ -121,38 +152,39 @@ body {
   line-height: normal;
 }
 
-#iam-login-form .ilf-help {
+#iam-login-form .iam-input-row-help {
   display: inline-block;
   float: right;
 }
-#iam-login-form .ilf-help a {
+#iam-login-form .iam-input-row-help a {
   color: #427fed;
 }
 
-#iam-login-box .ilb-signup {
+#iam-login-box > .signup {
   margin: 20px 0;
   text-align: center;
   font-size: 15px;
 }
-#iam-login-box .ilb-signup a {
+#iam-login-box > .signup a {
   font-size: 16px;
   color: #fff;
 }
 
-#iam-login-box .ilb-footer {
+#iam-login-box > .footer {
   text-align: center;
   margin: 20px 0;
   font-size: 14px;
 }
-#iam-login-box .ilb-footer a {
+#iam-login-box > .footer a {
   color: #ccc;
 }
-#iam-login-box .ilb-footer img {
+#iam-login-box > .footer img {
   width: 16px;
   height: 16px;
 }
 </style>
 
+<div id="iam-login-frame">
 <div id="iam-login-box">
 
   <div class="iam-login-msg01">{{T . "Sign in with your Account"}}</div>
@@ -163,41 +195,42 @@ body {
 
     <img class="iam-user-ico-default"  src="/iam/~/iam/img/user-default.svg">
 
-    <div id="iam-login-form-alert" class="alert ilf-group {{if eq .alert_msg nil}}hide{{end}}">{{.alert_msg}}</div>
+    <div id="iam-login-form-alert" class="alert iam-input-row {{if eq .alert_msg nil}}hide{{end}}">{{.alert_msg}}</div>
 
-    <div id="ilf-grp-input">
-      <div class="ilf-group">
+    <div id="iam-login-input-frame">
+      <div class="iam-input-row">
         <input type="text" class="ilf-input" name="uname" value="{{.uname}}" placeholder="{{T . "Username"}}">
       </div>
 
-      <div class="ilf-group">
+      <div class="iam-input-row">
         <input type="password" class="ilf-input" name="passwd" placeholder="{{T . "Password"}}">
       </div>
 
-      <div class="ilf-group">
+      <div class="iam-input-row">
         <button type="submit" class="ilf-btn">{{T . "Sign in"}}</button>
       </div>
 
       <div>
-        <div class="ilf-checkbox">
+        <div class="iam-input-row-checkbox">
           <input name="persistent" type="checkbox" value="1" checked="{{.persistent_checked}}"> Stay signed in
         </div>
-        <div class="ilf-help">
+        <div class="iam-input-row-help">
         <a href="/iam/reg/retrieve?redirect_token={{.redirect_token}}">Forgot Password?</a>
         </div>
       </div>
     </div>
   </form>
 
-  <div class="ilb-signup">
+  <div class="signup">
     <a href="/iam/reg/sign-up?redirect_token={{.redirect_token}}">Don't have an account? Create Account</a>
   </div>
 
-  <div class="ilb-footer">
+  <div class="footer">
     <img src="/iam/~/iam/img/iam-s2-32.png"> 
     <a href="http://www.lessos.com/p/iam" target="_blank">lessOS IAM</a>
   </div>
 
+</div>
 </div>
 
 <script type="text/javascript">
@@ -234,7 +267,7 @@ window.onload = function()
                 }
     
                 l4i.InnerAlert(alertid, 'alert-success', "Successfully Sign-on. Page redirecting ...");
-                $("#ilf-grp-input").hide(100);
+                $("#iam-login-input-frame").hide(100);
     
                 window.setTimeout(function() {
                     window.location = rsj.redirect_uri;
@@ -244,5 +277,5 @@ window.onload = function()
     });
 }
 </script>
-
-{{template "Common/HtmlFooter.tpl" .}}
+<body>
+</html>
