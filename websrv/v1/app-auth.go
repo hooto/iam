@@ -16,10 +16,12 @@ package v1
 
 import (
 	"code.hooto.com/lessos/iam/iamapi"
+	"code.hooto.com/lessos/iam/iamclient"
 	"code.hooto.com/lessos/iam/store"
 	"code.hooto.com/lynkdb/iomix/skv"
 	"github.com/lessos/lessgo/crypto/idhash"
 	"github.com/lessos/lessgo/httpsrv"
+	"github.com/lessos/lessgo/logger"
 	"github.com/lessos/lessgo/types"
 )
 
@@ -222,5 +224,80 @@ func (c AppAuth) RoleListAction() {
 	}
 
 	sets.Kind = "UserRoleList"
+}
 
+func (c AppAuth) UserAccessKeyAction() {
+
+	var set struct {
+		types.TypeMeta
+		iamapi.AccessKeySession
+	}
+	defer c.RenderJson(&set)
+
+	var (
+		user       = c.Params.Get("user")
+		access_key = c.Params.Get("access_key")
+	)
+	if user == "" || access_key == "" {
+		set.Error = types.NewErrorMeta(iamapi.ErrCodeInvalidArgument, "Bad Argument")
+		return
+	}
+
+	app_auth := c.Request.Header.Get("Auth")
+	if app_auth == "" {
+		set.Error = types.NewErrorMeta(iamapi.ErrCodeUnauthorized, "Unauthorized")
+		return
+	}
+
+	app_aka, err := iamapi.AccessKeyAuthDecode(app_auth)
+	if err != nil {
+		set.Error = types.NewErrorMeta(iamapi.ErrCodeUnauthorized, "Unauthorized")
+		return
+	}
+
+	if err := app_aka.Valid(); err != nil {
+		set.Error = types.NewErrorMeta(iamapi.ErrCodeInvalidArgument, err.Error())
+		return
+	}
+
+	var app iamapi.AppInstance
+	if rs := store.PoGet("app-instance", app_aka.Key); rs.OK() {
+		rs.Decode(&app)
+	}
+
+	if app.Meta.ID != app_aka.Key {
+		set.Error = types.NewErrorMeta(iamapi.ErrCodeInvalidArgument, "Bad Argument")
+		return
+	}
+
+	if err := iamclient.AccessKeyAuthValid(app_aka, app.SecretKey); err != nil {
+		set.Error = types.NewErrorMeta(iamapi.ErrCodeUnauthorized, "Unauthorized")
+		return
+	}
+
+	var user_ak iamapi.AccessKey
+	if rs := store.PoGet("ak/"+user, access_key); rs.OK() {
+		rs.Decode(&user_ak)
+	}
+
+	if user_ak.AccessKey != access_key ||
+		user_ak.Action != 1 {
+		set.Error = types.NewErrorMeta(iamapi.ErrCodeInvalidArgument, "Access Key Not Found")
+		return
+	}
+
+	user_bound := types.IterObjectGet(user_ak.Bounds, "app/"+app_aka.Key)
+	if user_bound == nil {
+		set.Error = types.NewErrorMeta(iamapi.ErrCodeInvalidArgument, "Access Key Not Found")
+		return
+	}
+
+	set.Kind = "AccessKeySession"
+	set.AccessKeySession = iamapi.AccessKeySession{
+		User:      user,
+		AccessKey: user_ak.AccessKey,
+		SecretKey: user_ak.SecretKey,
+		Expired:   types.MetaTimeNow().Add("+864000s"),
+	}
+	logger.Printf("info", "app-auth AccessKeySession")
 }

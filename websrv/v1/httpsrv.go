@@ -31,8 +31,9 @@ func NewModule() httpsrv.Module {
 	module.ControllerRegister(new(UserMgr))
 	module.ControllerRegister(new(AppMgr))
 
-	module.ControllerRegister(new(Status))
 	module.ControllerRegister(new(AppAuth))
+	module.ControllerRegister(new(AccessKey))
+	module.ControllerRegister(new(Status))
 
 	return module
 }

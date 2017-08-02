@@ -30,6 +30,7 @@ func (c User) PanelInfoAction() {
 	//
 	nav := []map[string]string{
 		{"path": "my-app/index", "title": "My Authorized Apps"},
+		{"path": "access-key/index", "title": "Access Keys"},
 	}
 
 	if iamclient.SessionAccessAllowed(c.Session, "user.admin", config.Config.InstanceID) {

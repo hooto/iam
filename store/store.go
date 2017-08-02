@@ -315,6 +315,10 @@ func AppInstanceRegister(inst iamapi.AppInstance) error {
 			prev.Url = inst.Url
 		}
 
+		if inst.SecretKey != "" && inst.SecretKey != prev.SecretKey {
+			prev.SecretKey = inst.SecretKey
+		}
+
 		PoPut("app-instance", prev.Meta.ID, prev, nil)
 
 		// TODO remove unused privileges

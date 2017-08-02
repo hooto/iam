@@ -41,8 +41,9 @@ var (
 
 var (
 	sessions     = map[string]iamapi.UserSession{}
+	sessions_aks = map[string]iamapi.AccessKeySession{}
 	sessions_tto = time.Now()
-	locker       sync.Mutex
+	locker       sync.RWMutex
 	c_roles            = iamapi.UserRoleList{}
 	c_roles_tto  int64 = 0
 )
@@ -69,6 +70,15 @@ func innerExpiredClean() {
 		}
 
 		delete(sessions, k)
+	}
+
+	for k, v := range sessions_aks {
+
+		if v.Expired > tnow {
+			continue
+		}
+
+		delete(sessions_aks, k)
 	}
 
 	sessions_tto = time.Now().Add(time.Second * 60)
