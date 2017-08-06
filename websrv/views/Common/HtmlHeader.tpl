@@ -1,6 +1,3 @@
-<!DOCTYPE html>
-<html lang="en">
-
 <head>
   <meta charset="utf-8">
   <title>IAM Service</title>
@@ -13,6 +10,3 @@
   <script src="/iam/~/twbs/js/bootstrap.min.js"></script>
   <link rel="shortcut icon" href="/iam/~/iam/img/favicon.ico" type="image/x-icon">
 </head>
-
-<body>
-

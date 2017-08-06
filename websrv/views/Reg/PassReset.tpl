@@ -1,4 +1,7 @@
+<!DOCTYPE html>
+<html lang="en">
 {{template "Common/HtmlHeader.tpl" .}}
+<body>
 
 <style type="text/css">
 body {
@@ -216,5 +219,5 @@ $("#iam-reg-passreset-form").submit(function(event) {
 
 </script>
 
-
-{{template "Common/HtmlFooter.tpl" .}}
+</body>
+</html>

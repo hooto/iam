@@ -227,7 +227,7 @@ body {
 
   <div class="footer">
     <img src="/iam/~/iam/img/iam-s2-32.png"> 
-    <a href="http://www.lessos.com/p/iam" target="_blank">lessOS IAM</a>
+    <a href="https://github.com/lessos/iam" target="_blank">lessOS IAM</a>
   </div>
 
 </div>
@@ -277,5 +277,5 @@ window.onload = function()
     });
 }
 </script>
-<body>
+</body>
 </html>
