@@ -235,10 +235,10 @@ func (c AppAuth) UserAccessKeyAction() {
 	defer c.RenderJson(&set)
 
 	var (
-		user       = c.Params.Get("user")
+		username   = c.Params.Get("user")
 		access_key = c.Params.Get("access_key")
 	)
-	if user == "" || access_key == "" {
+	if username == "" || access_key == "" {
 		set.Error = types.NewErrorMeta(iamapi.ErrCodeInvalidArgument, "Bad Argument")
 		return
 	}
@@ -276,7 +276,7 @@ func (c AppAuth) UserAccessKeyAction() {
 	}
 
 	var user_ak iamapi.AccessKey
-	if rs := store.PoGet("ak/"+user, access_key); rs.OK() {
+	if rs := store.PoGet("ak/"+username, access_key); rs.OK() {
 		rs.Decode(&user_ak)
 	}
 
@@ -292,11 +292,18 @@ func (c AppAuth) UserAccessKeyAction() {
 		return
 	}
 
+	userid := iamapi.UserId(username)
+	var user iamapi.User
+	if obj := store.PoGet("user", userid); obj.OK() {
+		obj.Decode(&user)
+	}
+
 	set.Kind = "AccessKeySession"
 	set.AccessKeySession = iamapi.AccessKeySession{
-		User:      user,
+		User:      username,
 		AccessKey: user_ak.AccessKey,
 		SecretKey: user_ak.SecretKey,
+		Roles:     user.Roles,
 		Expired:   types.MetaTimeNow().Add("+864000s"),
 	}
 	logger.Printf("info", "app-auth AccessKeySession")

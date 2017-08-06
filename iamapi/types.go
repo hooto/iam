@@ -304,10 +304,11 @@ func AccessKeyAuthDecode(auth string) (AccessKeyAuth, error) {
 // Access Key SESSION
 // K1(2)VERIFY-SIGNATURE(36)PAYLOAD-DATA
 type AccessKeySession struct {
-	AccessKey string         `json:"ak"`
-	SecretKey string         `json:"sk"`
-	User      string         `json:"ur"`
-	Expired   types.MetaTime `json:"ex"`
+	AccessKey string            `json:"ak"`
+	SecretKey string            `json:"sk"`
+	User      string            `json:"ur"`
+	Roles     types.ArrayUint32 `json:"rs"`
+	Expired   types.MetaTime    `json:"ex"`
 }
 
 type AccessTokenFrontend string
