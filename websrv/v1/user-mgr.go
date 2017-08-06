@@ -133,18 +133,14 @@ func (c UserMgr) UserEntryAction() {
 	var profile iamapi.UserProfile
 	if obj := store.PoGet("user-profile", userid); obj.OK() {
 		obj.Decode(&profile)
-		if profile.Login.Name == set.Login.Name {
-			set.Profile = &profile
-			set.Profile.About = html.EscapeString(set.Profile.About)
-			set.Profile.Photo = ""
-			set.Profile.PhotoSource = ""
-			set.Profile.Login = nil
-		}
+
+		profile.About = html.EscapeString(profile.About)
+		profile.Photo = ""
+		profile.PhotoSource = ""
+		profile.Login = nil
 	}
 
-	if set.Profile == nil {
-		set.Profile = &iamapi.UserProfile{}
-	}
+	set.Profile = &profile
 
 	set.Kind = "User"
 }
@@ -184,6 +180,8 @@ func (c UserMgr) UserSetAction() {
 		} else {
 			set.Login.Keys.Del(iamapi.UserKeyDefault)
 		}
+	} else {
+		set.Login.Keys.Del(iamapi.UserKeyDefault)
 	}
 
 	var prev iamapi.UserEntry
