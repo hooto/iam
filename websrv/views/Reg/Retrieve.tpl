@@ -13,11 +13,22 @@ body {
   color: #eee;
 }
 
+#iam-resetpass-frame {
+  width: 100%;
+  height: 100%;
+  position: relative;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  min-width: 500px;
+}
+
 #iam-resetpass-box {
   width: 550px;
-  /*position: absolute;*/
+  position: absolute;
   left: 50%;
-  top: 20px;
+  top: 50%;
+  transform: translate(-50%, -50%);
   margin: 0 auto;
 }
 
@@ -29,7 +40,7 @@ body {
 }
 
 .iam-resetpass-msg01 {
-  font-size: 20px;
+  font-size: 28px;
   padding: 40px 0;
   text-align: center;
 }
@@ -115,6 +126,7 @@ body {
 }
 </style>
 
+<div id="iam-resetpass-frame">
 <div id="iam-resetpass-box">
 
   <div class="iam-resetpass-msg01">{{T . "Reset your password"}}</div>
@@ -149,9 +161,10 @@ body {
 
   <div class="ilb-footer">
     <img src="/iam/~/iam/img/iam-s2-32.png"> 
-    <a href="http://www.lessos.com/p/iam" target="_blank">lessOS IAM</a>
+    <a href="https://github.com/lessos/iam" target="_blank">lessOS IAM</a>
   </div>
 
+</div>
 </div>
 
 <script>

@@ -44,7 +44,7 @@ body {
 }
 
 #iam-login-box {
-  width: 360px;
+  width: 400px;
   position: absolute;
   left: 50%;
   top: 50%;
@@ -157,7 +157,7 @@ body {
   float: right;
 }
 #iam-login-form .iam-input-row-help a {
-  color: #427fed;
+  color: #333;
 }
 
 #iam-login-box > .signup {
@@ -215,7 +215,7 @@ body {
           <input name="persistent" type="checkbox" value="1" checked="{{.persistent_checked}}"> Stay signed in
         </div>
         <div class="iam-input-row-help">
-        <a href="/iam/reg/retrieve?redirect_token={{.redirect_token}}">Forgot Password?</a>
+        <a href="/iam/reg/retrieve?redirect_token={{.redirect_token}}">Forgot Password ?</a>
         </div>
       </div>
     </div>

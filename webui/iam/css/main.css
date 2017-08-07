@@ -1,5 +1,5 @@
 body {
-  min-width: 800px;
+  min-width: 900px;
   /*background-color: #f9f9f9;*/
   background-color: #eee;
 }
@@ -353,18 +353,19 @@ body {
 }
 
 .iam-footer {
+  text-align: center;
   margin: 20px auto;
 }
 .iam-footer a {
-  color: #428bca;
+  color: #777;
   font-size: 14px;
+  line-height: 100%;
 }
-
 .iam-footer .if-logo {
   width: 16px;
   height: 16px;
+  margin-right: 10px;
 }
-
 
 
 button {

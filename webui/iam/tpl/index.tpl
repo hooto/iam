@@ -18,5 +18,11 @@
   </div>
   
   <div id="com-content"></div>
+
+  <div class="iam-footer">
+    <img src="/iam/~/iam/img/iam-s2-32.png" class="if-logo"> 
+    <a href="https://github.com/lessos/iam" target="_blank">lessOS IAM</a>
+  </div>
 </div>
+
 

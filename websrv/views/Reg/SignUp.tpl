@@ -5,18 +5,33 @@
 
 <style type="text/css">
 body {
-  margin: 0 auto;
+  margin: 0 auto !important;
   position: relative;
   font-size: 13px;
   font-family: Arial, sans-serif;
   background-color: #222;
   color: #eee;
+  min-width: 500px;
+  display: block;
+}
+
+#iam-signup-frame {
+  width: 100%;
+  height: 100%;
+  position: relative;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  min-width: 500px;
+  min-height: 400px;
 }
 
 #iam-signup-box {
   width: 500px;
+  position: absolute;
   left: 50%;
-  top: 20px;
+  top: 50%;
+  transform: translate(-50%, -50%);
   margin: 0 auto;
 }
 
@@ -28,7 +43,7 @@ body {
 }
 
 .iam-signup-msg01 {
-  font-size: 20px;
+  font-size: 28px;
   padding: 40px 0;
   text-align: center;
 }
@@ -114,6 +129,7 @@ body {
 }
 </style>
 
+<div id="iam-signup-frame">
 <div id="iam-signup-box">
 
   <div class="iam-signup-msg01">{{T . "Create your Account"}}</div>
@@ -152,65 +168,44 @@ body {
 
   <div class="ilb-footer">
     <img src="/iam/~/iam/img/iam-s2-32.png"> 
-    <a href="http://www.lessos.com/p/iam" target="_blank">lessOS IAM</a>
+    <a href="https://github.com/lessos/iam" target="_blank">lessOS IAM</a>
   </div>
 
 </div>
+</div>
 
 <script>
-
-//
 $("input[name=name]").focus();
-
-//
 $("#iam-signup-form").submit(function(event) {
-
     event.preventDefault();
-
-    /* var req = {
-        data: {
-            "name": $("input[name=name]").val(),
-            "email": $("input[name=email]").val(),
-            "passwd": $("input[name=passwd]").val(),
-            "continue": $("input[name=continue]").val(),
-        }
-    } */
-    // console.log($("#iam-signup-form").serialize());
-    
+    var alertid = "#iam-signup-form-alert";
     $.ajax({
         type    : "POST",
         url     : "/iam/reg/sign-up-reg",
         data    : $("#iam-signup-form").serialize(),//JSON.stringify(req),
         timeout : 3000,
-        //contentType: "application/json; charset=utf-8",
         success : function(data) {
 
-            // if (err) {
-            //     return l4i.InnerAlert("#iam-signup-form-alert", 'alert-danger', err);
-            // }
-
             if (data.error) {
-                return l4i.InnerAlert("#iam-signup-form-alert", 'alert-danger', data.error.message);
+                return l4i.InnerAlert(alertid, 'alert-danger', data.error.message);
             }
 
             if (data.kind != "User") {
-                return l4i.InnerAlert("#iam-signup-form-alert", 'alert-danger', "Unknown Error");
+                return l4i.InnerAlert(alertid, 'alert-danger', "Unknown Error");
             }
                 
-            l4i.InnerAlert("#iam-signup-form-alert", 'alert-success', "Successfully registration. Page redirecting");
+            l4i.InnerAlert(alertid, 'alert-success', "Successfully registration. Page redirecting");
             $(".ilf-group").hide(600);
 
             window.setTimeout(function(){
                 window.location = "/iam/service/login?continue={{.continue}}&redirect_uri={{.redirect_token}}";
             }, 1500);
-
         },
         error: function(xhr, textStatus, error) {
-            l4i.InnerAlert("#iam-signup-form-alert", 'alert-danger', '{{T . "Internal Server Error"}}');
+            l4i.InnerAlert(alertid, 'alert-danger', '{{T . "Internal Server Error"}}');
         }
     });
 });
-
 </script>
 
 </body>

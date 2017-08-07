@@ -7,18 +7,29 @@
 body {
   margin: 0 auto;
   position: relative;
-  font-size: 13px;
+  font-size: 16px;
   font-family: Arial, sans-serif;
   background-color: #222;
   color: #eee;
 }
 
+#iam-reg-passreset-frame {
+  width: 100%;
+  height: 100%;
+  position: relative;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  min-width: 500px;
+  min-height: 400px;
+}
 
 #iam-reg-passreset-box {
   width: 550px;
-  /*position: absolute;*/
+  position: absolute;
   left: 50%;
-  top: 20px;
+  top: 50%;
+  transform: translate(-50%, -50%);
   margin: 0 auto;
 }
 
@@ -30,7 +41,7 @@ body {
 }
 
 .iam-reg-passreset-msg01 {
-  font-size: 20px;
+  font-size: 28px;
   padding: 40px 0;
   text-align: center;
 }
@@ -129,7 +140,7 @@ body {
 }
 </style>
 
-
+<div id="iam-reg-passreset-frame">
 <div id="iam-reg-passreset-box">
 
   <div class="iam-reg-passreset-msg01">{{T . "Reset your Password"}}</div>
@@ -171,9 +182,10 @@ body {
 
   <div class="ilb-footer">
     <img src="/iam/~/iam/img/iam-s2-32.png"> 
-    <a href="http://www.lessos.com/p/iam" target="_blank">lessOS IAM</a>
+    <a href="https://github.com/lessos/iam" target="_blank">lessOS IAM</a>
   </div>
 
+</div>
 </div>
 
 
@@ -193,7 +205,6 @@ $("#iam-reg-passreset-form").submit(function(event) {
         url     : "/iam/reg/pass-reset-put",
         data    : $("#iam-reg-passreset-form").serialize(),
         timeout : 3000,
-        //contentType: "application/json; charset=utf-8",
         success : function(data) {
 
             if (data.error) {

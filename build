@@ -1,9 +1,0 @@
-#!/bin/bash
-
-go get github.com/go-sql-driver/mysql
-go get github.com/eryx/imaging
-
-go build -ldflags "-w -s" -o ./bin/lessos-iam-cli ./src/cli.go 
-go build -ldflags "-w -s" -o ./bin/lessos-iam ./src/main.go 
-
-
