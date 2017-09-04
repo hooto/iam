@@ -18,8 +18,8 @@ import (
 	"sync"
 	"time"
 
-	"code.hooto.com/lessos/iam/iamapi"
-	"code.hooto.com/lessos/iam/store"
+	"github.com/hooto/iam/iamapi"
+	"github.com/hooto/iam/store"
 	// "github.com/hooto/hlog4g/hlog"
 	"github.com/lessos/lessgo/crypto/idhash"
 )

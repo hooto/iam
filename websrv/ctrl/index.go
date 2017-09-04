@@ -15,9 +15,9 @@
 package ctrl
 
 import (
-	"code.hooto.com/lessos/iam/config"
-	"code.hooto.com/lessos/iam/iamclient"
 	"github.com/hooto/httpsrv"
+	"github.com/hooto/iam/config"
+	"github.com/hooto/iam/iamclient"
 )
 
 type Index struct {

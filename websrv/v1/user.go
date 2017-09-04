@@ -21,17 +21,17 @@ import (
 	"image/png"
 	"strings"
 
-	"code.hooto.com/lynkdb/iomix/skv"
 	"github.com/eryx/imaging"
 	"github.com/hooto/httpsrv"
 	"github.com/lessos/lessgo/pass"
 	"github.com/lessos/lessgo/types"
+	"github.com/lynkdb/iomix/skv"
 
-	"code.hooto.com/lessos/iam/base/login"
-	"code.hooto.com/lessos/iam/base/profile"
-	"code.hooto.com/lessos/iam/iamapi"
-	"code.hooto.com/lessos/iam/iamclient"
-	"code.hooto.com/lessos/iam/store"
+	"github.com/hooto/iam/base/login"
+	"github.com/hooto/iam/base/profile"
+	"github.com/hooto/iam/iamapi"
+	"github.com/hooto/iam/iamclient"
+	"github.com/hooto/iam/store"
 )
 
 type User struct {

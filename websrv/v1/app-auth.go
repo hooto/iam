@@ -15,14 +15,14 @@
 package v1
 
 import (
-	"code.hooto.com/lessos/iam/iamapi"
-	"code.hooto.com/lessos/iam/iamclient"
-	"code.hooto.com/lessos/iam/store"
-	"code.hooto.com/lynkdb/iomix/skv"
 	"github.com/hooto/hlog4g/hlog"
 	"github.com/hooto/httpsrv"
+	"github.com/hooto/iam/iamapi"
+	"github.com/hooto/iam/iamclient"
+	"github.com/hooto/iam/store"
 	"github.com/lessos/lessgo/crypto/idhash"
 	"github.com/lessos/lessgo/types"
+	"github.com/lynkdb/iomix/skv"
 )
 
 type AppAuth struct {

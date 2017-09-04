@@ -17,7 +17,7 @@ package login
 import (
 	"errors"
 
-	"code.hooto.com/lessos/iam/iamapi"
+	"github.com/hooto/iam/iamapi"
 )
 
 func PassSetValidate(set iamapi.UserPasswordSet) error {

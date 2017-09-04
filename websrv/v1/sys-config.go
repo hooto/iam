@@ -15,15 +15,15 @@
 package v1
 
 import (
-	"code.hooto.com/lynkdb/iomix/skv"
+	"github.com/lynkdb/iomix/skv"
 
 	"github.com/hooto/httpsrv"
 	"github.com/lessos/lessgo/types"
 
-	"code.hooto.com/lessos/iam/config"
-	"code.hooto.com/lessos/iam/iamapi"
-	"code.hooto.com/lessos/iam/iamclient"
-	"code.hooto.com/lessos/iam/store"
+	"github.com/hooto/iam/config"
+	"github.com/hooto/iam/iamapi"
+	"github.com/hooto/iam/iamclient"
+	"github.com/hooto/iam/store"
 )
 
 type SysConfig struct {

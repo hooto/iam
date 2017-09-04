@@ -19,13 +19,13 @@ import (
 	"regexp"
 	"strings"
 
-	"code.hooto.com/lessos/iam/config"
-	"code.hooto.com/lessos/iam/iamapi"
-	"code.hooto.com/lynkdb/iomix/skv"
+	"github.com/hooto/iam/config"
+	"github.com/hooto/iam/iamapi"
 	"github.com/lessos/lessgo/crypto/idhash"
 	"github.com/lessos/lessgo/crypto/phash"
 	"github.com/lessos/lessgo/net/email"
 	"github.com/lessos/lessgo/types"
+	"github.com/lynkdb/iomix/skv"
 )
 
 var (

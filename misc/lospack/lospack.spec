@@ -1,7 +1,7 @@
 project.name = iam
 project.version = 0.1.0.dev
 project.vendor = hooto.com
-project.homepage = https://code.hooto.com/lessos/iam
+project.homepage = https://github.com/hooto/iam
 project.groups = dev/sys-srv
 
 %build

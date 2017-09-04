@@ -22,15 +22,15 @@ import (
 	"strings"
 	"time"
 
-	"code.hooto.com/lynkdb/iomix/skv"
 	"github.com/hooto/httpsrv"
 	"github.com/lessos/lessgo/pass"
 	"github.com/lessos/lessgo/types"
 	"github.com/lessos/lessgo/utils"
+	"github.com/lynkdb/iomix/skv"
 
-	"code.hooto.com/lessos/iam/base/role"
-	"code.hooto.com/lessos/iam/iamapi"
-	"code.hooto.com/lessos/iam/store"
+	"github.com/hooto/iam/base/role"
+	"github.com/hooto/iam/iamapi"
+	"github.com/hooto/iam/store"
 )
 
 type Service struct {

@@ -20,7 +20,7 @@ import (
 	"fmt"
 	"time"
 
-	"code.hooto.com/lessos/iam/iamapi"
+	"github.com/hooto/iam/iamapi"
 	"github.com/lessos/lessgo/net/httpclient"
 	"github.com/lessos/lessgo/types"
 )

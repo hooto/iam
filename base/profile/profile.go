@@ -19,7 +19,7 @@ import (
 	"strings"
 	"time"
 
-	"code.hooto.com/lessos/iam/iamapi"
+	"github.com/hooto/iam/iamapi"
 )
 
 func PutValidate(set iamapi.UserProfile) (iamapi.UserProfile, error) {

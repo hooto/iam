@@ -22,9 +22,9 @@ import (
 
 	"github.com/hooto/httpsrv"
 
-	"code.hooto.com/lessos/iam/config"
-	"code.hooto.com/lessos/iam/websrv/ctrl"
-	"code.hooto.com/lessos/iam/websrv/v1"
+	"github.com/hooto/iam/config"
+	"github.com/hooto/iam/websrv/ctrl"
+	"github.com/hooto/iam/websrv/v1"
 )
 
 var flagPrefix = flag.String("prefix", "", "the prefix folder path")

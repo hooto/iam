@@ -6,7 +6,7 @@ import (
 
 	"github.com/hooto/httpsrv"
 
-	"code.hooto.com/lessos/iam/iamapi"
+	"github.com/hooto/iam/iamapi"
 )
 
 func Validate(params *httpsrv.Params) error {
