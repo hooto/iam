@@ -17,7 +17,7 @@ package v1
 import (
 	"code.hooto.com/lynkdb/iomix/skv"
 
-	"github.com/lessos/lessgo/httpsrv"
+	"github.com/hooto/httpsrv"
 	"github.com/lessos/lessgo/types"
 
 	"code.hooto.com/lessos/iam/config"

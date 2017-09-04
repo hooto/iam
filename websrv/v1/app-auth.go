@@ -19,9 +19,9 @@ import (
 	"code.hooto.com/lessos/iam/iamclient"
 	"code.hooto.com/lessos/iam/store"
 	"code.hooto.com/lynkdb/iomix/skv"
+	"github.com/hooto/hlog4g/hlog"
+	"github.com/hooto/httpsrv"
 	"github.com/lessos/lessgo/crypto/idhash"
-	"github.com/lessos/lessgo/httpsrv"
-	"github.com/lessos/lessgo/logger"
 	"github.com/lessos/lessgo/types"
 )
 
@@ -306,5 +306,5 @@ func (c AppAuth) UserAccessKeyAction() {
 		Roles:     user.Roles,
 		Expired:   types.MetaTimeNow().Add("+864000s"),
 	}
-	logger.Printf("info", "app-auth AccessKeySession")
+	hlog.Printf("info", "app-auth AccessKeySession")
 }

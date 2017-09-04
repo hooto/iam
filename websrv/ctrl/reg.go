@@ -20,7 +20,7 @@ import (
 	"time"
 
 	"code.hooto.com/lynkdb/iomix/skv"
-	"github.com/lessos/lessgo/httpsrv"
+	"github.com/hooto/httpsrv"
 	"github.com/lessos/lessgo/net/email"
 	"github.com/lessos/lessgo/pass"
 	"github.com/lessos/lessgo/types"
@@ -39,7 +39,6 @@ type Reg struct {
 }
 
 func (c Reg) SignUpAction() {
-	c.Data["continue"] = c.Params.Get("continue")
 	c.Data["user_reg_disable"] = config.UserRegistrationDisabled
 
 	if len(c.Params.Get("redirect_token")) > 20 &&

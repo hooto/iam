@@ -20,7 +20,7 @@ import (
 	"os"
 	"runtime"
 
-	"github.com/lessos/lessgo/httpsrv"
+	"github.com/hooto/httpsrv"
 
 	"code.hooto.com/lessos/iam/config"
 	"code.hooto.com/lessos/iam/websrv/ctrl"

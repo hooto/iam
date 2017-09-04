@@ -20,8 +20,8 @@ import (
 
 	"code.hooto.com/lessos/iam/iamapi"
 	"code.hooto.com/lessos/iam/store"
+	// "github.com/hooto/hlog4g/hlog"
 	"github.com/lessos/lessgo/crypto/idhash"
-	// "github.com/lessos/lessgo/logger"
 )
 
 var (
@@ -90,7 +90,7 @@ func AccessAllowed(owner string, roles []uint32, instanceid, privilege string) b
 
 	p := instPerms(instanceid)
 	if p.owner == owner {
-		// logger.Printf("info", "acl ok owner %s %s", instanceid, privilege)
+		// hlog.Printf("info", "acl ok owner %s %s", instanceid, privilege)
 		return true
 	}
 
@@ -101,14 +101,14 @@ func AccessAllowed(owner string, roles []uint32, instanceid, privilege string) b
 			for _, diffrid := range roles {
 
 				if rid == diffrid {
-					// logger.Printf("info", "acl ok role %s %s", instanceid, privilege)
+					// hlog.Printf("info", "acl ok role %s %s", instanceid, privilege)
 					return true
 				}
 			}
 		}
 	}
 
-	// logger.Printf("info", "acl !! %s %s", instanceid, privilege)
+	// hlog.Printf("info", "acl !! %s %s", instanceid, privilege)
 
 	return false
 }

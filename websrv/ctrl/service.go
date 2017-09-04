@@ -20,7 +20,7 @@ import (
 	"code.hooto.com/lessos/iam/iamapi"
 	"code.hooto.com/lessos/iam/iamclient"
 	"code.hooto.com/lessos/iam/store"
-	"github.com/lessos/lessgo/httpsrv"
+	"github.com/hooto/httpsrv"
 )
 
 type Service struct {
@@ -55,12 +55,7 @@ func (c Service) LoginAction() {
 
 func (c Service) SignOutAction() {
 
-	c.Data["continue"] = "/iam"
 	c.Data["access_token_key"] = iamclient.AccessTokenKey
-
-	if len(c.Params.Get("continue")) > 0 {
-		c.Data["continue"] = c.Params.Get("continue")
-	}
 
 	token := iamapi.AccessTokenFrontend(c.Params.Get(iamclient.AccessTokenKey))
 	if !token.Valid() {

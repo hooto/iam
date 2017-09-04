@@ -21,7 +21,7 @@ import (
 	"time"
 
 	"code.hooto.com/lynkdb/iomix/skv"
-	"github.com/lessos/lessgo/httpsrv"
+	"github.com/hooto/httpsrv"
 	"github.com/lessos/lessgo/pass"
 	"github.com/lessos/lessgo/types"
 

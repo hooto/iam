@@ -177,7 +177,7 @@ body {
   {{end}}
 
   <div class="ilb-reg-passreset">
-    <a href="/iam/service/login?continue={{.continue}}&redirect_token={{.redirect_token}}">Sign in with your Account</a>
+    <a href="/iam/service/login?redirect_token={{.redirect_token}}">Sign in with your Account</a>
   </div>
 
   <div class="ilb-footer">

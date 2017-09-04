@@ -133,7 +133,6 @@ body {
 
   <form id="iam-resetpass-form" action="#retrieve">
 
-    <input type="hidden" name="continue" value="{{.continue}}">
     <input type="hidden" name="redirect_token" value="{{.redirect_token}}">
 
     <div id="iam-resetpass-form-alert" class="alert alert-info ilf-groups">
@@ -156,7 +155,7 @@ body {
   </form>
 
   <div class="ilb-resetpass">
-    <a href="/iam/service/login?continue={{.continue}}&redirect_token={{.redirect_token}}">Sign in with your Account</a>
+    <a href="/iam/service/login?redirect_token={{.redirect_token}}">Sign in with your Account</a>
   </div>
 
   <div class="ilb-footer">
@@ -202,7 +201,7 @@ $("#iam-resetpass-form").submit(function(event) {
             $(".ilf-group").hide(200);
 
             // window.setTimeout(function(){
-            //     window.location = "/iam/service/login?continue={{.continue}}";
+            //     window.location = "/iam/service/login";
             // }, 1500);
         },
         error: function(xhr, textStatus, error) {
