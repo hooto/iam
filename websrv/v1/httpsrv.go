@@ -1,4 +1,4 @@
-// Copyright 2014 lessos Authors, All rights reserved.
+// Copyright 2014 Eryx <evorui аt gmаil dοt cοm>, All rights reserved.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -25,15 +25,17 @@ func NewModule() httpsrv.Module {
 	module.ControllerRegister(new(Service))
 
 	module.ControllerRegister(new(User))
-	module.ControllerRegister(new(MyApp))
-
-	module.ControllerRegister(new(SysConfig))
-	module.ControllerRegister(new(UserMgr))
-	module.ControllerRegister(new(AppMgr))
+	module.ControllerRegister(new(Ecoin))
+	module.ControllerRegister(new(App))
 
 	module.ControllerRegister(new(AppAuth))
 	module.ControllerRegister(new(AccessKey))
 	module.ControllerRegister(new(Status))
+
+	module.ControllerRegister(new(UserMgr))
+	module.ControllerRegister(new(AppMgr))
+	module.ControllerRegister(new(EcoinMgr))
+	module.ControllerRegister(new(SysConfig))
 
 	return module
 }

@@ -8,9 +8,9 @@
 }
 </style>
 
-<div id="iam-myapp-instset-alert"></div>
+<div id="iam-app-instset-alert"></div>
 
-<div id="iam-myapp-instset" class="form-horizontal" action="#">
+<div id="iam-app-instset" class="form-horizontal" action="#">
 
     <input type="hidden" name="instid" value="{[=it.meta.id]}">
 

@@ -70,5 +70,5 @@ body {
 </div>
 
 <div class="err-footer">
-    &copy; 2015 <a href="http://lessos.com" target="_blank">lessOS.com</a>
+    &copy; 2015 <a href="http://www.hooto.com" target="_blank">hooto.com</a>
 </div>

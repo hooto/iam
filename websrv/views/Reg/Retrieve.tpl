@@ -160,7 +160,7 @@ body {
 
   <div class="ilb-footer">
     <img src="/iam/~/iam/img/iam-s2-32.png"> 
-    <a href="https://github.com/lessos/iam" target="_blank">lessOS IAM</a>
+    <a href="https://github.com/hooto/iam" target="_blank">hooto IAM</a>
   </div>
 
 </div>

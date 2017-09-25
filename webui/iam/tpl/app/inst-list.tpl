@@ -4,10 +4,10 @@
 }
 </style>
 
-<div id="iam-myapp-insts-alert" class="hide" style="margin:20px 0;"></div>
-<div id="iam-myapp-insts"></div>
+<div id="iam-app-insts-alert" class="hide" style="margin:20px 0;"></div>
+<div id="iam-app-insts"></div>
 
-<script id="iam-myapp-insts-tpl" type="text/html">
+<script id="iam-app-insts-tpl" type="text/html">
 <div class="iam-div-light">
   <table class="table table-hover">
     <thead>
@@ -38,7 +38,7 @@
         <td>{[=l4i.MetaTimeParseFormat(v.meta.updated, "Y-m-d")]}</td>
         <td align="right">
           <button class="pure-button button-xsmall"
-            onclick="iamMyApp.InstSetForm('{[=v.meta.id]}')">
+            onclick="iamApp.InstSetForm('{[=v.meta.id]}')">
             Setting
           </button>
         </td>
@@ -46,11 +46,11 @@
       {[~]}
     </tbody>
   </table>
-  <div id="iam-myapp-insts-pager"></div>
+  <div id="iam-app-insts-pager"></div>
 </div>
 </script>
 
-<script id="iam-myapp-insts-pager-tpl" type="text/html">
+<script id="iam-app-insts-pager-tpl" type="text/html">
 <ul class="pagination pagination-sm">
   {[ if (it.FirstPageNumber > 0) { ]}
   <li><a href="#{[=it.FirstPageNumber]}">First</a></li>

@@ -1,4 +1,4 @@
-var iamMyApp = {
+var iamApp = {
     statusls : [{
         status: 1, title: "Active",
     }, {
@@ -17,19 +17,19 @@ var iamMyApp = {
     },
 }
 
-iamMyApp.Index = function()
+iamApp.Index = function()
 {
-    iam.TplCmd("my-app/index", {
+    iam.TplCmd("app/index", {
         callback: function(err, data) {
             $("#com-content").html(data);
-            iamMyApp.InstList();
+            iamApp.InstList();
         },
     });
 }
 
-iamMyApp.InstList = function()
+iamApp.InstList = function()
 {
-    var alert_id = "#iam-myapp-insts-alert";
+    var alert_id = "#iam-app-insts-alert";
 
     seajs.use(["ep"], function(EventProxy) {
 
@@ -61,13 +61,13 @@ iamMyApp.InstList = function()
             }
 
             l4iTemplate.Render({
-                dstid  : "iam-myapp-insts",
-                tplid  : "iam-myapp-insts-tpl",
+                dstid  : "iam-app-insts",
+                tplid  : "iam-app-insts-tpl",
                 data   : data,
                 // success : function() {
                 //     l4iTemplate.Render({
-                //         dstid  : "iam-myapp-insts-pager",
-                //         tplid  : "iam-myapp-insts-pager-tpl",
+                //         dstid  : "iam-app-insts-pager",
+                //         tplid  : "iam-app-insts-pager-tpl",
                 //         data   : l4i.Pager(data.meta),
                 //     });
                 // },
@@ -78,17 +78,17 @@ iamMyApp.InstList = function()
             alert("Error: Please try again later");
         });
 
-        iam.ApiCmd("my-app/inst-list", {
+        iam.ApiCmd("app/inst-list", {
             callback: ep.done('data'),
         });
 
-        iam.TplCmd("my-app/inst-list", {
+        iam.TplCmd("app/inst-list", {
             callback: ep.done('tpl'),
         });
     });
 }
 
-iamMyApp.InstSetForm = function(instid)
+iamApp.InstSetForm = function(instid)
 {
     seajs.use(["ep"], function(EventProxy) {
 
@@ -103,7 +103,7 @@ iamMyApp.InstSetForm = function(instid)
             }
             data._privilegeNumber = data.privileges.length;
 
-            data._statusls = iamMyApp.statusls;
+            data._statusls = iamApp.statusls;
             data._roles = l4i.Clone(roles);
 
             for (var i in data.privileges) {
@@ -131,7 +131,7 @@ iamMyApp.InstSetForm = function(instid)
                     onclick : "l4iModal.Close()",
                 }, {
                     title : "Save",
-                    onclick : "iamMyApp.InstSetCommit()",
+                    onclick : "iamApp.InstSetCommit()",
                     style   : "btn btn-primary",
                 }],
             });
@@ -141,12 +141,12 @@ iamMyApp.InstSetForm = function(instid)
             alert("Error: Please try again later");
         });
 
-        if (iamMyApp.roles) {
-            ep.emit("roles", iamMyApp.roles)
+        if (iamApp.roles) {
+            ep.emit("roles", iamApp.roles)
         } else {
             iam.ApiCmd("user/role-list?status=0", {
                 callback: function(err, roles) {
-                    iamMyApp.roles = roles;
+                    iamApp.roles = roles;
                     ep.emit("roles", roles);
                 },
             });
@@ -154,25 +154,25 @@ iamMyApp.InstSetForm = function(instid)
 
         if (instid) {
 
-            iam.ApiCmd("my-app/inst-entry?instid="+ instid, {
+            iam.ApiCmd("app/inst-entry?instid="+ instid, {
                 callback: ep.done('data'),
             });
 
         } else {
-            ep.emit("data", l4i.Clone(iamMyApp.appinstdef));
+            ep.emit("data", l4i.Clone(iamApp.appinstdef));
         }
 
-        iam.TplCmd("my-app/inst-set", {
+        iam.TplCmd("app/inst-set", {
             callback: ep.done('tpl'),
         });
     });
 }
 
-iamMyApp.InstSetCommit = function()
+iamApp.InstSetCommit = function()
 {
-    var form = $("#iam-myapp-instset"),
-        alert_id = "#iam-myapp-instset-alert",
-        req = l4i.Clone(iamMyApp.appinstdef);
+    var form = $("#iam-app-instset"),
+        alert_id = "#iam-app-instset-alert",
+        req = l4i.Clone(iamApp.appinstdef);
 
     try {
         req.meta.id = form.find("input[name=instid]").val();
@@ -192,7 +192,7 @@ iamMyApp.InstSetCommit = function()
         return l4i.InnerAlert(alert_id, 'alert-danger', err);
     }
 
-    iam.ApiCmd("my-app/inst-set", {
+    iam.ApiCmd("app/inst-set", {
         method : "PUT",
         data   : JSON.stringify(req),
         callback : function(err, data) {
@@ -209,7 +209,7 @@ iamMyApp.InstSetCommit = function()
 
             window.setTimeout(function(){
                 l4iModal.Close();
-                iamMyApp.InstList();
+                iamApp.InstList();
             }, 1000);
         },
     });

@@ -1,4 +1,4 @@
-// Copyright 2014 lessos Authors, All rights reserved.
+// Copyright 2014 Eryx <evorui аt gmаil dοt cοm>, All rights reserved.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -29,7 +29,7 @@ func (c User) PanelInfoAction() {
 	rsp := map[string]interface{}{}
 	//
 	nav := []map[string]string{
-		{"path": "my-app/index", "title": "My Authorized Apps"},
+		{"path": "app/index", "title": "My Authorized Apps"},
 		{"path": "access-key/index", "title": "Access Keys"},
 	}
 

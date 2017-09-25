@@ -1,4 +1,4 @@
-// Copyright 2014 lessos Authors, All rights reserved.
+// Copyright 2014 Eryx <evorui аt gmаil dοt cοm>, All rights reserved.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -30,11 +30,11 @@ const (
 
 var (
 	err                      error
-	Prefix                   = "/opt/lessos/iam"
+	Prefix                   = "/opt/hooto/iam"
 	UserRegistrationDisabled = false
 	Config                   = ConfigCommon{
 		InstanceID:       "",
-		ServiceName:      "lessOS IAM Service",
+		ServiceName:      "hooto IAM Service",
 		WebUiBannerTitle: "Account Center",
 	}
 )

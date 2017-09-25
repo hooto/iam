@@ -1,4 +1,4 @@
-// Copyright 2014 lessos Authors, All rights reserved.
+// Copyright 2014 Eryx <evorui аt gmаil dοt cοm>, All rights reserved.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -28,12 +28,12 @@ const (
 	myAppInstPageLimit = 100
 )
 
-type MyApp struct {
+type App struct {
 	*httpsrv.Controller
 	us iamapi.UserSession
 }
 
-func (c *MyApp) Init() int {
+func (c *App) Init() int {
 
 	//
 	c.us, _ = iamclient.SessionInstance(c.Session)
@@ -47,7 +47,7 @@ func (c *MyApp) Init() int {
 	return 0
 }
 
-func (c MyApp) InstListAction() {
+func (c App) InstListAction() {
 
 	ls := types.ObjectList{}
 	defer c.RenderJson(&ls)
@@ -70,7 +70,7 @@ func (c MyApp) InstListAction() {
 	ls.Kind = "AppInstanceList"
 }
 
-func (c MyApp) InstEntryAction() {
+func (c App) InstEntryAction() {
 
 	var set struct {
 		types.TypeMeta
@@ -96,7 +96,7 @@ func (c MyApp) InstEntryAction() {
 	set.Kind = "AppInstance"
 }
 
-func (c MyApp) InstSetAction() {
+func (c App) InstSetAction() {
 
 	var set struct {
 		types.TypeMeta

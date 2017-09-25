@@ -53,7 +53,7 @@ iam.Boot = function() {
                 "~/twbs/js/bootstrap.min.js",
                 "~/iam/js/mgr.js" + iam.debug_uri(),
                 "~/iam/js/user.js" + iam.debug_uri(),
-                "~/iam/js/myapp.js" + iam.debug_uri(),
+                "~/iam/js/app.js" + iam.debug_uri(),
                 "~/iam/js/sys.js" + iam.debug_uri(),
                 "~/iam/js/usermgr.js" + iam.debug_uri(),
                 "~/iam/js/appmgr.js" + iam.debug_uri(),
@@ -88,8 +88,8 @@ iam.load_index = function() {
 
             for (var i in pinfo.topnav) {
                 switch (pinfo.topnav[i].path) {
-                    case "my-app/index":
-                        l4i.UrlEventRegister("my-app/index", iamMyApp.Index, "iam-topbar-nav-menus");
+                    case "app/index":
+                        l4i.UrlEventRegister("app/index", iamApp.Index, "iam-topbar-nav-menus");
                         break;
 
                     case "access-key/index":

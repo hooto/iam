@@ -21,7 +21,7 @@
 
   <div class="iam-footer">
     <img src="/iam/~/iam/img/iam-s2-32.png" class="if-logo"> 
-    <a href="https://github.com/lessos/iam" target="_blank">lessOS IAM</a>
+    <a href="https://github.com/hooto/iam" target="_blank">hooto IAM</a>
   </div>
 </div>
 

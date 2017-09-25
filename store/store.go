@@ -1,4 +1,4 @@
-// Copyright 2014 lessos Authors, All rights reserved.
+// Copyright 2014 Eryx <evorui аt gmаil dοt cοm>, All rights reserved.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -175,7 +175,7 @@ func InitData() (err error) {
 		},
 		Version:    config.Version,
 		AppID:      "iam",
-		AppTitle:   "lessOS IAM Service",
+		AppTitle:   "hooto IAM Service",
 		Status:     1,
 		Url:        "",
 		Privileges: ps,
