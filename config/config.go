@@ -35,7 +35,7 @@ var (
 	Config                   = ConfigCommon{
 		InstanceID:       "",
 		ServiceName:      "hooto IAM Service",
-		WebUiBannerTitle: "Account Center",
+		WebUiBannerTitle: "Account Panel",
 	}
 )
 

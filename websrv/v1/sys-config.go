@@ -105,14 +105,8 @@ func (c SysConfig) GeneralSetAction() {
 			continue
 		}
 
-		var prevVersion uint64
-
-		if obj := store.PvGet("sys-config/" + v.Name); obj.OK() {
-			prevVersion = obj.Meta().Version
-		}
-
 		if obj := store.PvPut("sys-config/"+v.Name, v.Value, &skv.PathWriteOptions{
-			PrevVersion: prevVersion,
+			Force: true,
 		}); !obj.OK() {
 			sets.Error = types.NewErrorMeta("500", obj.Bytex().String())
 			return

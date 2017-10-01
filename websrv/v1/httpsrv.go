@@ -25,7 +25,8 @@ func NewModule() httpsrv.Module {
 	module.ControllerRegister(new(Service))
 
 	module.ControllerRegister(new(User))
-	module.ControllerRegister(new(Ecoin))
+	module.ControllerRegister(new(Account))
+	module.ControllerRegister(new(AccountCharge))
 	module.ControllerRegister(new(App))
 
 	module.ControllerRegister(new(AppAuth))
@@ -34,7 +35,7 @@ func NewModule() httpsrv.Module {
 
 	module.ControllerRegister(new(UserMgr))
 	module.ControllerRegister(new(AppMgr))
-	module.ControllerRegister(new(EcoinMgr))
+	module.ControllerRegister(new(AccountMgr))
 	module.ControllerRegister(new(SysConfig))
 
 	return module

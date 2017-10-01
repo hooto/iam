@@ -66,6 +66,7 @@ func (c User) ProfileAction() {
 		obj.Decode(&set.UserProfile)
 	}
 
+	set.Login = nil
 	if set.Login == nil || set.Login.Name == "" {
 
 		// login

@@ -2,21 +2,24 @@ var iamUser = {
 
 }
 
-iamUser.Overview = function()
-{
-    // console.log("overview");
+iamUser.Overview = function() {
     seajs.use(["ep"], function(EventProxy) {
 
-        var ep = EventProxy.create('tpl', 'data', function (tpl, data) {
+        var ep = EventProxy.create('tpl', 'data', function(tpl, data) {
 
             if (!data.login.display_name) {
                 data.login.display_name = data.login.name;
             }
 
+            if (!data.login.ecoin_amount) {
+                data.login.ecoin_amount = 0;
+            }
+            data.login.ecoin_amount = data.login.ecoin_amount.toFixed(4);
+
             l4iTemplate.Render({
-                dstid  : "com-content",
-                tplsrc : tpl,
-                data   : data,
+                dstid: "com-content",
+                tplsrc: tpl,
+                data: data,
             });
         });
 
@@ -34,38 +37,36 @@ iamUser.Overview = function()
     });
 }
 
-iamUser.PassSetForm = function()
-{
+iamUser.PassSetForm = function() {
     iam.TplCmd("user/pass-set", {
 
-        callback : function(err, tpl) {
+        callback: function(err, tpl) {
 
             l4iModal.Open({
-                tplsrc  : tpl,
-                width   : 500,
-                height  : 350,
-                title   : "Change Password",
-                buttons : [{
-                    title : "Cancel",
-                    onclick : "l4iModal.Close()",
+                tplsrc: tpl,
+                width: 500,
+                height: 350,
+                title: "Change Password",
+                buttons: [{
+                    title: "Cancel",
+                    onclick: "l4iModal.Close()",
                 }, {
-                    title : "Save",
-                    onclick : "iamUser.PassSetCommit()",
-                    style   : "btn btn-primary",
+                    title: "Save",
+                    onclick: "iamUser.PassSetCommit()",
+                    style: "btn btn-primary",
                 }],
             });
         },
     });
 }
 
-iamUser.PassSetCommit = function()
-{
+iamUser.PassSetCommit = function() {
     var form = $("#iam-user-pass-set"),
         alert_id = "#iam-user-pass-set-alert";
 
     var req = {
-        current_password  : form.find("input[name=passwd_current]").val(),
-        new_password : form.find("input[name=passwd_new]").val(),
+        current_password: form.find("input[name=passwd_current]").val(),
+        new_password: form.find("input[name=passwd_new]").val(),
     };
 
     if (req.new_password != form.find("input[name=passwd_confirm]").val()) {
@@ -73,9 +74,9 @@ iamUser.PassSetCommit = function()
     }
 
     iam.ApiCmd("user/pass-set", {
-        method : "PUT",
-        data   : JSON.stringify(req),
-        callback : function(err, data) {
+        method: "PUT",
+        data: JSON.stringify(req),
+        callback: function(err, data) {
 
             if (err) {
                 return l4i.InnerAlert(alert_id, 'alert-danger', err);
@@ -87,7 +88,7 @@ iamUser.PassSetCommit = function()
 
             l4i.InnerAlert(alert_id, 'alert-success', "Successfully updated");
 
-            window.setTimeout(function(){
+            window.setTimeout(function() {
                 l4iModal.Close();
             }, 1000);
         },
@@ -95,31 +96,30 @@ iamUser.PassSetCommit = function()
 }
 
 
-iamUser.EmailSetForm = function()
-{
+iamUser.EmailSetForm = function() {
     seajs.use(["ep"], function(EventProxy) {
 
-        var ep = EventProxy.create('tpl', 'data', function (tpl, data) {
+        var ep = EventProxy.create('tpl', 'data', function(tpl, data) {
 
             if (!data.login.email) {
                 data.login.email = "";
             }
 
             l4iModal.Open({
-                tplsrc  : tpl,
-                data    : {
-                    email : data.login.email,
+                tplsrc: tpl,
+                data: {
+                    email: data.login.email,
                 },
-                width   : 500,
-                height  : 350,
-                title   : "Change Email",
-                buttons : [{
-                    title : "Cancel",
-                    onclick : "l4iModal.Close()",
+                width: 500,
+                height: 350,
+                title: "Change Email",
+                buttons: [{
+                    title: "Cancel",
+                    onclick: "l4iModal.Close()",
                 }, {
-                    title : "Save",
-                    onclick : "iamUser.EmailSetCommit()",
-                    style   : "btn btn-primary",
+                    title: "Save",
+                    onclick: "iamUser.EmailSetCommit()",
+                    style: "btn btn-primary",
                 }],
             });
         });
@@ -138,20 +138,19 @@ iamUser.EmailSetForm = function()
     });
 }
 
-iamUser.EmailSetCommit = function()
-{
+iamUser.EmailSetCommit = function() {
     var form = $("#iam-user-email-set"),
         alert_id = "#iam-user-email-set-alert";
 
     var req = {
-        email : form.find("input[name=email]").val(),
-        auth  : form.find("input[name=auth]").val(),
+        email: form.find("input[name=email]").val(),
+        auth: form.find("input[name=auth]").val(),
     };
 
     iam.ApiCmd("user/email-set", {
-        method : "PUT",
-        data   : JSON.stringify(req),
-        callback : function(err, data) {
+        method: "PUT",
+        data: JSON.stringify(req),
+        callback: function(err, data) {
 
             if (err) {
                 return l4i.InnerAlert(alert_id, 'alert-danger', err);
@@ -163,7 +162,7 @@ iamUser.EmailSetCommit = function()
 
             l4i.InnerAlert(alert_id, 'alert-success', "Successfully updated");
 
-            window.setTimeout(function(){
+            window.setTimeout(function() {
                 l4iModal.Close();
                 iamUser.Overview();
             }, 1000);
@@ -172,11 +171,10 @@ iamUser.EmailSetCommit = function()
 }
 
 
-iamUser.ProfileSetForm = function()
-{
+iamUser.ProfileSetForm = function() {
     seajs.use(["ep"], function(EventProxy) {
 
-        var ep = EventProxy.create('tpl', 'data', function (tpl, data) {
+        var ep = EventProxy.create('tpl', 'data', function(tpl, data) {
 
             if (!data.login.display_name) {
                 data.login.display_name = "No Name";
@@ -191,18 +189,18 @@ iamUser.ProfileSetForm = function()
             }
 
             l4iModal.Open({
-                tplsrc  : tpl,
-                data    : data,
-                width   : 600,
-                height  : 400,
-                title   : "Change Profile",
-                buttons : [{
-                    title : "Cancel",
-                    onclick : "l4iModal.Close()",
+                tplsrc: tpl,
+                data: data,
+                width: 600,
+                height: 400,
+                title: "Change Profile",
+                buttons: [{
+                    title: "Cancel",
+                    onclick: "l4iModal.Close()",
                 }, {
-                    title : "Save",
-                    onclick : "iamUser.ProfileSetCommit()",
-                    style   : "btn btn-primary",
+                    title: "Save",
+                    onclick: "iamUser.ProfileSetCommit()",
+                    style: "btn btn-primary",
                 }],
             });
         });
@@ -221,23 +219,22 @@ iamUser.ProfileSetForm = function()
     });
 }
 
-iamUser.ProfileSetCommit = function()
-{
+iamUser.ProfileSetCommit = function() {
     var form = $("#iam-user-profile-set"),
         alert_id = "#iam-user-profile-set-alert";
 
     var req = {
         login: {
-            display_name : form.find("input[name=display_name]").val(),
+            display_name: form.find("input[name=display_name]").val(),
         },
-        birthday : form.find("input[name=birthday]").val(),
-        about  : form.find("textarea[name=about]").val(),
+        birthday: form.find("input[name=birthday]").val(),
+        about: form.find("textarea[name=about]").val(),
     };
 
     iam.ApiCmd("user/profile-set", {
-        method : "PUT",
-        data   : JSON.stringify(req),
-        callback : function(err, data) {
+        method: "PUT",
+        data: JSON.stringify(req),
+        callback: function(err, data) {
 
             if (err) {
                 return l4i.InnerAlert(alert_id, 'alert-danger', err);
@@ -249,7 +246,7 @@ iamUser.ProfileSetCommit = function()
 
             l4i.InnerAlert(alert_id, 'alert-success', "Successfully updated");
 
-            window.setTimeout(function(){
+            window.setTimeout(function() {
                 l4iModal.Close();
                 iamUser.Overview();
             }, 1000);
@@ -257,33 +254,33 @@ iamUser.ProfileSetCommit = function()
     });
 }
 
-iamUser.PhotoSetForm = function(username)
-{
+iamUser.PhotoSetForm = function(username) {
     iam.TplCmd("user/photo-set", {
 
-        callback : function(err, tpl) {
+        callback: function(err, tpl) {
 
             l4iModal.Open({
-                tplsrc  : tpl,
-                width   : 600,
-                height  : 400,
-                data    : {username: username},
-                title   : "Change Photo",
-                buttons : [{
-                    title : "Cancel",
-                    onclick : "l4iModal.Close()",
+                tplsrc: tpl,
+                width: 600,
+                height: 400,
+                data: {
+                    username: username
+                },
+                title: "Change Photo",
+                buttons: [{
+                    title: "Cancel",
+                    onclick: "l4iModal.Close()",
                 }, {
-                    title : "Save",
-                    onclick : "iamUser.PhotoSetCommit()",
-                    style   : "btn btn-primary",
+                    title: "Save",
+                    onclick: "iamUser.PhotoSetCommit()",
+                    style: "btn btn-primary",
                 }],
             });
         },
     });
 }
 
-iamUser.PhotoSetCommit = function()
-{
+iamUser.PhotoSetCommit = function() {
     var files = document.getElementById('iam-user-photo-set-file').files,
         alert_id = "#iam-user-photo-set-alert";
 
@@ -306,15 +303,15 @@ iamUser.PhotoSetCommit = function()
                 }
 
                 var req = {
-                    size : file.size,
-                    name : file.name,
-                    data : e.target.result,
+                    size: file.size,
+                    name: file.name,
+                    data: e.target.result,
                 }
 
                 iam.ApiCmd("user/photo-set", {
-                    method : "PUT",
-                    data   : JSON.stringify(req),
-                    callback : function(err, data) {
+                    method: "PUT",
+                    data: JSON.stringify(req),
+                    callback: function(err, data) {
 
                         if (err) {
                             return l4i.InnerAlert(alert_id, 'alert-danger', err);
@@ -326,7 +323,7 @@ iamUser.PhotoSetCommit = function()
 
                         l4i.InnerAlert(alert_id, 'alert-success', "Successfully updated");
 
-                        window.setTimeout(function(){
+                        window.setTimeout(function() {
                             l4iModal.Close();
                             iamUser.Overview();
                         }, 1000);
@@ -340,10 +337,9 @@ iamUser.PhotoSetCommit = function()
     }
 }
 
-iamUser.SignOut = function()
-{
+iamUser.SignOut = function() {
     // l4iCookie.Del("access_token");
-    window.setTimeout(function(){
+    window.setTimeout(function() {
         window.location = "/iam/service/sign-out";
     }, 500);
 }

@@ -15,7 +15,7 @@
       <th>Email</th>
       <th>Status</th>
       <th>Roles</th>
-      <th>Registered</th>
+      <th>ECoin</th>
       <th>Updated</th>
       <th></th>
     </tr>
@@ -28,7 +28,7 @@
 <script id="iam-usermgr-list-tpl" type="text/html">
 {[~it.items :v]}
 <tr>
-  <td>{[=v.name]}</td>
+  <td class="iam-monofont">{[=v.name]}</td>
   <td>{[=v.display_name]}</td>
   <td>{[=v.email]}</td>
   <td>
@@ -45,9 +45,13 @@
     {[~]}
     {[~]}
   </td>
-  <td>{[=l4i.MetaTimeParseFormat(v.created, "Y-m-d")]}</td>
+  <td>{[=v.ecoin_balance]}</td>
   <td>{[=l4i.MetaTimeParseFormat(v.updated, "Y-m-d")]}</td>
   <td align="right">
+    <button class="pure-button button-xsmall"
+      onclick="iamAccMgr.Recharge('{[=v.name]}')">
+      Recharge
+    </button>
     <button class="pure-button button-xsmall"
       onclick="iamUserMgr.UserSetForm('{[=v.name]}')">
       Setting

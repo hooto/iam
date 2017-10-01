@@ -34,6 +34,7 @@ const (
 	ErrCodeUnavailable     = "Unavailable"
 	ErrCodeInternalError   = "InternalError"
 	ErrCodeNotFound        = "NotFound"
+	ErrCodeAccChargeOut    = "AccChargeOut"
 )
 
 var (
@@ -86,6 +87,8 @@ type User struct {
 	Roles       types.ArrayUint32 `json:"roles,omitempty"`
 	Groups      types.ArrayUint32 `json:"groups,omitempty"`
 	Status      uint8             `json:"status"`
+	EcoinAmount float64           `json:"ecoin_amount"`
+	EcoinPrepay float64           `json:"ecoin_prepay"`
 	Created     types.MetaTime    `json:"created"`
 	Updated     types.MetaTime    `json:"updated"`
 }

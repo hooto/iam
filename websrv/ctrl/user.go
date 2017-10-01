@@ -31,12 +31,13 @@ func (c User) PanelInfoAction() {
 	nav := []map[string]string{
 		{"path": "app/index", "title": "My Authorized Apps"},
 		{"path": "access-key/index", "title": "Access Keys"},
+		{"path": "account/index", "title": "Acount"},
 	}
 
 	if iamclient.SessionAccessAllowed(c.Session, "user.admin", config.Config.InstanceID) {
 		nav = append(nav, map[string]string{
 			"path":  "user-mgr/index",
-			"title": "Accounts",
+			"title": "Users",
 		})
 	}
 
@@ -44,11 +45,11 @@ func (c User) PanelInfoAction() {
 
 		nav = append(nav, map[string]string{
 			"path":  "app-mgr/index",
-			"title": "Authorized Apps",
+			"title": "Apps",
 		})
 		nav = append(nav, map[string]string{
 			"path":  "sys-mgr/index",
-			"title": "Sys Settings",
+			"title": "System",
 		})
 	}
 

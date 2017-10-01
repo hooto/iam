@@ -1,7 +1,5 @@
-<table width="100%" style="margin-top:30px">
-<tr>
+<div class="iam-user-overview-box">
 
-  <td width="40%">
     <div class="iam-user-panel iam-user-profile">
       <div class="iup-title">Profile</div>
       <img class="iup-photo" src="/iam/v1/service/photo/{[=it.login.name]}" />
@@ -11,11 +9,8 @@
         <li><a class="iam-useridx-click" href="#photo-set" onclick="iamUser.PhotoSetForm('{[=it.login.name]}')">Change Photo</a></li>
       </ul>
     </div>
-  </td>
 
-  <td width="20px"></td>
 
-  <td>
     <div class="iam-user-panel iam-user-personal">
       <div class="iup-title">Personal Settings</div>
       <table>
@@ -43,7 +38,9 @@
 
       </table>
     </div>
-  </td>
 
-</tr>
-</table>
+    <div class="iam-user-panel iam-user-ecoin">
+      <div class="iup-title">Account Balance</div>
+	  <div class="ecoin-value">{[=it.login.ecoin_amount]}</div>
+	</div>
+</div>

@@ -3,3 +3,4 @@ etc
 bin
 var
 doc
+test.go

@@ -6,7 +6,7 @@
         <li class="iam-topbar-brand">{[=it.pinfo.webui_banner_title]}</li>
       </ul>
       <ul class="iam-nav iam-topbar-nav" id="iam-topbar-nav-menus">
-        <li><a class="l4i-nav-item" href="#index">My Account</a></li>
+        <li><a class="l4i-nav-item" href="#index">Home</a></li>
         {[~it.pinfo.topnav :v]}
         <li><a class="l4i-nav-item" href="#{[=v.path]}">{[=v.title]}</a></li>
         {[~]}
@@ -21,7 +21,7 @@
 
   <div class="iam-footer">
     <img src="/iam/~/iam/img/iam-s2-32.png" class="if-logo"> 
-    <a href="https://github.com/hooto/iam" target="_blank">hooto IAM</a>
+    <a href="https://github.com/hooto/iam" target="_blank">hooto IAM (Identity & Access Management) Service</a>
   </div>
 </div>
 
