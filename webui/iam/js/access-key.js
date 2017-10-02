@@ -110,8 +110,8 @@ iamAccessKey.Info = function(akid) {
 
             l4iModal.Open({
                 tplsrc: tpl,
-                width: 600,
-                height: 400,
+                width: 700,
+                height: 350,
                 data: data,
                 title: "Access Key Info",
                 buttons: [{

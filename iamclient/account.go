@@ -17,13 +17,14 @@ package iamclient
 import (
 	"fmt"
 
+	"github.com/hooto/iam/auth"
 	"github.com/hooto/iam/iamapi"
 	"github.com/lessos/lessgo/encoding/json"
 	"github.com/lessos/lessgo/net/httpclient"
 	"github.com/lessos/lessgo/types"
 )
 
-func AccountChargePrepay(req iamapi.AccountChargePrepay) iamapi.AccountChargePrepay {
+func AccountChargePrepay(req iamapi.AccountChargePrepay, ak iamapi.AccessKey) iamapi.AccountChargePrepay {
 
 	js, _ := json.Encode(req, "")
 
@@ -31,9 +32,14 @@ func AccountChargePrepay(req iamapi.AccountChargePrepay) iamapi.AccountChargePre
 		"%s/v1/account-charge/prepay",
 		ServiceUrl,
 	))
-	hc.Header("contentType", "application/json; charset=utf-8")
-	hc.Body(js)
 	defer hc.Close()
+
+	hc.Header("contentType", "application/json; charset=utf-8")
+
+	ac := auth.NewAuthCredentials(ak, js)
+	hc.Header(ac.HttpHeaderKey(), ac.HttpHeaderValue())
+
+	hc.Body(js)
 
 	var rsp iamapi.AccountChargePrepay
 	if err := hc.ReplyJson(&rsp); err != nil && rsp.Error == nil {
@@ -42,7 +48,7 @@ func AccountChargePrepay(req iamapi.AccountChargePrepay) iamapi.AccountChargePre
 	return rsp
 }
 
-func AccountChargePayout(req iamapi.AccountChargePayout) iamapi.AccountChargePayout {
+func AccountChargePayout(req iamapi.AccountChargePayout, ak iamapi.AccessKey) iamapi.AccountChargePayout {
 
 	js, _ := json.Encode(req, "")
 
@@ -50,9 +56,13 @@ func AccountChargePayout(req iamapi.AccountChargePayout) iamapi.AccountChargePay
 		"%s/v1/account-charge/payout",
 		ServiceUrl,
 	))
-	hc.Header("contentType", "application/json; charset=utf-8")
-	hc.Body(js)
 	defer hc.Close()
+	hc.Header("contentType", "application/json; charset=utf-8")
+
+	ac := auth.NewAuthCredentials(ak, js)
+	hc.Header(ac.HttpHeaderKey(), ac.HttpHeaderValue())
+
+	hc.Body(js)
 
 	var rsp iamapi.AccountChargePayout
 	if err := hc.ReplyJson(&rsp); err != nil && rsp.Error == nil {

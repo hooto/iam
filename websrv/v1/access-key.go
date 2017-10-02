@@ -147,6 +147,10 @@ func (c AccessKey) SetAction() {
 		prev.SecretKey = idhash.RandBase64String(40)
 	}
 
+	if len(prev.User) < 1 {
+		prev.User = c.us.UserName
+	}
+
 	if rs := store.PoPut("ak/"+c.us.UserName, prev.AccessKey, prev, nil); rs.OK() {
 		set.Kind = "AccessKey"
 	} else {

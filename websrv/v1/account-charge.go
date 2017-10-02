@@ -15,8 +15,10 @@
 package v1
 
 import (
+
 	// "github.com/hooto/hlog4g/hlog"
 	"github.com/hooto/httpsrv"
+	"github.com/hooto/iam/auth"
 	"github.com/hooto/iam/iamapi"
 	"github.com/hooto/iam/store"
 	"github.com/lessos/lessgo/types"
@@ -40,6 +42,26 @@ func (c AccountCharge) PrepayAction() {
 
 	if err := set.Valid(); err != nil {
 		set.Error = types.NewErrorMeta(iamapi.ErrCodeInvalidArgument, err.Error())
+		return
+	}
+
+	//
+	auth_token, err := auth.NewAuthToken(c.Request.Header.Get(auth.HttpHeaderKey))
+	if err != nil {
+		set.Error = types.NewErrorMeta(iamapi.ErrCodeUnauthorized, "No Auth Found #01")
+		return
+	}
+
+	var ak iamapi.AccessKey
+	if rs := store.PoGet("ak/"+auth_token.User, auth_token.AccessKey); rs.OK() {
+		rs.Decode(&ak)
+	}
+	if ak.AccessKey == "" || ak.AccessKey != auth_token.AccessKey {
+		set.Error = types.NewErrorMeta(iamapi.ErrCodeUnauthorized, "No Auth Found #02")
+		return
+	}
+	if terr := auth_token.Valid(ak, c.Request.RawBody); terr != nil {
+		set.Error = types.NewErrorMeta(iamapi.ErrCodeUnauthorized, "No Auth Found #03 "+terr.Message)
 		return
 	}
 
@@ -171,6 +193,28 @@ func (c AccountCharge) PayoutAction() {
 		return
 	}
 
+	//
+	auth_token, err := auth.NewAuthToken(c.Request.Header.Get(auth.HttpHeaderKey))
+	if err != nil {
+		set.Error = types.NewErrorMeta(iamapi.ErrCodeUnauthorized, "No Auth Found #01")
+		return
+	}
+
+	var ak iamapi.AccessKey
+	if rs := store.PoGet("ak/"+auth_token.User, auth_token.AccessKey); rs.OK() {
+		rs.Decode(&ak)
+	}
+	if ak.AccessKey == "" || ak.AccessKey != auth_token.AccessKey {
+		set.Error = types.NewErrorMeta(iamapi.ErrCodeUnauthorized, "No Auth Found #02")
+		return
+	}
+
+	if terr := auth_token.Valid(ak, c.Request.RawBody); terr != nil {
+		set.Error = types.NewErrorMeta(iamapi.ErrCodeUnauthorized, "No Auth Found #03")
+		return
+	}
+
+	//
 	var (
 		userid = iamapi.UserId(set.User)
 		login  iamapi.User

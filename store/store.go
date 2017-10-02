@@ -15,6 +15,7 @@
 package store
 
 import (
+	"errors"
 	"fmt"
 	"regexp"
 	"strings"
@@ -274,6 +275,24 @@ func SysConfigRefresh() {
 			config.UserRegistrationDisabled = false
 		}
 	}
+}
+
+func AccessKeyInitData(ak iamapi.AccessKey) error {
+	if ak.User == "" {
+		return errors.New("No User Set")
+	}
+
+	if rs := PoGet("ak/"+ak.User, ak.AccessKey); rs.OK() {
+		return nil
+	}
+
+	ak.Created = uint64(types.MetaTimeNow())
+	ak.Action = 1
+	if rs := PoPut("ak/"+ak.User, ak.AccessKey, ak, nil); !rs.OK() {
+		return errors.New(rs.Bytex().String())
+	}
+
+	return nil
 }
 
 func AppInstanceRegister(inst iamapi.AppInstance) error {

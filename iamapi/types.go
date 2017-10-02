@@ -16,7 +16,6 @@ package iamapi
 
 import (
 	"encoding/base64"
-	"errors"
 	"regexp"
 
 	"github.com/lessos/lessgo/crypto/idhash"
@@ -204,9 +203,8 @@ type AppAuthInfo struct {
 
 type AppInstanceRegister struct {
 	types.TypeMeta `json:",inline"`
-	AccessToken    string `json:"access_token,omitempty"`
-	// AccessKey      AccessKey   `json:"access_key,omitempty"`
-	Instance AppInstance `json:"instance"`
+	AccessToken    string      `json:"access_token,omitempty"`
+	Instance       AppInstance `json:"instance"`
 }
 
 type SysConfigList struct {
@@ -219,99 +217,6 @@ type SysConfigMailer struct {
 	SmtpPort string `json:"smtp_port"`
 	SmtpUser string `json:"smtp_user"`
 	SmtpPass string `json:"smtp_pass"`
-}
-
-type AccessKey struct {
-	AccessKey   string           `json:"access_key"`
-	SecretKey   string           `json:"secret_key,omitempty"`
-	Created     uint64           `json:"created,omitempty"`
-	Action      uint16           `json:"action,omitempty"`
-	Description string           `json:"desc,omitempty"`
-	Bounds      []AccessKeyBound `json:"bounds,omitempty"`
-}
-
-type AccessKeyBound struct {
-	Name    string `json:"name"`
-	Created uint64 `json:"created,omitempty"`
-}
-
-func (it AccessKeyBound) IterKey() string {
-	return it.Name
-}
-
-type AccessKeyBounds []AccessKeyBound
-
-type AccessKeyAuth struct {
-	Type  string `json:"t"`
-	User  string `json:"u"`
-	Key   string `json:"k"`
-	Time  int64  `json:"rt"`
-	Token string `json:"tk"`
-}
-
-func (t AccessKeyAuth) Encode() string {
-	bs, _ := json.Encode(t, "")
-	return base64.StdEncoding.EncodeToString(bs)
-}
-
-func (t AccessKeyAuth) Valid() error {
-
-	//
-	if len(t.Type) == 0 {
-		return errors.New("No Auth Type Found")
-	}
-
-	//
-	if len(t.User) == 0 {
-		return errors.New("No Auth User Found")
-	}
-
-	//
-	if len(t.Key) == 0 {
-		return errors.New("No Auth AccessKey Found")
-	}
-
-	if t.Time < 1000000000 {
-		return errors.New("Invalid Request Time")
-	}
-
-	//
-	if len(t.Token) < 30 {
-		return errors.New("No Auth Token Found")
-	}
-
-	return nil
-}
-
-func AccessKeyAuthDecode(auth string) (AccessKeyAuth, error) {
-
-	var t AccessKeyAuth
-	if len(auth) < 30 {
-		return t, errors.New("Unauthorized")
-	}
-
-	bs, err := base64.StdEncoding.DecodeString(auth)
-	if err != nil {
-		return t, err
-	}
-
-	if err = json.Decode(bs, &t); err != nil {
-		return t, err
-	}
-
-	err = t.Valid()
-
-	return t, err
-}
-
-// Access Key SESSION
-// K1(2)VERIFY-SIGNATURE(36)PAYLOAD-DATA
-type AccessKeySession struct {
-	AccessKey string            `json:"ak"`
-	SecretKey string            `json:"sk"`
-	User      string            `json:"ur"`
-	Roles     types.ArrayUint32 `json:"rs"`
-	Expired   types.MetaTime    `json:"ex"`
 }
 
 type AccessTokenFrontend string

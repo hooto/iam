@@ -29,7 +29,7 @@ func (c User) PanelInfoAction() {
 	rsp := map[string]interface{}{}
 	//
 	nav := []map[string]string{
-		{"path": "app/index", "title": "My Authorized Apps"},
+		{"path": "app/index", "title": "Authorized Apps"},
 		{"path": "access-key/index", "title": "Access Keys"},
 		{"path": "account/index", "title": "Acount"},
 	}
