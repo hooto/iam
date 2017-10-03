@@ -1,3 +1,8 @@
+<style>
+.iam-div-light table th {
+  vertical-align: middle !important;
+}
+</style>
 <div class="iam-div-light">
   <table class="table table-hover">
     <thead>
@@ -6,8 +11,8 @@
         <th>Type</th>
         <th>Amount</th>
         <th>Cash</th>
-		<th>Product Limits</th>
-		<th>Product Max</th>
+		<th>Product<br>Limits</th>
+		<th>Product<br>Max</th>
         <th>User</th>
 		<th>Operator</th>
         <th>Comment</th>
@@ -15,18 +20,18 @@
         <th></th>
       </tr>
     </thead>
-    <tbody id="iam-accm-rechargelist"></tbody>
+    <tbody id="iam-accm-fundlist"></tbody>
   </table>
 </div>
 
-<script id="iam-accm-rechargelist-tpl" type="text/html">
+<script id="iam-accm-fundlist-tpl" type="text/html">
 {[~it.items :v]}
 <tr>
   <td class="iam-monofont">
     {[=v.id.substr(8)]}
   </td>
   <td>
-    {[~it._ecoin_types :sv]}
+    {[~it._fund_types :sv]}
     {[ if (v.type == sv.value) { ]}{[=sv.name]}{[ } ]}
     {[~]}
   </td>
@@ -37,12 +42,12 @@
   <td class="iam-monofont">
     {[=v.user]}
   </td>
-  <td>{[=v.user_opr]}</td>
+  <td>{[=v.operator]}</td>
   <td>{[=v.comment]}</td>
   <td>{[=l4i.MetaTimeParseFormat(v.created, "Y-m-d")]}</td>
   <td align="right">
 	<button class="pure-button button-xsmall"
-      onclick="iamAccMgr.RechargeSet('{[=v.id]}')">
+      onclick="iamAccMgr.FundSet('{[=v.id]}')">
       Setting
     </button>
   </td>
@@ -50,9 +55,9 @@
 {[~]}
 </script>
 
-<script type="text/html" id="iam-accm-rechargelist-optools">
+<script type="text/html" id="iam-accm-fundlist-optools">
 <li class="iam-btn iam-btn-primary">
-  <a href="#" onclick="iamAccMgr.RechargeNew()">
+  <a href="#" onclick="iamAccMgr.FundNew()">
      Recharge
   </a>
 </li>

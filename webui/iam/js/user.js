@@ -32,7 +32,7 @@ iamUser.Overview = function() {
             alert("Error: Please try again later");
         });
 
-        iam.ApiCmd("account/user", {
+        iam.ApiCmd("account/user-entry", {
             callback: ep.done('acc'),
         });
 

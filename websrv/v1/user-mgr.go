@@ -23,7 +23,6 @@ import (
 	"github.com/hooto/httpsrv"
 	"github.com/lessos/lessgo/pass"
 	"github.com/lessos/lessgo/types"
-	"github.com/lynkdb/iomix/skv"
 
 	"github.com/hooto/iam/base/signup"
 	"github.com/hooto/iam/config"
@@ -186,12 +185,10 @@ func (c UserMgr) UserSetAction() {
 	}
 
 	var prev iamapi.UserEntry
-	var prevVersion uint64
 
 	//
 	if obj := store.PoGet("user", set.Login.Id); obj.OK() {
 		obj.Decode(&prev.Login)
-		prevVersion = obj.Meta().Version
 	}
 
 	//
@@ -223,22 +220,18 @@ func (c UserMgr) UserSetAction() {
 	set.Login.Updated = types.MetaTimeNow()
 	sort.Sort(set.Login.Roles)
 
-	if obj := store.PoPut("user", set.Login.Id, set.Login, &skv.PathWriteOptions{
-		PrevVersion: prevVersion,
-	}); !obj.OK() {
+	if obj := store.PoPut("user", set.Login.Id, set.Login, nil); !obj.OK() {
 		set.Error = types.NewErrorMeta("500", obj.Bytex().String())
 		return
 	}
 
 	if set.Profile != nil {
 
-		prevVersion = 0
 		var profile iamapi.UserProfile
 
 		if obj := store.PoGet("user-profile", set.Login.Id); obj.OK() {
 
 			obj.Decode(&profile)
-			prevVersion = obj.Meta().Version
 
 			if _, err := time.Parse("2006-01-02", set.Profile.Birthday); err == nil {
 				profile.Birthday = set.Profile.Birthday
@@ -249,9 +242,7 @@ func (c UserMgr) UserSetAction() {
 			}
 		}
 
-		if obj := store.PoPut("user-profile", set.Login.Id, profile, &skv.PathWriteOptions{
-			PrevVersion: prevVersion,
-		}); !obj.OK() {
+		if obj := store.PoPut("user-profile", set.Login.Id, profile, nil); !obj.OK() {
 			set.Error = types.NewErrorMeta("500", obj.Bytex().String())
 			return
 		}

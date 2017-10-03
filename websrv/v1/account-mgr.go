@@ -74,7 +74,7 @@ func (c AccountMgr) ReBalanceAction() {
 
 		ubs := iamapi.UserIdBytes(uname)
 
-		k := skv.NewProgKey(iamapi.AccActiveUser, ubs, "")
+		k := skv.NewProgKey(iamapi.AccFundUser, ubs, "")
 		if rs := store.Data.ProgRevScan(k, k, 1000); rs.OK() {
 
 			var (
@@ -85,10 +85,10 @@ func (c AccountMgr) ReBalanceAction() {
 			rss := rs.KvList()
 			for _, v := range rss {
 
-				var aa iamapi.AccountActive
+				var aa iamapi.AccountFund
 				if err := v.Decode(&aa); err == nil {
-					balance += (iamapi.AccountFloat64Round(aa.Amount) - iamapi.AccountFloat64Round(aa.Payout) - iamapi.AccountFloat64Round(aa.Prepay))
-					prepay += iamapi.AccountFloat64Round(aa.Prepay)
+					balance += (aa.Amount - aa.Payout - aa.Prepay)
+					prepay += aa.Prepay
 				}
 			}
 
@@ -123,7 +123,7 @@ func (c AccountMgr) ReBalanceAction() {
 	}
 }
 
-func (c AccountMgr) RechargeListAction() {
+func (c AccountMgr) FundListAction() {
 
 	ls := types.ObjectList{}
 	defer c.RenderJson(&ls)
@@ -133,26 +133,26 @@ func (c AccountMgr) RechargeListAction() {
 		return
 	}
 
-	k := skv.NewProgKey(iamapi.AccRechargeMgr, "")
-	if rs := store.Data.ProgRevScan(k, k, 100); rs.OK() {
+	k := skv.NewProgKey(iamapi.AccFundMgr, "")
+	if rs := store.Data.ProgRevScan(k, k, 1000); rs.OK() {
 		rss := rs.KvList()
 		for _, v := range rss {
 
-			var set iamapi.AccountRecharge
+			var set iamapi.AccountFund
 			if err := v.Decode(&set); err == nil {
 				ls.Items = append(ls.Items, set)
 			}
 		}
 	}
 
-	ls.Kind = "AccountRechargeList"
+	ls.Kind = "AccountFundList"
 }
 
-func (c AccountMgr) RechargeEntryAction() {
+func (c AccountMgr) FundEntryAction() {
 
 	var set struct {
 		types.TypeMeta
-		iamapi.AccountRecharge
+		iamapi.AccountFund
 	}
 	defer c.RenderJson(&set)
 
@@ -169,27 +169,27 @@ func (c AccountMgr) RechargeEntryAction() {
 
 	set_id := iamapi.HexStringToBytes(id)
 
-	if rs := store.Data.ProgGet(skv.NewProgKey(iamapi.AccRechargeMgr, set_id)); rs.OK() {
-		rs.Decode(&set.AccountRecharge)
+	if rs := store.Data.ProgGet(skv.NewProgKey(iamapi.AccFundMgr, set_id)); rs.OK() {
+		rs.Decode(&set.AccountFund)
 	}
 
-	if set.AccountRecharge.Id == "" || set.AccountRecharge.Id != id {
+	if set.AccountFund.Id == "" || set.AccountFund.Id != id {
 		set.Error = types.NewErrorMeta(iamapi.ErrCodeNotFound, "Object Not Found")
 		return
 	}
 
-	set.Kind = "AccountRecharge"
+	set.Kind = "AccountFund"
 }
 
-func (c AccountMgr) RechargeNewAction() {
+func (c AccountMgr) FundNewAction() {
 
 	var set struct {
 		types.TypeMeta
-		iamapi.AccountRecharge
+		iamapi.AccountFund
 	}
 	defer c.RenderJson(&set)
 
-	if err := c.Request.JsonDecode(&set.AccountRecharge); err != nil {
+	if err := c.Request.JsonDecode(&set.AccountFund); err != nil {
 		set.Error = types.NewErrorMeta(iamapi.ErrCodeInvalidArgument, "Bad Request")
 		return
 	}
@@ -249,37 +249,27 @@ func (c AccountMgr) RechargeNewAction() {
 	set.Id = iamapi.BytesToHexString(set_id)
 	set.Created = uint64(types.MetaTimeSet(tn.UTC()))
 	set.Updated = set.Created
-	set.UserOpr = c.us.UserName
+	set.Operator = c.us.UserName
 	set.Priority = 8
+	set.Amount = iamapi.AccountFloat64Round(set.Amount)
 
-	sets := []skv.ProgKeyValue{}
+	acc_user.Balance = iamapi.AccountFloat64Round(acc_user.Balance + set.Amount)
+	acc_user.Updated = set.Updated
 
-	sets = append(sets, skv.ProgKeyValue{
-		Key: skv.NewProgKey(iamapi.AccRechargeMgr, set_id),
-		Val: skv.NewProgValue(set.AccountRecharge),
-	})
-
-	sets = append(sets, skv.ProgKeyValue{
-		Key: skv.NewProgKey(iamapi.AccRechargeUser, userbs, set_id),
-		Val: skv.NewProgValue(set.AccountRecharge),
-	})
-
-	set_active := iamapi.AccountActive{
-		Id:               set.Id,
-		Type:             set.Type,
-		User:             set.User,
-		Amount:           set.Amount,
-		Priority:         set.Priority,
-		Options:          set.Options,
-		Created:          set.Created,
-		Updated:          set.Updated,
-		ExpProductLimits: set.ExpProductLimits,
-		ExpProductMax:    set.ExpProductMax,
+	sets := []skv.ProgKeyValue{
+		skv.ProgKeyValue{
+			Key: skv.NewProgKey(iamapi.AccFundMgr, set_id),
+			Val: skv.NewProgValue(set.AccountFund),
+		},
+		skv.ProgKeyValue{
+			Key: skv.NewProgKey(iamapi.AccFundUser, userbs, set_id),
+			Val: skv.NewProgValue(set.AccountFund),
+		},
+		skv.ProgKeyValue{
+			Key: skv.NewProgKey(iamapi.AccUser, userbs),
+			Val: skv.NewProgValue(acc_user),
+		},
 	}
-	sets = append(sets, skv.ProgKeyValue{
-		Key: skv.NewProgKey(iamapi.AccActiveUser, userbs, set_id),
-		Val: skv.NewProgValue(set_active),
-	})
 
 	for _, v := range sets {
 		if rs := store.Data.ProgPut(v.Key, v.Val, nil); !rs.OK() {
@@ -288,29 +278,18 @@ func (c AccountMgr) RechargeNewAction() {
 		}
 	}
 
-	acc_user.Balance += set.Amount
-	acc_user.Updated = set.Updated
-	if rs := store.Data.ProgPut(
-		skv.NewProgKey(iamapi.AccUser, userbs),
-		skv.NewProgValue(acc_user),
-		nil,
-	); !rs.OK() {
-		set.Error = types.NewErrorMeta("500", rs.Bytex().String())
-		return
-	}
-
-	set.Kind = "AccountRecharge"
+	set.Kind = "AccountFund"
 }
 
-func (c AccountMgr) RechargeSetAction() {
+func (c AccountMgr) FundSetAction() {
 
 	var set struct {
 		types.TypeMeta
-		iamapi.AccountRecharge
+		iamapi.AccountFund
 	}
 	defer c.RenderJson(&set)
 
-	if err := c.Request.JsonDecode(&set.AccountRecharge); err != nil {
+	if err := c.Request.JsonDecode(&set.AccountFund); err != nil {
 		set.Error = types.NewErrorMeta(iamapi.ErrCodeInvalidArgument, "Bad Request")
 		return
 	}
@@ -338,53 +317,34 @@ func (c AccountMgr) RechargeSetAction() {
 
 	var (
 		set_id   = iamapi.HexStringToBytes(set.Id)
-		recharge iamapi.AccountRecharge
+		set_prev iamapi.AccountFund
 	)
 
-	if rs := store.Data.ProgGet(skv.NewProgKey(iamapi.AccRechargeMgr, set_id)); rs.OK() {
-		rs.Decode(&recharge)
+	if rs := store.Data.ProgGet(skv.NewProgKey(iamapi.AccFundMgr, set_id)); rs.OK() {
+		rs.Decode(&set_prev)
 	}
 
-	if recharge.Id == "" || recharge.Id != set.Id {
+	if set_prev.Id == "" || set_prev.Id != set.Id {
 		set.Error = types.NewErrorMeta(iamapi.ErrCodeNotFound, "Object Not Found 1")
 		return
 	}
 
-	recharge.Updated = uint64(types.MetaTimeNow())
-	recharge.Comment = set.Comment
-	recharge.Type = set.Type
-	recharge.ExpProductLimits = set.ExpProductLimits
-	recharge.ExpProductMax = set.ExpProductMax
+	set_prev.Updated = uint64(types.MetaTimeNow())
+	set_prev.Comment = set.Comment
+	set_prev.Type = set.Type
+	set_prev.ExpProductLimits = set.ExpProductLimits
+	set_prev.ExpProductMax = set.ExpProductMax
 
-	userbs := iamapi.UserIdBytes(recharge.User)
-
-	var active iamapi.AccountActive
-	if rs := store.Data.ProgGet(skv.NewProgKey(iamapi.AccActiveUser, userbs, set_id)); rs.OK() {
-		rs.Decode(&active)
-	}
-
-	if active.Id != recharge.Id {
-		set.Error = types.NewErrorMeta(iamapi.ErrCodeNotFound, "Object Not Found 2")
-		return
-	}
-
-	active.Updated = recharge.Updated
-	active.Options = recharge.Options
-	active.ExpProductLimits = recharge.ExpProductLimits
-	active.ExpProductMax = recharge.ExpProductMax
+	userbs := iamapi.UserIdBytes(set_prev.User)
 
 	sets := []skv.ProgKeyValue{
 		{
-			Key: skv.NewProgKey(iamapi.AccRechargeMgr, set_id),
-			Val: skv.NewProgValue(recharge),
+			Key: skv.NewProgKey(iamapi.AccFundMgr, set_id),
+			Val: skv.NewProgValue(set_prev),
 		},
 		{
-			Key: skv.NewProgKey(iamapi.AccRechargeUser, userbs, set_id),
-			Val: skv.NewProgValue(recharge),
-		},
-		{
-			Key: skv.NewProgKey(iamapi.AccActiveUser, userbs, set_id),
-			Val: skv.NewProgValue(active),
+			Key: skv.NewProgKey(iamapi.AccFundUser, userbs, set_id),
+			Val: skv.NewProgValue(set_prev),
 		},
 	}
 
@@ -395,5 +355,208 @@ func (c AccountMgr) RechargeSetAction() {
 		}
 	}
 
-	set.Kind = "AccountRecharge"
+	set.Kind = "AccountFund"
+}
+
+func (c AccountMgr) ChargeListAction() {
+
+	ls := types.ObjectList{}
+	defer c.RenderJson(&ls)
+
+	if !iamclient.SessionAccessAllowed(c.Session, "user.admin", config.Config.InstanceID) {
+		ls.Error = types.NewErrorMeta(iamapi.ErrCodeAccessDenied, "Access Denied")
+		return
+	}
+
+	k := skv.NewProgKey(iamapi.AccChargeMgr, "")
+	if rs := store.Data.ProgRevScan(k, k, 1000); rs.OK() {
+		rss := rs.KvList()
+		for _, v := range rss {
+
+			var set iamapi.AccountCharge
+			if err := v.Decode(&set); err == nil {
+				ls.Items = append(ls.Items, set)
+			}
+		}
+	}
+
+	ls.Kind = "AccountChargeList"
+}
+
+func (c AccountMgr) ChargeEntryAction() {
+
+	var set struct {
+		types.TypeMeta
+		iamapi.AccountCharge
+	}
+	defer c.RenderJson(&set)
+
+	var (
+		id   = c.Params.Get("id")
+		user = c.Params.Get("user")
+	)
+
+	if len(id) < 16 {
+		set.Error = types.NewErrorMeta(iamapi.ErrCodeInvalidArgument, "ID Not Found")
+		return
+	}
+
+	if user == "" {
+		set.Error = types.NewErrorMeta(iamapi.ErrCodeInvalidArgument, "user Not Found")
+		return
+	}
+
+	if !iamclient.SessionAccessAllowed(c.Session, "user.admin", config.Config.InstanceID) {
+		set.Error = types.NewErrorMeta(iamapi.ErrCodeAccessDenied, "Access Denied")
+		return
+	}
+
+	var (
+		set_id = iamapi.HexStringToBytes(id)
+		userbs = iamapi.UserIdBytes(user)
+	)
+
+	//
+	if rs := store.Data.ProgGet(skv.NewProgKey(iamapi.AccChargeUser, userbs, set_id)); rs.OK() {
+		rs.Decode(&set.AccountCharge)
+	}
+	if set.Id == "" || set.Id != id {
+		set.Error = types.NewErrorMeta(iamapi.ErrCodeNotFound, "Object Not Found")
+		return
+	}
+
+	set.Kind = "AccountCharge"
+}
+
+func (c AccountMgr) ChargeSetPayoutAction() {
+
+	var (
+		set        types.TypeMeta
+		set_charge iamapi.AccountCharge
+	)
+	defer c.RenderJson(&set)
+
+	if err := c.Request.JsonDecode(&set_charge); err != nil {
+		set.Error = types.NewErrorMeta(iamapi.ErrCodeInvalidArgument, "Bad Request")
+		return
+	}
+
+	set_charge.Payout = iamapi.AccountFloat64Round(set_charge.Payout)
+
+	if len(set_charge.Id) < 16 {
+		set.Error = types.NewErrorMeta(iamapi.ErrCodeInvalidArgument, "ID Not Found")
+		return
+	}
+
+	if set_charge.Payout < 0 {
+		set.Error = types.NewErrorMeta(iamapi.ErrCodeInvalidArgument, "payout Not Found")
+		return
+	}
+
+	if set_charge.User == "" {
+		set.Error = types.NewErrorMeta(iamapi.ErrCodeInvalidArgument, "user Not Found")
+		return
+	}
+
+	if !iamclient.SessionAccessAllowed(c.Session, "user.admin", config.Config.InstanceID) {
+		set.Error = types.NewErrorMeta(iamapi.ErrCodeAccessDenied, "Access Denied")
+		return
+	}
+
+	var (
+		set_id   = iamapi.HexStringToBytes(set_charge.Id)
+		charge   iamapi.AccountCharge
+		userbs   = iamapi.UserIdBytes(set_charge.User)
+		acc_user iamapi.AccountUser
+	)
+
+	//
+	if rs := store.Data.ProgGet(skv.NewProgKey(iamapi.AccChargeUser, userbs, set_id)); rs.OK() {
+		rs.Decode(&charge)
+	}
+	if charge.Id == "" || charge.Id != set_charge.Id {
+		set.Error = types.NewErrorMeta(iamapi.ErrCodeNotFound, "Object Not Found")
+		return
+	}
+	if charge.Payout > 0 {
+		set.Error = types.NewErrorMeta(iamapi.ErrCodeInvalidArgument, "Payment already Closed")
+		return
+	}
+
+	//
+	if rs := store.Data.ProgGet(skv.NewProgKey(iamapi.AccUser, userbs)); rs.OK() {
+		rs.Decode(&acc_user)
+	} else if !rs.NotFound() {
+		set.Error = types.NewErrorMeta(iamapi.ErrCodeInternalError, "Server Error")
+		return
+	}
+	if acc_user.User == "" || acc_user.User != set_charge.User {
+		set.Error = types.NewErrorMeta(iamapi.ErrCodeInvalidArgument, "User Not Found")
+		return
+	}
+
+	sets := []skv.ProgKeyValue{}
+	updated := uint64(types.MetaTimeNow())
+
+	if charge.Fund != "" {
+		var fund iamapi.AccountFund
+		if rs := store.Data.ProgGet(
+			skv.NewProgKey(iamapi.AccFundUser, userbs, iamapi.HexStringToBytes(charge.Fund)),
+		); rs.OK() {
+			rs.Decode(&fund)
+		}
+		if fund.Id == "" || fund.Id != charge.Fund {
+			set.Error = types.NewErrorMeta(iamapi.ErrCodeInvalidArgument, "Fund Not Found")
+			return
+		}
+
+		//
+		fund.Prepay = iamapi.AccountFloat64Round(fund.Prepay - charge.Prepay)
+		fund.Payout = iamapi.AccountFloat64Round(fund.Payout + set_charge.Payout)
+		fund.ExpProductInpay.Del(charge.Product)
+		fund.Updated = updated
+
+		sets = append(sets, skv.ProgKeyValue{
+			Key: skv.NewProgKey(iamapi.AccFundUser, userbs, iamapi.HexStringToBytes(charge.Fund)),
+			Val: skv.NewProgValue(fund),
+		})
+
+		sets = append(sets, skv.ProgKeyValue{
+			Key: skv.NewProgKey(iamapi.AccFundMgr, iamapi.HexStringToBytes(charge.Fund)),
+			Val: skv.NewProgValue(fund),
+		})
+	}
+
+	//
+	acc_user.Balance = iamapi.AccountFloat64Round(acc_user.Balance + charge.Prepay - set_charge.Payout)
+	acc_user.Prepay = iamapi.AccountFloat64Round(acc_user.Prepay - charge.Prepay)
+	acc_user.Updated = updated
+
+	//
+	charge.Prepay = 0
+	charge.Payout = set_charge.Payout
+	charge.Updated = updated
+
+	//
+	sets = append(sets, skv.ProgKeyValue{
+		Key: skv.NewProgKey(iamapi.AccChargeUser, userbs, set_id),
+		Val: skv.NewProgValue(charge),
+	})
+	sets = append(sets, skv.ProgKeyValue{
+		Key: skv.NewProgKey(iamapi.AccUser, userbs),
+		Val: skv.NewProgValue(acc_user),
+	})
+	sets = append(sets, skv.ProgKeyValue{
+		Key: skv.NewProgKey(iamapi.AccChargeMgr, set_id),
+		Val: skv.NewProgValue(charge),
+	})
+
+	for _, v := range sets {
+		if rs := store.Data.ProgPut(v.Key, v.Val, nil); !rs.OK() {
+			set.Error = types.NewErrorMeta(iamapi.ErrCodeInternalError, "IO Error")
+			return
+		}
+	}
+
+	set.Kind = "AccountCharge"
 }

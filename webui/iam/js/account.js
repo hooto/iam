@@ -1,5 +1,5 @@
 var iamAcc = {
-    ecoin_types: [{
+    fund_types: [{
         name: "Cash",
         value: 1,
     }, {
@@ -16,16 +16,15 @@ iamAcc.Index = function() {
             iam.OpToolsClean();
             $("#com-content").html(data);
             l4i.UrlEventClean("iam-module-navbar-menus");
-            l4i.UrlEventRegister("account/recharge-list", iamAcc.RechargeList, "iam-module-navbar-menus");
-            l4i.UrlEventRegister("account/active-list", iamAcc.ActiveList, "iam-module-navbar-menus");
+            l4i.UrlEventRegister("account/fund-list", iamAcc.FundList, "iam-module-navbar-menus");
             l4i.UrlEventRegister("account/charge-list", iamAcc.ChargeList, "iam-module-navbar-menus");
             l4i.UrlEventRegister("account/payout-list", iamAcc.PayoutList, "iam-module-navbar-menus");
-            l4i.UrlEventHandler("account/charge-list", true);
+            l4i.UrlEventHandler("account/fund-list", true);
         },
     });
 }
 
-iamAcc.RechargeList = function() {
+iamAcc.FundList = function() {
     seajs.use(["ep"], function(EventProxy) {
 
         var ep = EventProxy.create('tpl', 'data', function(tpl, data) {
@@ -39,9 +38,25 @@ iamAcc.RechargeList = function() {
             }
 
             $("#work-content").html(tpl);
-            // iam.OpToolsRefresh("#iam-acc-activelist-optools");
+
             //
             for (var i in data.items) {
+
+                if (!data.items[i].amount) {
+                    data.items[i].amount = 0;
+                }
+                data.items[i].amount = data.items[i].amount.toFixed(4);
+
+                if (!data.items[i].payout) {
+                    data.items[i].payout = 0;
+                }
+                data.items[i].payout = data.items[i].payout.toFixed(4);
+
+                if (!data.items[i].prepay) {
+                    data.items[i].prepay = 0;
+                }
+                data.items[i].prepay = data.items[i].prepay.toFixed(4);
+
                 if (!data.items[i].comment) {
                     data.items[i].comment = "";
                 }
@@ -64,11 +79,11 @@ iamAcc.RechargeList = function() {
                 }
             }
 
-            data._ecoin_types = l4i.Clone(iamAcc.ecoin_types);
+            data._fund_types = l4i.Clone(iamAcc.fund_types);
 
             l4iTemplate.Render({
-                dstid: "iam-acc-rechargelist",
-                tplid: "iam-acc-rechargelist-tpl",
+                dstid: "iam-acc-fundlist",
+                tplid: "iam-acc-fundlist-tpl",
                 data: data,
             });
         });
@@ -77,79 +92,11 @@ iamAcc.RechargeList = function() {
             alert("Error: Please try again later");
         });
 
-        iam.ApiCmd("account/recharge-list", {
+        iam.ApiCmd("account/fund-list", {
             callback: ep.done('data'),
         });
 
-        iam.TplCmd("account/recharge-list", {
-            callback: ep.done('tpl'),
-        });
-    });
-}
-
-iamAcc.ActiveList = function() {
-    seajs.use(["ep"], function(EventProxy) {
-
-        var ep = EventProxy.create('tpl', 'data', function(tpl, data) {
-
-            if (!data) {
-                return;
-            }
-
-            if (!data.items) {
-                data.items = [];
-            }
-
-            for (var i in data.items) {
-
-                if (!data.items[i].amount) {
-                    data.items[i].amount = 0;
-                }
-                data.items[i].amount = data.items[i].amount.toFixed(4);
-                if (!data.items[i].payout) {
-                    data.items[i].payout = 0;
-                }
-                data.items[i].payout = data.items[i].payout.toFixed(4);
-                if (!data.items[i].prepay) {
-                    data.items[i].prepay = 0;
-                }
-                data.items[i].prepay = data.items[i].prepay.toFixed(4);
-
-                if (!data.items[i].exp_product_limits) {
-                    data.items[i]._exp_product_limits = "";
-                } else {
-                    data.items[i]._exp_product_limits = data.items[i].exp_product_limits.join(", ");
-                }
-
-                if (!data.items[i].exp_product_max) {
-                    data.items[i].exp_product_max = 0;
-                }
-                if (!data.items[i].exp_product_inpay) {
-                    data.items[i].exp_product_inpay = [];
-                }
-            }
-
-            $("#work-content").html(tpl);
-            // iam.OpToolsRefresh("#iam-acc-activelist-optools");
-
-            data._ecoin_types = l4i.Clone(iamAcc.ecoin_types);
-
-            l4iTemplate.Render({
-                dstid: "iam-acc-activelist",
-                tplid: "iam-acc-activelist-tpl",
-                data: data,
-            });
-        });
-
-        ep.fail(function(err) {
-            alert("Error: Please try again later");
-        });
-
-        iam.ApiCmd("account/active-list", {
-            callback: ep.done('data'),
-        });
-
-        iam.TplCmd("account/active-list", {
+        iam.TplCmd("account/fund-list", {
             callback: ep.done('tpl'),
         });
     });
@@ -181,7 +128,7 @@ iamAcc.ChargeList = function() {
 
             $("#work-content").html(tpl);
 
-            data._ecoin_types = l4i.Clone(iamAcc.ecoin_types);
+            data._fund_types = l4i.Clone(iamAcc.fund_types);
 
             l4iTemplate.Render({
                 dstid: "iam-acc-chargelist",
@@ -236,7 +183,7 @@ iamAcc.PayoutList = function() {
                 return l4i.InnerAlert(alert_id, 'alert-info', "No Payout Statement Found at this Moment");
             }
 
-            data._ecoin_types = l4i.Clone(iamAcc.ecoin_types);
+            data._fund_types = l4i.Clone(iamAcc.fund_types);
 
             l4iTemplate.Render({
                 dstid: "iam-acc-payoutlist",

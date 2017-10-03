@@ -32,11 +32,11 @@ var (
 )
 
 const (
-	AccUser         = "iam_au"
-	AccRechargeUser = "iam_arc"
-	AccRechargeMgr  = "iam_arcm"
-	AccActiveUser   = "iam_aa"
-	AccChargeUser   = "iam_ac"
+	AccUser       = "iam_au"
+	AccFundUser   = "iam_af"
+	AccFundMgr    = "iam_afm"
+	AccChargeUser = "iam_ac"
+	AccChargeMgr  = "iam_acm"
 
 	AccountCurrencyTypeCash    uint8 = 1
 	AccountCurrencyTypeVirtual uint8 = 32
@@ -44,12 +44,15 @@ const (
 )
 
 func AccountCurrencyTypeValid(v uint8) bool {
-	if v == AccountCurrencyTypeCash || v == AccountCurrencyTypeVirtual || v == AccountCurrencyTypeCard {
+	if v == AccountCurrencyTypeCash ||
+		v == AccountCurrencyTypeVirtual ||
+		v == AccountCurrencyTypeCard {
 		return true
 	}
 	return false
 }
 
+// iam/acc_user/user-id
 type AccountUser struct {
 	User    string  `json:"user"`
 	Balance float64 `json:"balance"`
@@ -57,35 +60,20 @@ type AccountUser struct {
 	Updated uint64  `json:"updated"`
 }
 
-// iam/acc_recharge/user-id/rand-id
-// iam/acc_recharge_mgr/rand-id
-type AccountRecharge struct {
-	Id               string                    `json:"id"`
-	Type             uint8                     `json:"type"`
-	User             string                    `json:"user"`
-	UserOpr          string                    `json:"user_opr"`
-	Amount           float64                   `json:"amount"`
-	CashType         uint16                    `json:"cash_type,omitempty"`
-	CashAmount       float32                   `json:"cash_amount,omitempty"`
-	Priority         uint8                     `json:"priority"`
-	Options          types.Labels              `json:"options,omitempty"`
-	Comment          string                    `json:"comment,omitempty"`
-	Created          uint64                    `json:"created"`
-	Updated          uint64                    `json:"updated"`
-	ExpProductLimits types.ArrayNameIdentifier `json:"exp_product_limits,omitempty"`
-	ExpProductMax    int                       `json:"exp_product_max,omitempty"`
-}
-
 type AccountCurrencyOption struct {
 	Name  string       `json:"name"`
 	Items types.Labels `json:"items,omitempty"`
 }
 
-// iam/acc_active/user-id/rand-id
-type AccountActive struct {
+// iam/acc_fund/user-id/rand-id
+// iam/acc_fund_mgr/rand-id
+type AccountFund struct {
 	Id               string                    `json:"id"`
 	Type             uint8                     `json:"type"`
 	User             string                    `json:"user"`
+	Operator         string                    `json:"operator,omitempty"`
+	CashType         uint16                    `json:"cash_type,omitempty"`
+	CashAmount       float32                   `json:"cash_amount,omitempty"`
 	Amount           float64                   `json:"amount"`
 	Prepay           float64                   `json:"prepay"`
 	Payout           float64                   `json:"payout"`
@@ -93,17 +81,18 @@ type AccountActive struct {
 	Options          types.Labels              `json:"options,emitempty"`
 	Created          uint64                    `json:"created"`
 	Updated          uint64                    `json:"updated"`
+	Comment          string                    `json:"comment,omitempty"`
 	ExpProductLimits types.ArrayNameIdentifier `json:"exp_product_limits,omitempty"`
 	ExpProductMax    int                       `json:"exp_product_max,omitempty"`
 	ExpProductInpay  types.ArrayNameIdentifier `json:"exp_product_inpay,omitempty"`
 }
 
 // iam/acc_charge/user-id/hash-id
-// iam/acc_payout/user-id/hash-id
-type AccountChargeEntry struct {
+// iam/acc_charge_mgr/hash-id
+type AccountCharge struct {
 	types.TypeMeta `json:",inline"`
 	Id             string               `json:"id"`
-	RcId           string               `json:"rcid"`
+	Fund           string               `json:"fund"`
 	User           string               `json:"user"`
 	Product        types.NameIdentifier `json:"product"`
 	Prepay         float64              `json:"prepay"`
@@ -114,7 +103,7 @@ type AccountChargeEntry struct {
 	Updated        uint64               `json:"updated"`
 }
 
-func AccountChargeEntryId(prod types.NameIdentifier, start, close uint32) ([]byte, string) {
+func AccountChargeId(prod types.NameIdentifier, start, close uint32) ([]byte, string) {
 
 	bs := make([]byte, 4)
 	binary.BigEndian.PutUint32(bs, start)

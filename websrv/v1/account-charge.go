@@ -64,8 +64,8 @@ func (c AccountCharge) PrepayAction() {
 	}
 
 	var (
-		charge_bs, charge_id = iamapi.AccountChargeEntryId(set.Product, set.TimeStart, set.TimeClose)
-		charge               iamapi.AccountChargeEntry
+		charge_bs, charge_id = iamapi.AccountChargeId(set.Product, set.TimeStart, set.TimeClose)
+		charge               iamapi.AccountCharge
 	)
 
 	if rs := store.Data.ProgGet(
@@ -110,78 +110,83 @@ func (c AccountCharge) PrepayAction() {
 		return
 	}
 
-	if charge.RcId == "" {
+	var active iamapi.AccountFund
 
-		actives := []iamapi.AccountActive{}
-		ka := skv.NewProgKey(iamapi.AccActiveUser, userbs, "")
+	if charge.Fund == "" {
+
+		actives := []iamapi.AccountFund{}
+		ka := skv.NewProgKey(iamapi.AccFundUser, userbs, "")
 		if rs := store.Data.ProgScan(ka, ka, 1000); rs.OK() {
 			rss := rs.KvList()
 			for _, v := range rss {
-				var active iamapi.AccountActive
-				if err := v.Decode(&active); err == nil {
-					if (active.Amount - active.Payout - active.Prepay) > 0 {
-						actives = append(actives, active)
+				var v2 iamapi.AccountFund
+				if err := v.Decode(&v2); err == nil {
+					if (v2.Amount - v2.Payout - v2.Prepay) > 0 {
+						actives = append(actives, v2)
 					}
 				}
 			}
 		}
 
-		for _, active := range actives {
+		for _, v := range actives {
 
-			if active.ExpProductMax > 0 &&
-				(len(active.ExpProductInpay) >= active.ExpProductMax ||
-					!active.ExpProductInpay.Has(charge.Product)) {
+			if v.ExpProductMax > 0 &&
+				len(v.ExpProductInpay) >= v.ExpProductMax &&
+				!v.ExpProductInpay.Has(charge.Product) {
 				continue
 			}
 
-			balance := active.Amount - active.Prepay - active.Payout
+			balance := v.Amount - v.Prepay - v.Payout
 			if charge.Prepay > balance {
 				continue
 			}
 
-			charge.RcId = active.Id
-
-			active.Prepay += charge.Prepay
-			active.Updated = uint64(types.MetaTimeNow())
-			active.ExpProductInpay.Set(charge.Product)
-
-			acc_user.Balance -= charge.Prepay
-			acc_user.Prepay += charge.Prepay
-
-			if rs := store.Data.ProgPut(
-				skv.NewProgKey(iamapi.AccActiveUser, userbs, iamapi.HexStringToBytes(active.Id)),
-				skv.NewProgValue(active),
-				nil,
-			); !rs.OK() {
-				set.Error = types.NewErrorMeta(iamapi.ErrCodeInternalError, rs.Bytex().String())
-				return
-			}
-
+			active = v
+			charge.Fund = v.Id
 			break
 		}
 	}
 
-	if charge.RcId == "" {
+	if active.Id == "" || active.Id != charge.Fund {
 		set.Error = types.NewErrorMeta(iamapi.ErrCodeAccChargeOut, "")
 		return
 	}
 
-	if rs := store.Data.ProgPut(
-		skv.NewProgKey(iamapi.AccChargeUser, userbs, charge_bs),
-		skv.NewProgValue(charge),
-		nil,
-	); !rs.OK() {
-		set.Error = types.NewErrorMeta(iamapi.ErrCodeInternalError, rs.Bytex().String())
-		return
+	active.Prepay = iamapi.AccountFloat64Round(active.Prepay + charge.Prepay)
+	active.Updated = uint64(types.MetaTimeNow())
+	active.ExpProductInpay.Set(charge.Product)
+
+	acc_user.Balance = iamapi.AccountFloat64Round(acc_user.Balance - charge.Prepay)
+	acc_user.Prepay = iamapi.AccountFloat64Round(acc_user.Prepay + charge.Prepay)
+
+	sets := []skv.ProgKeyValue{
+		skv.ProgKeyValue{
+			Key: skv.NewProgKey(iamapi.AccFundUser, userbs, iamapi.HexStringToBytes(active.Id)),
+			Val: skv.NewProgValue(active),
+		},
+		skv.ProgKeyValue{
+			Key: skv.NewProgKey(iamapi.AccChargeUser, userbs, charge_bs),
+			Val: skv.NewProgValue(charge),
+		},
+		skv.ProgKeyValue{
+			Key: skv.NewProgKey(iamapi.AccUser, userbs),
+			Val: skv.NewProgValue(acc_user),
+		},
+		skv.ProgKeyValue{
+			Key: skv.NewProgKey(iamapi.AccFundMgr, iamapi.HexStringToBytes(active.Id)),
+			Val: skv.NewProgValue(active),
+		},
+		skv.ProgKeyValue{
+			Key: skv.NewProgKey(iamapi.AccChargeMgr, charge_bs),
+			Val: skv.NewProgValue(charge),
+		},
 	}
 
-	if rs := store.Data.ProgPut(
-		skv.NewProgKey(iamapi.AccUser, userbs),
-		skv.NewProgValue(acc_user),
-		nil,
-	); !rs.OK() {
-		set.Error = types.NewErrorMeta("500", rs.Bytex().String())
-		return
+	for _, v := range sets {
+		if rs := store.Data.ProgPut(v.Key, v.Val, nil); !rs.OK() {
+			set.Error = types.NewErrorMeta(iamapi.ErrCodeInternalError, "IO Error")
+			return
+		}
 	}
 
 	set.Kind = "AccountChargePrepay"
@@ -241,8 +246,8 @@ func (c AccountCharge) PayoutAction() {
 	}
 
 	var (
-		charge_bs, charge_id = iamapi.AccountChargeEntryId(set.Product, set.TimeStart, set.TimeClose)
-		charge               iamapi.AccountChargeEntry
+		charge_bs, charge_id = iamapi.AccountChargeId(set.Product, set.TimeStart, set.TimeClose)
+		charge               iamapi.AccountCharge
 	)
 	if rs := store.Data.ProgGet(
 		skv.NewProgKey(iamapi.AccChargeUser, iamapi.UserId(set.User), charge_bs),
@@ -267,15 +272,15 @@ func (c AccountCharge) PayoutAction() {
 	charge.Updated = uint64(types.MetaTimeNow())
 
 	var (
-		active  iamapi.AccountActive
-		actives = []iamapi.AccountActive{}
+		active  iamapi.AccountFund
+		actives = []iamapi.AccountFund{}
 	)
 
-	ka := skv.NewProgKey(iamapi.AccActiveUser, userbs, "")
+	ka := skv.NewProgKey(iamapi.AccFundUser, userbs, "")
 	if rs := store.Data.ProgScan(ka, ka, 1000); rs.OK() {
 		rss := rs.KvList()
 		for _, v := range rss {
-			var v2 iamapi.AccountActive
+			var v2 iamapi.AccountFund
 			if err := v.Decode(&v2); err == nil {
 				actives = append(actives, v2)
 			}
@@ -286,16 +291,16 @@ func (c AccountCharge) PayoutAction() {
 
 		balance := v.Amount - v.Payout - v.Prepay
 
-		if (charge.RcId == "" && set.Payout <= balance) ||
-			(charge.RcId != "" && charge.RcId == v.Id) {
+		if (charge.Fund == "" && set.Payout <= balance) ||
+			(charge.Fund != "" && charge.Fund == v.Id) {
 
-			if charge.RcId == "" {
+			if charge.Fund == "" {
 				if v.ExpProductMax > 0 &&
 					len(v.ExpProductInpay) >= v.ExpProductMax &&
 					!v.ExpProductInpay.Has(charge.Product) {
 					continue
 				}
-				charge.RcId = v.Id
+				charge.Fund = v.Id
 			}
 
 			active = v
@@ -304,46 +309,51 @@ func (c AccountCharge) PayoutAction() {
 		}
 	}
 
-	if charge.RcId == "" || active.Id == "" {
+	if charge.Fund == "" || active.Id == "" {
 		set.Error = types.NewErrorMeta(iamapi.ErrCodeInvalidArgument, "InvalidArgument")
 		return
 	}
 
 	if charge.Prepay > 0 {
-		active.Prepay -= charge.Prepay
-		acc_user.Prepay -= charge.Prepay
+		active.Prepay = iamapi.AccountFloat64Round(active.Prepay - charge.Prepay)
+		acc_user.Prepay = iamapi.AccountFloat64Round(acc_user.Prepay - charge.Prepay)
 	}
 
-	active.Payout += charge.Payout
+	active.Payout = iamapi.AccountFloat64Round(active.Payout + charge.Payout)
 	active.Updated = uint64(types.MetaTimeNow())
 	active.ExpProductInpay.Del(charge.Product)
 
-	sets := []skv.ProgKeyValue{}
-	sets = append(sets, skv.ProgKeyValue{
-		Key: skv.NewProgKey(iamapi.AccActiveUser, userbs, iamapi.HexStringToBytes(active.Id)),
-		Val: skv.NewProgValue(active),
-	})
-	sets = append(sets, skv.ProgKeyValue{
-		Key: skv.NewProgKey(iamapi.AccChargeUser, userbs, charge_bs),
-		Val: skv.NewProgValue(charge),
-	})
+	acc_user.Balance = iamapi.AccountFloat64Round(acc_user.Balance - charge.Payout)
+	acc_user.Updated = active.Updated
+
+	sets := []skv.ProgKeyValue{
+		skv.ProgKeyValue{
+			Key: skv.NewProgKey(iamapi.AccFundUser, userbs, iamapi.HexStringToBytes(active.Id)),
+			Val: skv.NewProgValue(active),
+		},
+		skv.ProgKeyValue{
+			Key: skv.NewProgKey(iamapi.AccChargeUser, userbs, charge_bs),
+			Val: skv.NewProgValue(charge),
+		},
+		skv.ProgKeyValue{
+			Key: skv.NewProgKey(iamapi.AccUser, userbs),
+			Val: skv.NewProgValue(acc_user),
+		},
+		skv.ProgKeyValue{
+			Key: skv.NewProgKey(iamapi.AccFundMgr, iamapi.HexStringToBytes(active.Id)),
+			Val: skv.NewProgValue(active),
+		},
+		skv.ProgKeyValue{
+			Key: skv.NewProgKey(iamapi.AccChargeMgr, charge_bs),
+			Val: skv.NewProgValue(charge),
+		},
+	}
 
 	for _, v := range sets {
 		if rs := store.Data.ProgPut(v.Key, v.Val, nil); !rs.OK() {
 			set.Error = types.NewErrorMeta(iamapi.ErrCodeInternalError, "IO Error")
 			return
 		}
-	}
-
-	acc_user.Balance -= charge.Payout
-	acc_user.Updated = active.Updated
-	if rs := store.Data.ProgPut(
-		skv.NewProgKey(iamapi.AccUser, userbs),
-		skv.NewProgValue(acc_user),
-		nil,
-	); !rs.OK() {
-		set.Error = types.NewErrorMeta("500", rs.Bytex().String())
-		return
 	}
 
 	set.Kind = "AccountChargePayout"

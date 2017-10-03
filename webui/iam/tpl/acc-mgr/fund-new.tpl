@@ -9,10 +9,10 @@
 </style>
 
 
-<div id="iam-accmgr-recharge-alert" class="alert hide"></div>
+<div id="iam-accmgr-fund-alert" class="alert hide"></div>
 
 
-<div id="iam-accmgr-recharge-form" class="form-horizontal">
+<div id="iam-accmgr-fund-form" class="form-horizontal">
  
     <div class="form-group">
       <label class="col-sm-3 control-label">Username</label>
@@ -22,10 +22,10 @@
     </div>
 
     <div class="form-group">
-      <label class="col-sm-3 control-label">Recharge Type</label>
+      <label class="col-sm-3 control-label">Fund Type</label>
       <div class="col-sm-9">
 	    <select name="type" class="form-control">
-        {[~it._recharge_types :v]}
+        {[~it._fund_types :v]}
           <option value="{[=v.value]}" {[ if (v.default) { ]}selected{[ } ]}> {[=v.name]}
         {[~]}
 		</select>

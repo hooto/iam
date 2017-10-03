@@ -43,7 +43,7 @@ func (c *Account) Init() int {
 	return 0
 }
 
-func (c Account) UserAction() {
+func (c Account) UserEntryAction() {
 
 	var set struct {
 		types.TypeMeta
@@ -62,44 +62,24 @@ func (c Account) UserAction() {
 	}
 }
 
-func (c Account) RechargeListAction() {
+func (c Account) FundListAction() {
 
 	ls := types.ObjectList{}
 	defer c.RenderJson(&ls)
 
-	k := skv.NewProgKey(iamapi.AccRechargeUser, iamapi.UserIdBytes(c.us.UserName), "")
-	if rs := store.Data.ProgRevScan(k, k, 100); rs.OK() {
+	k := skv.NewProgKey(iamapi.AccFundUser, iamapi.UserIdBytes(c.us.UserName), "")
+	if rs := store.Data.ProgRevScan(k, k, 1000); rs.OK() {
 		rss := rs.KvList()
 		for _, v := range rss {
 
-			var set iamapi.AccountRecharge
+			var set iamapi.AccountFund
 			if err := v.Decode(&set); err == nil {
 				ls.Items = append(ls.Items, set)
 			}
 		}
 	}
 
-	ls.Kind = "AccountRechargeList"
-}
-
-func (c Account) ActiveListAction() {
-
-	ls := types.ObjectList{}
-	defer c.RenderJson(&ls)
-
-	k := skv.NewProgKey(iamapi.AccActiveUser, iamapi.UserIdBytes(c.us.UserName), "")
-	if rs := store.Data.ProgRevScan(k, k, 100); rs.OK() {
-		rss := rs.KvList()
-		for _, v := range rss {
-
-			var set iamapi.AccountActive
-			if err := v.Decode(&set); err == nil {
-				ls.Items = append(ls.Items, set)
-			}
-		}
-	}
-
-	ls.Kind = "AccountActiveList"
+	ls.Kind = "AccountFundList"
 }
 
 func (c Account) ChargeListAction() {
@@ -108,13 +88,15 @@ func (c Account) ChargeListAction() {
 	defer c.RenderJson(&ls)
 
 	k := skv.NewProgKey(iamapi.AccChargeUser, iamapi.UserIdBytes(c.us.UserName), "")
-	if rs := store.Data.ProgRevScan(k, k, 100); rs.OK() {
+	if rs := store.Data.ProgRevScan(k, k, 1000); rs.OK() {
 		rss := rs.KvList()
 		for _, v := range rss {
 
-			var set iamapi.AccountChargeEntry
+			var set iamapi.AccountCharge
 			if err := v.Decode(&set); err == nil {
-				ls.Items = append(ls.Items, set)
+				if set.Prepay > 0 {
+					ls.Items = append(ls.Items, set)
+				}
 			}
 		}
 	}
@@ -128,11 +110,11 @@ func (c Account) ChargePayoutListAction() {
 	defer c.RenderJson(&ls)
 
 	k := skv.NewProgKey(iamapi.AccChargeUser, iamapi.UserIdBytes(c.us.UserName), "")
-	if rs := store.Data.ProgRevScan(k, k, 100); rs.OK() {
+	if rs := store.Data.ProgRevScan(k, k, 1000); rs.OK() {
 		rss := rs.KvList()
 		for _, v := range rss {
 
-			var set iamapi.AccountChargeEntry
+			var set iamapi.AccountCharge
 			if err := v.Decode(&set); err == nil {
 				if set.Payout > 0 {
 					ls.Items = append(ls.Items, set)
