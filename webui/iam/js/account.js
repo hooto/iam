@@ -13,6 +13,7 @@ iamAcc.Index = function() {
     iam.OpToolActive = null;
     iam.TplCmd("account/index", {
         callback: function(err, data) {
+            iam.OpToolsClean();
             $("#com-content").html(data);
             l4i.UrlEventClean("iam-module-navbar-menus");
             l4i.UrlEventRegister("account/recharge-list", iamAcc.RechargeList, "iam-module-navbar-menus");
@@ -54,6 +55,12 @@ iamAcc.RechargeList = function() {
                     data.items[i]._exp_product_limits = "";
                 } else {
                     data.items[i]._exp_product_limits = data.items[i].exp_product_limits.join(", ");
+                }
+                if (!data.items[i].exp_product_max) {
+                    data.items[i].exp_product_max = 0;
+                }
+                if (!data.items[i].exp_product_inpay) {
+                    data.items[i].exp_product_inpay = [];
                 }
             }
 
@@ -113,6 +120,13 @@ iamAcc.ActiveList = function() {
                 } else {
                     data.items[i]._exp_product_limits = data.items[i].exp_product_limits.join(", ");
                 }
+
+                if (!data.items[i].exp_product_max) {
+                    data.items[i].exp_product_max = 0;
+                }
+                if (!data.items[i].exp_product_inpay) {
+                    data.items[i].exp_product_inpay = [];
+                }
             }
 
             $("#work-content").html(tpl);
@@ -155,11 +169,6 @@ iamAcc.ChargeList = function() {
             }
 
             for (var i in data.items) {
-                if (!data.items[i].exp_product_limits) {
-                    data.items[i]._exp_product_limits = "";
-                } else {
-                    data.items[i]._exp_product_limits = data.items[i].exp_product_limits.join(", ");
-                }
                 if (!data.items[i].payout) {
                     data.items[i].payout = 0;
                 }

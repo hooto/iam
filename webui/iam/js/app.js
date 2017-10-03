@@ -1,39 +1,40 @@
 var iamApp = {
-    statusls : [{
-        status: 1, title: "Active",
+    statusls: [{
+        status: 1,
+        title: "Active",
     }, {
-        status: 2, title: "Banned",
+        status: 2,
+        title: "Banned",
     }],
-    roles : null,
-    appinstdef : {
-        meta : {
-            id : "",
+    roles: null,
+    appinstdef: {
+        meta: {
+            id: "",
         },
-        app_id : "",
-        app_title : "",
-        version : "",
-        status : 1,
-        url : "",
+        app_id: "",
+        app_title: "",
+        version: "",
+        status: 1,
+        url: "",
     },
 }
 
-iamApp.Index = function()
-{
+iamApp.Index = function() {
     iam.TplCmd("app/index", {
         callback: function(err, data) {
+            iam.OpToolsClean();
             $("#com-content").html(data);
             iamApp.InstList();
         },
     });
 }
 
-iamApp.InstList = function()
-{
+iamApp.InstList = function() {
     var alert_id = "#iam-app-insts-alert";
 
     seajs.use(["ep"], function(EventProxy) {
 
-        var ep = EventProxy.create('tpl', 'data', function (tpl, data) {
+        var ep = EventProxy.create('tpl', 'data', function(tpl, data) {
 
             $("#work-content").html(tpl);
 
@@ -61,16 +62,16 @@ iamApp.InstList = function()
             }
 
             l4iTemplate.Render({
-                dstid  : "iam-app-insts",
-                tplid  : "iam-app-insts-tpl",
-                data   : data,
-                // success : function() {
-                //     l4iTemplate.Render({
-                //         dstid  : "iam-app-insts-pager",
-                //         tplid  : "iam-app-insts-pager-tpl",
-                //         data   : l4i.Pager(data.meta),
-                //     });
-                // },
+                dstid: "iam-app-insts",
+                tplid: "iam-app-insts-tpl",
+                data: data,
+            // success : function() {
+            //     l4iTemplate.Render({
+            //         dstid  : "iam-app-insts-pager",
+            //         tplid  : "iam-app-insts-pager-tpl",
+            //         data   : l4i.Pager(data.meta),
+            //     });
+            // },
             });
         });
 
@@ -88,11 +89,10 @@ iamApp.InstList = function()
     });
 }
 
-iamApp.InstSetForm = function(instid)
-{
+iamApp.InstSetForm = function(instid) {
     seajs.use(["ep"], function(EventProxy) {
 
-        var ep = EventProxy.create('tpl', 'roles', 'data', function (tpl, roles, data) {
+        var ep = EventProxy.create('tpl', 'roles', 'data', function(tpl, roles, data) {
 
             if (!data || !data.kind) {
                 return;
@@ -121,18 +121,18 @@ iamApp.InstSetForm = function(instid)
             }
 
             l4iModal.Open({
-                tplsrc  : tpl,
-                width   : 900,
-                height  : 600,
-                data    : data,
-                title   : "App Instance Setting",
-                buttons : [{
-                    title : "Cancel",
-                    onclick : "l4iModal.Close()",
+                tplsrc: tpl,
+                width: 900,
+                height: 600,
+                data: data,
+                title: "App Instance Setting",
+                buttons: [{
+                    title: "Cancel",
+                    onclick: "l4iModal.Close()",
                 }, {
-                    title : "Save",
-                    onclick : "iamApp.InstSetCommit()",
-                    style   : "btn btn-primary",
+                    title: "Save",
+                    onclick: "iamApp.InstSetCommit()",
+                    style: "btn btn-primary",
                 }],
             });
         });
@@ -154,7 +154,7 @@ iamApp.InstSetForm = function(instid)
 
         if (instid) {
 
-            iam.ApiCmd("app/inst-entry?instid="+ instid, {
+            iam.ApiCmd("app/inst-entry?instid=" + instid, {
                 callback: ep.done('data'),
             });
 
@@ -168,8 +168,7 @@ iamApp.InstSetForm = function(instid)
     });
 }
 
-iamApp.InstSetCommit = function()
-{
+iamApp.InstSetCommit = function() {
     var form = $("#iam-app-instset"),
         alert_id = "#iam-app-instset-alert",
         req = l4i.Clone(iamApp.appinstdef);
@@ -193,9 +192,9 @@ iamApp.InstSetCommit = function()
     }
 
     iam.ApiCmd("app/inst-set", {
-        method : "PUT",
-        data   : JSON.stringify(req),
-        callback : function(err, data) {
+        method: "PUT",
+        data: JSON.stringify(req),
+        callback: function(err, data) {
 
             if (err) {
                 return l4i.InnerAlert(alert_id, 'alert-danger', err);
@@ -207,7 +206,7 @@ iamApp.InstSetCommit = function()
 
             l4i.InnerAlert(alert_id, 'alert-success', "Successfully updated");
 
-            window.setTimeout(function(){
+            window.setTimeout(function() {
                 l4iModal.Close();
                 iamApp.InstList();
             }, 1000);

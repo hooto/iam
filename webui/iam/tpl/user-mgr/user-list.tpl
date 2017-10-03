@@ -15,7 +15,6 @@
       <th>Email</th>
       <th>Status</th>
       <th>Roles</th>
-      <th>ECoin</th>
       <th>Updated</th>
       <th></th>
     </tr>
@@ -45,11 +44,10 @@
     {[~]}
     {[~]}
   </td>
-  <td>{[=v.ecoin_balance]}</td>
   <td>{[=l4i.MetaTimeParseFormat(v.updated, "Y-m-d")]}</td>
   <td align="right">
     <button class="pure-button button-xsmall"
-      onclick="iamAccMgr.Recharge('{[=v.name]}')">
+      onclick="iamAccMgr.RechargeNew('{[=v.name]}')">
       Recharge
     </button>
     <button class="pure-button button-xsmall"

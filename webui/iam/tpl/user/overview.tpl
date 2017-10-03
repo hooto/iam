@@ -41,6 +41,6 @@
 
     <div class="iam-user-panel iam-user-ecoin">
       <div class="iup-title">Account Balance</div>
-	  <div class="ecoin-value">{[=it.login.ecoin_amount]}</div>
+	  <div class="ecoin-value">{[=it.account.balance]}</div>
 	</div>
 </div>

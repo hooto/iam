@@ -3,18 +3,23 @@ var iamUser = {
 }
 
 iamUser.Overview = function() {
+    iam.OpToolsClean();
     seajs.use(["ep"], function(EventProxy) {
 
-        var ep = EventProxy.create('tpl', 'data', function(tpl, data) {
+        var ep = EventProxy.create('tpl', 'data', 'acc', function(tpl, data, acc) {
 
             if (!data.login.display_name) {
                 data.login.display_name = data.login.name;
             }
 
-            if (!data.login.ecoin_amount) {
-                data.login.ecoin_amount = 0;
+            if (!acc.balance) {
+                acc.balance = 0;
             }
-            data.login.ecoin_amount = data.login.ecoin_amount.toFixed(4);
+            if (!acc.prepay) {
+                acc.prepay = 0;
+            }
+
+            data.account = acc;
 
             l4iTemplate.Render({
                 dstid: "com-content",
@@ -25,6 +30,10 @@ iamUser.Overview = function() {
 
         ep.fail(function(err) {
             alert("Error: Please try again later");
+        });
+
+        iam.ApiCmd("account/user", {
+            callback: ep.done('acc'),
         });
 
         iam.ApiCmd("user/profile", {

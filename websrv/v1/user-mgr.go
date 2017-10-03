@@ -80,6 +80,7 @@ func (c UserMgr) UserListAction() {
 
 				user.Id = ""
 				user.Keys = nil
+
 				ls.Items = append(ls.Items, user)
 			}
 		}

@@ -2,11 +2,10 @@ var iamSys = {
 
 }
 
-iamSys.Index = function()
-{
-    iam.OpToolActive = null;
+iamSys.Index = function() {
     iam.TplCmd("sys-mgr/index", {
         callback: function(err, data) {
+            iam.OpToolsClean();
             $("#com-content").html(data);
             l4i.UrlEventClean("iam-module-navbar-menus");
             l4i.UrlEventRegister("sys-mgr/general-set", iamSys.GeneralSet, "iam-module-navbar-menus");
@@ -16,11 +15,10 @@ iamSys.Index = function()
     });
 }
 
-iamSys.GeneralSet = function()
-{
+iamSys.GeneralSet = function() {
     seajs.use(["ep"], function(EventProxy) {
 
-        var ep = EventProxy.create('tpl', 'data', function (tpl, data) {
+        var ep = EventProxy.create('tpl', 'data', function(tpl, data) {
 
             if (!data || !data.items) {
                 return;
@@ -32,9 +30,9 @@ iamSys.GeneralSet = function()
             }
 
             l4iTemplate.Render({
-                dstid  : "work-content",
-                tplsrc : tpl,
-                data   : data,
+                dstid: "work-content",
+                tplsrc: tpl,
+                data: data,
             });
         });
 
@@ -52,8 +50,7 @@ iamSys.GeneralSet = function()
     });
 }
 
-iamSys.GeneralSetCommit = function()
-{
+iamSys.GeneralSetCommit = function() {
     var form = $("#iam-sysmgr-generalset"),
         alert_id = "#iam-sysmgr-generalset-alert";
 
@@ -63,7 +60,7 @@ iamSys.GeneralSetCommit = function()
     }
 
     var req = {
-        items : [{
+        items: [{
             name: "service_name",
             value: form.find("input[name=service_name]").val(),
         }, {
@@ -78,9 +75,9 @@ iamSys.GeneralSetCommit = function()
     // console.log(req);
 
     iam.ApiCmd("sys-config/general-set", {
-        method : "PUT",
-        data   : JSON.stringify(req),
-        callback : function(err, data) {
+        method: "PUT",
+        data: JSON.stringify(req),
+        callback: function(err, data) {
 
             if (err) {
                 return l4i.InnerAlert(alert_id, 'alert-danger', err);
@@ -92,19 +89,18 @@ iamSys.GeneralSetCommit = function()
 
             l4i.InnerAlert(alert_id, 'alert-success', "Successfully updated");
 
-            // window.setTimeout(function(){
-            //     iamSys.GeneralSet();
-            // }, 1000);
+        // window.setTimeout(function(){
+        //     iamSys.GeneralSet();
+        // }, 1000);
         },
     });
 }
 
 
-iamSys.MailerSet = function(name)
-{
+iamSys.MailerSet = function(name) {
     seajs.use(["ep"], function(EventProxy) {
 
-        var ep = EventProxy.create('tpl', 'data', function (tpl, data) {
+        var ep = EventProxy.create('tpl', 'data', function(tpl, data) {
 
             if (!data || !data.items) {
                 return;
@@ -135,9 +131,9 @@ iamSys.MailerSet = function(name)
             }
 
             l4iTemplate.Render({
-                dstid  : "work-content",
-                tplsrc : tpl,
-                data   : mailer,
+                dstid: "work-content",
+                tplsrc: tpl,
+                data: mailer,
             });
         });
 
@@ -156,8 +152,7 @@ iamSys.MailerSet = function(name)
 }
 
 
-iamSys.MailerSetCommit = function()
-{
+iamSys.MailerSetCommit = function() {
     var form = $("#iam-sysmgr-mailerset"),
         alert_id = "#iam-sysmgr-mailerset-alert";
     if (!form) {
@@ -172,16 +167,16 @@ iamSys.MailerSetCommit = function()
     };
 
     var req = {
-        items : [{
+        items: [{
             name: "mailer",
             value: JSON.stringify(mailer),
         }],
     };
 
     iam.ApiCmd("sys-config/general-set", {
-        method : "PUT",
-        data   : JSON.stringify(req),
-        callback : function(err, data) {
+        method: "PUT",
+        data: JSON.stringify(req),
+        callback: function(err, data) {
 
             if (err) {
                 return l4i.InnerAlert(alert_id, 'alert-danger', err);
@@ -193,9 +188,9 @@ iamSys.MailerSetCommit = function()
 
             l4i.InnerAlert(alert_id, 'alert-success', "Successfully updated");
 
-            // window.setTimeout(function(){
-            //     iamSys.GeneralSet();
-            // }, 1000);
+        // window.setTimeout(function(){
+        //     iamSys.GeneralSet();
+        // }, 1000);
         },
     });
 }

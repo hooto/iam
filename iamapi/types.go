@@ -16,6 +16,8 @@ package iamapi
 
 import (
 	"encoding/base64"
+	"encoding/binary"
+	"encoding/hex"
 	"regexp"
 
 	"github.com/lessos/lessgo/crypto/idhash"
@@ -42,8 +44,12 @@ var (
 	accessTokenFrontendRe2 = regexp.MustCompile("^[a-z0-9]{4,30}\\/[a-f0-9]{20,40}$")
 )
 
+func UserIdBytes(name string) []byte {
+	return idhash.Hash([]byte(name), 4)
+}
+
 func UserId(name string) string {
-	return idhash.HashToHexString([]byte(name), 8)
+	return hex.EncodeToString(UserIdBytes(name))
 }
 
 type UserSession struct {
@@ -86,8 +92,6 @@ type User struct {
 	Roles       types.ArrayUint32 `json:"roles,omitempty"`
 	Groups      types.ArrayUint32 `json:"groups,omitempty"`
 	Status      uint8             `json:"status"`
-	EcoinAmount float64           `json:"ecoin_amount"`
-	EcoinPrepay float64           `json:"ecoin_prepay"`
 	Created     types.MetaTime    `json:"created"`
 	Updated     types.MetaTime    `json:"updated"`
 }
@@ -279,4 +283,22 @@ func ServiceRedirectTokenDecode(tokenstr string) ServiceRedirectToken {
 		json.Decode(jsb, &token)
 	}
 	return token
+}
+
+func Uint32ToBytes(v uint32) []byte {
+	bs := make([]byte, 4)
+	binary.BigEndian.PutUint32(bs, v)
+	return bs
+}
+
+func BytesToHexString(bs []byte) string {
+	return hex.EncodeToString(bs)
+}
+
+func HexStringToBytes(s string) []byte {
+	dec, err := hex.DecodeString(s)
+	if err != nil {
+		return []byte{}
+	}
+	return dec
 }

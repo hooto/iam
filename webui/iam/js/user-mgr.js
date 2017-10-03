@@ -41,9 +41,9 @@ var iamUserMgr = {
 }
 
 iamUserMgr.Index = function() {
-    iam.OpToolActive = null;
     iam.TplCmd("user-mgr/index", {
         callback: function(err, data) {
+            iam.OpToolsClean();
             $("#com-content").html(data);
             l4i.UrlEventClean("iam-module-navbar-menus");
             l4i.UrlEventRegister("user-mgr/user-list", iamUserMgr.UserList, "iam-module-navbar-menus");
@@ -81,9 +81,6 @@ iamUserMgr.UserList = function() {
                 }
                 if (!data.items[i].display_name) {
                     data.items[i].display_name = "";
-                }
-                if (!data.items[i].ecoin_balance) {
-                    data.items[i].ecoin_balance = 0;
                 }
             }
 

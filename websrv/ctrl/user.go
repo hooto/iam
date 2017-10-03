@@ -39,6 +39,10 @@ func (c User) PanelInfoAction() {
 			"path":  "user-mgr/index",
 			"title": "Users",
 		})
+		nav = append(nav, map[string]string{
+			"path":  "acc-mgr/index",
+			"title": "Accounts",
+		})
 	}
 
 	if iamclient.SessionAccessAllowed(c.Session, "sys.admin", config.Config.InstanceID) {

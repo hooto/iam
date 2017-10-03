@@ -19,7 +19,6 @@ import (
 	"encoding/hex"
 	"errors"
 	"fmt"
-	"math"
 	"regexp"
 	"time"
 
@@ -33,6 +32,12 @@ var (
 )
 
 const (
+	AccUser         = "iam_au"
+	AccRechargeUser = "iam_arc"
+	AccRechargeMgr  = "iam_arcm"
+	AccActiveUser   = "iam_aa"
+	AccChargeUser   = "iam_ac"
+
 	AccountCurrencyTypeCash    uint8 = 1
 	AccountCurrencyTypeVirtual uint8 = 32
 	AccountCurrencyTypeCard    uint8 = 33
@@ -45,8 +50,15 @@ func AccountCurrencyTypeValid(v uint8) bool {
 	return false
 }
 
+type AccountUser struct {
+	User    string  `json:"user"`
+	Balance float64 `json:"balance"`
+	Prepay  float64 `json:"prepay"`
+	Updated uint64  `json:"updated"`
+}
+
 // iam/acc_recharge/user-id/rand-id
-// iam/acc_recharge_ls/rand-id
+// iam/acc_recharge_mgr/rand-id
 type AccountRecharge struct {
 	Id               string                    `json:"id"`
 	Type             uint8                     `json:"type"`
@@ -61,6 +73,7 @@ type AccountRecharge struct {
 	Created          uint64                    `json:"created"`
 	Updated          uint64                    `json:"updated"`
 	ExpProductLimits types.ArrayNameIdentifier `json:"exp_product_limits,omitempty"`
+	ExpProductMax    int                       `json:"exp_product_max,omitempty"`
 }
 
 type AccountCurrencyOption struct {
@@ -81,6 +94,8 @@ type AccountActive struct {
 	Created          uint64                    `json:"created"`
 	Updated          uint64                    `json:"updated"`
 	ExpProductLimits types.ArrayNameIdentifier `json:"exp_product_limits,omitempty"`
+	ExpProductMax    int                       `json:"exp_product_max,omitempty"`
+	ExpProductInpay  types.ArrayNameIdentifier `json:"exp_product_inpay,omitempty"`
 }
 
 // iam/acc_charge/user-id/hash-id
@@ -99,35 +114,26 @@ type AccountChargeEntry struct {
 	Updated        uint64               `json:"updated"`
 }
 
-func AccountChargeEntryId(prod types.NameIdentifier, start, close uint32) string {
+func AccountChargeEntryId(prod types.NameIdentifier, start, close uint32) ([]byte, string) {
 
 	bs := make([]byte, 4)
-	binary.BigEndian.PutUint32(bs, close)
+	binary.BigEndian.PutUint32(bs, start)
 
-	return hex.EncodeToString(bs) + idhash.HashToHexString([]byte(fmt.Sprintf(
+	hk := idhash.Hash([]byte(fmt.Sprintf(
 		"acc.charge.%s.%d.%d",
 		prod.String(),
 		start, close,
-	)), 16)
+	)), 8)
+
+	rs := append(bs, hk...)
+
+	return rs, hex.EncodeToString(rs)
 }
 
 const (
 	PayTypeLease uint8 = 1
 	PayTypeOrder uint8 = 2
 )
-
-type AccountPayout struct {
-	Id        string               `json:"id"`
-	Type      uint8                `json:"type"`
-	RcId      string               `json:"rcid"`
-	User      string               `json:"user"`
-	Product   types.NameIdentifier `json:"product"`
-	Payout    float64              `json:"payout"`
-	Comments  types.Labels         `json:"comments,omitempty"`
-	PayOpened uint64               `json:"pay_opened"`
-	PayClosed uint64               `json:"pay_closed"`
-	Created   uint64               `json:"created"`
-}
 
 type AccountChargePrepay struct {
 	types.TypeMeta `json:",inline"`
@@ -206,11 +212,6 @@ func (this *AccountChargePayout) Valid() error {
 	return nil
 }
 
-type AccountChargeStatus struct {
-	PayOpened uint64 `json:"pay_opened"`
-	PayTime   uint64 `json:"pay_time"`
-}
-
 const (
 	AccountChargeTypePrepay uint8 = 1
 	AccountChargeTypePayout uint8 = 2
@@ -266,17 +267,6 @@ func AccountChargeCycleTimeCloseNow(cycle uint32) uint32 {
 	}
 
 	return ctm
-
-	// if cycle > AccountChargeCycleHour {
-	// 	offset += uint32(tm.Hour()) * 3600
-	// }
-	// if cycle > AccountChargeCycleDay {
-	// 	offset += uint32(tm.Day()) * 86400
-	// }
-	// if fix := uint32(tm.Minute()*60+tm.Second()) % cycle; fix > 0 {
-	// 	ctm -= fix
-	// }
-	// return (ctm + cycle)
 }
 
 func AccountChargeCycleTimeClose(cycle, ctc uint32) uint32 {
@@ -322,19 +312,8 @@ func AccountChargeCycleTimeClose(cycle, ctc uint32) uint32 {
 	}
 
 	return ctm
-	// cycle = account_charge_cycle_fix(cycle)
-	// tm := time.Unix(int64(ctm), 0)
-	// if fix := uint32(tm.Minute()*60+tm.Second()) % cycle; fix > 0 {
-	// 	ctm = ctm - fix + cycle
-	// }
 }
 
-// deposit
-// type AccoutPaymentStatus struct {
-// 	PayOpened uint64 `json:"pay_opened"`
-// 	PayTime   uint32 `json:"pay_time"`
-// }
-
 func AccountFloat64Round(f float64) float64 {
-	return math.Trunc(f*1e4+0.5) * 1e-4
+	return float64(int64(f*1e4+0.5)) / 1e4
 }

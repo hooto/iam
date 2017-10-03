@@ -57,8 +57,8 @@ iam.Boot = function() {
                 "~/iam/js/access-key.js" + iam.debug_uri(),
                 "~/iam/js/account.js" + iam.debug_uri(),
                 "~/iam/js/sys.js" + iam.debug_uri(),
-                "~/iam/js/usermgr.js" + iam.debug_uri(),
-                "~/iam/js/appmgr.js" + iam.debug_uri(),
+                "~/iam/js/user-mgr.js" + iam.debug_uri(),
+                "~/iam/js/app-mgr.js" + iam.debug_uri(),
                 "~/iam/js/account-mgr.js" + iam.debug_uri(),
             ], iam.load_index);
         });
@@ -106,16 +106,16 @@ iam.load_index = function() {
                         l4i.UrlEventRegister("user-mgr/index", iamUserMgr.Index, "iam-topbar-nav-menus");
                         break;
 
+                    case "acc-mgr/index":
+                        l4i.UrlEventRegister("acc-mgr/index", iamAccMgr.Index, "iam-topbar-nav-menus");
+                        break;
+
                     case "app-mgr/index":
                         l4i.UrlEventRegister("app-mgr/index", iamAppMgr.Index, "iam-topbar-nav-menus");
                         break;
 
                     case "sys-mgr/index":
                         l4i.UrlEventRegister("sys-mgr/index", iamSys.Index, "iam-topbar-nav-menus");
-                        break;
-
-                    case "acount-mgr/index":
-                        l4i.UrlEventRegister("account-mgr/index", iamAccMgr.Index, "iam-topbar-nav-menus");
                         break;
                 }
             }
@@ -236,4 +236,9 @@ iam.OpToolsRefresh = function(div_target) {
             iam.OpToolActive = div_target;
         }
     }
+}
+
+iam.OpToolsClean = function() {
+    $("#iam-module-navbar-optools").empty();
+    iam.OpToolActive = null;
 }

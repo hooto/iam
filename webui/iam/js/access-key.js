@@ -18,9 +18,9 @@ var iamAccessKey = {
 }
 
 iamAccessKey.Index = function() {
-    iam.OpToolActive = null;
     iam.TplCmd("access-key/index", {
         callback: function(err, data) {
+            iam.OpToolsClean();
             $("#com-content").html(data);
             l4i.UrlEventClean("iam-module-navbar-menus");
             l4i.UrlEventRegister("access-key/list", iamAccessKey.List, "iam-module-navbar-menus");

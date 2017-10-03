@@ -2,19 +2,18 @@ var iamMgr = {
 
 }
 
-iamMgr.NavAction = function(uri)
-{
+iamMgr.NavAction = function(uri) {
     switch (uri) {
-    case "user/my":
-    case "user-mgr/index":
-    case "auth-mgr/index":
-    case "sys-mgr/index":
-    case "app-mgr/index":
-    case "app/my":
-        $(".iuh-menu a.active").removeClass('active');
-        iam.ComLoader(uri);
-        $(".iuh-menu").find("a[href='#"+uri+"']").addClass("active");
-        break;
+        case "user/my":
+        case "user-mgr/index":
+        case "auth-mgr/index":
+        case "sys-mgr/index":
+        case "app-mgr/index":
+        case "app/my":
+            $(".iuh-menu a.active").removeClass('active');
+            iam.ComLoader(uri);
+            $(".iuh-menu").find("a[href='#" + uri + "']").addClass("active");
+            break;
     }
 
 // $(".iuh-menu a").click(function(event) {
@@ -24,17 +23,16 @@ iamMgr.NavAction = function(uri)
 // });
 }
 
-iamMgr.Index = function()
-{
+iamMgr.Index = function() {
     seajs.use(["ep"], function(EventProxy) {
 
-        var ep = EventProxy.create('tpl', 'data', function (tpl, data) {
+        var ep = EventProxy.create('tpl', 'data', function(tpl, data) {
 
             l4iTemplate.Render({
-                dstid  : "body-content",
-                tplsrc : tpl,
-                data   : data,
-                success : function() {
+                dstid: "body-content",
+                tplsrc: tpl,
+                data: data,
+                success: function() {
                     iamUser.Overview();
                 },
             });

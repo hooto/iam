@@ -43,13 +43,32 @@ func (c *Account) Init() int {
 	return 0
 }
 
+func (c Account) UserAction() {
+
+	var set struct {
+		types.TypeMeta
+		iamapi.AccountUser
+	}
+	defer c.RenderJson(&set)
+
+	if rs := store.Data.ProgGet(
+		skv.NewProgKey(iamapi.AccUser, iamapi.UserIdBytes(c.us.UserName)),
+	); rs.OK() {
+		rs.Decode(&set.AccountUser)
+	}
+
+	if set.AccountUser.User == c.us.UserName {
+		set.Kind = "AccountUser"
+	}
+}
+
 func (c Account) RechargeListAction() {
 
 	ls := types.ObjectList{}
 	defer c.RenderJson(&ls)
 
-	k := skv.NewProgKey("iam", "acc_recharge", iamapi.UserId(c.us.UserName), "")
-	if rs := store.Data.ProgScan(k, k, 100); rs.OK() {
+	k := skv.NewProgKey(iamapi.AccRechargeUser, iamapi.UserIdBytes(c.us.UserName), "")
+	if rs := store.Data.ProgRevScan(k, k, 100); rs.OK() {
 		rss := rs.KvList()
 		for _, v := range rss {
 
@@ -68,8 +87,8 @@ func (c Account) ActiveListAction() {
 	ls := types.ObjectList{}
 	defer c.RenderJson(&ls)
 
-	k := skv.NewProgKey("iam", "acc_active", iamapi.UserId(c.us.UserName), "")
-	if rs := store.Data.ProgScan(k, k, 100); rs.OK() {
+	k := skv.NewProgKey(iamapi.AccActiveUser, iamapi.UserIdBytes(c.us.UserName), "")
+	if rs := store.Data.ProgRevScan(k, k, 100); rs.OK() {
 		rss := rs.KvList()
 		for _, v := range rss {
 
@@ -88,7 +107,7 @@ func (c Account) ChargeListAction() {
 	ls := types.ObjectList{}
 	defer c.RenderJson(&ls)
 
-	k := skv.NewProgKey("iam", "acc_charge", iamapi.UserId(c.us.UserName), "")
+	k := skv.NewProgKey(iamapi.AccChargeUser, iamapi.UserIdBytes(c.us.UserName), "")
 	if rs := store.Data.ProgRevScan(k, k, 100); rs.OK() {
 		rss := rs.KvList()
 		for _, v := range rss {
@@ -108,7 +127,7 @@ func (c Account) ChargePayoutListAction() {
 	ls := types.ObjectList{}
 	defer c.RenderJson(&ls)
 
-	k := skv.NewProgKey("iam", "acc_charge", iamapi.UserId(c.us.UserName), "")
+	k := skv.NewProgKey(iamapi.AccChargeUser, iamapi.UserIdBytes(c.us.UserName), "")
 	if rs := store.Data.ProgRevScan(k, k, 100); rs.OK() {
 		rss := rs.KvList()
 		for _, v := range rss {

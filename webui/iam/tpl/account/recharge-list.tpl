@@ -7,6 +7,8 @@
         <th>Amount</th>
         <th>Cash</th>
 		<th>Product Limits</th>
+		<th>Product Max</th>
+		<th>Product Inpay</th>
         <th>Comment</th>
 		<th>Operator</th>
         <th>Created</th>
@@ -21,7 +23,7 @@
 {[~it.items :v]}
 <tr>
   <td class="iam-monofont">
-    {[=v.id]}
+    {[=v.id.substr(8)]}
   </td>
   <td>
     {[~it._ecoin_types :sv]}
@@ -31,6 +33,8 @@
   <td>{[=v.amount]}</td>
   <td>{[=v.cash_amount]}</td>
   <td>{[=v._exp_product_limits]}</td>
+  <td>{[=v.exp_product_max]}</td>
+  <td>{[=v._exp_product_inpay]}</td>
   <td>{[=v.comment]}</td>
   <td>{[=v.user_opr]}</td>
   <td>{[=l4i.MetaTimeParseFormat(v.created, "Y-m-d")]}</td>
