@@ -1,7 +1,8 @@
 body {
-  min-width: 960px;
+  min-width: 980px;
   /*background-color: #f9f9f9;*/
   background-color: #eee;
+  padding: 0 10px;
 }
 
 .iam-monofont {
@@ -18,7 +19,7 @@ body {
 
 .iam-container {
   margin: 0 auto;
-  width: 1200px;
+  max-width: 1300px;
   position: relative;
 }
 

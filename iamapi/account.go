@@ -32,11 +32,11 @@ var (
 )
 
 const (
-	AccUser       = "iam_au"
-	AccFundUser   = "iam_af"
-	AccFundMgr    = "iam_afm"
-	AccChargeUser = "iam_ac"
-	AccChargeMgr  = "iam_acm"
+	AccUser       = "iam/au"
+	AccFundUser   = "iam/af"
+	AccFundMgr    = "iam/afm"
+	AccChargeUser = "iam/ac"
+	AccChargeMgr  = "iam/acm"
 
 	AccountCurrencyTypeCash    uint8 = 1
 	AccountCurrencyTypeVirtual uint8 = 32

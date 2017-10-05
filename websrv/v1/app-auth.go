@@ -102,13 +102,11 @@ func (c AppAuth) RegisterAction() {
 	// sess, err := c.Session.SessionFetch()
 
 	var (
-		prevVersion uint64
-		prev        iamapi.AppInstance
+		prev iamapi.AppInstance
 	)
 
 	if obj := store.PoGet("app-instance", set.Instance.Meta.ID); obj.OK() {
 		obj.Decode(&prev)
-		prevVersion = obj.Meta().Version
 	}
 
 	if prev.Meta.ID == "" {
@@ -131,7 +129,7 @@ func (c AppAuth) RegisterAction() {
 	}
 
 	if obj := store.PoPut("app-instance", set.Instance.Meta.ID, set.Instance, &skv.PathWriteOptions{
-		PrevVersion: prevVersion,
+		Force: true,
 	}); !obj.OK() {
 		set.Error = types.NewErrorMeta(iamapi.ErrCodeInternalError, obj.Bytex().String())
 		return

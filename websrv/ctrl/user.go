@@ -30,7 +30,7 @@ func (c User) PanelInfoAction() {
 	//
 	nav := []map[string]string{
 		{"path": "app/index", "title": "Authorized Apps"},
-		{"path": "access-key/index", "title": "Access Keys"},
+		{"path": "access-key/index", "title": "Keys"},
 		{"path": "account/index", "title": "Acount"},
 	}
 
