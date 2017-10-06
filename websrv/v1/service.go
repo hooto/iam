@@ -16,7 +16,6 @@ package v1
 
 import (
 	"encoding/base64"
-	"fmt"
 	"net/http"
 	"net/url"
 	"strings"
@@ -60,7 +59,6 @@ func (c Service) LoginAuthAction() {
 	defer c.RenderJson(&rsp)
 
 	uname := strings.TrimSpace(strings.ToLower(c.Params.Get("uname")))
-	userid := iamapi.UserId(uname)
 
 	if uname == "" || c.Params.Get("passwd") == "" {
 		rsp.Error = types.NewErrorMeta("400", "Bad Request")
@@ -68,7 +66,7 @@ func (c Service) LoginAuthAction() {
 	}
 
 	var user iamapi.User
-	if obj := store.PoGet("user", userid); obj.OK() {
+	if obj := store.Data.ProgGet(iamapi.DataUserKey(uname)); obj.OK() {
 		obj.Decode(&user)
 	}
 
@@ -102,10 +100,8 @@ func (c Service) LoginAuthAction() {
 
 	token := iamapi.NewAccessTokenFrontend(session.UserName, session.AccessToken)
 
-	skey := fmt.Sprintf("session/%s", token.SessionPath())
-
-	if sobj := store.PvPut(skey, session, &skv.PathWriteOptions{
-		Ttl: 864000000, // 10 days
+	if sobj := store.Data.ProgPut(iamapi.DataSessionKey(session.UserName, session.AccessToken), skv.NewProgValue(session), &skv.ProgWriteOptions{
+		Expired: time.Now().Add(864000e9),
 	}); !sobj.OK() {
 		rsp.Error = types.NewErrorMeta("500", sobj.Bytex().String())
 		return
@@ -163,7 +159,7 @@ func (c Service) AuthAction() {
 		return
 	}
 
-	if obj := store.PvGet("session/" + token.SessionPath()); obj.OK() {
+	if obj := store.Data.ProgGet(iamapi.DataSessionKey(token.User(), token.Id())); obj.OK() {
 		obj.Decode(&set.UserSession)
 	}
 
@@ -213,7 +209,7 @@ func (c Service) AccessAllowedAction() {
 	}
 
 	var session iamapi.UserSession
-	if obj := store.PvGet("session/" + token.SessionPath()); obj.OK() {
+	if obj := store.Data.ProgGet(iamapi.DataSessionKey(token.User(), token.Id())); obj.OK() {
 		obj.Decode(&session)
 	}
 
@@ -254,11 +250,11 @@ func (c Service) PhotoAction() {
 
 	if len(c.Request.RequestPath) > iam_v1_service_len {
 
-		uid := iamapi.UserId(c.Request.RequestPath[iam_v1_service_len:])
+		uname := c.Request.RequestPath[iam_v1_service_len:]
 
 		var profile iamapi.UserProfile
 
-		if obj := store.PoGet("user-profile", uid); obj.OK() {
+		if obj := store.Data.ProgGet(iamapi.DataUserProfileKey(uname)); obj.OK() {
 			if err := obj.Decode(&profile); err == nil && len(profile.Photo) > 50 {
 				photo = profile.Photo
 			}

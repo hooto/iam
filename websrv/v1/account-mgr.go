@@ -60,7 +60,7 @@ func (c AccountMgr) ReBalanceAction() {
 
 	users := []string{}
 
-	if rs := store.PoScan("user", []byte{}, []byte{}, 10000); rs.OK() {
+	if rs := store.Data.ProgScan(iamapi.DataUserKey(""), iamapi.DataUserKey(""), 10000); rs.OK() {
 		rss := rs.KvList()
 		for _, v := range rss {
 			var user iamapi.User
@@ -72,9 +72,7 @@ func (c AccountMgr) ReBalanceAction() {
 
 	for _, uname := range users {
 
-		ubs := iamapi.UserIdBytes(uname)
-
-		k := skv.NewProgKey(iamapi.AccFundUser, ubs, "")
+		k := iamapi.DataAccFundUserKey(uname, "")
 		if rs := store.Data.ProgRevScan(k, k, 1000); rs.OK() {
 
 			var (
@@ -96,7 +94,7 @@ func (c AccountMgr) ReBalanceAction() {
 			prepay = iamapi.AccountFloat64Round(prepay)
 
 			var au iamapi.AccountUser
-			if rs := store.Data.ProgGet(skv.NewProgKey(iamapi.AccUser, ubs)); rs.OK() {
+			if rs := store.Data.ProgGet(iamapi.DataAccUserKey(uname)); rs.OK() {
 				rs.Decode(&au)
 			}
 
@@ -111,7 +109,7 @@ func (c AccountMgr) ReBalanceAction() {
 				au.Updated = uint64(types.MetaTimeNow())
 
 				store.Data.ProgPut(
-					skv.NewProgKey(iamapi.AccUser, ubs),
+					iamapi.DataAccUserKey(uname),
 					skv.NewProgValue(au),
 					nil,
 				)
@@ -133,7 +131,7 @@ func (c AccountMgr) FundListAction() {
 		return
 	}
 
-	k := skv.NewProgKey(iamapi.AccFundMgr, "")
+	k := iamapi.DataAccFundMgrKey("")
 	if rs := store.Data.ProgRevScan(k, k, 1000); rs.OK() {
 		rss := rs.KvList()
 		for _, v := range rss {
@@ -167,9 +165,7 @@ func (c AccountMgr) FundEntryAction() {
 		return
 	}
 
-	set_id := iamapi.HexStringToBytes(id)
-
-	if rs := store.Data.ProgGet(skv.NewProgKey(iamapi.AccFundMgr, set_id)); rs.OK() {
+	if rs := store.Data.ProgGet(iamapi.DataAccFundMgrKey(id)); rs.OK() {
 		rs.Decode(&set.AccountFund)
 	}
 
@@ -227,11 +223,8 @@ func (c AccountMgr) FundNewAction() {
 		return
 	}
 
-	var (
-		userbs   = iamapi.UserIdBytes(set.User)
-		acc_user iamapi.AccountUser
-	)
-	if rs := store.Data.ProgGet(skv.NewProgKey(iamapi.AccUser, userbs)); rs.OK() {
+	var acc_user iamapi.AccountUser
+	if rs := store.Data.ProgGet(iamapi.DataAccUserKey(set.User)); rs.OK() {
 		rs.Decode(&acc_user)
 	} else if !rs.NotFound() {
 		set.Error = types.NewErrorMeta(iamapi.ErrCodeInternalError, "Server Error")
@@ -257,16 +250,16 @@ func (c AccountMgr) FundNewAction() {
 	acc_user.Updated = set.Updated
 
 	sets := []skv.ProgKeyValue{
-		skv.ProgKeyValue{
-			Key: skv.NewProgKey(iamapi.AccFundMgr, set_id),
+		{
+			Key: iamapi.DataAccFundMgrKey(set.Id),
 			Val: skv.NewProgValue(set.AccountFund),
 		},
-		skv.ProgKeyValue{
-			Key: skv.NewProgKey(iamapi.AccFundUser, userbs, set_id),
+		{
+			Key: iamapi.DataAccFundUserKey(set.User, set.Id),
 			Val: skv.NewProgValue(set.AccountFund),
 		},
-		skv.ProgKeyValue{
-			Key: skv.NewProgKey(iamapi.AccUser, userbs),
+		{
+			Key: iamapi.DataAccUserKey(set.User),
 			Val: skv.NewProgValue(acc_user),
 		},
 	}
@@ -315,12 +308,9 @@ func (c AccountMgr) FundSetAction() {
 		return
 	}
 
-	var (
-		set_id   = iamapi.HexStringToBytes(set.Id)
-		set_prev iamapi.AccountFund
-	)
+	var set_prev iamapi.AccountFund
 
-	if rs := store.Data.ProgGet(skv.NewProgKey(iamapi.AccFundMgr, set_id)); rs.OK() {
+	if rs := store.Data.ProgGet(iamapi.DataAccFundMgrKey(set.Id)); rs.OK() {
 		rs.Decode(&set_prev)
 	}
 
@@ -335,15 +325,13 @@ func (c AccountMgr) FundSetAction() {
 	set_prev.ExpProductLimits = set.ExpProductLimits
 	set_prev.ExpProductMax = set.ExpProductMax
 
-	userbs := iamapi.UserIdBytes(set_prev.User)
-
 	sets := []skv.ProgKeyValue{
 		{
-			Key: skv.NewProgKey(iamapi.AccFundMgr, set_id),
+			Key: iamapi.DataAccFundMgrKey(set.Id),
 			Val: skv.NewProgValue(set_prev),
 		},
 		{
-			Key: skv.NewProgKey(iamapi.AccFundUser, userbs, set_id),
+			Key: iamapi.DataAccFundUserKey(set_prev.User, set.Id),
 			Val: skv.NewProgValue(set_prev),
 		},
 	}
@@ -368,7 +356,7 @@ func (c AccountMgr) ChargeListAction() {
 		return
 	}
 
-	k := skv.NewProgKey(iamapi.AccChargeMgr, "")
+	k := iamapi.DataAccChargeMgrKey("")
 	if rs := store.Data.ProgRevScan(k, k, 1000); rs.OK() {
 		rss := rs.KvList()
 		for _, v := range rss {
@@ -411,13 +399,8 @@ func (c AccountMgr) ChargeEntryAction() {
 		return
 	}
 
-	var (
-		set_id = iamapi.HexStringToBytes(id)
-		userbs = iamapi.UserIdBytes(user)
-	)
-
 	//
-	if rs := store.Data.ProgGet(skv.NewProgKey(iamapi.AccChargeUser, userbs, set_id)); rs.OK() {
+	if rs := store.Data.ProgGet(iamapi.DataAccChargeUserKey(user, id)); rs.OK() {
 		rs.Decode(&set.AccountCharge)
 	}
 	if set.Id == "" || set.Id != id {
@@ -464,14 +447,12 @@ func (c AccountMgr) ChargeSetPayoutAction() {
 	}
 
 	var (
-		set_id   = iamapi.HexStringToBytes(set_charge.Id)
 		charge   iamapi.AccountCharge
-		userbs   = iamapi.UserIdBytes(set_charge.User)
 		acc_user iamapi.AccountUser
 	)
 
 	//
-	if rs := store.Data.ProgGet(skv.NewProgKey(iamapi.AccChargeUser, userbs, set_id)); rs.OK() {
+	if rs := store.Data.ProgGet(iamapi.DataAccChargeUserKey(set_charge.User, set_charge.Id)); rs.OK() {
 		rs.Decode(&charge)
 	}
 	if charge.Id == "" || charge.Id != set_charge.Id {
@@ -484,7 +465,7 @@ func (c AccountMgr) ChargeSetPayoutAction() {
 	}
 
 	//
-	if rs := store.Data.ProgGet(skv.NewProgKey(iamapi.AccUser, userbs)); rs.OK() {
+	if rs := store.Data.ProgGet(iamapi.DataAccUserKey(set_charge.User)); rs.OK() {
 		rs.Decode(&acc_user)
 	} else if !rs.NotFound() {
 		set.Error = types.NewErrorMeta(iamapi.ErrCodeInternalError, "Server Error")
@@ -501,7 +482,7 @@ func (c AccountMgr) ChargeSetPayoutAction() {
 	if charge.Fund != "" {
 		var fund iamapi.AccountFund
 		if rs := store.Data.ProgGet(
-			skv.NewProgKey(iamapi.AccFundUser, userbs, iamapi.HexStringToBytes(charge.Fund)),
+			iamapi.DataAccFundUserKey(set_charge.User, charge.Fund),
 		); rs.OK() {
 			rs.Decode(&fund)
 		}
@@ -517,12 +498,12 @@ func (c AccountMgr) ChargeSetPayoutAction() {
 		fund.Updated = updated
 
 		sets = append(sets, skv.ProgKeyValue{
-			Key: skv.NewProgKey(iamapi.AccFundUser, userbs, iamapi.HexStringToBytes(charge.Fund)),
+			Key: iamapi.DataAccFundUserKey(set_charge.User, charge.Fund),
 			Val: skv.NewProgValue(fund),
 		})
 
 		sets = append(sets, skv.ProgKeyValue{
-			Key: skv.NewProgKey(iamapi.AccFundMgr, iamapi.HexStringToBytes(charge.Fund)),
+			Key: iamapi.DataAccFundMgrKey(charge.Fund),
 			Val: skv.NewProgValue(fund),
 		})
 	}
@@ -539,15 +520,15 @@ func (c AccountMgr) ChargeSetPayoutAction() {
 
 	//
 	sets = append(sets, skv.ProgKeyValue{
-		Key: skv.NewProgKey(iamapi.AccChargeUser, userbs, set_id),
+		Key: iamapi.DataAccChargeUserKey(set_charge.User, set_charge.Id),
 		Val: skv.NewProgValue(charge),
 	})
 	sets = append(sets, skv.ProgKeyValue{
-		Key: skv.NewProgKey(iamapi.AccUser, userbs),
+		Key: iamapi.DataAccUserKey(set_charge.User),
 		Val: skv.NewProgValue(acc_user),
 	})
 	sets = append(sets, skv.ProgKeyValue{
-		Key: skv.NewProgKey(iamapi.AccChargeMgr, set_id),
+		Key: iamapi.DataAccChargeMgrKey(set_charge.Id),
 		Val: skv.NewProgValue(charge),
 	})
 

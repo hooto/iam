@@ -23,6 +23,7 @@ import (
 	"github.com/hooto/httpsrv"
 	"github.com/lessos/lessgo/pass"
 	"github.com/lessos/lessgo/types"
+	"github.com/lynkdb/iomix/skv"
 
 	"github.com/hooto/iam/base/signup"
 	"github.com/hooto/iam/config"
@@ -64,7 +65,7 @@ func (c UserMgr) UserListAction() {
 	)
 
 	// TODO page
-	if rs := store.PoScan("user", []byte{}, []byte{}, 1000); rs.OK() {
+	if rs := store.Data.ProgScan(iamapi.DataUserKey(""), iamapi.DataUserKey(""), 1000); rs.OK() {
 
 		rss := rs.KvList()
 		for _, obj := range rss {
@@ -115,9 +116,9 @@ func (c UserMgr) UserEntryAction() {
 		return
 	}
 
-	userid := iamapi.UserId(c.Params.Get("username"))
+	uname := c.Params.Get("username")
 
-	if obj := store.PoGet("user", userid); obj.OK() {
+	if obj := store.Data.ProgGet(iamapi.DataUserKey(uname)); obj.OK() {
 		obj.Decode(&set.Login)
 	}
 
@@ -131,7 +132,7 @@ func (c UserMgr) UserEntryAction() {
 
 	//
 	var profile iamapi.UserProfile
-	if obj := store.PoGet("user-profile", userid); obj.OK() {
+	if obj := store.Data.ProgGet(iamapi.DataUserProfileKey(uname)); obj.OK() {
 		obj.Decode(&profile)
 
 		profile.About = html.EscapeString(profile.About)
@@ -187,7 +188,7 @@ func (c UserMgr) UserSetAction() {
 	var prev iamapi.UserEntry
 
 	//
-	if obj := store.PoGet("user", set.Login.Id); obj.OK() {
+	if obj := store.Data.ProgGet(iamapi.DataUserKey(set.Login.Name)); obj.OK() {
 		obj.Decode(&prev.Login)
 	}
 
@@ -220,7 +221,7 @@ func (c UserMgr) UserSetAction() {
 	set.Login.Updated = types.MetaTimeNow()
 	sort.Sort(set.Login.Roles)
 
-	if obj := store.PoPut("user", set.Login.Id, set.Login, nil); !obj.OK() {
+	if obj := store.Data.ProgPut(iamapi.DataUserKey(set.Login.Name), skv.NewProgValue(set.Login), nil); !obj.OK() {
 		set.Error = types.NewErrorMeta("500", obj.Bytex().String())
 		return
 	}
@@ -229,7 +230,7 @@ func (c UserMgr) UserSetAction() {
 
 		var profile iamapi.UserProfile
 
-		if obj := store.PoGet("user-profile", set.Login.Id); obj.OK() {
+		if obj := store.Data.ProgGet(iamapi.DataUserProfileKey(set.Login.Name)); obj.OK() {
 
 			obj.Decode(&profile)
 
@@ -242,7 +243,7 @@ func (c UserMgr) UserSetAction() {
 			}
 		}
 
-		if obj := store.PoPut("user-profile", set.Login.Id, profile, nil); !obj.OK() {
+		if obj := store.Data.ProgPut(iamapi.DataUserProfileKey(set.Login.Name), skv.NewProgValue(profile), nil); !obj.OK() {
 			set.Error = types.NewErrorMeta("500", obj.Bytex().String())
 			return
 		}

@@ -35,7 +35,7 @@ func (c UserMgr) RoleListAction() {
 	// 	return
 	// }
 
-	if objs := store.PoScan("role", []byte{}, []byte{}, 10000); objs.OK() {
+	if objs := store.Data.ProgScan(iamapi.DataRoleKey(0), iamapi.DataRoleKey(99999999), 1000); objs.OK() {
 
 		rss := objs.KvList()
 		for _, obj := range rss {
@@ -68,7 +68,7 @@ func (c UserMgr) RoleEntryAction() {
 	// 	return
 	// }
 
-	if obj := store.PoGet("role", uint32(c.Params.Uint64("roleid"))); obj.OK() {
+	if obj := store.Data.ProgGet(iamapi.DataRoleKey(uint32(c.Params.Uint64("roleid")))); obj.OK() {
 		obj.Decode(&set.UserRole)
 	}
 
@@ -88,7 +88,6 @@ func (c UserMgr) RoleSetAction() {
 			types.TypeMeta
 			iamapi.UserRole
 		}
-		prevVersion uint64
 	)
 	defer c.RenderJson(&set)
 
@@ -109,7 +108,7 @@ func (c UserMgr) RoleSetAction() {
 
 	if set.Id == 0 {
 
-		if objs := store.PoRevScan("role", []byte{}, []byte{}, 1); objs.OK() {
+		if objs := store.Data.ProgRevScan(iamapi.DataRoleKey(0), iamapi.DataRoleKey(99999999), 1); objs.OK() {
 
 			rss := objs.KvList()
 			for _, obj := range rss {
@@ -133,9 +132,8 @@ func (c UserMgr) RoleSetAction() {
 
 	} else {
 
-		if obj := store.PoGet("role", set.Id); obj.OK() {
+		if obj := store.Data.ProgGet(iamapi.DataRoleKey(set.Id)); obj.OK() {
 			obj.Decode(&prev)
-			prevVersion = obj.Meta().Version
 		}
 
 		if prev.Id != set.Id {
@@ -151,9 +149,7 @@ func (c UserMgr) RoleSetAction() {
 	set.Updated = types.MetaTimeNow()
 	// roleset["privileges"] = strings.Join(c.Params.Values["privileges"], ",")
 
-	if obj := store.PoPut("role", set.Id, set, &skv.PathWriteOptions{
-		PrevVersion: prevVersion,
-	}); !obj.OK() {
+	if obj := store.Data.ProgPut(iamapi.DataRoleKey(set.Id), skv.NewProgValue(set), nil); !obj.OK() {
 		set.Error = types.NewErrorMeta("500", obj.Bytex().String())
 		return
 	}

@@ -20,7 +20,6 @@ import (
 
 	"github.com/hooto/iam/iamapi"
 	"github.com/hooto/iam/store"
-	// "github.com/hooto/hlog4g/hlog"
 	"github.com/lessos/lessgo/crypto/idhash"
 )
 
@@ -59,7 +58,7 @@ func instPerms(instanceid string) *perm_map {
 	}
 
 	//
-	if obj := store.PoGet("app-instance", instanceid); obj.OK() {
+	if obj := store.Data.ProgGet(iamapi.DataAppInstanceKey(instanceid)); obj.OK() {
 
 		var inst iamapi.AppInstance
 

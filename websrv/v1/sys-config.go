@@ -49,7 +49,7 @@ func (c SysConfig) GeneralAction() {
 		return
 	}
 
-	if objs := store.PvScan("sys-config/", "", "", 1000); objs.OK() {
+	if objs := store.Data.ProgScan(iamapi.DataSysConfigKey(""), iamapi.DataSysConfigKey(""), 1000); objs.OK() {
 
 		rss := objs.KvList()
 		for _, obj := range rss {
@@ -105,9 +105,7 @@ func (c SysConfig) GeneralSetAction() {
 			continue
 		}
 
-		if obj := store.PvPut("sys-config/"+v.Name, v.Value, &skv.PathWriteOptions{
-			Force: true,
-		}); !obj.OK() {
+		if obj := store.Data.ProgPut(iamapi.DataSysConfigKey(v.Name), skv.NewProgValue(v.Value), nil); !obj.OK() {
 			sets.Error = types.NewErrorMeta("500", obj.Bytex().String())
 			return
 		}
@@ -129,7 +127,7 @@ func (c SysConfig) MailerAction() {
 		return
 	}
 
-	if obj := store.PvGet("sys-config/mailer"); obj.OK() {
+	if obj := store.Data.ProgGet(iamapi.DataSysConfigKey("mailer")); obj.OK() {
 		ls.Items.Set("mailer", obj.Bytex().String())
 	}
 

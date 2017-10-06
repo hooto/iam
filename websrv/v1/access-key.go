@@ -20,6 +20,7 @@ import (
 	"github.com/hooto/httpsrv"
 	"github.com/lessos/lessgo/crypto/idhash"
 	"github.com/lessos/lessgo/types"
+	"github.com/lynkdb/iomix/skv"
 
 	"github.com/hooto/iam/iamapi"
 	"github.com/hooto/iam/iamclient"
@@ -64,7 +65,7 @@ func (c AccessKey) EntryAction() {
 	}
 
 	var ak iamapi.AccessKey
-	if rs := store.PoGet("ak/"+c.us.UserName, id); rs.OK() {
+	if rs := store.Data.ProgGet(iamapi.DataAccessKeyKey(c.us.UserName, id)); rs.OK() {
 		rs.Decode(&ak)
 	}
 
@@ -81,7 +82,7 @@ func (c AccessKey) ListAction() {
 	ls := types.ObjectList{}
 	defer c.RenderJson(&ls)
 
-	if rs := store.PoScan("ak/"+c.us.UserName, []byte{}, []byte{}, ak_limit); rs.OK() {
+	if rs := store.Data.ProgScan(iamapi.DataAccessKeyKey(c.us.UserName, ""), iamapi.DataAccessKeyKey(c.us.UserName, ""), ak_limit); rs.OK() {
 
 		rss := rs.KvList()
 		for _, v := range rss {
@@ -113,12 +114,12 @@ func (c AccessKey) SetAction() {
 		set.AccessKey.AccessKey = idhash.RandHexString(16)
 	} else {
 
-		if rs := store.PoGet("ak/"+c.us.UserName, set.AccessKey.AccessKey); rs.OK() {
+		if rs := store.Data.ProgGet(iamapi.DataAccessKeyKey(c.us.UserName, set.AccessKey.AccessKey)); rs.OK() {
 			rs.Decode(&prev)
 		}
 	}
 
-	if rs := store.PoScan("ak/"+c.us.UserName, []byte{}, []byte{}, ak_limit+1); rs.OK() {
+	if rs := store.Data.ProgScan(iamapi.DataAccessKeyKey(c.us.UserName, ""), iamapi.DataAccessKeyKey(c.us.UserName, ""), ak_limit+1); rs.OK() {
 		if rs.KvLen() > ak_limit && prev.AccessKey == "" {
 			set.Error = types.NewErrorMeta(iamapi.ErrCodeInvalidArgument, fmt.Sprintf("Num Out Range (%d)", ak_limit))
 			return
@@ -151,7 +152,7 @@ func (c AccessKey) SetAction() {
 		prev.User = c.us.UserName
 	}
 
-	if rs := store.PoPut("ak/"+c.us.UserName, prev.AccessKey, prev, nil); rs.OK() {
+	if rs := store.Data.ProgPut(iamapi.DataAccessKeyKey(c.us.UserName, prev.AccessKey), skv.NewProgValue(prev), nil); rs.OK() {
 		set.Kind = "AccessKey"
 	} else {
 		set.Error = types.NewErrorMeta(iamapi.ErrCodeInternalError, "IO Error")
@@ -169,7 +170,7 @@ func (c AccessKey) DelAction() {
 		return
 	}
 
-	if rs := store.PoDel("ak/"+c.us.UserName, id, nil); rs.OK() {
+	if rs := store.Data.ProgDel(iamapi.DataAccessKeyKey(c.us.UserName, id), nil); rs.OK() {
 		set.Kind = "AccessKey"
 	} else {
 		set.Error = types.NewErrorMeta(iamapi.ErrCodeInternalError, "IO Error")
@@ -191,7 +192,7 @@ func (c AccessKey) BindAction() {
 	}
 
 	var ak iamapi.AccessKey
-	if rs := store.PoGet("ak/"+c.us.UserName, id); rs.OK() {
+	if rs := store.Data.ProgGet(iamapi.DataAccessKeyKey(c.us.UserName, id)); rs.OK() {
 		rs.Decode(&ak)
 	}
 
@@ -209,7 +210,7 @@ func (c AccessKey) BindAction() {
 		}
 	})
 
-	if rs := store.PoPut("ak/"+c.us.UserName, ak.AccessKey, ak, nil); rs.OK() {
+	if rs := store.Data.ProgPut(iamapi.DataAccessKeyKey(c.us.UserName, ak.AccessKey), skv.NewProgValue(ak), nil); rs.OK() {
 		set.Kind = "AccessKey"
 	} else {
 		set.Error = types.NewErrorMeta(iamapi.ErrCodeInternalError, "IO Error")
@@ -231,7 +232,7 @@ func (c AccessKey) UnbindAction() {
 	}
 
 	var ak iamapi.AccessKey
-	if rs := store.PoGet("ak/"+c.us.UserName, id); rs.OK() {
+	if rs := store.Data.ProgGet(iamapi.DataAccessKeyKey(c.us.UserName, id)); rs.OK() {
 		rs.Decode(&ak)
 	}
 
@@ -246,7 +247,7 @@ func (c AccessKey) UnbindAction() {
 		}
 	})
 
-	if rs := store.PoPut("ak/"+c.us.UserName, ak.AccessKey, ak, nil); rs.OK() {
+	if rs := store.Data.ProgPut(iamapi.DataAccessKeyKey(c.us.UserName, ak.AccessKey), skv.NewProgValue(ak), nil); rs.OK() {
 		set.Kind = "AccessKey"
 	} else {
 		set.Error = types.NewErrorMeta(iamapi.ErrCodeInternalError, "IO Error")

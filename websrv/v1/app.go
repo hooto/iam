@@ -52,7 +52,7 @@ func (c App) InstListAction() {
 	ls := types.ObjectList{}
 	defer c.RenderJson(&ls)
 
-	if objs := store.PoScan("app-instance", []byte{}, []byte{}, 1000); objs.OK() {
+	if objs := store.Data.ProgScan(iamapi.DataAppInstanceKey(""), iamapi.DataAppInstanceKey(""), 1000); objs.OK() {
 
 		rss := objs.KvList()
 		for _, obj := range rss {
@@ -78,7 +78,7 @@ func (c App) InstEntryAction() {
 	}
 	defer c.RenderJson(&set)
 
-	if obj := store.PoGet("app-instance", c.Params.Get("instid")); obj.OK() {
+	if obj := store.Data.ProgGet(iamapi.DataAppInstanceKey(c.Params.Get("instid"))); obj.OK() {
 		obj.Decode(&set.AppInstance)
 	}
 
@@ -110,10 +110,8 @@ func (c App) InstSetAction() {
 	}
 
 	var prev iamapi.AppInstance
-	var prevVersion uint64
-	if obj := store.PoGet("app-instance", set.Meta.ID); obj.OK() {
+	if obj := store.Data.ProgGet(iamapi.DataAppInstanceKey(set.Meta.ID)); obj.OK() {
 		obj.Decode(&prev)
-		prevVersion = obj.Meta().Version
 	}
 
 	if prev.Meta.ID == "" {
@@ -132,9 +130,7 @@ func (c App) InstSetAction() {
 		prev.AppTitle = set.AppTitle
 		prev.Url = set.Url
 
-		if obj := store.PoPut("app-instance", set.Meta.ID, prev, &skv.PathWriteOptions{
-			PrevVersion: prevVersion,
-		}); !obj.OK() {
+		if obj := store.Data.ProgPut(iamapi.DataAppInstanceKey(set.Meta.ID), skv.NewProgValue(prev), nil); !obj.OK() {
 			set.Error = types.NewErrorMeta(iamapi.ErrCodeInternalError, obj.Bytex().String())
 			return
 		}

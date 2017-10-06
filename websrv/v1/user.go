@@ -62,7 +62,7 @@ func (c User) ProfileAction() {
 	defer c.RenderJson(&set)
 
 	// profile
-	if obj := store.PoGet("user-profile", c.us.UserId()); obj.OK() {
+	if obj := store.Data.ProgGet(iamapi.DataUserProfileKey(c.us.UserName)); obj.OK() {
 		obj.Decode(&set.UserProfile)
 	}
 
@@ -71,7 +71,7 @@ func (c User) ProfileAction() {
 
 		// login
 		var user iamapi.User
-		if obj := store.PoGet("user", c.us.UserId()); obj.OK() {
+		if obj := store.Data.ProgGet(iamapi.DataUserKey(c.us.UserName)); obj.OK() {
 			obj.Decode(&user)
 		}
 
@@ -81,7 +81,7 @@ func (c User) ProfileAction() {
 		}
 
 		set.Login = &user
-		store.PoPut("user-profile", c.us.UserId(), set, nil)
+		store.Data.ProgPut(iamapi.DataUserProfileKey(c.us.UserName), skv.NewProgValue(set), nil)
 	}
 
 	set.Photo = ""
@@ -111,7 +111,7 @@ func (c User) ProfileSetAction() {
 
 	// login
 	var user iamapi.User
-	uobj := store.PoGet("user", c.us.UserId())
+	uobj := store.Data.ProgGet(iamapi.DataUserKey(c.us.UserName))
 	if uobj.OK() {
 		uobj.Decode(&user)
 	}
@@ -122,13 +122,11 @@ func (c User) ProfileSetAction() {
 	}
 	user.DisplayName = req.Login.DisplayName
 
-	store.PoPut("user", c.us.UserId(), user, &skv.PathWriteOptions{
-		PrevVersion: uobj.Meta().Version,
-	})
+	store.Data.ProgPut(iamapi.DataUserKey(c.us.UserName), skv.NewProgValue(user), nil)
 
 	// profile
 	var profile iamapi.UserProfile
-	pobj := store.PoGet("user-profile", c.us.UserId())
+	pobj := store.Data.ProgGet(iamapi.DataUserProfileKey(c.us.UserName))
 	if pobj.OK() {
 		pobj.Decode(&profile)
 	}
@@ -139,9 +137,7 @@ func (c User) ProfileSetAction() {
 	profile.Login = &user
 	profile.Login.Keys = nil
 
-	store.PoPut("user-profile", c.us.UserId(), profile, &skv.PathWriteOptions{
-		PrevVersion: pobj.Meta().Version,
-	})
+	store.Data.ProgPut(iamapi.DataUserProfileKey(c.us.UserName), skv.NewProgValue(profile), nil)
 
 	set.Kind = "UserProfile"
 }
@@ -165,7 +161,7 @@ func (c User) PassSetAction() {
 	}
 
 	var user iamapi.User
-	uobj := store.PoGet("user", c.us.UserId())
+	uobj := store.Data.ProgGet(iamapi.DataUserKey(c.us.UserName))
 	if uobj.OK() {
 		uobj.Decode(&user)
 	}
@@ -185,9 +181,7 @@ func (c User) PassSetAction() {
 	auth_key, _ := pass.HashDefault(req.NewPassword)
 	user.Keys.Set(iamapi.UserKeyDefault, auth_key)
 
-	store.PoPut("user", user.Id, user, &skv.PathWriteOptions{
-		PrevVersion: uobj.Meta().Version,
-	})
+	store.Data.ProgPut(iamapi.DataUserKey(c.us.UserName), skv.NewProgValue(user), nil)
 
 	set.Kind = "UserPassword"
 }
@@ -213,7 +207,7 @@ func (c User) EmailSetAction() {
 	}
 
 	var user iamapi.User
-	uobj := store.PoGet("user", c.us.UserId())
+	uobj := store.Data.ProgGet(iamapi.DataUserKey(c.us.UserName))
 	if uobj.OK() {
 		uobj.Decode(&user)
 	}
@@ -231,17 +225,13 @@ func (c User) EmailSetAction() {
 
 	user.Email = req.Email
 	user.Updated = types.MetaTimeNow()
-	store.PoPut("user", user.Id, user, &skv.PathWriteOptions{
-		PrevVersion: uobj.Meta().Version,
-	})
+	store.Data.ProgPut(iamapi.DataUserKey(c.us.UserName), skv.NewProgValue(user), nil)
 
-	if rs := store.PoGet("user-profile", c.us.UserId()); rs.OK() {
+	if rs := store.Data.ProgGet(iamapi.DataUserProfileKey(c.us.UserName)); rs.OK() {
 		var preprofile iamapi.UserProfile
 		if err := rs.Decode(&preprofile); err == nil {
 			preprofile.Login = &user
-			store.PoPut("user-profile", c.us.UserId(), preprofile, &skv.PathWriteOptions{
-				Force: true,
-			})
+			store.Data.ProgPut(iamapi.DataUserProfileKey(c.us.UserName), skv.NewProgValue(preprofile), nil)
 		}
 	}
 
@@ -270,7 +260,7 @@ func (c User) PhotoSetAction() {
 
 	// profile
 	var profile iamapi.UserProfile
-	pobj := store.PoGet("user-profile", c.us.UserId())
+	pobj := store.Data.ProgGet(iamapi.DataUserProfileKey(c.us.UserName))
 	if pobj.OK() {
 		pobj.Decode(&profile)
 	}
@@ -300,9 +290,7 @@ func (c User) PhotoSetAction() {
 	profile.Photo = "data:image/png;base64," + imgphoto
 	profile.PhotoSource = req.Data
 
-	store.PoPut("user-profile", c.us.UserId(), profile, &skv.PathWriteOptions{
-		PrevVersion: pobj.Meta().Version,
-	})
+	store.Data.ProgPut(iamapi.DataUserProfileKey(c.us.UserName), skv.NewProgValue(profile), nil)
 
 	set.Kind = "UserPhoto"
 }
@@ -313,7 +301,7 @@ func (c User) RoleListAction() {
 	defer c.RenderJson(&sets)
 
 	// TODO page
-	if objs := store.PoScan("role", []byte{}, []byte{}, 1000); objs.OK() {
+	if objs := store.Data.ProgScan(iamapi.DataRoleKey(0), iamapi.DataRoleKey(99999999), 1000); objs.OK() {
 
 		rss := objs.KvList()
 		for _, obj := range rss {

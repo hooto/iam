@@ -42,7 +42,7 @@ func (c AppAuth) InfoAction() {
 	}
 
 	var inst iamapi.AppInstance
-	if obj := store.PoGet("app-instance", instid); obj.OK() {
+	if obj := store.Data.ProgGet(iamapi.DataAppInstanceKey(instid)); obj.OK() {
 		obj.Decode(&inst)
 	}
 
@@ -81,7 +81,7 @@ func (c AppAuth) RegisterAction() {
 	}
 
 	var session iamapi.UserSession
-	if obj := store.PvGet("session/" + token.SessionPath()); obj.OK() {
+	if obj := store.Data.ProgGet(iamapi.DataSessionKey(token.User(), token.Id())); obj.OK() {
 		obj.Decode(&session)
 	}
 
@@ -105,7 +105,7 @@ func (c AppAuth) RegisterAction() {
 		prev iamapi.AppInstance
 	)
 
-	if obj := store.PoGet("app-instance", set.Instance.Meta.ID); obj.OK() {
+	if obj := store.Data.ProgGet(iamapi.DataAppInstanceKey(set.Instance.Meta.ID)); obj.OK() {
 		obj.Decode(&prev)
 	}
 
@@ -128,9 +128,7 @@ func (c AppAuth) RegisterAction() {
 		set.Instance.Status = prev.Status
 	}
 
-	if obj := store.PoPut("app-instance", set.Instance.Meta.ID, set.Instance, &skv.PathWriteOptions{
-		Force: true,
-	}); !obj.OK() {
+	if obj := store.Data.ProgPut(iamapi.DataAppInstanceKey(set.Instance.Meta.ID), skv.NewProgValue(set.Instance), nil); !obj.OK() {
 		set.Error = types.NewErrorMeta(iamapi.ErrCodeInternalError, obj.Bytex().String())
 		return
 	}
@@ -200,7 +198,7 @@ func (c AppAuth) RoleListAction() {
 	defer c.RenderJson(&sets)
 
 	// TODO app<->role
-	if objs := store.PoScan("role", []byte{}, []byte{}, 100); objs.OK() {
+	if objs := store.Data.ProgScan(iamapi.DataRoleKey(0), iamapi.DataRoleKey(99999999), 100); objs.OK() {
 
 		rss := objs.KvList()
 		for _, obj := range rss {
@@ -259,7 +257,7 @@ func (c AppAuth) UserAccessKeyAction() {
 	}
 
 	var app iamapi.AppInstance
-	if rs := store.PoGet("app-instance", app_aka.Key); rs.OK() {
+	if rs := store.Data.ProgGet(iamapi.DataAppInstanceKey(app_aka.Key)); rs.OK() {
 		rs.Decode(&app)
 	}
 
@@ -274,7 +272,7 @@ func (c AppAuth) UserAccessKeyAction() {
 	}
 
 	var user_ak iamapi.AccessKey
-	if rs := store.PoGet("ak/"+username, access_key); rs.OK() {
+	if rs := store.Data.ProgGet(iamapi.DataAccessKeyKey(username, access_key)); rs.OK() {
 		rs.Decode(&user_ak)
 	}
 
@@ -290,9 +288,8 @@ func (c AppAuth) UserAccessKeyAction() {
 		return
 	}
 
-	userid := iamapi.UserId(username)
 	var user iamapi.User
-	if obj := store.PoGet("user", userid); obj.OK() {
+	if obj := store.Data.ProgGet(iamapi.DataUserKey(username)); obj.OK() {
 		obj.Decode(&user)
 	}
 

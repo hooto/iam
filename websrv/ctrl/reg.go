@@ -72,7 +72,7 @@ func (c Reg) SignUpRegAction() {
 	userid := iamapi.UserId(uname)
 
 	var user iamapi.User
-	if obj := store.PoGet("user", userid); obj.OK() {
+	if obj := store.Data.ProgGet(iamapi.DataUserKey(uname)); obj.OK() {
 		obj.Decode(&user)
 	}
 
@@ -96,7 +96,7 @@ func (c Reg) SignUpRegAction() {
 	}
 	user.Keys.Set(iamapi.UserKeyDefault, auth)
 
-	if obj := store.PoPut("user", user.Id, user, nil); !obj.OK() {
+	if obj := store.Data.ProgPut(iamapi.DataUserKey(user.Name), skv.NewProgValue(user), nil); !obj.OK() {
 		rsp.Error = &types.ErrorMeta{"500", obj.Bytex().String()}
 		return
 	}
@@ -133,10 +133,11 @@ func (c Reg) RetrievePutAction() {
 		rsp.Error = &types.ErrorMeta{iamapi.ErrCodeInvalidArgument, "User Not Found"}
 		return
 	}
-	userid := iamapi.UserId(c.Params.Get("username"))
+	uname := c.Params.Get("username")
+	userid := iamapi.UserId(uname)
 
 	var user iamapi.User
-	if obj := store.PoGet("user", userid); obj.OK() {
+	if obj := store.Data.ProgGet(iamapi.DataUserKey(uname)); obj.OK() {
 		obj.Decode(&user)
 	}
 
@@ -152,8 +153,8 @@ func (c Reg) RetrievePutAction() {
 		Expired:  utilx.TimeNowAdd("atom", "+3600s"),
 	}
 
-	if obj := store.PoPut("pwd-reset", reset.Id, reset, &skv.PathWriteOptions{
-		Ttl: 3600000,
+	if obj := store.Data.ProgPut(iamapi.DataPasswordResetKey(reset.Id), skv.NewProgValue(reset), &skv.ProgWriteOptions{
+		Expired: time.Now().Add(3600e9),
 	}); !obj.OK() {
 		rsp.Error = &types.ErrorMeta{"500", obj.Bytex().String()}
 		return
@@ -209,7 +210,7 @@ func (c Reg) PassResetAction() {
 	}
 
 	var reset iamapi.UserPasswordReset
-	if obj := store.PoGet("pwd-reset", c.Params.Get("id")); obj.OK() {
+	if obj := store.Data.ProgGet(iamapi.DataPasswordResetKey(c.Params.Get("id"))); obj.OK() {
 		obj.Decode(&reset)
 	}
 
@@ -244,7 +245,7 @@ func (c Reg) PassResetPutAction() {
 	}
 
 	var reset iamapi.UserPasswordReset
-	rsobj := store.PoGet("pwd-reset", c.Params.Get("id"))
+	rsobj := store.Data.ProgGet(iamapi.DataPasswordResetKey(c.Params.Get("id")))
 	if rsobj.OK() {
 		rsobj.Decode(&reset)
 	}
@@ -261,7 +262,7 @@ func (c Reg) PassResetPutAction() {
 
 	var user iamapi.User
 	userid := iamapi.UserId(reset.UserName)
-	uobj := store.PoGet("user", userid)
+	uobj := store.Data.ProgGet(iamapi.DataUserKey(reset.UserName))
 	if uobj.OK() {
 		uobj.Decode(&user)
 	}
@@ -276,16 +277,12 @@ func (c Reg) PassResetPutAction() {
 	auth, _ := pass.HashDefault(c.Params.Get("passwd"))
 	user.Keys.Set(iamapi.UserKeyDefault, auth)
 
-	if obj := store.PoPut("user", user.Id, user, &skv.PathWriteOptions{
-		PrevVersion: uobj.Meta().Version,
-	}); !obj.OK() {
+	if obj := store.Data.ProgPut(iamapi.DataUserKey(reset.UserName), skv.NewProgValue(user), nil); !obj.OK() {
 		rsp.Error = &types.ErrorMeta{"500", obj.Bytex().String()}
 		return
 	}
 
-	store.PoDel("pwd-reset", reset.Id, &skv.PathWriteOptions{
-		PrevVersion: rsobj.Meta().Version,
-	})
+	store.Data.ProgDel(iamapi.DataPasswordResetKey(reset.Id), nil)
 
 	rsp.Kind = "UserAuth"
 }

@@ -21,7 +21,6 @@ import (
 	"github.com/hooto/iam/iamclient"
 	"github.com/hooto/iam/store"
 	"github.com/lessos/lessgo/types"
-	"github.com/lynkdb/iomix/skv"
 )
 
 type Account struct {
@@ -52,7 +51,7 @@ func (c Account) UserEntryAction() {
 	defer c.RenderJson(&set)
 
 	if rs := store.Data.ProgGet(
-		skv.NewProgKey(iamapi.AccUser, iamapi.UserIdBytes(c.us.UserName)),
+		iamapi.DataAccUserKey(c.us.UserName),
 	); rs.OK() {
 		rs.Decode(&set.AccountUser)
 	}
@@ -67,7 +66,7 @@ func (c Account) FundListAction() {
 	ls := types.ObjectList{}
 	defer c.RenderJson(&ls)
 
-	k := skv.NewProgKey(iamapi.AccFundUser, iamapi.UserIdBytes(c.us.UserName), "")
+	k := iamapi.DataAccFundUserKey(c.us.UserName, "")
 	if rs := store.Data.ProgRevScan(k, k, 1000); rs.OK() {
 		rss := rs.KvList()
 		for _, v := range rss {
@@ -87,7 +86,7 @@ func (c Account) ChargeListAction() {
 	ls := types.ObjectList{}
 	defer c.RenderJson(&ls)
 
-	k := skv.NewProgKey(iamapi.AccChargeUser, iamapi.UserIdBytes(c.us.UserName), "")
+	k := iamapi.DataAccChargeUserKey(c.us.UserName, "")
 	if rs := store.Data.ProgRevScan(k, k, 1000); rs.OK() {
 		rss := rs.KvList()
 		for _, v := range rss {
@@ -109,7 +108,7 @@ func (c Account) ChargePayoutListAction() {
 	ls := types.ObjectList{}
 	defer c.RenderJson(&ls)
 
-	k := skv.NewProgKey(iamapi.AccChargeUser, iamapi.UserIdBytes(c.us.UserName), "")
+	k := iamapi.DataAccChargeUserKey(c.us.UserName, "")
 	if rs := store.Data.ProgRevScan(k, k, 1000); rs.OK() {
 		rss := rs.KvList()
 		for _, v := range rss {

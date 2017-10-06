@@ -19,6 +19,7 @@ import (
 	"fmt"
 	"regexp"
 	"strings"
+	"time"
 
 	"github.com/hooto/iam/config"
 	"github.com/hooto/iam/iamapi"
@@ -30,68 +31,11 @@ import (
 )
 
 var (
-	path_prefix           = ""
 	Data                  skv.Connector
 	def_sysadmin          = "sysadmin"
 	def_sysadmin_password = "changeme"
 	app_inst_id_re        = regexp.MustCompile("^[0-9a-f]{16}$")
 )
-
-//
-func PvGet(path string) *skv.Result {
-	return Data.PvGet(PathPrefixAppend(path))
-}
-
-func PvPut(path string, v interface{}, opts *skv.PathWriteOptions) *skv.Result {
-	return Data.PvPut(PathPrefixAppend(path), v, opts)
-}
-
-func PvDel(path string, opts *skv.PathWriteOptions) *skv.Result {
-	return Data.PvDel(PathPrefixAppend(path), opts)
-}
-
-func PvScan(path, offset, cutset string, limit int) *skv.Result {
-	return Data.PvScan(PathPrefixAppend(path), offset, cutset, limit)
-}
-
-func PvRevScan(path, offset, cutset string, limit int) *skv.Result {
-	return Data.PvRevScan(PathPrefixAppend(path), offset, cutset, limit)
-}
-
-//
-func PoGet(path string, key interface{}) *skv.Result {
-	return Data.PoGet(PathPrefixAppend(path), key)
-}
-
-func PoPut(path string, key, value interface{}, opts *skv.PathWriteOptions) *skv.Result {
-	return Data.PoPut(PathPrefixAppend(path), key, value, opts)
-}
-
-func PoDel(path string, key interface{}, opts *skv.PathWriteOptions) *skv.Result {
-	return Data.PoDel(PathPrefixAppend(path), key, opts)
-}
-
-func PoScan(path string, offset, cutset interface{}, limit int) *skv.Result {
-	return Data.PoScan(PathPrefixAppend(path), offset, cutset, limit)
-}
-
-func PoRevScan(path string, offset, cutset interface{}, limit int) *skv.Result {
-	return Data.PoRevScan(PathPrefixAppend(path), offset, cutset, limit)
-}
-
-//
-func PathPrefixSet(path string) {
-	path_prefix = path
-}
-
-func PathPrefixAppend(path string) string {
-
-	if path_prefix == "" {
-		return path
-	}
-
-	return path_prefix + "/" + path
-}
 
 func Init() error {
 
@@ -99,13 +43,19 @@ func Init() error {
 		return fmt.Errorf("iam.store connect not ready")
 	}
 
-	if rs := Data.PoPut(PathPrefixAppend("iam-test"), uint32(1234), "test", &skv.PathWriteOptions{
-		Ttl: 3000,
-	}); !rs.OK() {
+	if rs := Data.ProgPut(
+		skv.NewProgKey("iam", "test"),
+		skv.NewProgValue("test"),
+		&skv.ProgWriteOptions{
+			Expired: time.Now().Add(3e9),
+		},
+	); !rs.OK() {
 		return fmt.Errorf("iam.store connect not ready")
 	}
 
-	if rs := Data.PoGet(PathPrefixAppend("iam-test"), uint32(1234)); !rs.OK() ||
+	if rs := Data.ProgGet(
+		skv.NewProgKey("iam", "test"),
+	); !rs.OK() ||
 		rs.Bytex().String() != "test" {
 		return fmt.Errorf("iam.store connect not ready")
 	}
@@ -133,25 +83,25 @@ func InitData() (err error) {
 		Created: types.MetaTimeNow(),
 		Updated: types.MetaTimeNow(),
 	}
-	PoPut("role", role.Id, role, nil)
+	Data.ProgPut(iamapi.DataRoleKey(role.Id), skv.NewProgValue(role), nil)
 
 	//
 	role.Id = 100
 	role.Name = "Member"
 	role.Desc = "Universal Member"
-	PoPut("role", role.Id, role, nil)
+	Data.ProgPut(iamapi.DataRoleKey(role.Id), skv.NewProgValue(role), nil)
 
 	//
 	role.Id = 101
 	role.Name = "Developer"
 	role.Desc = "Universal Developer"
-	PoPut("role", role.Id, role, nil)
+	Data.ProgPut(iamapi.DataRoleKey(role.Id), skv.NewProgValue(role), nil)
 
 	//
 	role.Id = 1000
 	role.Name = "Anonymous"
 	role.Desc = "Anonymous Member"
-	PoPut("role", role.Id, role, nil)
+	Data.ProgPut(iamapi.DataRoleKey(role.Id), skv.NewProgValue(role), nil)
 
 	//
 	ps := []iamapi.AppPrivilege{
@@ -181,7 +131,7 @@ func InitData() (err error) {
 		Url:        "",
 		Privileges: ps,
 	}
-	PoPut("app-instance", inst.Meta.ID, inst, nil)
+	Data.ProgPut(iamapi.DataAppInstanceKey(inst.Meta.ID), skv.NewProgValue(inst), nil)
 
 	AppInstanceRegister(inst)
 
@@ -207,7 +157,7 @@ func InitData() (err error) {
 
 	// Init Super SysAdmin Account
 	uid := idhash.HashToHexString([]byte(def_sysadmin), 8)
-	if rs := PoGet("user", uid); rs.NotFound() {
+	if rs := Data.ProgGet(iamapi.DataUserKey(def_sysadmin)); rs.NotFound() {
 
 		sysadm := iamapi.User{
 			Id:          uid,
@@ -227,7 +177,7 @@ func InitData() (err error) {
 
 		sysadm.Keys.Set(iamapi.UserKeyDefault, auth)
 
-		PoPut("user", uid, sysadm, nil)
+		Data.ProgPut(iamapi.DataUserKey(def_sysadmin), skv.NewProgValue(sysadm), nil)
 	}
 
 	return nil
@@ -237,7 +187,7 @@ func SysConfigRefresh() {
 
 	//
 	var mailer iamapi.SysConfigMailer
-	if obj := PvGet("sys-config/mailer"); obj.OK() {
+	if obj := Data.ProgGet(iamapi.DataSysConfigKey("mailer")); obj.OK() {
 
 		obj.Decode(&mailer)
 
@@ -253,21 +203,21 @@ func SysConfigRefresh() {
 		}
 	}
 
-	if obj := PvGet("sys-config/service_name"); obj.OK() {
+	if obj := Data.ProgGet(iamapi.DataSysConfigKey("service_name")); obj.OK() {
 
 		if obj.Bytex().String() != "" {
 			config.Config.ServiceName = obj.Bytex().String()
 		}
 	}
 
-	if obj := PvGet("sys-config/webui_banner_title"); obj.OK() {
+	if obj := Data.ProgGet(iamapi.DataSysConfigKey("webui_banner_title")); obj.OK() {
 
 		if obj.Bytex().String() != "" {
 			config.Config.WebUiBannerTitle = obj.Bytex().String()
 		}
 	}
 
-	if obj := PvGet("sys-config/user_reg_disable"); obj.OK() {
+	if obj := Data.ProgGet(iamapi.DataSysConfigKey("user_reg_disable")); obj.OK() {
 
 		if obj.Bytex().String() == "1" {
 			config.UserRegistrationDisabled = true
@@ -282,13 +232,17 @@ func AccessKeyInitData(ak iamapi.AccessKey) error {
 		return errors.New("No User Set")
 	}
 
-	if rs := PoGet("ak/"+ak.User, ak.AccessKey); rs.OK() {
+	if rs := Data.ProgGet(iamapi.DataAccessKeyKey(ak.User, ak.AccessKey)); rs.OK() {
 		return nil
 	}
 
 	ak.Created = uint64(types.MetaTimeNow())
 	ak.Action = 1
-	if rs := PoPut("ak/"+ak.User, ak.AccessKey, ak, nil); !rs.OK() {
+	if rs := Data.ProgPut(
+		iamapi.DataAccessKeyKey(ak.User, ak.AccessKey),
+		skv.NewProgValue(ak),
+		nil,
+	); !rs.OK() {
 		return errors.New(rs.Bytex().String())
 	}
 
@@ -301,19 +255,23 @@ func AppInstanceRegister(inst iamapi.AppInstance) error {
 		return fmt.Errorf("Invalid meta.id (%s)", inst.Meta.ID)
 	}
 
-	if rs := PoGet("user", iamapi.UserId(def_sysadmin)); rs.NotFound() {
+	if rs := Data.ProgGet(iamapi.DataUserKey(inst.Meta.User)); rs.NotFound() {
 		inst.Meta.User = def_sysadmin
 	}
 
 	var prev iamapi.AppInstance
-	if rs := PoGet("app-instance", inst.Meta.ID); rs.OK() {
+	if rs := Data.ProgGet(iamapi.DataAppInstanceKey(inst.Meta.ID)); rs.OK() {
 		rs.Decode(&prev)
 	}
 
 	if prev.Meta.ID == "" {
 		inst.Meta.Created = types.MetaTimeNow()
 		inst.Meta.Updated = types.MetaTimeNow()
-		PoPut("app-instance", inst.Meta.ID, inst, nil)
+		Data.ProgPut(
+			iamapi.DataAppInstanceKey(inst.Meta.ID),
+			skv.NewProgValue(inst),
+			nil,
+		)
 	} else {
 
 		prev.Meta.Updated = types.MetaTimeNow()
@@ -338,7 +296,11 @@ func AppInstanceRegister(inst iamapi.AppInstance) error {
 			prev.SecretKey = inst.SecretKey
 		}
 
-		PoPut("app-instance", prev.Meta.ID, prev, nil)
+		Data.ProgPut(
+			iamapi.DataAppInstanceKey(prev.Meta.ID),
+			skv.NewProgValue(prev),
+			nil,
+		)
 
 		// TODO remove unused privileges
 	}
@@ -358,7 +320,11 @@ func AppInstanceRegister(inst iamapi.AppInstance) error {
 	}
 
 	for rid, v := range rps {
-		PoPut(fmt.Sprintf("role-privilege/%d", rid), inst.Meta.ID, strings.Join(v, ","), nil)
+		Data.ProgPut(
+			iamapi.DataRolePrivilegeKey(rid, inst.Meta.ID),
+			skv.NewProgValue(strings.Join(v, ",")),
+			nil,
+		)
 	}
 
 	return nil

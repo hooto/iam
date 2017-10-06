@@ -19,6 +19,7 @@ import (
 	"encoding/binary"
 	"encoding/hex"
 	"regexp"
+	"strings"
 
 	"github.com/lessos/lessgo/crypto/idhash"
 	"github.com/lessos/lessgo/encoding/json"
@@ -239,6 +240,20 @@ func (t *AccessTokenFrontend) SessionPath() string {
 
 func (t *AccessTokenFrontend) String() string {
 	return string(*t)
+}
+
+func (t *AccessTokenFrontend) User() string {
+	if n := strings.Index(string(*t), "/"); n > 0 {
+		return string(*t)[:n]
+	}
+	return ""
+}
+
+func (t *AccessTokenFrontend) Id() string {
+	if n := strings.Index(string(*t), "/"); n > 0 {
+		return string(*t)[n+1:]
+	}
+	return ""
 }
 
 type ServiceLoginAuth struct {
