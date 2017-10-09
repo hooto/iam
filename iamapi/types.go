@@ -18,6 +18,7 @@ import (
 	"encoding/base64"
 	"encoding/binary"
 	"encoding/hex"
+	"errors"
 	"regexp"
 	"strings"
 
@@ -51,6 +52,13 @@ func UserIdBytes(name string) []byte {
 
 func UserId(name string) string {
 	return hex.EncodeToString(UserIdBytes(name))
+}
+
+func UserNameValid(user string) error {
+	if UserNameRe2.MatchString(user) {
+		return nil
+	}
+	return errors.New("Invalid UserName")
 }
 
 type UserSession struct {

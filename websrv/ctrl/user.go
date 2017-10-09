@@ -16,8 +16,12 @@ package ctrl
 
 import (
 	"github.com/hooto/httpsrv"
+	"github.com/lessos/lessgo/types"
+
 	"github.com/hooto/iam/config"
+	"github.com/hooto/iam/iamapi"
 	"github.com/hooto/iam/iamclient"
+	"github.com/hooto/iam/store"
 )
 
 type User struct {
@@ -46,7 +50,6 @@ func (c User) PanelInfoAction() {
 	}
 
 	if iamclient.SessionAccessAllowed(c.Session, "sys.admin", config.Config.InstanceID) {
-
 		nav = append(nav, map[string]string{
 			"path":  "app-mgr/index",
 			"title": "Apps",
@@ -61,4 +64,29 @@ func (c User) PanelInfoAction() {
 	rsp["webui_banner_title"] = config.Config.WebUiBannerTitle
 
 	c.RenderJson(rsp)
+}
+
+func (c User) EntryAction() {
+
+	var set iamapi.UserEntry
+	defer c.RenderJson(&set)
+
+	user := c.Params.Get("user")
+
+	if user == "" {
+		set.Error = types.NewErrorMeta(iamapi.ErrCodeNotFound, "User Not Found")
+		return
+	}
+
+	// profile
+	var profile iamapi.UserProfile
+	if obj := store.Data.ProgGet(iamapi.DataUserProfileKey(user)); obj.OK() {
+		obj.Decode(&profile)
+		set.Login = iamapi.User{
+			Name: user,
+		}
+		set.Kind = "UserEntry"
+	} else {
+		set.Error = types.NewErrorMeta(iamapi.ErrCodeNotFound, "User Not Found")
+	}
 }

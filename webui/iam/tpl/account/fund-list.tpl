@@ -40,7 +40,7 @@
   <td>{[=v.payout]}</td>
   <td>{[=v._exp_product_limits]}</td>
   <td>{[=v.exp_product_max]}</td>
-  <td>
+  <td class="iam-monofont">
     {[~v.exp_product_inpay :pv]}
 	<div>{[=pv]}</div>
     {[~]}

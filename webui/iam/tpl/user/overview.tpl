@@ -39,8 +39,8 @@
       </table>
     </div>
 
-    <div class="iam-user-panel iam-user-ecoin">
+    <div class="iam-user-panel iam-user-acc-balance">
       <div class="iup-title">Account Balance</div>
-	  <div class="ecoin-value">{[=it.account.balance]}</div>
+	  <div class="acc-balance-value">{[=it.account.balance]}</div>
 	</div>
 </div>

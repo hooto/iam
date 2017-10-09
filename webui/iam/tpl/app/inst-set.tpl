@@ -51,12 +51,16 @@
         <thead>
           <tr>
             <th>Privilege</th>
+            <th>Description</th>
             <th>Roles</th>
           </tr>
         </thead>
         <tbody>
           {[~it.privileges :v]}
           <tr>
+            <td>
+              <strong>{[=v.privilege]}</strong>
+            </td>
             <td>
               <strong>{[=v.desc]}</strong>
             </td>
@@ -65,7 +69,7 @@
             {[~v.roles :rv]}
               {[~it._roles.items :drv]}
               {[ if (rv == drv.id) { ]}
-                {[=drv.name]}
+                {[=drv.name]}&nbsp;
               {[ } ]}
               {[~]}
             {[~]}
