@@ -90,8 +90,8 @@ func (c AccountMgr) ReBalanceAction() {
 				}
 			}
 
-			balance = iamapi.AccountFloat64Round(balance)
-			prepay = iamapi.AccountFloat64Round(prepay)
+			balance = iamapi.AccountFloat64Round(balance, 4)
+			prepay = iamapi.AccountFloat64Round(prepay, 4)
 
 			var au iamapi.AccountUser
 			if rs := store.Data.ProgGet(iamapi.DataAccUserKey(uname)); rs.OK() {
@@ -190,7 +190,7 @@ func (c AccountMgr) FundNewAction() {
 		return
 	}
 
-	set.Amount = iamapi.AccountFloat64Round(set.Amount)
+	set.Amount = iamapi.AccountFloat64Round(set.Amount, 4)
 
 	if set.Amount < 1 {
 		set.Error = types.NewErrorMeta(iamapi.ErrCodeInvalidArgument, "Invalid Amount Value")
@@ -244,9 +244,9 @@ func (c AccountMgr) FundNewAction() {
 	set.Updated = set.Created
 	set.Operator = c.us.UserName
 	set.Priority = 8
-	set.Amount = iamapi.AccountFloat64Round(set.Amount)
+	set.Amount = iamapi.AccountFloat64Round(set.Amount, 4)
 
-	acc_user.Balance = iamapi.AccountFloat64Round(acc_user.Balance + set.Amount)
+	acc_user.Balance = iamapi.AccountFloat64Round(acc_user.Balance+set.Amount, 4)
 	acc_user.Updated = set.Updated
 
 	sets := []skv.ProgKeyValue{
@@ -424,7 +424,7 @@ func (c AccountMgr) ChargeSetPayoutAction() {
 		return
 	}
 
-	set_charge.Payout = iamapi.AccountFloat64Round(set_charge.Payout)
+	set_charge.Payout = iamapi.AccountFloat64Round(set_charge.Payout, 4)
 
 	if len(set_charge.Id) < 16 {
 		set.Error = types.NewErrorMeta(iamapi.ErrCodeInvalidArgument, "ID Not Found")
@@ -492,8 +492,8 @@ func (c AccountMgr) ChargeSetPayoutAction() {
 		}
 
 		//
-		fund.Prepay = iamapi.AccountFloat64Round(fund.Prepay - charge.Prepay)
-		fund.Payout = iamapi.AccountFloat64Round(fund.Payout + set_charge.Payout)
+		fund.Prepay = iamapi.AccountFloat64Round(fund.Prepay-charge.Prepay, 4)
+		fund.Payout = iamapi.AccountFloat64Round(fund.Payout+set_charge.Payout, 4)
 		fund.ExpProductInpay.Del(charge.Product)
 		fund.Updated = updated
 
@@ -509,8 +509,8 @@ func (c AccountMgr) ChargeSetPayoutAction() {
 	}
 
 	//
-	acc_user.Balance = iamapi.AccountFloat64Round(acc_user.Balance + charge.Prepay - set_charge.Payout)
-	acc_user.Prepay = iamapi.AccountFloat64Round(acc_user.Prepay - charge.Prepay)
+	acc_user.Balance = iamapi.AccountFloat64Round(acc_user.Balance+charge.Prepay-set_charge.Payout, 4)
+	acc_user.Prepay = iamapi.AccountFloat64Round(acc_user.Prepay-charge.Prepay, 4)
 	acc_user.Updated = updated
 
 	//

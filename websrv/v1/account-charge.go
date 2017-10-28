@@ -28,6 +28,96 @@ type AccountCharge struct {
 	us iamapi.UserSession
 }
 
+func (c AccountCharge) PreValidAction() {
+
+	set := iamapi.AccountChargePrepay{}
+	defer c.RenderJson(&set)
+
+	if err := c.Request.JsonDecode(&set); err != nil {
+		set.Error = types.NewErrorMeta(iamapi.ErrCodeInvalidArgument, "InvalidArgument")
+		return
+	}
+
+	if err := set.Valid(); err != nil {
+		set.Error = types.NewErrorMeta(iamapi.ErrCodeInvalidArgument, err.Error())
+		return
+	}
+
+	//
+	auth_token, err := auth.NewAuthToken(c.Request.Header.Get(auth.HttpHeaderKey))
+	if err != nil {
+		set.Error = types.NewErrorMeta(iamapi.ErrCodeUnauthorized, "No Auth Found #01")
+		return
+	}
+
+	var ak iamapi.AccessKey
+	if rs := store.Data.ProgGet(iamapi.DataAccessKeyKey(auth_token.User, auth_token.AccessKey)); rs.OK() {
+		rs.Decode(&ak)
+	}
+	if ak.AccessKey == "" || ak.AccessKey != auth_token.AccessKey {
+		set.Error = types.NewErrorMeta(iamapi.ErrCodeUnauthorized, "No Auth Found #02")
+		return
+	}
+	if terr := auth_token.Valid(ak, c.Request.RawBody); terr != nil {
+		set.Error = types.NewErrorMeta(iamapi.ErrCodeUnauthorized, "No Auth Found #03 "+terr.Message)
+		return
+	}
+
+	set.Prepay = iamapi.AccountFloat64Round(set.Prepay, 2)
+
+	var acc_user iamapi.AccountUser
+	if rs := store.Data.ProgGet(iamapi.DataAccUserKey(set.User)); rs.OK() {
+		rs.Decode(&acc_user)
+	} else if !rs.NotFound() {
+		set.Error = types.NewErrorMeta(iamapi.ErrCodeInternalError, "Server Error")
+		return
+	}
+
+	if acc_user.User == "" || acc_user.User != set.User {
+		set.Error = types.NewErrorMeta(iamapi.ErrCodeAccChargeOut, "")
+		return
+	}
+
+	actives := []iamapi.AccountFund{}
+	ka := iamapi.DataAccFundUserKey(set.User, "")
+	if rs := store.Data.ProgScan(ka, ka, 1000); rs.OK() {
+		rss := rs.KvList()
+		for _, v := range rss {
+			var v2 iamapi.AccountFund
+			if err := v.Decode(&v2); err == nil {
+				if (v2.Amount - v2.Payout - v2.Prepay) > 0 {
+					actives = append(actives, v2)
+				}
+			}
+		}
+	}
+
+	var active iamapi.AccountFund
+	for _, v := range actives {
+
+		if v.ExpProductMax > 0 &&
+			len(v.ExpProductInpay) >= v.ExpProductMax &&
+			!v.ExpProductInpay.Has(set.Product) {
+			continue
+		}
+
+		balance := v.Amount - v.Prepay - v.Payout
+		if set.Prepay > balance {
+			continue
+		}
+
+		active = v
+		break
+	}
+
+	if active.Id == "" {
+		set.Error = types.NewErrorMeta(iamapi.ErrCodeAccChargeOut, "")
+		return
+	}
+
+	set.Kind = "AccountChargePrepay"
+}
+
 func (c AccountCharge) PrepayAction() {
 
 	set := iamapi.AccountChargePrepay{}
@@ -79,7 +169,7 @@ func (c AccountCharge) PrepayAction() {
 		}
 	}
 
-	set.Prepay = iamapi.AccountFloat64Round(set.Prepay)
+	set.Prepay = iamapi.AccountFloat64Round(set.Prepay, 4)
 
 	if charge_id != charge.Id {
 		charge.Id = charge_id
@@ -149,12 +239,12 @@ func (c AccountCharge) PrepayAction() {
 		return
 	}
 
-	active.Prepay = iamapi.AccountFloat64Round(active.Prepay + charge.Prepay)
+	active.Prepay = iamapi.AccountFloat64Round(active.Prepay+charge.Prepay, 4)
 	active.Updated = uint64(types.MetaTimeNow())
 	active.ExpProductInpay.Set(charge.Product)
 
-	acc_user.Balance = iamapi.AccountFloat64Round(acc_user.Balance - charge.Prepay)
-	acc_user.Prepay = iamapi.AccountFloat64Round(acc_user.Prepay + charge.Prepay)
+	acc_user.Balance = iamapi.AccountFloat64Round(acc_user.Balance-charge.Prepay, 4)
+	acc_user.Prepay = iamapi.AccountFloat64Round(acc_user.Prepay+charge.Prepay, 4)
 
 	sets := []skv.ProgKeyValue{
 		{
@@ -249,7 +339,7 @@ func (c AccountCharge) PayoutAction() {
 		rs.Decode(&charge)
 	}
 
-	set.Payout = iamapi.AccountFloat64Round(set.Payout)
+	set.Payout = iamapi.AccountFloat64Round(set.Payout, 4)
 
 	if charge_id != charge.Id {
 
@@ -309,15 +399,15 @@ func (c AccountCharge) PayoutAction() {
 	}
 
 	if charge.Prepay > 0 {
-		active.Prepay = iamapi.AccountFloat64Round(active.Prepay - charge.Prepay)
-		acc_user.Prepay = iamapi.AccountFloat64Round(acc_user.Prepay - charge.Prepay)
+		active.Prepay = iamapi.AccountFloat64Round(active.Prepay-charge.Prepay, 4)
+		acc_user.Prepay = iamapi.AccountFloat64Round(acc_user.Prepay-charge.Prepay, 4)
 	}
 
-	active.Payout = iamapi.AccountFloat64Round(active.Payout + charge.Payout)
+	active.Payout = iamapi.AccountFloat64Round(active.Payout+charge.Payout, 4)
 	active.Updated = uint64(types.MetaTimeNow())
 	active.ExpProductInpay.Del(charge.Product)
 
-	acc_user.Balance = iamapi.AccountFloat64Round(acc_user.Balance - charge.Payout)
+	acc_user.Balance = iamapi.AccountFloat64Round(acc_user.Balance-charge.Payout, 4)
 	acc_user.Updated = active.Updated
 
 	sets := []skv.ProgKeyValue{

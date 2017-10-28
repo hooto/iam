@@ -297,6 +297,15 @@ func AccountChargeCycleTimeClose(cycle, ctc uint32) uint32 {
 	return ctm
 }
 
-func AccountFloat64Round(f float64) float64 {
-	return float64(int64(f*1e4+0.5)) / 1e4
+func AccountFloat64Round(f float64, pa_num int64) float64 {
+	pa_fix := float64(1e4)
+	switch pa_num {
+	case 2:
+		pa_fix = 1e2
+	case 3:
+		pa_fix = 1e3
+	default:
+		pa_fix = 1e4
+	}
+	return float64(int64(f*pa_fix+0.5)) / pa_fix
 }

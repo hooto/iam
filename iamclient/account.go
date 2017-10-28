@@ -24,6 +24,30 @@ import (
 	"github.com/lessos/lessgo/types"
 )
 
+func AccountChargePreValid(req iamapi.AccountChargePrepay, ak iamapi.AccessKey) iamapi.AccountChargePrepay {
+
+	js, _ := json.Encode(req, "")
+
+	hc := httpclient.Post(fmt.Sprintf(
+		"%s/v1/account-charge/pre-valid",
+		ServiceUrl,
+	))
+	defer hc.Close()
+
+	hc.Header("contentType", "application/json; charset=utf-8")
+
+	ac := auth.NewAuthCredentials(ak, js)
+	hc.Header(ac.HttpHeaderKey(), ac.HttpHeaderValue())
+
+	hc.Body(js)
+
+	var rsp iamapi.AccountChargePrepay
+	if err := hc.ReplyJson(&rsp); err != nil && rsp.Error == nil {
+		rsp.Error = types.NewErrorMeta("400", "Network Error")
+	}
+	return rsp
+}
+
 func AccountChargePrepay(req iamapi.AccountChargePrepay, ak iamapi.AccessKey) iamapi.AccountChargePrepay {
 
 	js, _ := json.Encode(req, "")
