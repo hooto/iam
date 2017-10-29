@@ -74,7 +74,7 @@ func (c AccountCharge) PreValidAction() {
 	}
 
 	if acc_user.User == "" || acc_user.User != set.User {
-		set.Error = types.NewErrorMeta(iamapi.ErrCodeAccChargeOut, "")
+		set.Error = types.NewErrorMeta(iamapi.ErrCodeAccChargeOut, "Out of balance")
 		return
 	}
 
@@ -111,11 +111,11 @@ func (c AccountCharge) PreValidAction() {
 	}
 
 	if active.Id == "" {
-		set.Error = types.NewErrorMeta(iamapi.ErrCodeAccChargeOut, "")
+		set.Error = types.NewErrorMeta(iamapi.ErrCodeAccChargeOut, "Out of balance")
 		return
 	}
 
-	set.Kind = "AccountChargePrepay"
+	set.Kind = "AccountCharge"
 }
 
 func (c AccountCharge) PrepayAction() {
@@ -235,7 +235,7 @@ func (c AccountCharge) PrepayAction() {
 	}
 
 	if active.Id == "" || active.Id != charge.Fund {
-		set.Error = types.NewErrorMeta(iamapi.ErrCodeAccChargeOut, "")
+		set.Error = types.NewErrorMeta(iamapi.ErrCodeAccChargeOut, "Out of balance")
 		return
 	}
 
