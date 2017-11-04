@@ -154,7 +154,7 @@ func (c AccountCharge) PrepayAction() {
 	}
 
 	var (
-		_, charge_id = iamapi.AccountChargeId(set.Product, set.TimeStart, set.TimeClose)
+		_, charge_id = iamapi.AccountChargeId(set.Product, set.TimeStart)
 		charge       iamapi.AccountCharge
 	)
 
@@ -330,7 +330,7 @@ func (c AccountCharge) PayoutAction() {
 	}
 
 	var (
-		_, charge_id = iamapi.AccountChargeId(set.Product, set.TimeStart, set.TimeClose)
+		_, charge_id = iamapi.AccountChargeId(set.Product, set.TimeStart)
 		charge       iamapi.AccountCharge
 	)
 	if rs := store.Data.ProgGet(

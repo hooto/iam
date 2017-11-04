@@ -97,15 +97,15 @@ type AccountCharge struct {
 	Updated        uint64               `json:"updated"`
 }
 
-func AccountChargeId(prod types.NameIdentifier, start, close uint32) ([]byte, string) {
+func AccountChargeId(prod types.NameIdentifier, start uint32) ([]byte, string) {
 
 	bs := make([]byte, 4)
 	binary.BigEndian.PutUint32(bs, start)
 
 	hk := idhash.Hash([]byte(fmt.Sprintf(
-		"acc.charge.%s.%d.%d",
+		"acc.charge.%s.%d",
 		prod.String(),
-		start, close,
+		start,
 	)), 8)
 
 	rs := append(bs, hk...)
