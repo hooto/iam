@@ -13,10 +13,10 @@ iamUser.Overview = function() {
             }
 
             if (!acc.balance) {
-                acc.balance = 0;
+                acc.balance = 0.00;
             }
             if (!acc.prepay) {
-                acc.prepay = 0;
+                acc.prepay = 0.00;
             }
 
             data.account = acc;

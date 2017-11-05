@@ -169,7 +169,7 @@ func (c AccountCharge) PrepayAction() {
 		}
 	}
 
-	set.Prepay = iamapi.AccountFloat64Round(set.Prepay, 4)
+	set.Prepay = iamapi.AccountFloat64Round(set.Prepay, 2)
 
 	if charge_id != charge.Id {
 		charge.Id = charge_id
@@ -239,12 +239,12 @@ func (c AccountCharge) PrepayAction() {
 		return
 	}
 
-	active.Prepay = iamapi.AccountFloat64Round(active.Prepay+charge.Prepay, 4)
+	active.Prepay = iamapi.AccountFloat64Round(active.Prepay+charge.Prepay, 2)
 	active.Updated = uint64(types.MetaTimeNow())
 	active.ExpProductInpay.Set(charge.Product)
 
-	acc_user.Balance = iamapi.AccountFloat64Round(acc_user.Balance-charge.Prepay, 4)
-	acc_user.Prepay = iamapi.AccountFloat64Round(acc_user.Prepay+charge.Prepay, 4)
+	acc_user.Balance = iamapi.AccountFloat64Round(acc_user.Balance-charge.Prepay, 2)
+	acc_user.Prepay = iamapi.AccountFloat64Round(acc_user.Prepay+charge.Prepay, 2)
 
 	sets := []skv.ProgKeyValue{
 		{
@@ -339,7 +339,7 @@ func (c AccountCharge) PayoutAction() {
 		rs.Decode(&charge)
 	}
 
-	set.Payout = iamapi.AccountFloat64Round(set.Payout, 4)
+	set.Payout = iamapi.AccountFloat64Round(set.Payout, 2)
 
 	if charge_id != charge.Id {
 
@@ -399,15 +399,15 @@ func (c AccountCharge) PayoutAction() {
 	}
 
 	if charge.Prepay > 0 {
-		active.Prepay = iamapi.AccountFloat64Round(active.Prepay-charge.Prepay, 4)
-		acc_user.Prepay = iamapi.AccountFloat64Round(acc_user.Prepay-charge.Prepay, 4)
+		active.Prepay = iamapi.AccountFloat64Round(active.Prepay-charge.Prepay, 2)
+		acc_user.Prepay = iamapi.AccountFloat64Round(acc_user.Prepay-charge.Prepay, 2)
 	}
 
-	active.Payout = iamapi.AccountFloat64Round(active.Payout+charge.Payout, 4)
+	active.Payout = iamapi.AccountFloat64Round(active.Payout+charge.Payout, 2)
 	active.Updated = uint64(types.MetaTimeNow())
 	active.ExpProductInpay.Del(charge.Product)
 
-	acc_user.Balance = iamapi.AccountFloat64Round(acc_user.Balance-charge.Payout, 4)
+	acc_user.Balance = iamapi.AccountFloat64Round(acc_user.Balance-charge.Payout, 2)
 	acc_user.Updated = active.Updated
 
 	sets := []skv.ProgKeyValue{

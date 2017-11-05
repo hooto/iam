@@ -312,13 +312,13 @@ iamAccMgr.ChargeList = function() {
 
             for (var i in data.items) {
                 if (!data.items[i].payout) {
-                    data.items[i].payout = 0;
+                    data.items[i].payout = 0.00;
                 }
-                data.items[i].payout = data.items[i].payout.toFixed(4);
+                data.items[i].payout = data.items[i].payout.toFixed(2);
                 if (!data.items[i].prepay) {
-                    data.items[i].prepay = 0;
+                    data.items[i].prepay = 0.00;
                 }
-                data.items[i].prepay = data.items[i].prepay.toFixed(4);
+                data.items[i].prepay = data.items[i].prepay.toFixed(2);
             }
 
             $("#work-content").html(tpl);

@@ -45,17 +45,17 @@ iamAcc.FundList = function() {
                 if (!data.items[i].amount) {
                     data.items[i].amount = 0;
                 }
-                data.items[i].amount = data.items[i].amount.toFixed(4);
+                data.items[i].amount = data.items[i].amount.toFixed(2);
 
                 if (!data.items[i].payout) {
                     data.items[i].payout = 0;
                 }
-                data.items[i].payout = data.items[i].payout.toFixed(4);
+                data.items[i].payout = data.items[i].payout.toFixed(2);
 
                 if (!data.items[i].prepay) {
                     data.items[i].prepay = 0;
                 }
-                data.items[i].prepay = data.items[i].prepay.toFixed(4);
+                data.items[i].prepay = data.items[i].prepay.toFixed(2);
 
                 if (!data.items[i].comment) {
                     data.items[i].comment = "";
@@ -119,11 +119,11 @@ iamAcc.ChargeList = function() {
                 if (!data.items[i].payout) {
                     data.items[i].payout = 0;
                 }
-                data.items[i].payout = data.items[i].payout.toFixed(4);
+                data.items[i].payout = data.items[i].payout.toFixed(2);
                 if (!data.items[i].prepay) {
                     data.items[i].prepay = 0;
                 }
-                data.items[i].prepay = data.items[i].prepay.toFixed(4);
+                data.items[i].prepay = data.items[i].prepay.toFixed(2);
             }
 
             $("#work-content").html(tpl);
@@ -169,11 +169,11 @@ iamAcc.PayoutList = function() {
                 if (!data.items[i].payout) {
                     data.items[i].payout = 0;
                 }
-                data.items[i].payout = data.items[i].payout.toFixed(4);
+                data.items[i].payout = data.items[i].payout.toFixed(2);
                 if (!data.items[i].prepay) {
                     data.items[i].prepay = 0;
                 }
-                data.items[i].prepay = data.items[i].prepay.toFixed(4);
+                data.items[i].prepay = data.items[i].prepay.toFixed(2);
             }
 
             $("#work-content").html(tpl);
