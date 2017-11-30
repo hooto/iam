@@ -16,11 +16,13 @@ package v1
 
 import (
 	"fmt"
+	"time"
 
 	"github.com/hooto/httpsrv"
 	"github.com/lessos/lessgo/crypto/idhash"
 	"github.com/lessos/lessgo/types"
 	"github.com/lynkdb/iomix/skv"
+	iox_utils "github.com/lynkdb/iomix/utils"
 
 	"github.com/hooto/iam/iamapi"
 	"github.com/hooto/iam/iamclient"
@@ -111,7 +113,7 @@ func (c AccessKey) SetAction() {
 
 	var prev iamapi.AccessKey
 	if len(set.AccessKey.AccessKey) < 16 {
-		set.AccessKey.AccessKey = idhash.RandHexString(16)
+		set.AccessKey.AccessKey = iox_utils.Uint32ToHexString(uint32(time.Now().Unix())) + idhash.RandHexString(8)
 	} else {
 
 		if rs := store.Data.ProgGet(iamapi.DataAccessKeyKey(c.us.UserName, set.AccessKey.AccessKey)); rs.OK() {
