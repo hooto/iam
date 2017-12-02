@@ -84,7 +84,8 @@ func (c AccessKey) ListAction() {
 	ls := types.ObjectList{}
 	defer c.RenderJson(&ls)
 
-	if rs := store.Data.ProgScan(iamapi.DataAccessKeyKey(c.us.UserName, ""), iamapi.DataAccessKeyKey(c.us.UserName, ""), ak_limit); rs.OK() {
+	k := iamapi.DataAccessKeyKey(c.us.UserName, "")
+	if rs := store.Data.ProgRevScan(k, k, ak_limit); rs.OK() {
 
 		rss := rs.KvList()
 		for _, v := range rss {

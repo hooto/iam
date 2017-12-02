@@ -50,7 +50,8 @@ func (c AppMgr) InstListAction() {
 	)
 
 	// TODO page
-	if objs := store.Data.ProgScan(iamapi.DataAppInstanceKey(""), iamapi.DataAppInstanceKey(""), 1000); objs.OK() {
+	k := iamapi.DataAppInstanceKey("")
+	if objs := store.Data.ProgRevScan(k, k, 1000); objs.OK() {
 
 		rss := objs.KvList()
 		for _, obj := range rss {

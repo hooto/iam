@@ -52,7 +52,7 @@ func (c App) InstListAction() {
 	ls := types.ObjectList{}
 	defer c.RenderJson(&ls)
 
-	if objs := store.Data.ProgScan(iamapi.DataAppInstanceKey(""), iamapi.DataAppInstanceKey(""), 1000); objs.OK() {
+	if objs := store.Data.ProgRevScan(iamapi.DataAppInstanceKey(""), iamapi.DataAppInstanceKey(""), 1000); objs.OK() {
 
 		rss := objs.KvList()
 		for _, obj := range rss {

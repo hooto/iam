@@ -44,6 +44,7 @@ var (
 	UserNameRe2            = regexp.MustCompile("^[a-z]{1}[a-z0-9]{3,29}$")
 	UserEmailRe2           = regexp.MustCompile("^[_a-z0-9-]+(\\.[_a-z0-9-]+)*@[a-z0-9-]+(\\.[a-z0-9-]+)*(\\.[a-z]{2,10})$")
 	accessTokenFrontendRe2 = regexp.MustCompile("^[a-z0-9]{4,30}\\/[a-f0-9]{20,40}$")
+	AppInstanceIdReg       = regexp.MustCompile("^[a-f0-9]{16,24}$")
 )
 
 func UserIdBytes(name string) []byte {

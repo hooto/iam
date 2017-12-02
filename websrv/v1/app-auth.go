@@ -15,6 +15,9 @@
 package v1
 
 import (
+	"strings"
+	"time"
+
 	"github.com/hooto/hlog4g/hlog"
 	"github.com/hooto/httpsrv"
 	"github.com/hooto/iam/iamapi"
@@ -23,6 +26,7 @@ import (
 	"github.com/lessos/lessgo/crypto/idhash"
 	"github.com/lessos/lessgo/types"
 	"github.com/lynkdb/iomix/skv"
+	iox_utils "github.com/lynkdb/iomix/utils"
 )
 
 type AppAuth struct {
@@ -70,10 +74,23 @@ func (c AppAuth) RegisterAction() {
 		return
 	}
 
-	// if set.Instance.Meta.ID == "" {
-	// 	set.Error = types.NewErrorMeta(iamapi.ErrCodeInvalidArgument, "Bad Argument")
-	// 	return
-	// }
+	tn := uint32(time.Now().Unix())
+	if len(set.Instance.Meta.ID) > 0 {
+
+		if len(set.Instance.Meta.ID) < 16 || iamapi.AppInstanceIdReg.MatchString(set.Instance.Meta.ID) {
+			set.Error = types.NewErrorMeta(iamapi.ErrCodeInvalidArgument, "Invalid Instance ID")
+			return
+		}
+
+		if !strings.HasPrefix(set.Instance.Meta.ID, "00") {
+			time_seq := iox_utils.BytesToUint32(iox_utils.HexStringToBytes(set.Instance.Meta.ID[:8]))
+			if time_seq < (tn-31104000) || time_seq > (tn+864000) {
+				set.Error = types.NewErrorMeta(iamapi.ErrCodeInvalidArgument, "Invalid Instance ID (Prefix Error)")
+				return
+			}
+		}
+	}
+
 	token := iamapi.AccessTokenFrontend(set.AccessToken)
 	if !token.Valid() {
 		set.Error = types.NewErrorMeta(iamapi.ErrCodeUnauthorized, "Unauthorized")
@@ -91,7 +108,7 @@ func (c AppAuth) RegisterAction() {
 	}
 
 	if set.Instance.Meta.ID == "" {
-		set.Instance.Meta.ID = idhash.RandHexString(16)
+		set.Instance.Meta.ID = iox_utils.Uint32ToHexString(tn) + idhash.RandHexString(8)
 	}
 
 	// if !c.Session.AccessAllowed("sys.admin") {
