@@ -138,3 +138,33 @@ func (c App) InstSetAction() {
 
 	set.Kind = "AppInstance"
 }
+
+func (c App) InstDelAction() {
+
+	var set types.TypeMeta
+	defer c.RenderJson(&set)
+
+	inst_id := c.Params.Get("inst_id")
+
+	var prev iamapi.AppInstance
+	if obj := store.Data.ProgGet(iamapi.DataAppInstanceKey(inst_id)); obj.OK() {
+		obj.Decode(&prev)
+	}
+
+	if prev.Meta.ID == "" {
+		set.Error = types.NewErrorMeta(iamapi.ErrCodeInvalidArgument, "App Instance Not Found")
+		return
+	}
+
+	if prev.Meta.User != c.us.UserName {
+		set.Error = types.NewErrorMeta(iamapi.ErrCodeUnauthorized, "Access Denied")
+		return
+	}
+
+	if obj := store.Data.ProgDel(iamapi.DataAppInstanceKey(inst_id), nil); !obj.OK() {
+		set.Error = types.NewErrorMeta(iamapi.ErrCodeInternalError, obj.Bytex().String())
+		return
+	}
+
+	set.Kind = "AppInstance"
+}

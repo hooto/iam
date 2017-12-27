@@ -127,6 +127,10 @@ iamApp.InstSetForm = function(instid) {
                 data: data,
                 title: "App Instance Setting",
                 buttons: [{
+                    title: "Delete",
+                    onclick: "iamApp.InstDelCommit()",
+                    style: "pull-left",
+                }, {
                     title: "Cancel",
                     onclick: "l4iModal.Close()",
                 }, {
@@ -213,3 +217,34 @@ iamApp.InstSetCommit = function() {
         },
     });
 }
+
+
+iamApp.InstDelCommit = function() {
+    var form = $("#iam-app-instset"),
+        alert_id = "#iam-app-instset-alert";
+
+    if (!form) {
+        return;
+    }
+
+    iam.ApiCmd("app/inst-del?inst_id=" + form.find("input[name=instid]").val(), {
+        callback: function(err, data) {
+
+            if (err) {
+                return l4i.InnerAlert(alert_id, 'alert-danger', err);
+            }
+
+            if (!data || data.error) {
+                return l4i.InnerAlert(alert_id, 'alert-danger', data.error.message);
+            }
+
+            l4i.InnerAlert(alert_id, 'alert-success', "Successfully updated");
+
+            window.setTimeout(function() {
+                l4iModal.Close();
+                iamApp.InstList();
+            }, 1000);
+        },
+    });
+}
+
