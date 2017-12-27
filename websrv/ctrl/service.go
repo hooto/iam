@@ -18,6 +18,7 @@ import (
 	"net/http"
 
 	"github.com/hooto/httpsrv"
+	"github.com/hooto/iam/config"
 	"github.com/hooto/iam/iamapi"
 	"github.com/hooto/iam/iamclient"
 	"github.com/hooto/iam/store"
@@ -50,6 +51,10 @@ func (c Service) LoginAction() {
 
 	if rt.Persistent == 1 {
 		c.Data["persistent_checked"] = "checked"
+	}
+
+	if config.Config.ServiceLoginFormAlertMsg != "" {
+		c.Data["alert_msg"] = config.Config.ServiceLoginFormAlertMsg
 	}
 }
 

@@ -195,7 +195,7 @@ body {
 
     <img class="iam-user-ico-default"  src="/iam/~/iam/img/user-default.svg">
 
-    <div id="iam-login-form-alert" class="alert iam-input-row {{if eq .alert_msg nil}}hide{{end}}">{{.alert_msg}}</div>
+    <div id="iam-login-form-alert" class="alert alert-info {{if eq .alert_msg nil}}hide{{end}}">{{.alert_msg}}</div>
 
     <div id="iam-login-input-frame">
       <div class="iam-input-row">

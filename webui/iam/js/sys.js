@@ -26,7 +26,11 @@ iamSys.GeneralSet = function() {
 
             data._items = {};
             for (var i in data.items) {
-                data._items[data.items[i]["name"]] = data.items[i]["value"];
+                if (!data.items[i].value) {
+                    data._items[data.items[i]["name"]] = "";
+                } else {
+                    data._items[data.items[i]["name"]] = data.items[i]["value"];
+                }
             }
 
             l4iTemplate.Render({
@@ -69,6 +73,9 @@ iamSys.GeneralSetCommit = function() {
         }, {
             name: "user_reg_disable",
             value: user_reg_disable,
+        }, {
+            name: "service_login_form_alert_msg",
+            value: form.find("input[name=service_login_form_alert_msg]").val(),
         }],
     };
 

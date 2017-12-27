@@ -35,6 +35,7 @@ var (
 		"service_name",
 		"webui_banner_title",
 		"user_reg_disable",
+		"service_login_form_alert_msg",
 		"mailer",
 	}
 )
@@ -55,7 +56,7 @@ func (c SysConfig) GeneralAction() {
 		for _, obj := range rss {
 
 			switch string(obj.Key) {
-			case "service_name", "webui_banner_title", "user_reg_disable":
+			case "service_name", "webui_banner_title", "user_reg_disable", "service_login_form_alert_msg":
 				ls.Items.Set(string(obj.Key), obj.Bytex().String())
 			}
 		}
@@ -71,6 +72,12 @@ func (c SysConfig) GeneralAction() {
 
 	if val, ok := ls.Items.Get("user_reg_disable"); !ok || val.String() == "" {
 		ls.Items.Set("user_reg_disable", "0")
+	}
+
+	if val, ok := ls.Items.Get("service_login_form_alert_msg"); !ok || val.String() == "" {
+		ls.Items.Set("service_login_form_alert_msg", config.Config.ServiceLoginFormAlertMsg)
+	} else {
+		ls.Items.Set("service_login_form_alert_msg", "")
 	}
 
 	ls.Kind = "SysConfigList"

@@ -74,6 +74,15 @@
     </div>
     -->
 
+    <label class="iam-form-group-title">Messages</label>
+
+    <div class="form-group">
+      <label class="col-sm-3 control-label">Login form alert</label>
+      <div class="col-sm-4">
+        <input type="text" class="form-control" name="service_login_form_alert_msg" value="{[=it._items.service_login_form_alert_msg]}">
+      </div>
+    </div>
+
     <div class="form-group">
       <div class="col-sm-offset-3 col-sm-4">
         <button type="submit" class="pure-button pure-button-primary" onclick="iamSys.GeneralSetCommit()">Save</button>

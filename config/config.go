@@ -33,17 +33,19 @@ var (
 	Prefix                   = "/opt/hooto/iam"
 	UserRegistrationDisabled = false
 	Config                   = ConfigCommon{
-		InstanceID:       "",
-		ServiceName:      "hooto IAM Service",
-		WebUiBannerTitle: "Account Panel",
+		InstanceID:               "",
+		ServiceName:              "hooto IAM Service",
+		WebUiBannerTitle:         "Account Panel",
+		ServiceLoginFormAlertMsg: "",
 	}
 )
 
 type ConfigCommon struct {
-	InstanceID       string `json:"instance_id"`
-	HttpPort         uint16 `json:"http_port,omitempty"`
-	ServiceName      string `json:"service_name"`
-	WebUiBannerTitle string
+	InstanceID               string `json:"instance_id"`
+	HttpPort                 uint16 `json:"http_port,omitempty"`
+	ServiceName              string `json:"service_name"`
+	WebUiBannerTitle         string
+	ServiceLoginFormAlertMsg string
 }
 
 func Init(prefix string) error {

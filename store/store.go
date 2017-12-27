@@ -217,6 +217,10 @@ func SysConfigRefresh() {
 		}
 	}
 
+	if obj := Data.ProgGet(iamapi.DataSysConfigKey("service_login_form_alert_msg")); obj.OK() {
+		config.Config.ServiceLoginFormAlertMsg = obj.Bytex().String()
+	}
+
 	if obj := Data.ProgGet(iamapi.DataSysConfigKey("user_reg_disable")); obj.OK() {
 
 		if obj.Bytex().String() == "1" {
