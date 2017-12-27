@@ -133,6 +133,10 @@ iamAppMgr.InstSetForm = function(instid) {
                 data: data,
                 title: "App Instance Setting",
                 buttons: [{
+                    title: "Delete",
+                    onclick: "iamAppMgr.InstDelCommit()",
+                    style: "pull-left",
+                }, {
                     title: "Cancel",
                     onclick: "l4iModal.Close()",
                 }, {
@@ -220,3 +224,35 @@ iamAppMgr.InstSetCommit = function() {
         },
     });
 }
+
+
+iamAppMgr.InstDelCommit = function() {
+    var form = $("#iam-appmgr-instset"),
+        alert_id = "#iam-appmgr-instset-alert";
+
+    if (!form) {
+        return;
+    }
+
+    iam.ApiCmd("app-mgr/inst-del?inst_id=" + form.find("input[name=instid]").val(), {
+        callback: function(err, data) {
+
+            if (err) {
+                return l4i.InnerAlert(alert_id, 'alert-danger', err);
+            }
+
+            if (!data || data.error) {
+                return l4i.InnerAlert(alert_id, 'alert-danger', data.error.message);
+            }
+
+            l4i.InnerAlert(alert_id, 'alert-success', "Successfully updated");
+
+            window.setTimeout(function() {
+                l4iModal.Close();
+                iamAppMgr.InstList();
+            }, 500);
+        },
+    });
+}
+
+

@@ -141,3 +141,33 @@ func (c AppMgr) InstSetAction() {
 
 	set.Kind = "AppInstance"
 }
+
+func (c AppMgr) InstDelAction() {
+
+	var set types.TypeMeta
+	defer c.RenderJson(&set)
+
+	inst_id := c.Params.Get("inst_id")
+
+	if !iamclient.SessionAccessAllowed(c.Session, "sys.admin", config.Config.InstanceID) {
+		set.Error = types.NewErrorMeta(iamapi.ErrCodeAccessDenied, "Access Denied")
+		return
+	}
+
+	var prev iamapi.AppInstance
+	if obj := store.Data.ProgGet(iamapi.DataAppInstanceKey(inst_id)); obj.OK() {
+		obj.Decode(&prev)
+	}
+
+	if prev.Meta.ID == "" {
+		set.Error = types.NewErrorMeta(iamapi.ErrCodeInvalidArgument, "App Instance Not Found")
+		return
+	}
+
+	if obj := store.Data.ProgDel(iamapi.DataAppInstanceKey(inst_id), nil); !obj.OK() {
+		set.Error = types.NewErrorMeta(iamapi.ErrCodeInternalError, obj.Bytex().String())
+		return
+	}
+
+	set.Kind = "AppInstance"
+}

@@ -243,7 +243,7 @@ iamApp.InstDelCommit = function() {
             window.setTimeout(function() {
                 l4iModal.Close();
                 iamApp.InstList();
-            }, 1000);
+            }, 500);
         },
     });
 }
