@@ -27,7 +27,7 @@ body {
 }
 
 #iam-signup-box {
-  width: 500px;
+  width: 600px;
   position: absolute;
   left: 50%;
   top: 50%;
@@ -40,6 +40,11 @@ body {
   border-radius: 4px;
   padding: 30px 30px 20px 30px;
   /*box-shadow: 0px 2px 2px 0px #999;*/
+}
+
+#iam-signup-form > .alert {
+   font-size: 16pt;
+   line-height: 160%
 }
 
 .iam-signup-msg01 {
