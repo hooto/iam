@@ -23,13 +23,14 @@ import (
 )
 
 const (
-	Version       = "0.2.1dev"
+	Version       = "0.2.1"
 	GroupMember   = 100
 	GroupSysAdmin = 1
 )
 
 var (
 	err                      error
+	VersionHash              = Version
 	Prefix                   = "/opt/hooto/iam"
 	UserRegistrationDisabled = false
 	Config                   = ConfigCommon{

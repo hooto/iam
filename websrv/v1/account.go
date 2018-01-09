@@ -93,7 +93,7 @@ func (c Account) ChargeListAction() {
 
 			var set iamapi.AccountCharge
 			if err := v.Decode(&set); err == nil {
-				if set.Prepay > 0 {
+				if set.Prepay > 0 && set.Payout == 0 {
 					ls.Items = append(ls.Items, set)
 				}
 			}

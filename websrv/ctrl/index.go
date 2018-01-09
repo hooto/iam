@@ -36,15 +36,19 @@ func (c Index) IndexAction() {
 		return
 	}
 
+	c.AutoRender = false
+	c.Response.Out.Header().Set("Cache-Control", "no-cache")
+
 	c.RenderString(`<!DOCTYPE html>
 <html lang="en">
 <head>
   <meta charset="utf-8">
   <title>` + config.Config.WebUiBannerTitle + `</title>
   <link rel="shortcut icon" type="image/x-icon" href="/iam/~/iam/img/favicon.ico">
-  <script src="/iam/~/lessui/js/sea.js"></script>
-  <script src="/iam/~/iam/js/main.js"></script>
+  <script src="/iam/~/lessui/js/sea.js?v=` + config.VersionHash + `"></script>
+  <script src="/iam/~/iam/js/main.js?v=` + config.VersionHash + `"></script>
   <script type="text/javascript">
+	iam.version = "` + config.VersionHash + `";
     window.onload = iam.Boot();
   </script>
 </head>

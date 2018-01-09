@@ -77,8 +77,8 @@ func (c AppAuth) RegisterAction() {
 	tn := uint32(time.Now().Unix())
 	if len(set.Instance.Meta.ID) > 0 {
 
-		if len(set.Instance.Meta.ID) < 16 || iamapi.AppInstanceIdReg.MatchString(set.Instance.Meta.ID) {
-			set.Error = types.NewErrorMeta(iamapi.ErrCodeInvalidArgument, "Invalid Instance ID")
+		if len(set.Instance.Meta.ID) < 16 || !iamapi.AppInstanceIdReg.MatchString(set.Instance.Meta.ID) {
+			set.Error = types.NewErrorMeta(iamapi.ErrCodeInvalidArgument, "Invalid Instance ID "+set.Instance.Meta.ID)
 			return
 		}
 

@@ -5,7 +5,6 @@
         <th>ID</th>
         <th>Product</th>
         <th>Prepay</th>
-        <th>Payout</th>
         <th>Pay Start</th>
         <th>Pay Close</th>
         <th>Updated</th>
@@ -25,7 +24,6 @@
     {[=v.product]}
   </td>
   <td>{[=v.prepay]}</td>
-  <td>{[=v.payout]}</td>
   <td>{[=l4i.UnixTimeFormat(v.time_start, "Y-m-d H:i")]}</td>
   <td>{[=l4i.UnixTimeFormat(v.time_close, "Y-m-d H:i")]}</td>
   <td>{[=l4i.MetaTimeParseFormat(v.updated, "Y-m-d H:i")]}</td>

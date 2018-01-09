@@ -47,7 +47,7 @@
   <td>{[=l4i.MetaTimeParseFormat(v.updated, "Y-m-d")]}</td>
   <td align="right">
     <button class="pure-button button-xsmall"
-      onclick="iamAccMgr.RechargeNew('{[=v.name]}')">
+      onclick="iamAccMgr.FundNew('{[=v.name]}')">
       Recharge
     </button>
     <button class="pure-button button-xsmall"

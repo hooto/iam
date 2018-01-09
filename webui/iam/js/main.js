@@ -1,4 +1,5 @@
 var iam = {
+    version: "0.2",
     base: "/iam/",
     baseui: "/iam/~/",
     basetpl: "/iam/~/iam/tpl/",
@@ -11,7 +12,7 @@ var iam = {
 
 iam.debug_uri = function() {
     if (!iam.debug) {
-        return "";
+        return "?_=" + iam.version;
     }
     return "?_=" + Math.random();
 }
@@ -25,8 +26,8 @@ iam.Boot = function() {
     });
 
     seajs.use([
-        "~/twbs/css/bootstrap.min.css",
-        "~/jquery/jquery.min.js",
+        "~/twbs/css/bootstrap.css",
+        "~/jquery/jquery.js",
         "~/lessui/js/browser-detect.js",
     ], function() {
 
@@ -50,7 +51,7 @@ iam.Boot = function() {
 
             seajs.use([
                 "~/iam/css/main.css" + iam.debug_uri(),
-                "~/twbs/js/bootstrap.min.js",
+                "~/twbs/js/bootstrap.js",
                 "~/iam/js/mgr.js" + iam.debug_uri(),
                 "~/iam/js/user.js" + iam.debug_uri(),
                 "~/iam/js/app.js" + iam.debug_uri(),
