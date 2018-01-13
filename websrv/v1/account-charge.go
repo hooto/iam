@@ -352,6 +352,10 @@ func (c AccountCharge) PayoutAction() {
 		charge.TimeClose = set.TimeClose
 	}
 
+	if set.TimeClose > 0 && charge.TimeClose != set.TimeClose && set.TimeClose > charge.TimeStart {
+		charge.TimeClose = set.TimeClose
+	}
+
 	charge.Payout = set.Payout
 	charge.Updated = uint64(types.MetaTimeNow())
 

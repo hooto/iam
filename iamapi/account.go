@@ -137,7 +137,7 @@ func (this *AccountChargePrepay) Valid() error {
 		return errors.New("Invalid Product : " + err.Error())
 	}
 
-	if this.Prepay == 0 {
+	if this.Prepay <= 0 {
 		return errors.New("Invalid Prepay")
 	}
 
@@ -295,6 +295,10 @@ func AccountChargeCycleTimeClose(cycle, ctc uint32) uint32 {
 	}
 
 	return ctm
+}
+
+func AccountChargeTimeNow() uint32 {
+	return uint32(time.Now().Unix())
 }
 
 func AccountFloat64Round(f float64, pa_num int64) float64 {
