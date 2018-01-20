@@ -155,7 +155,7 @@ func (c AccessKey) SetAction() {
 		prev.User = c.us.UserName
 	}
 
-	if rs := store.Data.ProgPut(iamapi.DataAccessKeyKey(c.us.UserName, prev.AccessKey), skv.NewProgValue(prev), nil); rs.OK() {
+	if rs := store.Data.ProgPut(iamapi.DataAccessKeyKey(c.us.UserName, prev.AccessKey), skv.NewValueObject(prev), nil); rs.OK() {
 		set.Kind = "AccessKey"
 	} else {
 		set.Error = types.NewErrorMeta(iamapi.ErrCodeInternalError, "IO Error")
@@ -213,7 +213,7 @@ func (c AccessKey) BindAction() {
 		}
 	})
 
-	if rs := store.Data.ProgPut(iamapi.DataAccessKeyKey(c.us.UserName, ak.AccessKey), skv.NewProgValue(ak), nil); rs.OK() {
+	if rs := store.Data.ProgPut(iamapi.DataAccessKeyKey(c.us.UserName, ak.AccessKey), skv.NewValueObject(ak), nil); rs.OK() {
 		set.Kind = "AccessKey"
 	} else {
 		set.Error = types.NewErrorMeta(iamapi.ErrCodeInternalError, "IO Error")
@@ -250,7 +250,7 @@ func (c AccessKey) UnbindAction() {
 		}
 	})
 
-	if rs := store.Data.ProgPut(iamapi.DataAccessKeyKey(c.us.UserName, ak.AccessKey), skv.NewProgValue(ak), nil); rs.OK() {
+	if rs := store.Data.ProgPut(iamapi.DataAccessKeyKey(c.us.UserName, ak.AccessKey), skv.NewValueObject(ak), nil); rs.OK() {
 		set.Kind = "AccessKey"
 	} else {
 		set.Error = types.NewErrorMeta(iamapi.ErrCodeInternalError, "IO Error")

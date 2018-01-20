@@ -100,8 +100,8 @@ func (c Service) LoginAuthAction() {
 
 	token := iamapi.NewAccessTokenFrontend(session.UserName, session.AccessToken)
 
-	if sobj := store.Data.ProgPut(iamapi.DataSessionKey(session.UserName, session.AccessToken), skv.NewProgValue(session), &skv.ProgWriteOptions{
-		Expired: time.Now().Add(864000e9),
+	if sobj := store.Data.ProgPut(iamapi.DataSessionKey(session.UserName, session.AccessToken), skv.NewValueObject(session), &skv.ProgWriteOptions{
+		Expired: uint64(time.Now().Add(864000e9).UnixNano()),
 	}); !sobj.OK() {
 		rsp.Error = types.NewErrorMeta("500", sobj.Bytex().String())
 		return

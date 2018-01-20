@@ -145,7 +145,7 @@ func (c AppAuth) RegisterAction() {
 		set.Instance.Status = prev.Status
 	}
 
-	if obj := store.Data.ProgPut(iamapi.DataAppInstanceKey(set.Instance.Meta.ID), skv.NewProgValue(set.Instance), nil); !obj.OK() {
+	if obj := store.Data.ProgPut(iamapi.DataAppInstanceKey(set.Instance.Meta.ID), skv.NewValueObject(set.Instance), nil); !obj.OK() {
 		set.Error = types.NewErrorMeta(iamapi.ErrCodeInternalError, obj.Bytex().String())
 		return
 	}

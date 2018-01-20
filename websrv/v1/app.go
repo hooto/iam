@@ -130,7 +130,7 @@ func (c App) InstSetAction() {
 		prev.AppTitle = set.AppTitle
 		prev.Url = set.Url
 
-		if obj := store.Data.ProgPut(iamapi.DataAppInstanceKey(set.Meta.ID), skv.NewProgValue(prev), nil); !obj.OK() {
+		if obj := store.Data.ProgPut(iamapi.DataAppInstanceKey(set.Meta.ID), skv.NewValueObject(prev), nil); !obj.OK() {
 			set.Error = types.NewErrorMeta(iamapi.ErrCodeInternalError, obj.Bytex().String())
 			return
 		}

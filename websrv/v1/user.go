@@ -81,7 +81,7 @@ func (c User) ProfileAction() {
 		}
 
 		set.Login = &user
-		store.Data.ProgPut(iamapi.DataUserProfileKey(c.us.UserName), skv.NewProgValue(set), nil)
+		store.Data.ProgPut(iamapi.DataUserProfileKey(c.us.UserName), skv.NewValueObject(set), nil)
 	}
 
 	set.Photo = ""
@@ -122,7 +122,7 @@ func (c User) ProfileSetAction() {
 	}
 	user.DisplayName = req.Login.DisplayName
 
-	store.Data.ProgPut(iamapi.DataUserKey(c.us.UserName), skv.NewProgValue(user), nil)
+	store.Data.ProgPut(iamapi.DataUserKey(c.us.UserName), skv.NewValueObject(user), nil)
 
 	// profile
 	var profile iamapi.UserProfile
@@ -137,7 +137,7 @@ func (c User) ProfileSetAction() {
 	profile.Login = &user
 	profile.Login.Keys = nil
 
-	store.Data.ProgPut(iamapi.DataUserProfileKey(c.us.UserName), skv.NewProgValue(profile), nil)
+	store.Data.ProgPut(iamapi.DataUserProfileKey(c.us.UserName), skv.NewValueObject(profile), nil)
 
 	set.Kind = "UserProfile"
 }
@@ -181,7 +181,7 @@ func (c User) PassSetAction() {
 	auth_key, _ := pass.HashDefault(req.NewPassword)
 	user.Keys.Set(iamapi.UserKeyDefault, auth_key)
 
-	store.Data.ProgPut(iamapi.DataUserKey(c.us.UserName), skv.NewProgValue(user), nil)
+	store.Data.ProgPut(iamapi.DataUserKey(c.us.UserName), skv.NewValueObject(user), nil)
 
 	set.Kind = "UserPassword"
 }
@@ -225,13 +225,13 @@ func (c User) EmailSetAction() {
 
 	user.Email = req.Email
 	user.Updated = types.MetaTimeNow()
-	store.Data.ProgPut(iamapi.DataUserKey(c.us.UserName), skv.NewProgValue(user), nil)
+	store.Data.ProgPut(iamapi.DataUserKey(c.us.UserName), skv.NewValueObject(user), nil)
 
 	if rs := store.Data.ProgGet(iamapi.DataUserProfileKey(c.us.UserName)); rs.OK() {
 		var preprofile iamapi.UserProfile
 		if err := rs.Decode(&preprofile); err == nil {
 			preprofile.Login = &user
-			store.Data.ProgPut(iamapi.DataUserProfileKey(c.us.UserName), skv.NewProgValue(preprofile), nil)
+			store.Data.ProgPut(iamapi.DataUserProfileKey(c.us.UserName), skv.NewValueObject(preprofile), nil)
 		}
 	}
 
@@ -290,7 +290,7 @@ func (c User) PhotoSetAction() {
 	profile.Photo = "data:image/png;base64," + imgphoto
 	profile.PhotoSource = req.Data
 
-	store.Data.ProgPut(iamapi.DataUserProfileKey(c.us.UserName), skv.NewProgValue(profile), nil)
+	store.Data.ProgPut(iamapi.DataUserProfileKey(c.us.UserName), skv.NewValueObject(profile), nil)
 
 	set.Kind = "UserPhoto"
 }

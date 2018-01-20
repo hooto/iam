@@ -221,7 +221,7 @@ func (c UserMgr) UserSetAction() {
 	set.Login.Updated = types.MetaTimeNow()
 	sort.Sort(set.Login.Roles)
 
-	if obj := store.Data.ProgPut(iamapi.DataUserKey(set.Login.Name), skv.NewProgValue(set.Login), nil); !obj.OK() {
+	if obj := store.Data.ProgPut(iamapi.DataUserKey(set.Login.Name), skv.NewValueObject(set.Login), nil); !obj.OK() {
 		set.Error = types.NewErrorMeta("500", obj.Bytex().String())
 		return
 	}
@@ -243,7 +243,7 @@ func (c UserMgr) UserSetAction() {
 			}
 		}
 
-		if obj := store.Data.ProgPut(iamapi.DataUserProfileKey(set.Login.Name), skv.NewProgValue(profile), nil); !obj.OK() {
+		if obj := store.Data.ProgPut(iamapi.DataUserProfileKey(set.Login.Name), skv.NewValueObject(profile), nil); !obj.OK() {
 			set.Error = types.NewErrorMeta("500", obj.Bytex().String())
 			return
 		}

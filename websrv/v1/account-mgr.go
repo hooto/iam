@@ -110,7 +110,7 @@ func (c AccountMgr) ReBalanceAction() {
 
 				store.Data.ProgPut(
 					iamapi.DataAccUserKey(uname),
-					skv.NewProgValue(au),
+					skv.NewValueObject(au),
 					nil,
 				)
 				rsp.Changed++
@@ -252,15 +252,15 @@ func (c AccountMgr) FundNewAction() {
 	sets := []skv.ProgKeyValue{
 		{
 			Key: iamapi.DataAccFundMgrKey(set.Id),
-			Val: skv.NewProgValue(set.AccountFund),
+			Val: skv.NewValueObject(set.AccountFund),
 		},
 		{
 			Key: iamapi.DataAccFundUserKey(set.User, set.Id),
-			Val: skv.NewProgValue(set.AccountFund),
+			Val: skv.NewValueObject(set.AccountFund),
 		},
 		{
 			Key: iamapi.DataAccUserKey(set.User),
-			Val: skv.NewProgValue(acc_user),
+			Val: skv.NewValueObject(acc_user),
 		},
 	}
 
@@ -328,11 +328,11 @@ func (c AccountMgr) FundSetAction() {
 	sets := []skv.ProgKeyValue{
 		{
 			Key: iamapi.DataAccFundMgrKey(set.Id),
-			Val: skv.NewProgValue(set_prev),
+			Val: skv.NewValueObject(set_prev),
 		},
 		{
 			Key: iamapi.DataAccFundUserKey(set_prev.User, set.Id),
-			Val: skv.NewProgValue(set_prev),
+			Val: skv.NewValueObject(set_prev),
 		},
 	}
 
@@ -499,12 +499,12 @@ func (c AccountMgr) ChargeSetPayoutAction() {
 
 		sets = append(sets, skv.ProgKeyValue{
 			Key: iamapi.DataAccFundUserKey(set_charge.User, charge.Fund),
-			Val: skv.NewProgValue(fund),
+			Val: skv.NewValueObject(fund),
 		})
 
 		sets = append(sets, skv.ProgKeyValue{
 			Key: iamapi.DataAccFundMgrKey(charge.Fund),
-			Val: skv.NewProgValue(fund),
+			Val: skv.NewValueObject(fund),
 		})
 	}
 
@@ -521,15 +521,15 @@ func (c AccountMgr) ChargeSetPayoutAction() {
 	//
 	sets = append(sets, skv.ProgKeyValue{
 		Key: iamapi.DataAccChargeUserKey(set_charge.User, set_charge.Id),
-		Val: skv.NewProgValue(charge),
+		Val: skv.NewValueObject(charge),
 	})
 	sets = append(sets, skv.ProgKeyValue{
 		Key: iamapi.DataAccUserKey(set_charge.User),
-		Val: skv.NewProgValue(acc_user),
+		Val: skv.NewValueObject(acc_user),
 	})
 	sets = append(sets, skv.ProgKeyValue{
 		Key: iamapi.DataAccChargeMgrKey(set_charge.Id),
-		Val: skv.NewProgValue(charge),
+		Val: skv.NewValueObject(charge),
 	})
 
 	for _, v := range sets {

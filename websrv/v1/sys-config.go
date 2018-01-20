@@ -112,7 +112,7 @@ func (c SysConfig) GeneralSetAction() {
 			continue
 		}
 
-		if obj := store.Data.ProgPut(iamapi.DataSysConfigKey(v.Name), skv.NewProgValue(v.Value), nil); !obj.OK() {
+		if obj := store.Data.ProgPut(iamapi.DataSysConfigKey(v.Name), skv.NewValueObject(v.Value), nil); !obj.OK() {
 			sets.Error = types.NewErrorMeta("500", obj.Bytex().String())
 			return
 		}

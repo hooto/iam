@@ -149,7 +149,7 @@ func (c UserMgr) RoleSetAction() {
 	set.Updated = types.MetaTimeNow()
 	// roleset["privileges"] = strings.Join(c.Params.Values["privileges"], ",")
 
-	if obj := store.Data.ProgPut(iamapi.DataRoleKey(set.Id), skv.NewProgValue(set), nil); !obj.OK() {
+	if obj := store.Data.ProgPut(iamapi.DataRoleKey(set.Id), skv.NewValueObject(set), nil); !obj.OK() {
 		set.Error = types.NewErrorMeta("500", obj.Bytex().String())
 		return
 	}

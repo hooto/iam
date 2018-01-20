@@ -249,23 +249,23 @@ func (c AccountCharge) PrepayAction() {
 	sets := []skv.ProgKeyValue{
 		{
 			Key: iamapi.DataAccFundUserKey(charge.User, active.Id),
-			Val: skv.NewProgValue(active),
+			Val: skv.NewValueObject(active),
 		},
 		{
 			Key: iamapi.DataAccChargeUserKey(charge.User, charge_id),
-			Val: skv.NewProgValue(charge),
+			Val: skv.NewValueObject(charge),
 		},
 		{
 			Key: iamapi.DataAccUserKey(charge.User),
-			Val: skv.NewProgValue(acc_user),
+			Val: skv.NewValueObject(acc_user),
 		},
 		{
 			Key: iamapi.DataAccFundMgrKey(active.Id),
-			Val: skv.NewProgValue(active),
+			Val: skv.NewValueObject(active),
 		},
 		{
 			Key: iamapi.DataAccChargeMgrKey(charge_id),
-			Val: skv.NewProgValue(charge),
+			Val: skv.NewValueObject(charge),
 		},
 	}
 
@@ -417,23 +417,23 @@ func (c AccountCharge) PayoutAction() {
 	sets := []skv.ProgKeyValue{
 		{
 			Key: iamapi.DataAccFundUserKey(set.User, active.Id),
-			Val: skv.NewProgValue(active),
+			Val: skv.NewValueObject(active),
 		},
 		{
 			Key: iamapi.DataAccChargeUserKey(set.User, charge_id),
-			Val: skv.NewProgValue(charge),
+			Val: skv.NewValueObject(charge),
 		},
 		{
 			Key: iamapi.DataAccUserKey(set.User),
-			Val: skv.NewProgValue(acc_user),
+			Val: skv.NewValueObject(acc_user),
 		},
 		{
 			Key: iamapi.DataAccFundMgrKey(active.Id),
-			Val: skv.NewProgValue(active),
+			Val: skv.NewValueObject(active),
 		},
 		{
 			Key: iamapi.DataAccChargeMgrKey(charge_id),
-			Val: skv.NewProgValue(charge),
+			Val: skv.NewValueObject(charge),
 		},
 	}
 

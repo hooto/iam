@@ -96,7 +96,7 @@ func (c Reg) SignUpRegAction() {
 	}
 	user.Keys.Set(iamapi.UserKeyDefault, auth)
 
-	if obj := store.Data.ProgPut(iamapi.DataUserKey(user.Name), skv.NewProgValue(user), nil); !obj.OK() {
+	if obj := store.Data.ProgPut(iamapi.DataUserKey(user.Name), skv.NewValueObject(user), nil); !obj.OK() {
 		rsp.Error = &types.ErrorMeta{"500", obj.Bytex().String()}
 		return
 	}
@@ -153,8 +153,8 @@ func (c Reg) RetrievePutAction() {
 		Expired:  utilx.TimeNowAdd("atom", "+3600s"),
 	}
 
-	if obj := store.Data.ProgPut(iamapi.DataPasswordResetKey(reset.Id), skv.NewProgValue(reset), &skv.ProgWriteOptions{
-		Expired: time.Now().Add(3600e9),
+	if obj := store.Data.ProgPut(iamapi.DataPasswordResetKey(reset.Id), skv.NewValueObject(reset), &skv.ProgWriteOptions{
+		Expired: uint64(time.Now().Add(3600e9).UnixNano()),
 	}); !obj.OK() {
 		rsp.Error = &types.ErrorMeta{"500", obj.Bytex().String()}
 		return
@@ -277,7 +277,7 @@ func (c Reg) PassResetPutAction() {
 	auth, _ := pass.HashDefault(c.Params.Get("passwd"))
 	user.Keys.Set(iamapi.UserKeyDefault, auth)
 
-	if obj := store.Data.ProgPut(iamapi.DataUserKey(reset.UserName), skv.NewProgValue(user), nil); !obj.OK() {
+	if obj := store.Data.ProgPut(iamapi.DataUserKey(reset.UserName), skv.NewValueObject(user), nil); !obj.OK() {
 		rsp.Error = &types.ErrorMeta{"500", obj.Bytex().String()}
 		return
 	}

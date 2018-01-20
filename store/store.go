@@ -45,9 +45,9 @@ func Init() error {
 
 	if rs := Data.ProgPut(
 		skv.NewProgKey("iam", "test"),
-		skv.NewProgValue("test"),
+		skv.NewValueObject("test"),
 		&skv.ProgWriteOptions{
-			Expired: time.Now().Add(3e9),
+			Expired: uint64(time.Now().Add(3e9).UnixNano()),
 		},
 	); !rs.OK() {
 		return fmt.Errorf("iam.store connect not ready")
@@ -83,25 +83,25 @@ func InitData() (err error) {
 		Created: types.MetaTimeNow(),
 		Updated: types.MetaTimeNow(),
 	}
-	Data.ProgPut(iamapi.DataRoleKey(role.Id), skv.NewProgValue(role), nil)
+	Data.ProgNew(iamapi.DataRoleKey(role.Id), skv.NewValueObject(role), nil)
 
 	//
 	role.Id = 100
 	role.Name = "Member"
 	role.Desc = "Universal Member"
-	Data.ProgPut(iamapi.DataRoleKey(role.Id), skv.NewProgValue(role), nil)
+	Data.ProgNew(iamapi.DataRoleKey(role.Id), skv.NewValueObject(role), nil)
 
 	//
 	role.Id = 101
 	role.Name = "Developer"
 	role.Desc = "Universal Developer"
-	Data.ProgPut(iamapi.DataRoleKey(role.Id), skv.NewProgValue(role), nil)
+	Data.ProgNew(iamapi.DataRoleKey(role.Id), skv.NewValueObject(role), nil)
 
 	//
 	role.Id = 1000
 	role.Name = "Anonymous"
 	role.Desc = "Anonymous Member"
-	Data.ProgPut(iamapi.DataRoleKey(role.Id), skv.NewProgValue(role), nil)
+	Data.ProgNew(iamapi.DataRoleKey(role.Id), skv.NewValueObject(role), nil)
 
 	//
 	ps := []iamapi.AppPrivilege{
@@ -131,7 +131,7 @@ func InitData() (err error) {
 		Url:        "",
 		Privileges: ps,
 	}
-	Data.ProgPut(iamapi.DataAppInstanceKey(inst.Meta.ID), skv.NewProgValue(inst), nil)
+	Data.ProgNew(iamapi.DataAppInstanceKey(inst.Meta.ID), skv.NewValueObject(inst), nil)
 
 	AppInstanceRegister(inst)
 
@@ -177,7 +177,7 @@ func InitData() (err error) {
 
 		sysadm.Keys.Set(iamapi.UserKeyDefault, auth)
 
-		Data.ProgPut(iamapi.DataUserKey(def_sysadmin), skv.NewProgValue(sysadm), nil)
+		Data.ProgNew(iamapi.DataUserKey(def_sysadmin), skv.NewValueObject(sysadm), nil)
 	}
 
 	return nil
@@ -236,15 +236,11 @@ func AccessKeyInitData(ak iamapi.AccessKey) error {
 		return errors.New("No User Set")
 	}
 
-	if rs := Data.ProgGet(iamapi.DataAccessKeyKey(ak.User, ak.AccessKey)); rs.OK() {
-		return nil
-	}
-
 	ak.Created = uint64(types.MetaTimeNow())
 	ak.Action = 1
-	if rs := Data.ProgPut(
+	if rs := Data.ProgNew(
 		iamapi.DataAccessKeyKey(ak.User, ak.AccessKey),
-		skv.NewProgValue(ak),
+		skv.NewValueObject(ak),
 		nil,
 	); !rs.OK() {
 		return errors.New(rs.Bytex().String())
@@ -271,9 +267,9 @@ func AppInstanceRegister(inst iamapi.AppInstance) error {
 	if prev.Meta.ID == "" {
 		inst.Meta.Created = types.MetaTimeNow()
 		inst.Meta.Updated = types.MetaTimeNow()
-		Data.ProgPut(
+		Data.ProgNew(
 			iamapi.DataAppInstanceKey(inst.Meta.ID),
-			skv.NewProgValue(inst),
+			skv.NewValueObject(inst),
 			nil,
 		)
 	} else {
@@ -300,9 +296,9 @@ func AppInstanceRegister(inst iamapi.AppInstance) error {
 			prev.SecretKey = inst.SecretKey
 		}
 
-		Data.ProgPut(
+		Data.ProgNew(
 			iamapi.DataAppInstanceKey(prev.Meta.ID),
-			skv.NewProgValue(prev),
+			skv.NewValueObject(prev),
 			nil,
 		)
 
@@ -324,9 +320,9 @@ func AppInstanceRegister(inst iamapi.AppInstance) error {
 	}
 
 	for rid, v := range rps {
-		Data.ProgPut(
+		Data.ProgNew(
 			iamapi.DataRolePrivilegeKey(rid, inst.Meta.ID),
-			skv.NewProgValue(strings.Join(v, ",")),
+			skv.NewValueObject(strings.Join(v, ",")),
 			nil,
 		)
 	}
