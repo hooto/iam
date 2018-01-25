@@ -15,26 +15,28 @@
 package iamapi
 
 import (
+	"github.com/lessos/lessgo/crypto/idhash"
 	"github.com/lynkdb/iomix/skv"
 	"github.com/lynkdb/iomix/utils"
 )
 
 const (
-	dataPrefix        = "iam"
-	dataAppInstance   = "ai"
-	dataUser          = "u"
-	dataPassReset     = "pr"
-	dataSession       = "s"
-	dataAccessKey     = "ak"
-	dataRole          = "r"
-	dataRolePrivilege = "rp"
-	dataSysConfig     = "sc"
-	dataUserProfile   = "up"
-	dataAccUser       = "au"
-	dataAccFundUser   = "af"
-	dataAccFundMgr    = "afm"
-	dataAccChargeUser = "ac"
-	dataAccChargeMgr  = "acm"
+	dataPrefix          = "iam"
+	dataAppInstance     = "ai"
+	dataUser            = "u"
+	dataPassReset       = "pr"
+	dataSession         = "s"
+	dataAccessKey       = "ak"
+	dataRole            = "r"
+	dataRolePrivilege   = "rp"
+	dataSysConfig       = "sc"
+	dataUserProfile     = "up"
+	dataAccUser         = "au"
+	dataAccFundUser     = "af"
+	dataAccFundMgr      = "afm"
+	dataAccChargeUser   = "ac"
+	dataAccChargeMgr    = "acm"
+	dataLoginErrorLimit = "lel"
 )
 
 func DataAppInstanceKey(id string) skv.ProgKey {
@@ -60,6 +62,11 @@ func DataUserProfileKey(uname string) skv.ProgKey {
 
 func DataPasswordResetKey(id string) skv.ProgKey {
 	return skv.NewProgKey(dataPrefix, dataPassReset, utils.HexStringToBytes(id))
+}
+
+func DataLoginErrorLimitKey(uname, remote_ip string) skv.ProgKey {
+	bs := idhash.Hash([]byte(remote_ip), 2)
+	return skv.NewProgKey(dataPrefix, dataLoginErrorLimit, append(UserIdBytes(uname), bs...))
 }
 
 func DataSessionKey(uname, id string) skv.ProgKey {

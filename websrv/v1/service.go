@@ -16,6 +16,7 @@ package v1
 
 import (
 	"encoding/base64"
+	"fmt"
 	"net/http"
 	"net/url"
 	"strings"
@@ -75,15 +76,30 @@ func (c Service) LoginAuthAction() {
 		return
 	}
 
-	if auth := user.Keys.Get(iamapi.UserKeyDefault); auth == nil ||
-		!pass.Check(c.Params.Get("passwd"), auth.String()) {
-		rsp.Error = types.NewErrorMeta("400", "Username or Password can not match")
-		return
-	}
-
 	addr := "127.0.0.1"
 	if addridx := strings.Index(c.Request.RemoteAddr, ":"); addridx > 0 {
 		addr = c.Request.RemoteAddr[:addridx]
+	}
+
+	err_num := 0
+	err_key := iamapi.DataLoginErrorLimitKey(uname, addr)
+	if rs := store.Data.ProgGet(err_key); rs.OK() {
+		err_num = rs.Int()
+		if err_num > 10 {
+			rsp.Error = types.NewErrorMeta("400",
+				fmt.Sprintf("more than %d times failed to verify this signin, please try again in 1 day later", err_num))
+			return
+		}
+	}
+
+	if auth := user.Keys.Get(iamapi.UserKeyDefault); auth == nil ||
+		!pass.Check(c.Params.Get("passwd"), auth.String()) {
+		err_num++
+		store.Data.ProgPut(err_key, skv.NewValueObject(err_num), &skv.ProgWriteOptions{
+			Expired: uint64(time.Now().Add(86400e9).UnixNano()),
+		})
+		rsp.Error = types.NewErrorMeta("400", "Username or Password can not match")
+		return
 	}
 
 	session := iamapi.UserSession{
