@@ -74,10 +74,8 @@ func (c SysConfig) GeneralAction() {
 		ls.Items.Set("user_reg_disable", "0")
 	}
 
-	if val, ok := ls.Items.Get("service_login_form_alert_msg"); !ok || val.String() == "" {
+	if _, ok := ls.Items.Get("service_login_form_alert_msg"); !ok {
 		ls.Items.Set("service_login_form_alert_msg", config.Config.ServiceLoginFormAlertMsg)
-	} else {
-		ls.Items.Set("service_login_form_alert_msg", "")
 	}
 
 	ls.Kind = "SysConfigList"
@@ -112,9 +110,20 @@ func (c SysConfig) GeneralSetAction() {
 			continue
 		}
 
-		if obj := store.Data.ProgPut(iamapi.DataSysConfigKey(v.Name), skv.NewValueObject(v.Value), nil); !obj.OK() {
-			sets.Error = types.NewErrorMeta("500", obj.Bytex().String())
-			return
+		if v.Value == "" {
+			if obj := store.Data.ProgDel(iamapi.DataSysConfigKey(v.Name), nil); !obj.OK() {
+				sets.Error = types.NewErrorMeta("500", "DB ERROR "+obj.Bytex().String())
+				return
+			}
+			if v.Name == "service_login_form_alert_msg" {
+				config.Config.ServiceLoginFormAlertMsg = ""
+			}
+		} else {
+
+			if obj := store.Data.ProgPut(iamapi.DataSysConfigKey(v.Name), skv.NewValueObject(v.Value), nil); !obj.OK() {
+				sets.Error = types.NewErrorMeta("500", "DB ERROR "+obj.Bytex().String())
+				return
+			}
 		}
 	}
 
