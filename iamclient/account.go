@@ -30,7 +30,7 @@ func AccountChargePreValid(req iamapi.AccountChargePrepay, ak iamapi.AccessKey) 
 
 	hc := httpclient.Post(fmt.Sprintf(
 		"%s/v1/account-charge/pre-valid",
-		ServiceUrl,
+		service_url_global(),
 	))
 	defer hc.Close()
 
@@ -54,7 +54,7 @@ func AccountChargePrepay(req iamapi.AccountChargePrepay, ak iamapi.AccessKey) ia
 
 	hc := httpclient.Post(fmt.Sprintf(
 		"%s/v1/account-charge/prepay",
-		ServiceUrl,
+		service_url_global(),
 	))
 	defer hc.Close()
 
@@ -78,7 +78,7 @@ func AccountChargePayout(req iamapi.AccountChargePayout, ak iamapi.AccessKey) ia
 
 	hc := httpclient.Post(fmt.Sprintf(
 		"%s/v1/account-charge/payout",
-		ServiceUrl,
+		service_url_global(),
 	))
 	defer hc.Close()
 	hc.Header("contentType", "application/json; charset=utf-8")

@@ -37,6 +37,7 @@ var (
 	InstanceOwner      = ""
 	ServiceUrl         = "http://127.0.0.1:9528/iam"
 	ServiceUrlFrontend = ""
+	ServiceUrlGlobal   = ""
 )
 
 var (
@@ -50,6 +51,13 @@ var (
 
 func Expired(ttl int) time.Time {
 	return time.Now().Add(time.Second * time.Duration(ttl))
+}
+
+func service_url_global() string {
+	if ServiceUrlGlobal != "" {
+		return ServiceUrlGlobal
+	}
+	return ServiceUrl
 }
 
 func innerExpiredClean() {

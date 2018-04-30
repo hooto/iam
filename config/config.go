@@ -23,7 +23,7 @@ import (
 )
 
 const (
-	Version       = "0.2.1"
+	Version       = "0.3.0"
 	GroupMember   = 100
 	GroupSysAdmin = 1
 )
