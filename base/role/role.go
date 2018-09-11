@@ -58,7 +58,7 @@ func instPerms(instanceid string) *perm_map {
 	}
 
 	//
-	if obj := store.Data.ProgGet(iamapi.DataAppInstanceKey(instanceid)); obj.OK() {
+	if obj := store.Data.KvProgGet(iamapi.DataAppInstanceKey(instanceid)); obj.OK() {
 
 		var inst iamapi.AppInstance
 

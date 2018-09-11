@@ -51,7 +51,7 @@ func (c AppMgr) InstListAction() {
 
 	// TODO page
 	k := iamapi.DataAppInstanceKey("")
-	if objs := store.Data.ProgRevScan(k, k, 1000); objs.OK() {
+	if objs := store.Data.KvProgRevScan(k, k, 1000); objs.OK() {
 
 		rss := objs.KvList()
 		for _, obj := range rss {
@@ -87,7 +87,7 @@ func (c AppMgr) InstEntryAction() {
 		return
 	}
 
-	if obj := store.Data.ProgGet(iamapi.DataAppInstanceKey(c.Params.Get("instid"))); obj.OK() {
+	if obj := store.Data.KvProgGet(iamapi.DataAppInstanceKey(c.Params.Get("instid"))); obj.OK() {
 		obj.Decode(&set.AppInstance)
 	}
 
@@ -118,7 +118,7 @@ func (c AppMgr) InstSetAction() {
 	}
 
 	var prev iamapi.AppInstance
-	if obj := store.Data.ProgGet(iamapi.DataAppInstanceKey(set.Meta.ID)); obj.OK() {
+	if obj := store.Data.KvProgGet(iamapi.DataAppInstanceKey(set.Meta.ID)); obj.OK() {
 		obj.Decode(&prev)
 	}
 
@@ -133,7 +133,7 @@ func (c AppMgr) InstSetAction() {
 		prev.AppTitle = set.AppTitle
 		prev.Url = set.Url
 
-		if obj := store.Data.ProgPut(iamapi.DataAppInstanceKey(set.Meta.ID), skv.NewValueObject(prev), nil); !obj.OK() {
+		if obj := store.Data.KvProgPut(iamapi.DataAppInstanceKey(set.Meta.ID), skv.NewKvEntry(prev), nil); !obj.OK() {
 			set.Error = types.NewErrorMeta(iamapi.ErrCodeInternalError, obj.Bytex().String())
 			return
 		}
@@ -155,7 +155,7 @@ func (c AppMgr) InstDelAction() {
 	}
 
 	var prev iamapi.AppInstance
-	if obj := store.Data.ProgGet(iamapi.DataAppInstanceKey(inst_id)); obj.OK() {
+	if obj := store.Data.KvProgGet(iamapi.DataAppInstanceKey(inst_id)); obj.OK() {
 		obj.Decode(&prev)
 	}
 
@@ -164,7 +164,7 @@ func (c AppMgr) InstDelAction() {
 		return
 	}
 
-	if obj := store.Data.ProgDel(iamapi.DataAppInstanceKey(inst_id), nil); !obj.OK() {
+	if obj := store.Data.KvProgDel(iamapi.DataAppInstanceKey(inst_id), nil); !obj.OK() {
 		set.Error = types.NewErrorMeta(iamapi.ErrCodeInternalError, obj.Bytex().String())
 		return
 	}

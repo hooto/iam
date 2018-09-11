@@ -51,7 +51,7 @@ func (c AccountCharge) PreValidAction() {
 	}
 
 	var ak iamapi.AccessKey
-	if rs := store.Data.ProgGet(iamapi.DataAccessKeyKey(auth_token.User, auth_token.AccessKey)); rs.OK() {
+	if rs := store.Data.KvProgGet(iamapi.DataAccessKeyKey(auth_token.User, auth_token.AccessKey)); rs.OK() {
 		rs.Decode(&ak)
 	}
 	if ak.AccessKey == "" || ak.AccessKey != auth_token.AccessKey {
@@ -66,7 +66,7 @@ func (c AccountCharge) PreValidAction() {
 	set.Prepay = iamapi.AccountFloat64Round(set.Prepay, 2)
 
 	var acc_user iamapi.AccountUser
-	if rs := store.Data.ProgGet(iamapi.DataAccUserKey(set.User)); rs.OK() {
+	if rs := store.Data.KvProgGet(iamapi.DataAccUserKey(set.User)); rs.OK() {
 		rs.Decode(&acc_user)
 	} else if !rs.NotFound() {
 		set.Error = types.NewErrorMeta(iamapi.ErrCodeInternalError, "Server Error")
@@ -80,7 +80,7 @@ func (c AccountCharge) PreValidAction() {
 
 	actives := []iamapi.AccountFund{}
 	ka := iamapi.DataAccFundUserKey(set.User, "")
-	if rs := store.Data.ProgScan(ka, ka, 1000); rs.OK() {
+	if rs := store.Data.KvProgScan(ka, ka, 1000); rs.OK() {
 		rss := rs.KvList()
 		for _, v := range rss {
 			var v2 iamapi.AccountFund
@@ -141,7 +141,7 @@ func (c AccountCharge) PrepayAction() {
 	}
 
 	var ak iamapi.AccessKey
-	if rs := store.Data.ProgGet(iamapi.DataAccessKeyKey(auth_token.User, auth_token.AccessKey)); rs.OK() {
+	if rs := store.Data.KvProgGet(iamapi.DataAccessKeyKey(auth_token.User, auth_token.AccessKey)); rs.OK() {
 		rs.Decode(&ak)
 	}
 	if ak.AccessKey == "" || ak.AccessKey != auth_token.AccessKey {
@@ -158,7 +158,7 @@ func (c AccountCharge) PrepayAction() {
 		charge       iamapi.AccountCharge
 	)
 
-	if rs := store.Data.ProgGet(
+	if rs := store.Data.KvProgGet(
 		iamapi.DataAccChargeUserKey(set.User, charge_id),
 	); rs.OK() {
 		if err := rs.Decode(&charge); err == nil {
@@ -185,7 +185,7 @@ func (c AccountCharge) PrepayAction() {
 	charge.Updated = uint64(types.MetaTimeNow())
 
 	var acc_user iamapi.AccountUser
-	if rs := store.Data.ProgGet(iamapi.DataAccUserKey(charge.User)); rs.OK() {
+	if rs := store.Data.KvProgGet(iamapi.DataAccUserKey(charge.User)); rs.OK() {
 		rs.Decode(&acc_user)
 	} else if !rs.NotFound() {
 		set.Error = types.NewErrorMeta(iamapi.ErrCodeInternalError, "Server Error")
@@ -203,7 +203,7 @@ func (c AccountCharge) PrepayAction() {
 
 		actives := []iamapi.AccountFund{}
 		ka := iamapi.DataAccFundUserKey(charge.User, "")
-		if rs := store.Data.ProgScan(ka, ka, 1000); rs.OK() {
+		if rs := store.Data.KvProgScan(ka, ka, 1000); rs.OK() {
 			rss := rs.KvList()
 			for _, v := range rss {
 				var v2 iamapi.AccountFund
@@ -246,31 +246,31 @@ func (c AccountCharge) PrepayAction() {
 	acc_user.Balance = iamapi.AccountFloat64Round(acc_user.Balance-charge.Prepay, 2)
 	acc_user.Prepay = iamapi.AccountFloat64Round(acc_user.Prepay+charge.Prepay, 2)
 
-	sets := []skv.ProgKeyValue{
+	sets := []skv.KvProgKeyValue{
 		{
 			Key: iamapi.DataAccFundUserKey(charge.User, active.Id),
-			Val: skv.NewValueObject(active),
+			Val: skv.NewKvEntry(active),
 		},
 		{
 			Key: iamapi.DataAccChargeUserKey(charge.User, charge_id),
-			Val: skv.NewValueObject(charge),
+			Val: skv.NewKvEntry(charge),
 		},
 		{
 			Key: iamapi.DataAccUserKey(charge.User),
-			Val: skv.NewValueObject(acc_user),
+			Val: skv.NewKvEntry(acc_user),
 		},
 		{
 			Key: iamapi.DataAccFundMgrKey(active.Id),
-			Val: skv.NewValueObject(active),
+			Val: skv.NewKvEntry(active),
 		},
 		{
 			Key: iamapi.DataAccChargeMgrKey(charge_id),
-			Val: skv.NewValueObject(charge),
+			Val: skv.NewKvEntry(charge),
 		},
 	}
 
 	for _, v := range sets {
-		if rs := store.Data.ProgPut(v.Key, v.Val, nil); !rs.OK() {
+		if rs := store.Data.KvProgPut(v.Key, v.Val, nil); !rs.OK() {
 			set.Error = types.NewErrorMeta(iamapi.ErrCodeInternalError, "IO Error")
 			return
 		}
@@ -302,7 +302,7 @@ func (c AccountCharge) PayoutAction() {
 	}
 
 	var ak iamapi.AccessKey
-	if rs := store.Data.ProgGet(iamapi.DataAccessKeyKey(auth_token.User, auth_token.AccessKey)); rs.OK() {
+	if rs := store.Data.KvProgGet(iamapi.DataAccessKeyKey(auth_token.User, auth_token.AccessKey)); rs.OK() {
 		rs.Decode(&ak)
 	}
 	if ak.AccessKey == "" || ak.AccessKey != auth_token.AccessKey {
@@ -318,7 +318,7 @@ func (c AccountCharge) PayoutAction() {
 	//
 	var acc_user iamapi.AccountUser
 	// hlog.Printf("info", "%s %s %d %d", set.User, userid, set.TimeStart, set.TimeClose)
-	if rs := store.Data.ProgGet(iamapi.DataAccUserKey(set.User)); rs.OK() {
+	if rs := store.Data.KvProgGet(iamapi.DataAccUserKey(set.User)); rs.OK() {
 		rs.Decode(&acc_user)
 	} else if !rs.NotFound() {
 		set.Error = types.NewErrorMeta(iamapi.ErrCodeInternalError, "Server Error")
@@ -333,7 +333,7 @@ func (c AccountCharge) PayoutAction() {
 		_, charge_id = iamapi.AccountChargeId(set.Product, set.TimeStart)
 		charge       iamapi.AccountCharge
 	)
-	if rs := store.Data.ProgGet(
+	if rs := store.Data.KvProgGet(
 		iamapi.DataAccChargeUserKey(set.User, charge_id),
 	); rs.OK() {
 		rs.Decode(&charge)
@@ -365,7 +365,7 @@ func (c AccountCharge) PayoutAction() {
 	)
 
 	ka := iamapi.DataAccFundUserKey(set.User, "")
-	if rs := store.Data.ProgScan(ka, ka, 1000); rs.OK() {
+	if rs := store.Data.KvProgScan(ka, ka, 1000); rs.OK() {
 		rss := rs.KvList()
 		for _, v := range rss {
 			var v2 iamapi.AccountFund
@@ -414,31 +414,31 @@ func (c AccountCharge) PayoutAction() {
 	acc_user.Balance = iamapi.AccountFloat64Round(acc_user.Balance-charge.Payout, 2)
 	acc_user.Updated = active.Updated
 
-	sets := []skv.ProgKeyValue{
+	sets := []skv.KvProgKeyValue{
 		{
 			Key: iamapi.DataAccFundUserKey(set.User, active.Id),
-			Val: skv.NewValueObject(active),
+			Val: skv.NewKvEntry(active),
 		},
 		{
 			Key: iamapi.DataAccChargeUserKey(set.User, charge_id),
-			Val: skv.NewValueObject(charge),
+			Val: skv.NewKvEntry(charge),
 		},
 		{
 			Key: iamapi.DataAccUserKey(set.User),
-			Val: skv.NewValueObject(acc_user),
+			Val: skv.NewKvEntry(acc_user),
 		},
 		{
 			Key: iamapi.DataAccFundMgrKey(active.Id),
-			Val: skv.NewValueObject(active),
+			Val: skv.NewKvEntry(active),
 		},
 		{
 			Key: iamapi.DataAccChargeMgrKey(charge_id),
-			Val: skv.NewValueObject(charge),
+			Val: skv.NewKvEntry(charge),
 		},
 	}
 
 	for _, v := range sets {
-		if rs := store.Data.ProgPut(v.Key, v.Val, nil); !rs.OK() {
+		if rs := store.Data.KvProgPut(v.Key, v.Val, nil); !rs.OK() {
 			set.Error = types.NewErrorMeta(iamapi.ErrCodeInternalError, "IO Error")
 			return
 		}

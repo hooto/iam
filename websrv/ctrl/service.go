@@ -69,7 +69,7 @@ func (c Service) SignOutAction() {
 	}
 
 	if token.Valid() {
-		store.Data.ProgDel(iamapi.DataSessionKey(token.User(), token.Id()), nil)
+		store.Data.KvProgDel(iamapi.DataSessionKey(token.User(), token.Id()), nil)
 	}
 
 	http.SetCookie(c.Response.Out, &http.Cookie{

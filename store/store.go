@@ -40,24 +40,24 @@ var (
 func Init() error {
 
 	if Data == nil {
-		return fmt.Errorf("iam.store connect not ready")
+		return fmt.Errorf("iam.store connect not ready #1")
 	}
 
-	if rs := Data.ProgPut(
-		skv.NewProgKey("iam", "test"),
-		skv.NewValueObject("test"),
-		&skv.ProgWriteOptions{
+	if rs := Data.KvProgPut(
+		skv.NewKvProgKey("iam", "test"),
+		skv.NewKvEntry("test"),
+		&skv.KvProgWriteOptions{
 			Expired: uint64(time.Now().Add(3e9).UnixNano()),
 		},
 	); !rs.OK() {
-		return fmt.Errorf("iam.store connect not ready")
+		return fmt.Errorf("iam.store connect not ready #2 " + rs.String())
 	}
 
-	if rs := Data.ProgGet(
-		skv.NewProgKey("iam", "test"),
+	if rs := Data.KvProgGet(
+		skv.NewKvProgKey("iam", "test"),
 	); !rs.OK() ||
 		rs.Bytex().String() != "test" {
-		return fmt.Errorf("iam.store connect not ready")
+		return fmt.Errorf("iam.store connect not ready #3")
 	}
 
 	return nil
@@ -83,25 +83,25 @@ func InitData() (err error) {
 		Created: types.MetaTimeNow(),
 		Updated: types.MetaTimeNow(),
 	}
-	Data.ProgNew(iamapi.DataRoleKey(role.Id), skv.NewValueObject(role), nil)
+	Data.KvProgNew(iamapi.DataRoleKey(role.Id), skv.NewKvEntry(role), nil)
 
 	//
 	role.Id = 100
 	role.Name = "Member"
 	role.Desc = "Universal Member"
-	Data.ProgNew(iamapi.DataRoleKey(role.Id), skv.NewValueObject(role), nil)
+	Data.KvProgNew(iamapi.DataRoleKey(role.Id), skv.NewKvEntry(role), nil)
 
 	//
 	role.Id = 101
 	role.Name = "Developer"
 	role.Desc = "Universal Developer"
-	Data.ProgNew(iamapi.DataRoleKey(role.Id), skv.NewValueObject(role), nil)
+	Data.KvProgNew(iamapi.DataRoleKey(role.Id), skv.NewKvEntry(role), nil)
 
 	//
 	role.Id = 1000
 	role.Name = "Anonymous"
 	role.Desc = "Anonymous Member"
-	Data.ProgNew(iamapi.DataRoleKey(role.Id), skv.NewValueObject(role), nil)
+	Data.KvProgNew(iamapi.DataRoleKey(role.Id), skv.NewKvEntry(role), nil)
 
 	//
 	ps := []iamapi.AppPrivilege{
@@ -131,7 +131,7 @@ func InitData() (err error) {
 		Url:        "",
 		Privileges: ps,
 	}
-	Data.ProgNew(iamapi.DataAppInstanceKey(inst.Meta.ID), skv.NewValueObject(inst), nil)
+	Data.KvProgNew(iamapi.DataAppInstanceKey(inst.Meta.ID), skv.NewKvEntry(inst), nil)
 
 	AppInstanceRegister(inst)
 
@@ -157,7 +157,7 @@ func InitData() (err error) {
 
 	// Init Super SysAdmin Account
 	uid := idhash.HashToHexString([]byte(def_sysadmin), 8)
-	if rs := Data.ProgGet(iamapi.DataUserKey(def_sysadmin)); rs.NotFound() {
+	if rs := Data.KvProgGet(iamapi.DataUserKey(def_sysadmin)); rs.NotFound() {
 
 		sysadm := iamapi.User{
 			Id:          uid,
@@ -177,7 +177,7 @@ func InitData() (err error) {
 
 		sysadm.Keys.Set(iamapi.UserKeyDefault, auth)
 
-		Data.ProgNew(iamapi.DataUserKey(def_sysadmin), skv.NewValueObject(sysadm), nil)
+		Data.KvProgNew(iamapi.DataUserKey(def_sysadmin), skv.NewKvEntry(sysadm), nil)
 	}
 
 	return nil
@@ -187,7 +187,7 @@ func SysConfigRefresh() {
 
 	//
 	var mailer iamapi.SysConfigMailer
-	if obj := Data.ProgGet(iamapi.DataSysConfigKey("mailer")); obj.OK() {
+	if obj := Data.KvProgGet(iamapi.DataSysConfigKey("mailer")); obj.OK() {
 
 		obj.Decode(&mailer)
 
@@ -203,25 +203,25 @@ func SysConfigRefresh() {
 		}
 	}
 
-	if obj := Data.ProgGet(iamapi.DataSysConfigKey("service_name")); obj.OK() {
+	if obj := Data.KvProgGet(iamapi.DataSysConfigKey("service_name")); obj.OK() {
 
 		if obj.Bytex().String() != "" {
 			config.Config.ServiceName = obj.Bytex().String()
 		}
 	}
 
-	if obj := Data.ProgGet(iamapi.DataSysConfigKey("webui_banner_title")); obj.OK() {
+	if obj := Data.KvProgGet(iamapi.DataSysConfigKey("webui_banner_title")); obj.OK() {
 
 		if obj.Bytex().String() != "" {
 			config.Config.WebUiBannerTitle = obj.Bytex().String()
 		}
 	}
 
-	if obj := Data.ProgGet(iamapi.DataSysConfigKey("service_login_form_alert_msg")); obj.OK() {
+	if obj := Data.KvProgGet(iamapi.DataSysConfigKey("service_login_form_alert_msg")); obj.OK() {
 		config.Config.ServiceLoginFormAlertMsg = obj.Bytex().String()
 	}
 
-	if obj := Data.ProgGet(iamapi.DataSysConfigKey("user_reg_disable")); obj.OK() {
+	if obj := Data.KvProgGet(iamapi.DataSysConfigKey("user_reg_disable")); obj.OK() {
 
 		if obj.Bytex().String() == "1" {
 			config.UserRegistrationDisabled = true
@@ -238,9 +238,9 @@ func AccessKeyInitData(ak iamapi.AccessKey) error {
 
 	ak.Created = uint64(types.MetaTimeNow())
 	ak.Action = 1
-	if rs := Data.ProgNew(
+	if rs := Data.KvProgNew(
 		iamapi.DataAccessKeyKey(ak.User, ak.AccessKey),
-		skv.NewValueObject(ak),
+		skv.NewKvEntry(ak),
 		nil,
 	); !rs.OK() {
 		return errors.New(rs.Bytex().String())
@@ -255,21 +255,21 @@ func AppInstanceRegister(inst iamapi.AppInstance) error {
 		return fmt.Errorf("Invalid meta.id (%s)", inst.Meta.ID)
 	}
 
-	if rs := Data.ProgGet(iamapi.DataUserKey(inst.Meta.User)); rs.NotFound() {
+	if rs := Data.KvProgGet(iamapi.DataUserKey(inst.Meta.User)); rs.NotFound() {
 		inst.Meta.User = def_sysadmin
 	}
 
 	var prev iamapi.AppInstance
-	if rs := Data.ProgGet(iamapi.DataAppInstanceKey(inst.Meta.ID)); rs.OK() {
+	if rs := Data.KvProgGet(iamapi.DataAppInstanceKey(inst.Meta.ID)); rs.OK() {
 		rs.Decode(&prev)
 	}
 
 	if prev.Meta.ID == "" {
 		inst.Meta.Created = types.MetaTimeNow()
 		inst.Meta.Updated = types.MetaTimeNow()
-		Data.ProgNew(
+		Data.KvProgNew(
 			iamapi.DataAppInstanceKey(inst.Meta.ID),
-			skv.NewValueObject(inst),
+			skv.NewKvEntry(inst),
 			nil,
 		)
 	} else {
@@ -296,9 +296,9 @@ func AppInstanceRegister(inst iamapi.AppInstance) error {
 			prev.SecretKey = inst.SecretKey
 		}
 
-		Data.ProgNew(
+		Data.KvProgNew(
 			iamapi.DataAppInstanceKey(prev.Meta.ID),
-			skv.NewValueObject(prev),
+			skv.NewKvEntry(prev),
 			nil,
 		)
 
@@ -320,9 +320,9 @@ func AppInstanceRegister(inst iamapi.AppInstance) error {
 	}
 
 	for rid, v := range rps {
-		Data.ProgNew(
+		Data.KvProgNew(
 			iamapi.DataRolePrivilegeKey(rid, inst.Meta.ID),
-			skv.NewValueObject(strings.Join(v, ",")),
+			skv.NewKvEntry(strings.Join(v, ",")),
 			nil,
 		)
 	}

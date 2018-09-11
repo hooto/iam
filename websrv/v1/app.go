@@ -52,7 +52,7 @@ func (c App) InstListAction() {
 	ls := types.ObjectList{}
 	defer c.RenderJson(&ls)
 
-	if objs := store.Data.ProgRevScan(iamapi.DataAppInstanceKey(""), iamapi.DataAppInstanceKey(""), 1000); objs.OK() {
+	if objs := store.Data.KvProgRevScan(iamapi.DataAppInstanceKey(""), iamapi.DataAppInstanceKey(""), 1000); objs.OK() {
 
 		rss := objs.KvList()
 		for _, obj := range rss {
@@ -78,7 +78,7 @@ func (c App) InstEntryAction() {
 	}
 	defer c.RenderJson(&set)
 
-	if obj := store.Data.ProgGet(iamapi.DataAppInstanceKey(c.Params.Get("instid"))); obj.OK() {
+	if obj := store.Data.KvProgGet(iamapi.DataAppInstanceKey(c.Params.Get("instid"))); obj.OK() {
 		obj.Decode(&set.AppInstance)
 	}
 
@@ -110,7 +110,7 @@ func (c App) InstSetAction() {
 	}
 
 	var prev iamapi.AppInstance
-	if obj := store.Data.ProgGet(iamapi.DataAppInstanceKey(set.Meta.ID)); obj.OK() {
+	if obj := store.Data.KvProgGet(iamapi.DataAppInstanceKey(set.Meta.ID)); obj.OK() {
 		obj.Decode(&prev)
 	}
 
@@ -130,7 +130,7 @@ func (c App) InstSetAction() {
 		prev.AppTitle = set.AppTitle
 		prev.Url = set.Url
 
-		if obj := store.Data.ProgPut(iamapi.DataAppInstanceKey(set.Meta.ID), skv.NewValueObject(prev), nil); !obj.OK() {
+		if obj := store.Data.KvProgPut(iamapi.DataAppInstanceKey(set.Meta.ID), skv.NewKvEntry(prev), nil); !obj.OK() {
 			set.Error = types.NewErrorMeta(iamapi.ErrCodeInternalError, obj.Bytex().String())
 			return
 		}
@@ -147,7 +147,7 @@ func (c App) InstDelAction() {
 	inst_id := c.Params.Get("inst_id")
 
 	var prev iamapi.AppInstance
-	if obj := store.Data.ProgGet(iamapi.DataAppInstanceKey(inst_id)); obj.OK() {
+	if obj := store.Data.KvProgGet(iamapi.DataAppInstanceKey(inst_id)); obj.OK() {
 		obj.Decode(&prev)
 	}
 
@@ -161,7 +161,7 @@ func (c App) InstDelAction() {
 		return
 	}
 
-	if obj := store.Data.ProgDel(iamapi.DataAppInstanceKey(inst_id), nil); !obj.OK() {
+	if obj := store.Data.KvProgDel(iamapi.DataAppInstanceKey(inst_id), nil); !obj.OK() {
 		set.Error = types.NewErrorMeta(iamapi.ErrCodeInternalError, obj.Bytex().String())
 		return
 	}

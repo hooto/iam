@@ -50,7 +50,7 @@ func (c SysConfig) GeneralAction() {
 		return
 	}
 
-	if objs := store.Data.ProgScan(iamapi.DataSysConfigKey(""), iamapi.DataSysConfigKey(""), 1000); objs.OK() {
+	if objs := store.Data.KvProgScan(iamapi.DataSysConfigKey(""), iamapi.DataSysConfigKey(""), 1000); objs.OK() {
 
 		rss := objs.KvList()
 		for _, obj := range rss {
@@ -111,7 +111,7 @@ func (c SysConfig) GeneralSetAction() {
 		}
 
 		if v.Value == "" {
-			if obj := store.Data.ProgDel(iamapi.DataSysConfigKey(v.Name), nil); !obj.OK() {
+			if obj := store.Data.KvProgDel(iamapi.DataSysConfigKey(v.Name), nil); !obj.OK() {
 				sets.Error = types.NewErrorMeta("500", "DB ERROR "+obj.Bytex().String())
 				return
 			}
@@ -120,7 +120,7 @@ func (c SysConfig) GeneralSetAction() {
 			}
 		} else {
 
-			if obj := store.Data.ProgPut(iamapi.DataSysConfigKey(v.Name), skv.NewValueObject(v.Value), nil); !obj.OK() {
+			if obj := store.Data.KvProgPut(iamapi.DataSysConfigKey(v.Name), skv.NewKvEntry(v.Value), nil); !obj.OK() {
 				sets.Error = types.NewErrorMeta("500", "DB ERROR "+obj.Bytex().String())
 				return
 			}
@@ -143,7 +143,7 @@ func (c SysConfig) MailerAction() {
 		return
 	}
 
-	if obj := store.Data.ProgGet(iamapi.DataSysConfigKey("mailer")); obj.OK() {
+	if obj := store.Data.KvProgGet(iamapi.DataSysConfigKey("mailer")); obj.OK() {
 		ls.Items.Set("mailer", obj.Bytex().String())
 	}
 

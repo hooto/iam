@@ -67,7 +67,7 @@ func (c Service) LoginAuthAction() {
 	}
 
 	var user iamapi.User
-	if obj := store.Data.ProgGet(iamapi.DataUserKey(uname)); obj.OK() {
+	if obj := store.Data.KvProgGet(iamapi.DataUserKey(uname)); obj.OK() {
 		obj.Decode(&user)
 	}
 
@@ -83,7 +83,7 @@ func (c Service) LoginAuthAction() {
 
 	err_num := 0
 	err_key := iamapi.DataLoginErrorLimitKey(uname, addr)
-	if rs := store.Data.ProgGet(err_key); rs.OK() {
+	if rs := store.Data.KvProgGet(err_key); rs.OK() {
 		err_num = rs.Int()
 		if err_num > 10 {
 			rsp.Error = types.NewErrorMeta("400",
@@ -95,7 +95,7 @@ func (c Service) LoginAuthAction() {
 	if auth := user.Keys.Get(iamapi.UserKeyDefault); auth == nil ||
 		!pass.Check(c.Params.Get("passwd"), auth.String()) {
 		err_num++
-		store.Data.ProgPut(err_key, skv.NewValueObject(err_num), &skv.ProgWriteOptions{
+		store.Data.KvProgPut(err_key, skv.NewKvEntry(err_num), &skv.KvProgWriteOptions{
 			Expired: uint64(time.Now().Add(86400e9).UnixNano()),
 		})
 		rsp.Error = types.NewErrorMeta("400", "Username or Password can not match")
@@ -116,7 +116,7 @@ func (c Service) LoginAuthAction() {
 
 	token := iamapi.NewAccessTokenFrontend(session.UserName, session.AccessToken)
 
-	if sobj := store.Data.ProgPut(iamapi.DataSessionKey(session.UserName, session.AccessToken), skv.NewValueObject(session), &skv.ProgWriteOptions{
+	if sobj := store.Data.KvProgPut(iamapi.DataSessionKey(session.UserName, session.AccessToken), skv.NewKvEntry(session), &skv.KvProgWriteOptions{
 		Expired: uint64(time.Now().Add(864000e9).UnixNano()),
 	}); !sobj.OK() {
 		rsp.Error = types.NewErrorMeta("500", sobj.Bytex().String())
@@ -175,7 +175,7 @@ func (c Service) AuthAction() {
 		return
 	}
 
-	if obj := store.Data.ProgGet(iamapi.DataSessionKey(token.User(), token.Id())); obj.OK() {
+	if obj := store.Data.KvProgGet(iamapi.DataSessionKey(token.User(), token.Id())); obj.OK() {
 		obj.Decode(&set.UserSession)
 	}
 
@@ -225,7 +225,7 @@ func (c Service) AccessAllowedAction() {
 	}
 
 	var session iamapi.UserSession
-	if obj := store.Data.ProgGet(iamapi.DataSessionKey(token.User(), token.Id())); obj.OK() {
+	if obj := store.Data.KvProgGet(iamapi.DataSessionKey(token.User(), token.Id())); obj.OK() {
 		obj.Decode(&session)
 	}
 
@@ -270,7 +270,7 @@ func (c Service) PhotoAction() {
 
 		var profile iamapi.UserProfile
 
-		if obj := store.Data.ProgGet(iamapi.DataUserProfileKey(uname)); obj.OK() {
+		if obj := store.Data.KvProgGet(iamapi.DataUserProfileKey(uname)); obj.OK() {
 			if err := obj.Decode(&profile); err == nil && len(profile.Photo) > 50 {
 				photo = profile.Photo
 			}

@@ -67,7 +67,7 @@ func (c AccessKey) EntryAction() {
 	}
 
 	var ak iamapi.AccessKey
-	if rs := store.Data.ProgGet(iamapi.DataAccessKeyKey(c.us.UserName, id)); rs.OK() {
+	if rs := store.Data.KvProgGet(iamapi.DataAccessKeyKey(c.us.UserName, id)); rs.OK() {
 		rs.Decode(&ak)
 	}
 
@@ -85,7 +85,7 @@ func (c AccessKey) ListAction() {
 	defer c.RenderJson(&ls)
 
 	k := iamapi.DataAccessKeyKey(c.us.UserName, "")
-	if rs := store.Data.ProgRevScan(k, k, ak_limit); rs.OK() {
+	if rs := store.Data.KvProgRevScan(k, k, ak_limit); rs.OK() {
 
 		rss := rs.KvList()
 		for _, v := range rss {
@@ -117,12 +117,12 @@ func (c AccessKey) SetAction() {
 		set.AccessKey.AccessKey = iox_utils.Uint32ToHexString(uint32(time.Now().Unix())) + idhash.RandHexString(8)
 	} else {
 
-		if rs := store.Data.ProgGet(iamapi.DataAccessKeyKey(c.us.UserName, set.AccessKey.AccessKey)); rs.OK() {
+		if rs := store.Data.KvProgGet(iamapi.DataAccessKeyKey(c.us.UserName, set.AccessKey.AccessKey)); rs.OK() {
 			rs.Decode(&prev)
 		}
 	}
 
-	if rs := store.Data.ProgScan(iamapi.DataAccessKeyKey(c.us.UserName, ""), iamapi.DataAccessKeyKey(c.us.UserName, ""), ak_limit+1); rs.OK() {
+	if rs := store.Data.KvProgScan(iamapi.DataAccessKeyKey(c.us.UserName, ""), iamapi.DataAccessKeyKey(c.us.UserName, ""), ak_limit+1); rs.OK() {
 		if rs.KvLen() > ak_limit && prev.AccessKey == "" {
 			set.Error = types.NewErrorMeta(iamapi.ErrCodeInvalidArgument, fmt.Sprintf("Num Out Range (%d)", ak_limit))
 			return
@@ -155,7 +155,7 @@ func (c AccessKey) SetAction() {
 		prev.User = c.us.UserName
 	}
 
-	if rs := store.Data.ProgPut(iamapi.DataAccessKeyKey(c.us.UserName, prev.AccessKey), skv.NewValueObject(prev), nil); rs.OK() {
+	if rs := store.Data.KvProgPut(iamapi.DataAccessKeyKey(c.us.UserName, prev.AccessKey), skv.NewKvEntry(prev), nil); rs.OK() {
 		set.Kind = "AccessKey"
 	} else {
 		set.Error = types.NewErrorMeta(iamapi.ErrCodeInternalError, "IO Error")
@@ -173,7 +173,7 @@ func (c AccessKey) DelAction() {
 		return
 	}
 
-	if rs := store.Data.ProgDel(iamapi.DataAccessKeyKey(c.us.UserName, id), nil); rs.OK() {
+	if rs := store.Data.KvProgDel(iamapi.DataAccessKeyKey(c.us.UserName, id), nil); rs.OK() {
 		set.Kind = "AccessKey"
 	} else {
 		set.Error = types.NewErrorMeta(iamapi.ErrCodeInternalError, "IO Error")
@@ -195,7 +195,7 @@ func (c AccessKey) BindAction() {
 	}
 
 	var ak iamapi.AccessKey
-	if rs := store.Data.ProgGet(iamapi.DataAccessKeyKey(c.us.UserName, id)); rs.OK() {
+	if rs := store.Data.KvProgGet(iamapi.DataAccessKeyKey(c.us.UserName, id)); rs.OK() {
 		rs.Decode(&ak)
 	}
 
@@ -213,7 +213,7 @@ func (c AccessKey) BindAction() {
 		}
 	})
 
-	if rs := store.Data.ProgPut(iamapi.DataAccessKeyKey(c.us.UserName, ak.AccessKey), skv.NewValueObject(ak), nil); rs.OK() {
+	if rs := store.Data.KvProgPut(iamapi.DataAccessKeyKey(c.us.UserName, ak.AccessKey), skv.NewKvEntry(ak), nil); rs.OK() {
 		set.Kind = "AccessKey"
 	} else {
 		set.Error = types.NewErrorMeta(iamapi.ErrCodeInternalError, "IO Error")
@@ -235,7 +235,7 @@ func (c AccessKey) UnbindAction() {
 	}
 
 	var ak iamapi.AccessKey
-	if rs := store.Data.ProgGet(iamapi.DataAccessKeyKey(c.us.UserName, id)); rs.OK() {
+	if rs := store.Data.KvProgGet(iamapi.DataAccessKeyKey(c.us.UserName, id)); rs.OK() {
 		rs.Decode(&ak)
 	}
 
@@ -250,7 +250,7 @@ func (c AccessKey) UnbindAction() {
 		}
 	})
 
-	if rs := store.Data.ProgPut(iamapi.DataAccessKeyKey(c.us.UserName, ak.AccessKey), skv.NewValueObject(ak), nil); rs.OK() {
+	if rs := store.Data.KvProgPut(iamapi.DataAccessKeyKey(c.us.UserName, ak.AccessKey), skv.NewKvEntry(ak), nil); rs.OK() {
 		set.Kind = "AccessKey"
 	} else {
 		set.Error = types.NewErrorMeta(iamapi.ErrCodeInternalError, "IO Error")

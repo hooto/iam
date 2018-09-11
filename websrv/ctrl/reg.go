@@ -72,7 +72,7 @@ func (c Reg) SignUpRegAction() {
 	userid := iamapi.UserId(uname)
 
 	var user iamapi.User
-	if obj := store.Data.ProgGet(iamapi.DataUserKey(uname)); obj.OK() {
+	if obj := store.Data.KvProgGet(iamapi.DataUserKey(uname)); obj.OK() {
 		obj.Decode(&user)
 	}
 
@@ -96,7 +96,7 @@ func (c Reg) SignUpRegAction() {
 	}
 	user.Keys.Set(iamapi.UserKeyDefault, auth)
 
-	if obj := store.Data.ProgPut(iamapi.DataUserKey(user.Name), skv.NewValueObject(user), nil); !obj.OK() {
+	if obj := store.Data.KvProgPut(iamapi.DataUserKey(user.Name), skv.NewKvEntry(user), nil); !obj.OK() {
 		rsp.Error = &types.ErrorMeta{"500", obj.Bytex().String()}
 		return
 	}
@@ -137,7 +137,7 @@ func (c Reg) RetrievePutAction() {
 	userid := iamapi.UserId(uname)
 
 	var user iamapi.User
-	if obj := store.Data.ProgGet(iamapi.DataUserKey(uname)); obj.OK() {
+	if obj := store.Data.KvProgGet(iamapi.DataUserKey(uname)); obj.OK() {
 		obj.Decode(&user)
 	}
 
@@ -153,7 +153,7 @@ func (c Reg) RetrievePutAction() {
 		Expired:  utilx.TimeNowAdd("atom", "+3600s"),
 	}
 
-	if obj := store.Data.ProgPut(iamapi.DataPasswordResetKey(reset.Id), skv.NewValueObject(reset), &skv.ProgWriteOptions{
+	if obj := store.Data.KvProgPut(iamapi.DataPasswordResetKey(reset.Id), skv.NewKvEntry(reset), &skv.KvProgWriteOptions{
 		Expired: uint64(time.Now().Add(3600e9).UnixNano()),
 	}); !obj.OK() {
 		rsp.Error = &types.ErrorMeta{"500", obj.Bytex().String()}
@@ -210,7 +210,7 @@ func (c Reg) PassResetAction() {
 	}
 
 	var reset iamapi.UserPasswordReset
-	if obj := store.Data.ProgGet(iamapi.DataPasswordResetKey(c.Params.Get("id"))); obj.OK() {
+	if obj := store.Data.KvProgGet(iamapi.DataPasswordResetKey(c.Params.Get("id"))); obj.OK() {
 		obj.Decode(&reset)
 	}
 
@@ -245,7 +245,7 @@ func (c Reg) PassResetPutAction() {
 	}
 
 	var reset iamapi.UserPasswordReset
-	rsobj := store.Data.ProgGet(iamapi.DataPasswordResetKey(c.Params.Get("id")))
+	rsobj := store.Data.KvProgGet(iamapi.DataPasswordResetKey(c.Params.Get("id")))
 	if rsobj.OK() {
 		rsobj.Decode(&reset)
 	}
@@ -262,7 +262,7 @@ func (c Reg) PassResetPutAction() {
 
 	var user iamapi.User
 	userid := iamapi.UserId(reset.UserName)
-	uobj := store.Data.ProgGet(iamapi.DataUserKey(reset.UserName))
+	uobj := store.Data.KvProgGet(iamapi.DataUserKey(reset.UserName))
 	if uobj.OK() {
 		uobj.Decode(&user)
 	}
@@ -277,12 +277,12 @@ func (c Reg) PassResetPutAction() {
 	auth, _ := pass.HashDefault(c.Params.Get("passwd"))
 	user.Keys.Set(iamapi.UserKeyDefault, auth)
 
-	if obj := store.Data.ProgPut(iamapi.DataUserKey(reset.UserName), skv.NewValueObject(user), nil); !obj.OK() {
+	if obj := store.Data.KvProgPut(iamapi.DataUserKey(reset.UserName), skv.NewKvEntry(user), nil); !obj.OK() {
 		rsp.Error = &types.ErrorMeta{"500", obj.Bytex().String()}
 		return
 	}
 
-	store.Data.ProgDel(iamapi.DataPasswordResetKey(reset.Id), nil)
+	store.Data.KvProgDel(iamapi.DataPasswordResetKey(reset.Id), nil)
 
 	rsp.Kind = "UserAuth"
 }

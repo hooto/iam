@@ -39,80 +39,80 @@ const (
 	dataLoginErrorLimit = "lel"
 )
 
-func DataAppInstanceKey(id string) skv.ProgKey {
+func DataAppInstanceKey(id string) skv.KvProgKey {
 	if id == "" {
-		return skv.NewProgKey(dataPrefix, dataAppInstance, []byte{})
+		return skv.NewKvProgKey(dataPrefix, dataAppInstance, []byte{})
 	}
-	return skv.NewProgKey(dataPrefix, dataAppInstance, utils.HexStringToBytes(id))
+	return skv.NewKvProgKey(dataPrefix, dataAppInstance, utils.HexStringToBytes(id))
 }
 
-func DataUserKey(uname string) skv.ProgKey {
+func DataUserKey(uname string) skv.KvProgKey {
 	if uname == "" {
-		return skv.NewProgKey(dataPrefix, dataUser, []byte{})
+		return skv.NewKvProgKey(dataPrefix, dataUser, []byte{})
 	}
-	return skv.NewProgKey(dataPrefix, dataUser, UserIdBytes(uname))
+	return skv.NewKvProgKey(dataPrefix, dataUser, UserIdBytes(uname))
 }
 
-func DataUserProfileKey(uname string) skv.ProgKey {
+func DataUserProfileKey(uname string) skv.KvProgKey {
 	if uname == "" {
-		return skv.NewProgKey(dataPrefix, dataUserProfile, []byte{})
+		return skv.NewKvProgKey(dataPrefix, dataUserProfile, []byte{})
 	}
-	return skv.NewProgKey(dataPrefix, dataUserProfile, UserIdBytes(uname))
+	return skv.NewKvProgKey(dataPrefix, dataUserProfile, UserIdBytes(uname))
 }
 
-func DataPasswordResetKey(id string) skv.ProgKey {
-	return skv.NewProgKey(dataPrefix, dataPassReset, utils.HexStringToBytes(id))
+func DataPasswordResetKey(id string) skv.KvProgKey {
+	return skv.NewKvProgKey(dataPrefix, dataPassReset, utils.HexStringToBytes(id))
 }
 
-func DataLoginErrorLimitKey(uname, remote_ip string) skv.ProgKey {
+func DataLoginErrorLimitKey(uname, remote_ip string) skv.KvProgKey {
 	bs := idhash.Hash([]byte(remote_ip), 2)
-	return skv.NewProgKey(dataPrefix, dataLoginErrorLimit, append(UserIdBytes(uname), bs...))
+	return skv.NewKvProgKey(dataPrefix, dataLoginErrorLimit, append(UserIdBytes(uname), bs...))
 }
 
-func DataSessionKey(uname, id string) skv.ProgKey {
-	return skv.NewProgKey(dataPrefix, dataSession,
+func DataSessionKey(uname, id string) skv.KvProgKey {
+	return skv.NewKvProgKey(dataPrefix, dataSession,
 		UserIdBytes(uname), utils.HexStringToBytes(id))
 }
 
-func DataAccessKeyKey(uname, id string) skv.ProgKey {
-	return skv.NewProgKey(dataPrefix, dataAccessKey,
+func DataAccessKeyKey(uname, id string) skv.KvProgKey {
+	return skv.NewKvProgKey(dataPrefix, dataAccessKey,
 		UserIdBytes(uname), utils.HexStringToBytes(id))
 }
 
-func DataRoleKey(id uint32) skv.ProgKey {
-	return skv.NewProgKey(dataPrefix, dataRole, utils.Uint32ToBytes(id))
+func DataRoleKey(id uint32) skv.KvProgKey {
+	return skv.NewKvProgKey(dataPrefix, dataRole, utils.Uint32ToBytes(id))
 }
 
-func DataRolePrivilegeKey(rid uint32, inst string) skv.ProgKey {
-	return skv.NewProgKey(dataPrefix, dataRolePrivilege,
+func DataRolePrivilegeKey(rid uint32, inst string) skv.KvProgKey {
+	return skv.NewKvProgKey(dataPrefix, dataRolePrivilege,
 		utils.Uint32ToBytes(rid), utils.HexStringToBytes(inst))
 }
 
-func DataSysConfigKey(name string) skv.ProgKey {
-	return skv.NewProgKey(dataPrefix, dataSysConfig, name)
+func DataSysConfigKey(name string) skv.KvProgKey {
+	return skv.NewKvProgKey(dataPrefix, dataSysConfig, name)
 }
 
-func DataAccUserKey(uname string) skv.ProgKey {
+func DataAccUserKey(uname string) skv.KvProgKey {
 	if uname == "" {
-		return skv.NewProgKey(dataPrefix, dataAccUser, []byte{})
+		return skv.NewKvProgKey(dataPrefix, dataAccUser, []byte{})
 	}
-	return skv.NewProgKey(dataPrefix, dataAccUser, UserIdBytes(uname))
+	return skv.NewKvProgKey(dataPrefix, dataAccUser, UserIdBytes(uname))
 }
 
-func DataAccFundUserKey(uname, id string) skv.ProgKey {
-	return skv.NewProgKey(dataPrefix, dataAccFundUser,
+func DataAccFundUserKey(uname, id string) skv.KvProgKey {
+	return skv.NewKvProgKey(dataPrefix, dataAccFundUser,
 		UserIdBytes(uname), utils.HexStringToBytes(id))
 }
 
-func DataAccFundMgrKey(id string) skv.ProgKey {
-	return skv.NewProgKey(dataPrefix, dataAccFundMgr, utils.HexStringToBytes(id))
+func DataAccFundMgrKey(id string) skv.KvProgKey {
+	return skv.NewKvProgKey(dataPrefix, dataAccFundMgr, utils.HexStringToBytes(id))
 }
 
-func DataAccChargeUserKey(uname, id string) skv.ProgKey {
-	return skv.NewProgKey(dataPrefix, dataAccChargeUser,
+func DataAccChargeUserKey(uname, id string) skv.KvProgKey {
+	return skv.NewKvProgKey(dataPrefix, dataAccChargeUser,
 		UserIdBytes(uname), utils.HexStringToBytes(id))
 }
 
-func DataAccChargeMgrKey(id string) skv.ProgKey {
-	return skv.NewProgKey(dataPrefix, dataAccChargeMgr, utils.HexStringToBytes(id))
+func DataAccChargeMgrKey(id string) skv.KvProgKey {
+	return skv.NewKvProgKey(dataPrefix, dataAccChargeMgr, utils.HexStringToBytes(id))
 }

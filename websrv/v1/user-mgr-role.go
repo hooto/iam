@@ -35,7 +35,7 @@ func (c UserMgr) RoleListAction() {
 	// 	return
 	// }
 
-	if objs := store.Data.ProgScan(iamapi.DataRoleKey(0), iamapi.DataRoleKey(99999999), 1000); objs.OK() {
+	if objs := store.Data.KvProgScan(iamapi.DataRoleKey(0), iamapi.DataRoleKey(99999999), 1000); objs.OK() {
 
 		rss := objs.KvList()
 		for _, obj := range rss {
@@ -68,7 +68,7 @@ func (c UserMgr) RoleEntryAction() {
 	// 	return
 	// }
 
-	if obj := store.Data.ProgGet(iamapi.DataRoleKey(uint32(c.Params.Uint64("roleid")))); obj.OK() {
+	if obj := store.Data.KvProgGet(iamapi.DataRoleKey(uint32(c.Params.Uint64("roleid")))); obj.OK() {
 		obj.Decode(&set.UserRole)
 	}
 
@@ -108,7 +108,7 @@ func (c UserMgr) RoleSetAction() {
 
 	if set.Id == 0 {
 
-		if objs := store.Data.ProgRevScan(iamapi.DataRoleKey(0), iamapi.DataRoleKey(99999999), 1); objs.OK() {
+		if objs := store.Data.KvProgRevScan(iamapi.DataRoleKey(0), iamapi.DataRoleKey(99999999), 1); objs.OK() {
 
 			rss := objs.KvList()
 			for _, obj := range rss {
@@ -132,7 +132,7 @@ func (c UserMgr) RoleSetAction() {
 
 	} else {
 
-		if obj := store.Data.ProgGet(iamapi.DataRoleKey(set.Id)); obj.OK() {
+		if obj := store.Data.KvProgGet(iamapi.DataRoleKey(set.Id)); obj.OK() {
 			obj.Decode(&prev)
 		}
 
@@ -149,7 +149,7 @@ func (c UserMgr) RoleSetAction() {
 	set.Updated = types.MetaTimeNow()
 	// roleset["privileges"] = strings.Join(c.Params.Values["privileges"], ",")
 
-	if obj := store.Data.ProgPut(iamapi.DataRoleKey(set.Id), skv.NewValueObject(set), nil); !obj.OK() {
+	if obj := store.Data.KvProgPut(iamapi.DataRoleKey(set.Id), skv.NewKvEntry(set), nil); !obj.OK() {
 		set.Error = types.NewErrorMeta("500", obj.Bytex().String())
 		return
 	}

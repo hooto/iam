@@ -50,7 +50,7 @@ func (c Account) UserEntryAction() {
 	}
 	defer c.RenderJson(&set)
 
-	if rs := store.Data.ProgGet(
+	if rs := store.Data.KvProgGet(
 		iamapi.DataAccUserKey(c.us.UserName),
 	); rs.OK() {
 		rs.Decode(&set.AccountUser)
@@ -67,7 +67,7 @@ func (c Account) FundListAction() {
 	defer c.RenderJson(&ls)
 
 	k := iamapi.DataAccFundUserKey(c.us.UserName, "")
-	if rs := store.Data.ProgRevScan(k, k, 1000); rs.OK() {
+	if rs := store.Data.KvProgRevScan(k, k, 1000); rs.OK() {
 		rss := rs.KvList()
 		for _, v := range rss {
 
@@ -87,7 +87,7 @@ func (c Account) ChargeListAction() {
 	defer c.RenderJson(&ls)
 
 	k := iamapi.DataAccChargeUserKey(c.us.UserName, "")
-	if rs := store.Data.ProgRevScan(k, k, 1000); rs.OK() {
+	if rs := store.Data.KvProgRevScan(k, k, 1000); rs.OK() {
 		rss := rs.KvList()
 		for _, v := range rss {
 
@@ -109,7 +109,7 @@ func (c Account) ChargePayoutListAction() {
 	defer c.RenderJson(&ls)
 
 	k := iamapi.DataAccChargeUserKey(c.us.UserName, "")
-	if rs := store.Data.ProgRevScan(k, k, 1000); rs.OK() {
+	if rs := store.Data.KvProgRevScan(k, k, 1000); rs.OK() {
 		rss := rs.KvList()
 		for _, v := range rss {
 
