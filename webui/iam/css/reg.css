@@ -1,0 +1,269 @@
+html {
+  height: 100%;
+}
+
+body {
+  margin: 0 auto !important;
+  position: relative;
+  font-size: 13px;
+  font-family: Arial, sans-serif;
+  background-color: #222;
+  color: #eee;
+  min-width: 500px;
+  display: block;
+  height: 100%;
+}
+
+.iam-reg-frame {
+  width: 100%;
+  height: 100%;
+  position: relative;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  min-width: 500px;
+  min-height: 400px;
+}
+
+.iam-reg-frame a {
+  text-decoration: none;
+}
+.iam-reg-frame a:hover {
+  text-decoration: underline;
+}
+
+.iam-reg-box {
+  width: 400px;
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  transform: translate(-50%, -50%);
+  color: #555;
+  margin: 0 auto;
+}
+
+.iam-reg-form {
+  background-color: #f7f7f7;
+  border-radius: 4px;
+  padding: 20px;
+}
+
+.iam-reg-form input {
+  box-sizing: border-box;
+}
+
+#iam-signup-box {
+  width: 600px;
+}
+
+#iam-resetpass-box {
+  width: 600px;
+}
+
+#iam-reg-passreset-box {
+  width: 600px;
+}
+
+#iam-reg-passreset-form .iam-key {
+  font-family: monospace;
+  font-weight: bold;
+  text-align: center;
+}
+
+.iam-reg-msg01 {
+  font-size: 24px;
+  padding: 30px 0;
+  text-align: center;
+  color: #eee;
+}
+
+.iam-reg-form .iam-group {
+  padding: 0 0 10px 0; 
+}
+
+.iam-reg-form .iam-group:last-child {
+  padding-bottom: 0; 
+}
+
+.iam-user-ico-default {
+  width: 96px;
+  height: 96px;
+  padding: 2px;
+  position: relative;
+  left: 50%;
+  margin: 10px 0 30px -48px;
+  border-radius: 50%;
+  background-color: #dfdfdf;
+}
+
+.iam-reg-form .iam-input-row {
+  padding: 0 0 10px 0; 
+}
+
+.iam-reg-form .iam-input {
+  display: block;
+  width: 100%;
+  height: 40px;
+  padding: 5px 10px;
+  font-size: 14px;
+  line-height: 1.42857143;
+  color: #555;
+  background-color: #fff;
+  background-image: none;
+  border: 1px solid #ccc;
+  border-radius: 2px;
+  box-shadow: inset 0 1px 1px rgba(0, 0, 0, .075);
+  transition: border-color ease-in-out .15s, box-shadow ease-in-out .15s;
+}
+
+.iam-reg-form .iam-input:focus {
+  border-color: #66afe9;
+  outline: 0;
+  box-shadow: inset 0 1px 1px rgba(0,0,0,.075), 0 0 8px rgba(102, 175, 233, .6);
+}
+
+.iam-reg-form .iam-btn {
+  width: 100%;
+  height: 40px;
+  display: inline-block;
+  padding: 5px 10px;
+  margin-bottom: 0;
+  font-size: 14px;
+  font-weight: normal;
+  line-height: 1.42857143;
+  text-align: center;
+  white-space: nowrap;
+  vertical-align: middle;
+  cursor: pointer;
+  -webkit-user-select: none;
+     -moz-user-select: none;
+      -ms-user-select: none;
+          user-select: none;
+  background-image: none;
+  border: 1px solid transparent;
+  border-radius: 3px;
+  color: #fff;
+  background-color: #343a40;
+  border-color: #343a40;
+}
+
+.iam-reg-form .iam-btn:hover {
+  color: #fff;
+  background-color: #212529;
+  border-color: #212529;
+}
+
+.iam-reg-form .iam-input-row-checkbox {
+  display: inline-block;
+  min-height: 20px;
+  font-weight: normal;
+  color: #555;
+}
+
+.iam-reg-form .iam-input-row-checkbox input[type="checkbox"] {
+  float: left;
+  margin: 3px 5px 0 0;
+  padding: 0;
+  border: 1px solid #c6c6c6;
+  cursor: pointer;
+  width: 14px;
+  height: 14px;
+  box-sizing: border-box;
+  line-height: normal;
+}
+
+.iam-reg-form .iam-input-row-help {
+  display: inline-block;
+  float: right;
+}
+.iam-reg-form .iam-input-row-help a {
+  color: #333;
+}
+
+.iam-reg-box > .ref-action {
+  margin: 20px 0;
+  text-align: center;
+  font-size: 15px;
+}
+.iam-reg-box > .ref-action a {
+  font-size: 16px;
+  color: #fff;
+}
+
+.iam-reg-box > .footer {
+  text-align: center;
+  margin: 20px 0;
+  font-size: 14px;
+}
+.iam-reg-box > .footer a {
+  color: #ccc;
+}
+.iam-reg-box > .footer img {
+  width: 16px;
+  height: 16px;
+}
+
+
+.alert {
+  padding: 10px;
+  margin: 0 0 10px 0;
+  border: 1px solid #ccc;
+  line-height: 200%;
+  color: #383d41;
+  background-color: #e2e3e5;
+  border-color: #d6d8db;
+  border-radius: 3px;
+  font-size: 1.2em;
+}
+
+.alert p {
+  margin: 0;
+}
+
+.alert-danger {
+  color: #721c24;
+  background-color: #f8d7da;
+  border-color: #f5c6cb;
+}
+
+.alert-warning {
+  color: #856404;
+  background-color: #fff3cd;
+  border-color: #ffeeba;
+}
+
+.alert-success {
+  color: #155724;
+  background-color: #d4edda;
+  border-color: #c3e6cb;
+}
+
+.alert-info,
+.alert-primary {
+  color: #004085;
+  background-color: #cce5ff;
+  border-color: #b8daff;
+}
+
+.alert-dark {
+  color: #1b1e21;
+  background-color: #d6d8d9;
+  border-color: #c6c8ca;
+}
+
+.hide {
+  display: none;
+}
+
+input {
+  border-radius: 3px !important;
+  box-shadow: none !important;
+  border: 1px solid #ddd !important;
+}
+
+button,
+input:focus {
+  outline: 0 !important;
+  border-color: #343a40 !important;
+}
+

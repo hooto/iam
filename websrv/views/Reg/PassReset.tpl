@@ -1,174 +1,36 @@
 <!DOCTYPE html>
 <html lang="en">
-{{template "Common/HtmlHeader.tpl" .}}
+{{template "Common/HtmlHeaderReg.tpl" .}}
 <body>
 
-<style type="text/css">
-body {
-  margin: 0 auto;
-  position: relative;
-  font-size: 16px;
-  font-family: Arial, sans-serif;
-  background-color: #222;
-  color: #eee;
-}
 
-#iam-reg-passreset-frame {
-  width: 100%;
-  height: 100%;
-  position: relative;
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  min-width: 500px;
-  min-height: 400px;
-}
+<div id="iam-reg-passreset-frame" class="iam-reg-frame">
+<div id="iam-reg-passreset-box" class="iam-reg-box">
 
-#iam-reg-passreset-box {
-  width: 550px;
-  position: absolute;
-  left: 50%;
-  top: 50%;
-  transform: translate(-50%, -50%);
-  margin: 0 auto;
-}
-
-#iam-reg-passreset-form {
-  background-color: #f7f7f7;
-  border-radius: 4px;
-  padding: 30px 30px 20px 30px;
-  /*box-shadow: 0px 2px 2px 0px #999;*/
-}
-
-.iam-reg-passreset-msg01 {
-  font-size: 28px;
-  padding: 40px 0;
-  text-align: center;
-}
-
-#iam-reg-passreset-form .ilf-group {
-  padding: 0 0 10px 0; 
-}
-
-#iam-reg-passreset-form .ilf-input {
-  display: block;
-  width: 100%;
-  height: 40px;
-  padding: 5px 10px;
-  font-size: 14px;
-  line-height: 1.42857143;
-  color: #555;
-  background-color: #fff;
-  background-image: none;
-  border: 1px solid #ccc;
-  border-radius: 2px;
-  box-shadow: inset 0 1px 1px rgba(0, 0, 0, .075);
-  transition: border-color ease-in-out .15s, box-shadow ease-in-out .15s;
-}
-
-#iam-reg-passreset-form .ilf-input:focus {
-  border-color: #66afe9;
-  outline: 0;
-  box-shadow: inset 0 1px 1px rgba(0,0,0,.075), 0 0 8px rgba(102, 175, 233, .6);
-}
-
-#iam-reg-passreset-form .ilf-btn {
-  width: 100%;
-  height: 40px;
-  display: inline-block;
-  padding: 5px 10px;
-  margin-bottom: 0;
-  font-size: 14px;
-  font-weight: normal;
-  line-height: 1.42857143;
-  text-align: center;
-  white-space: nowrap;
-  vertical-align: middle;
-  cursor: pointer;
-  -webkit-user-select: none;
-     -moz-user-select: none;
-      -ms-user-select: none;
-          user-select: none;
-  background-image: none;
-  border: 1px solid transparent;
-  border-radius: 3px;
-  color: #fff;
-  background-color: #427fed;
-  border-color: #357ebd;
-}
-
-#iam-reg-passreset-form .ilf-btn:hover {
-  color: #fff;
-  background-color: #3276b1;
-  border-color: #285e8e;
-}
-
-#iam-reg-passreset-form .ilf-key {
-  font-family: monospace;
-  font-size: 16px;
-  font-weight: bold;
-  padding:10px 5px;
-  background-color: #555;
-  color: #fff;
-  width: 100%;
-  display: inline-block;
-  border-radius: 3px;
-  text-align: center;
-}
-
-#iam-reg-passreset-box .ilb-reg-passreset {
-  margin: 20px 0;
-  text-align: center;
-  font-size: 15px;
-}
-#iam-reg-passreset-box .ilb-reg-passreset a {
-  font-size: 16px;
-  color: #fff;
-}
-
-#iam-reg-passreset-box .ilb-footer {
-  text-align: center;
-  margin: 20px 0;
-  font-size: 14px;
-}
-#iam-reg-passreset-box .ilb-footer a {
-  color: #777;
-}
-#iam-reg-passreset-box .ilb-footer img {
-  width: 16px;
-  height: 16px;
-}
-</style>
-
-<div id="iam-reg-passreset-frame">
-<div id="iam-reg-passreset-box">
-
-  <div class="iam-reg-passreset-msg01">{{T . "Reset your Password"}}</div>
+  <div class="iam-reg-msg01">{{T . "Reset your Password"}}</div>
 
   {{if .pass_reset_id}}
-  <form id="iam-reg-passreset-form" action="#forgot-pass">
+  <form id="iam-reg-passreset-form"  class="iam-reg-form" action="#forgot-pass">
+
+    <input type="hidden" name="id" value="{{.pass_reset_id}}">
+    <div class="iam-key alert alert-dark">{{.pass_reset_id}}</div>
 
     <div id="iam-reg-passreset-form-alert" class="alert hide"></div>
 
-    <div class="ilf-group">
-      <input type="hidden" name="id" value="{{.pass_reset_id}}">
-      <span class="ilf-key">{{.pass_reset_id}}</span>
+    <div class="iam-group">
+      <input type="text" class="iam-input" name="email" placeholder="{{T . "Confirm your Email"}}">
     </div>
 
-    <div class="ilf-group">
-      <input type="text" class="ilf-input" name="email" placeholder="{{T . "Confirm your Email"}}">
+    <div class="iam-group">
+      <input type="password" class="iam-input" name="passwd" placeholder="{{T . "Your new password"}}">
     </div>
 
-    <div class="ilf-group">
-      <input type="password" class="ilf-input" name="passwd" placeholder="{{T . "Your new password"}}">
-    </div>
-
-    <div class="ilf-group">
-      <input type="password" class="ilf-input" name="passwd_confirm" placeholder="{{T . "Confirm your new password"}}">
+    <div class="iam-group">
+      <input type="password" class="iam-input" name="passwd_confirm" placeholder="{{T . "Confirm your new password"}}">
     </div>    
 
-    <div class="ilf-group">
-      <button type="submit" class="ilf-btn">{{T . "Next"}}</button>
+    <div class="iam-group">
+      <button type="submit" class="iam-btn">{{T . "Next"}}</button>
     </div>
 
   </form>
@@ -176,11 +38,11 @@ body {
     <div class="alert alert-danger">The Token is not valid or Expired</div>
   {{end}}
 
-  <div class="ilb-reg-passreset">
+  <div class="ref-action">
     <a href="/iam/service/login?redirect_token={{.redirect_token}}">Sign in with your Account</a>
   </div>
 
-  <div class="ilb-footer">
+  <div class="footer">
     <img src="/iam/~/iam/img/iam-s2-32.png"> 
     <a href="https://github.com/hooto/iam" target="_blank">hooto IAM</a>
   </div>
@@ -190,6 +52,18 @@ body {
 
 
 <script>
+function innerAlert (alertid, type_ui, msg) {
+    if (!type_ui) {
+        return $(alertid).fadeOut(200);
+    }
+    var elem = $(alertid);
+    if (elem) {
+        elem.removeClass().addClass("alert " + type_ui).html(msg);
+        elem.fadeOut(200, function() {
+             elem.fadeIn(200);
+        });
+    }
+}
 
 $("input[name=email]").focus();
 
@@ -198,7 +72,7 @@ $("#iam-reg-passreset-form").submit(function(event) {
 
     event.preventDefault();
 
-    l4i.InnerAlert("#iam-reg-passreset-form-alert", 'alert-info', "Pending");
+    innerAlert("#iam-reg-passreset-form-alert", 'alert-info', "Pending");
 
     $.ajax({
         type    : "POST",
@@ -208,22 +82,22 @@ $("#iam-reg-passreset-form").submit(function(event) {
         success : function(data) {
 
             if (data.error) {
-                return l4i.InnerAlert("#iam-reg-passreset-form-alert", 'alert-danger', data.error.message);
+                return innerAlert("#iam-reg-passreset-form-alert", 'alert-danger', data.error.message);
             }
 
             if (data.kind != "UserAuth") {
-                return l4i.InnerAlert("#iam-reg-passreset-form-alert", 'alert-danger', "Unknown Error");
+                return innerAlert("#iam-reg-passreset-form-alert", 'alert-danger', "Unknown Error");
             }
                 
-            l4i.InnerAlert("#iam-reg-passreset-form-alert", 'alert-success', "Successfully Updated. Page redirecting");
-            $(".ilf-group").hide(200);
+            innerAlert("#iam-reg-passreset-form-alert", 'alert-success', "Successfully Updated. Page redirecting");
+            $(".iam-group").hide(200);
 
             window.setTimeout(function(){
                 window.location = "/iam/service/login?redirect_token={{.redirect_token}}";
             }, 2000);
         },
         error: function(xhr, textStatus, error) {
-            l4i.InnerAlert("#iam-reg-passreset-form-alert", 'alert-danger', '{{T . "Internal Server Error"}}');
+            innerAlert("#iam-reg-passreset-form-alert", 'alert-danger', '{{T . "Internal Server Error"}}');
         }
     });
 });
