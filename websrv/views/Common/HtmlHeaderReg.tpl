@@ -5,5 +5,5 @@
   <script src="/iam/~/lessui/js/lessui.js"></script>
   <link rel="stylesheet" href="/iam/~/purecss/css/pure.css" type="text/css">
   <link rel="stylesheet" href="/iam/~/iam/css/reg.css" type="text/css">
-  <link rel="shortcut icon" href="/iam/~/iam/img/favicon.ico" type="image/x-icon">
+  <link rel="shortcut icon" href="/iam/~/iam/img/iam-s2-32.png" type="image/x-icon">
 </head>
