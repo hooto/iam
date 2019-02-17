@@ -249,6 +249,24 @@ func AccessKeyInitData(ak iamapi.AccessKey) error {
 	return nil
 }
 
+func AccessKeyReset(ak iamapi.AccessKey) error {
+	if ak.User == "" {
+		return errors.New("No User Set")
+	}
+
+	ak.Created = uint64(types.MetaTimeNow())
+	ak.Action = 1
+	if rs := Data.KvProgPut(
+		iamapi.DataAccessKeyKey(ak.User, ak.AccessKey),
+		skv.NewKvEntry(ak),
+		nil,
+	); !rs.OK() {
+		return errors.New(rs.Bytex().String())
+	}
+
+	return nil
+}
+
 func AppInstanceRegister(inst iamapi.AppInstance) error {
 
 	if !app_inst_id_re.MatchString(inst.Meta.ID) {

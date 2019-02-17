@@ -22,6 +22,7 @@ import (
 	"strings"
 	"time"
 
+	"github.com/hooto/hlog4g/hlog"
 	"github.com/hooto/httpsrv"
 	"github.com/lessos/lessgo/pass"
 	"github.com/lessos/lessgo/types"
@@ -62,7 +63,7 @@ func (c Service) LoginAuthAction() {
 	uname := strings.TrimSpace(strings.ToLower(c.Params.Get("uname")))
 
 	if uname == "" || c.Params.Get("passwd") == "" {
-		rsp.Error = types.NewErrorMeta("400", "Bad Request")
+		rsp.Error = types.NewErrorMeta("400", "Username or Password can not be empty")
 		return
 	}
 
@@ -159,6 +160,8 @@ func (c Service) LoginAuthAction() {
 	})
 
 	rsp.Kind = "ServiceLoginAuth"
+
+	hlog.Printf("info", "ServiceLoginAuth User %s", user.Name)
 }
 
 func (c Service) AuthAction() {

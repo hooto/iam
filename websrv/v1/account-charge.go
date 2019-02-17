@@ -55,7 +55,7 @@ func (c AccountCharge) PreValidAction() {
 		rs.Decode(&ak)
 	}
 	if ak.AccessKey == "" || ak.AccessKey != auth_token.AccessKey {
-		set.Error = types.NewErrorMeta(iamapi.ErrCodeUnauthorized, "No Auth Found #02")
+		set.Error = types.NewErrorMeta(iamapi.ErrCodeUnauthorized, "No Auth Found, AK "+ak.AccessKey)
 		return
 	}
 	if terr := auth_token.Valid(ak, c.Request.RawBody); terr != nil {
@@ -145,7 +145,7 @@ func (c AccountCharge) PrepayAction() {
 		rs.Decode(&ak)
 	}
 	if ak.AccessKey == "" || ak.AccessKey != auth_token.AccessKey {
-		set.Error = types.NewErrorMeta(iamapi.ErrCodeUnauthorized, "No Auth Found #02")
+		set.Error = types.NewErrorMeta(iamapi.ErrCodeUnauthorized, "No Auth Found, AK "+ak.AccessKey)
 		return
 	}
 	if terr := auth_token.Valid(ak, c.Request.RawBody); terr != nil {
@@ -183,6 +183,7 @@ func (c AccountCharge) PrepayAction() {
 
 	charge.Prepay = set.Prepay
 	charge.Updated = uint64(types.MetaTimeNow())
+	charge.Comment = set.Comment
 
 	var acc_user iamapi.AccountUser
 	if rs := store.Data.KvProgGet(iamapi.DataAccUserKey(charge.User)); rs.OK() {
@@ -306,12 +307,12 @@ func (c AccountCharge) PayoutAction() {
 		rs.Decode(&ak)
 	}
 	if ak.AccessKey == "" || ak.AccessKey != auth_token.AccessKey {
-		set.Error = types.NewErrorMeta(iamapi.ErrCodeUnauthorized, "No Auth Found #02")
+		set.Error = types.NewErrorMeta(iamapi.ErrCodeUnauthorized, "No Auth Found, AK "+ak.AccessKey)
 		return
 	}
 
 	if terr := auth_token.Valid(ak, c.Request.RawBody); terr != nil {
-		set.Error = types.NewErrorMeta(iamapi.ErrCodeUnauthorized, "No Auth Found #03")
+		set.Error = types.NewErrorMeta(iamapi.ErrCodeUnauthorized, "No Auth Found #03 "+terr.Message)
 		return
 	}
 
@@ -358,6 +359,7 @@ func (c AccountCharge) PayoutAction() {
 
 	charge.Payout = set.Payout
 	charge.Updated = uint64(types.MetaTimeNow())
+	charge.Comment = set.Comment
 
 	var (
 		active  iamapi.AccountFund

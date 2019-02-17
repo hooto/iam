@@ -95,6 +95,7 @@ type AccountCharge struct {
 	TimeClose      uint32               `json:"time_close"`
 	Created        uint64               `json:"created"`
 	Updated        uint64               `json:"updated"`
+	Comment        string               `json:"comment,omitempty"`
 }
 
 func AccountChargeId(prod types.NameIdentifier, start uint32) ([]byte, string) {
@@ -125,6 +126,7 @@ type AccountChargePrepay struct {
 	Prepay         float64              `json:"prepay"`
 	TimeStart      uint32               `json:"time_start"`
 	TimeClose      uint32               `json:"time_close"`
+	Comment        string               `json:"comment,omitempty"`
 }
 
 func (this *AccountChargePrepay) Valid() error {
@@ -164,6 +166,7 @@ type AccountChargePayout struct {
 	Payout         float64              `json:"payout"`
 	TimeStart      uint32               `json:"time_start"`
 	TimeClose      uint32               `json:"time_close"`
+	Comment        string               `json:"comment,omitempty"`
 }
 
 func (this *AccountChargePayout) Valid() error {

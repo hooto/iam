@@ -64,7 +64,6 @@ $("input[name=username]").focus();
 //
 function retrieveCommit() {
     event.preventDefault();
-
     var alertid = "#iam-resetpass-form-alert";
 
     innerAlert(alertid, 'alert-info', "Pending");

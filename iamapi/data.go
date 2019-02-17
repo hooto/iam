@@ -116,3 +116,7 @@ func DataAccChargeUserKey(uname, id string) skv.KvProgKey {
 func DataAccChargeMgrKey(id string) skv.KvProgKey {
 	return skv.NewKvProgKey(dataPrefix, dataAccChargeMgr, utils.HexStringToBytes(id))
 }
+
+func DataAccChargeMgrKeyBytes(id []byte) skv.KvProgKey {
+	return skv.NewKvProgKey(dataPrefix, dataAccChargeMgr, id)
+}
