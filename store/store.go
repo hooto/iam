@@ -21,13 +21,15 @@ import (
 	"strings"
 	"time"
 
-	"github.com/hooto/iam/config"
-	"github.com/hooto/iam/iamapi"
+	"github.com/hooto/hlog4g/hlog"
 	"github.com/lessos/lessgo/crypto/idhash"
 	"github.com/lessos/lessgo/crypto/phash"
 	"github.com/lessos/lessgo/net/email"
 	"github.com/lessos/lessgo/types"
 	"github.com/lynkdb/iomix/skv"
+
+	"github.com/hooto/iam/config"
+	"github.com/hooto/iam/iamapi"
 )
 
 var (
@@ -58,6 +60,8 @@ func Init() error {
 	); !rs.OK() ||
 		rs.Bytex().String() != "test" {
 		return fmt.Errorf("iam.store connect not ready #3")
+	} else {
+		hlog.Printf("info", "iam/data connect ok")
 	}
 
 	return nil

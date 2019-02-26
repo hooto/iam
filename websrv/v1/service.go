@@ -70,10 +70,13 @@ func (c Service) LoginAuthAction() {
 	var user iamapi.User
 	if obj := store.Data.KvProgGet(iamapi.DataUserKey(uname)); obj.OK() {
 		obj.Decode(&user)
+	} else {
+		rsp.Error = types.NewErrorMeta("500", "server error #01")
+		return
 	}
 
 	if user.Name != uname {
-		rsp.Error = types.NewErrorMeta("400", "Username or Password can not match")
+		rsp.Error = types.NewErrorMeta("400", "incorrect username or password #01")
 		return
 	}
 
@@ -99,7 +102,7 @@ func (c Service) LoginAuthAction() {
 		store.Data.KvProgPut(err_key, skv.NewKvEntry(err_num), &skv.KvProgWriteOptions{
 			Expired: uint64(time.Now().Add(86400e9).UnixNano()),
 		})
-		rsp.Error = types.NewErrorMeta("400", "Username or Password can not match")
+		rsp.Error = types.NewErrorMeta("400", "incorrect username or password #02")
 		return
 	}
 
