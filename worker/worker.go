@@ -181,4 +181,6 @@ func AccountChargeCloseRefresh() {
 
 		offset = iamapi.DataAccChargeMgrKeyBytes(rss[len(rss)-1].Key)
 	}
+
+	accountChargeCloseRefreshed = tn
 }
