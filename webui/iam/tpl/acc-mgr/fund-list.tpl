@@ -49,7 +49,7 @@
 	<button class="pure-button button-small"
       onclick="iamAccMgr.FundSet('{[=v.id]}')">
 	  <span class="fa fa-cog"></span>
-      Setting
+      {[=l4i.T("Setting")]}
     </button>
   </td>
 </tr>
@@ -59,7 +59,7 @@
 <script type="text/html" id="iam-accm-fundlist-optools">
 <li class="iam-btn iam-btn-primary">
   <a href="#" onclick="iamAccMgr.FundNew()">
-     Recharge
+     {[=l4i.T("Recharge")]}
   </a>
 </li>
 </script>

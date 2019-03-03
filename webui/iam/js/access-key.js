@@ -18,10 +18,12 @@ var iamAccessKey = {
 }
 
 iamAccessKey.Index = function() {
-    iam.TplCmd("access-key/index", {
-        callback: function(err, data) {
+    l4iTemplate.Render({
+        dstid: "com-content",
+        tplurl: iam.TplPath("access-key/index"),
+        // data: {},
+        callback: function() {
             iam.OpToolsClean();
-            $("#com-content").html(data);
             l4i.UrlEventClean("iam-module-navbar-menus");
             l4i.UrlEventRegister("access-key/list", iamAccessKey.List, "iam-module-navbar-menus");
             l4i.UrlEventHandler("access-key/list", true);
@@ -42,8 +44,8 @@ iamAccessKey.List = function() {
                 aks.items = [];
             }
 
-            $("#work-content").html(tpl);
-            iam.OpToolsRefresh("#iam-aklist-optools");
+            // $("#work-content").html(tpl);
+
 
             for (var i in aks.items) {
 
@@ -64,14 +66,17 @@ iamAccessKey.List = function() {
             aks._actionls = iamAccessKey.actionls;
 
             l4iTemplate.Render({
-                dstid: "iam-aklist",
-                tplid: "iam-aklist-tpl",
+                dstid: "work-content",
+                tplsrc: tpl, // "iam-aklist-tpl",
                 data: aks,
+                callback: function() {
+                    iam.OpToolsRefresh("#iam-aklist-optools");
+                },
             });
         });
 
         ep.fail(function(err) {
-            alert("Error: Please try again later");
+            alert(l4i.T("network error, please try again later"));
         });
 
         iam.ApiCmd("access-key/list?action=0", {
@@ -115,14 +120,14 @@ iamAccessKey.Info = function(akid) {
                 data: data,
                 title: "Access Key Info",
                 buttons: [{
-                    title: "Cancel",
+                    title: l4i.T("Cancel"),
                     onclick: "l4iModal.Close()",
                 }],
             });
         });
 
         ep.fail(function(err) {
-            alert("Error: Please try again later");
+            alert(l4i.T("network error, please try again later"));
         });
 
         if (akid) {
@@ -150,9 +155,9 @@ iamAccessKey.Set = function(akid) {
             }
 
             if (data._isnew) {
-                data._form_title = "New Access Key";
+                data._form_title = l4i.T("New %s", "Access Key");
             } else {
-                data._form_title = "Access Key Setting";
+                data._form_title = l4i.T("%s Settings", "Access Key");
             }
 
             if (!data.desc) {
@@ -177,10 +182,10 @@ iamAccessKey.Set = function(akid) {
                 data: data,
                 title: data._form_title,
                 buttons: [{
-                    title: "Cancel",
+                    title: l4i.T("Cancel"),
                     onclick: "l4iModal.Close()",
                 }, {
-                    title: "Save",
+                    title: l4i.T("Save"),
                     onclick: "iamAccessKey.SetCommit()",
                     style: "btn btn-primary",
                 }],
@@ -188,7 +193,7 @@ iamAccessKey.Set = function(akid) {
         });
 
         ep.fail(function(err) {
-            alert("Error: Please try again later");
+            alert(l4i.T("network error, please try again later"));
         });
 
         if (akid) {
@@ -239,7 +244,7 @@ iamAccessKey.SetCommit = function() {
                 return l4i.InnerAlert(alert_id, 'alert-danger', data.error.message);
             }
 
-            l4i.InnerAlert(alert_id, 'alert-success', "Successfully updated");
+            l4i.InnerAlert(alert_id, 'alert-success', l4i.T(l4i.T("Successfully %s", l4i.T("updated"))));
 
             window.setTimeout(function() {
                 l4iModal.Close();
@@ -251,15 +256,15 @@ iamAccessKey.SetCommit = function() {
 
 iamAccessKey.Del = function(akid) {
     l4iModal.Open({
-        title: "Delete",
-        tplsrc: '<div id="iam-ak-del" class="alert alert-danger">Are you sure to delete this?</div>',
+        title: l4i.T("Delete"),
+        tplsrc: '<div id="iam-ak-del" class="alert alert-danger">' + l4i.T("Are you sure to delete this") + '?</div>',
         height: "200px",
         buttons: [{
-            title: "Confirm to delete",
+            title: l4i.T("Confirm and remove"),
             onclick: 'iamAccessKey.DelCommit("' + akid + '")',
             style: "btn-danger",
         }, {
-            title: "Cancel",
+            title: l4i.T("Cancel"),
             onclick: "l4iModal.Close()",
         }],
     });
@@ -276,7 +281,7 @@ iamAccessKey.DelCommit = function(akid) {
                 return l4i.InnerAlert(alertid, 'alert-danger', data.error.message);
             }
 
-            l4i.InnerAlert(alertid, 'alert-success', "Successful deleted");
+            l4i.InnerAlert(alertid, 'alert-success', l4i.T("Successfully %s", l4i.T("deleted")));
             setTimeout(function() {
                 iamAccessKey.List();
                 l4iModal.Close();
@@ -294,15 +299,15 @@ iamAccessKey.Bind = function(akid) {
                 tplsrc: tpl,
                 width: 800,
                 height: 260,
-                title: "Bind Instance to this AccessKey",
+                title: l4i.T("Bind new instance to this %s", "AccessKey"),
                 data: {
                     access_key: akid,
                 },
                 buttons: [{
-                    title: "Cancel",
+                    title: l4i.T("Cancel"),
                     onclick: "l4iModal.Close()",
                 }, {
-                    title: "Save",
+                    title: l4i.T("Save"),
                     onclick: "iamAccessKey.BindCommit()",
                     style: "btn btn-primary",
                 }],
@@ -310,7 +315,7 @@ iamAccessKey.Bind = function(akid) {
         });
 
         ep.fail(function(err) {
-            alert("Error: Please try again later");
+            alert(l4i.T("network error, please try again later"));
         });
 
         iam.TplCmd("access-key/bind", {
@@ -339,7 +344,7 @@ iamAccessKey.BindCommit = function() {
                 return l4i.InnerAlert(alert_id, 'alert-danger', data.error.message);
             }
 
-            l4i.InnerAlert(alert_id, 'alert-success', "Successfully updated");
+            l4i.InnerAlert(alert_id, 'alert-success', l4i.T("Successfully %s", l4i.T("updated")));
 
             window.setTimeout(function() {
                 l4iModal.Close();
@@ -352,15 +357,15 @@ iamAccessKey.BindCommit = function() {
 iamAccessKey.UnBind = function(akid, name) {
 
     l4iModal.Open({
-        title: "Delete",
-        tplsrc: '<div id="iam-ak-unbind" class="alert alert-danger">Are you sure to delete this?</div>',
+        title: l4i.T("Delete"),
+        tplsrc: '<div id="iam-ak-unbind" class="alert alert-danger">' + l4i.T("Are you sure to delete this") + '?</div>',
         height: "200px",
         buttons: [{
-            title: "Confirm to delete",
+            title: l4i.T("Confirm and remove"),
             onclick: 'iamAccessKey.UnBindCommit("' + akid + '", "' + name + '")',
             style: "btn-danger",
         }, {
-            title: "Cancel",
+            title: l4i.T("Cancel"),
             onclick: "l4iModal.Close()",
         }],
     });
@@ -379,7 +384,7 @@ iamAccessKey.UnBindCommit = function(akid, name) {
                 return l4i.InnerAlert(alertid, 'alert-danger', data.error.message);
             }
 
-            l4i.InnerAlert(alertid, 'alert-success', "Successful deleted");
+            l4i.InnerAlert(alertid, 'alert-success', l4i.T("Successfully %s", l4i.T("deleted")));
             setTimeout(function() {
                 iamAccessKey.List();
                 l4iModal.Close();

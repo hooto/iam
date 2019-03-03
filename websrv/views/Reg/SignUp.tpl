@@ -6,7 +6,7 @@
 <div id="iam-signup-frame" class="iam-reg-frame">
 <div id="iam-signup-box" class="iam-reg-box">
 
-  <div class="iam-reg-msg01">{{T . "Create your Account"}}</div>
+  <div class="iam-reg-msg01">{{T .LANG "Create your Account"}}</div>
 
   <form id="iam-signup-form" class="iam-reg-form" action="#" onsubmit="return false;">
 
@@ -15,28 +15,28 @@
     <input type="hidden" name="redirect_token" value="{{.redirect_token}}">
     {{if eq .user_reg_disable false }}
     <div class="iam-group">
-      <input type="text" class="iam-input" name="uname" value="{{.uname}}" placeholder="{{T . "Unique Username"}}">
+      <input type="text" class="iam-input" name="uname" value="{{.uname}}" placeholder="{{T .LANG "Unique Username"}}">
     </div>
 
     <div class="iam-group">
-      <input type="text" class="iam-input" name="email" placeholder="{{T . "Email"}}">
+      <input type="text" class="iam-input" name="email" placeholder="{{T .LANG "Email"}}">
     </div>
 
     <div class="iam-group">
-      <input type="password" class="iam-input" name="passwd" placeholder="{{T . "Password"}}">
+      <input type="password" class="iam-input" name="passwd" placeholder="{{T .LANG "Password"}}">
     </div>
 
     <div class="iam-group">
-      <button type="submit" class="iam-btn" onclick="iamLogin.SignupCommit()">{{T . "Create Account"}}</button>
+      <button type="submit" class="iam-btn" onclick="iamLogin.SignupCommit()">{{T .LANG "Create Account"}}</button>
     </div>
     {{else}}
-    <div class="alert alert-danger">User registration was closed!<br>Please contact the administrator to manually register accounts</div>
+    <div class="alert alert-danger">{{T .LANG "User registration was closed"}}!<br>{{T .LANG "Please contact the administrator to manually register accounts"}}</div>
     {{end}}
 
   </form>
 
   <div class="ref-action">
-    <a href="/iam/service/login?redirect_token={{.redirect_token}}">Sign in with your Account</a>
+    <a href="/iam/service/login?redirect_token={{.redirect_token}}">{{T .LANG "Sign in with your Account"}}</a>
   </div>
 
   <div class="footer">

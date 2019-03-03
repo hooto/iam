@@ -20,10 +20,12 @@ var iamAppMgr = {
 }
 
 iamAppMgr.Index = function() {
-    iam.TplCmd("app-mgr/index", {
-        callback: function(err, data) {
+    l4iTemplate.Render({
+        dstid: "com-content",
+        tplurl: iam.TplPath("app-mgr/index"),
+        data: {},
+        callback: function() {
             iam.OpToolsClean();
-            $("#com-content").html(data);
             l4i.UrlEventClean("iam-module-navbar-menus");
             l4i.UrlEventRegister("app-mgr/inst-list", iamAppMgr.InstList);
             l4i.UrlEventHandler("app-mgr/inst-list", true);
@@ -48,7 +50,7 @@ iamAppMgr.InstList = function() {
             $("#work-content").html(tpl);
 
             if (!data || !data.items) {
-                return l4i.InnerAlert(alertId, 'info', "No Items Yet ...");
+                return l4i.InnerAlert(alertId, 'info', l4i.T("No Items Yet ..."));
             }
 
             data._statusls = iamUserMgr.statusls;
@@ -80,7 +82,7 @@ iamAppMgr.InstList = function() {
         });
 
         ep.fail(function(err) {
-            alert("Error: Please try again later");
+            alert(l4i.T("network error, please try again later"));
         });
 
         iam.ApiCmd("app-mgr/inst-list" + uri, {
@@ -125,16 +127,16 @@ iamAppMgr.InstSetForm = function(instid) {
                 width: 1000,
                 height: 600,
                 data: data,
-                title: "App Instance Setting",
+                title: l4i.T("%s Settings", l4i.T("App Instance")),
                 buttons: [{
-                    title: "Delete",
+                    title: l4i.T("Delete"),
                     onclick: "iamAppMgr.InstDelCommit()",
                     style: "btn btn-outline-danger",
                 }, {
-                    title: "Cancel",
+                    title: l4i.T("Cancel"),
                     onclick: "l4iModal.Close()",
                 }, {
-                    title: "Save",
+                    title: l4i.T("Save"),
                     onclick: "iamAppMgr.InstSetCommit()",
                     style: "btn btn-primary",
                 }],
@@ -142,7 +144,7 @@ iamAppMgr.InstSetForm = function(instid) {
         });
 
         ep.fail(function(err) {
-            alert("Error: Please try again later");
+            alert(l4i.T("network error, please try again later"));
         });
 
         if (iamAppMgr.roles) {
@@ -209,7 +211,7 @@ iamAppMgr.InstSetCommit = function() {
                 return l4i.InnerAlert(alert_id, 'alert-danger', data.error.message);
             }
 
-            l4i.InnerAlert(alert_id, 'alert-success', "Successfully updated");
+            l4i.InnerAlert(alert_id, 'alert-success', l4i.T("Successfully %s", l4i.T("updated")));
 
             window.setTimeout(function() {
                 l4iModal.Close();
@@ -239,7 +241,7 @@ iamAppMgr.InstDelCommit = function() {
                 return l4i.InnerAlert(alert_id, 'alert-danger', data.error.message);
             }
 
-            l4i.InnerAlert(alert_id, 'alert-success', "Successfully updated");
+            l4i.InnerAlert(alert_id, 'alert-success', l4i.T("Successfully %s", l4i.T("updated")));
 
             window.setTimeout(function() {
                 l4iModal.Close();

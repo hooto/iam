@@ -40,7 +40,7 @@
           <button class="pure-button button-small"
             onclick="iamApp.InstSetForm('{[=v.meta.id]}')">
             <span class="fa fa-cog"></span>
-            Setting
+            {[=l4i.T("Settings")]}
           </button>
         </td>
       </tr>

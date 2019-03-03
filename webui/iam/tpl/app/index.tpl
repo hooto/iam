@@ -1,6 +1,6 @@
 <div id="iam-module-navbar">
   <ul id="iam-module-navbar-menus" class="iam-module-nav">
-    <li><a class="active" href="#app/inst">My Authorized Applications</a></li>
+    <li><a class="active" href="#app/inst">{[=l4i.T("My Authorized Applications")]}</a></li>
     <!--<li>
       <form id="z28k7l" action="#" class="form-inlines">
         <input id="query_text" type="text"

@@ -72,10 +72,14 @@ iam.load_index = function() {
 
     seajs.use(["ep"], function(EventProxy) {
 
-        var ep = EventProxy.create("tpl", "session", "pinfo", function(tpl, session, pinfo) {
+        var ep = EventProxy.create("tpl", "session", "pinfo", "lang", function(tpl, session, pinfo, lang) {
+
+            if (lang && lang.items) {
+                l4i.LangSync(lang.items, lang.locale);
+            }
 
             if (!session || session.username == "") {
-                return alert("Network is unreachable, Please try again later");
+                return alert(l4i.T("network error, please try again later"));
             }
             iam.Session = session;
 
@@ -83,10 +87,8 @@ iam.load_index = function() {
                 pinfo.topnav = [];
             }
             if (!pinfo.webui_banner_title) {
-                pinfo.webui_banner_title = "Account Panel";
+                pinfo.webui_banner_title = l4i.T("User Center");
             }
-
-            // console.log(pinfo);
 
             l4i.UrlEventRegister("index", iamUser.Overview, "iam-topbar-nav-menus");
 
@@ -129,7 +131,7 @@ iam.load_index = function() {
                     pinfo: pinfo,
                     session: session,
                 },
-                success: function() {
+                callback: function() {
                     l4i.UrlEventHandler("index", true);
                 },
             });
@@ -139,7 +141,7 @@ iam.load_index = function() {
             if (err && err == "AuthSession") {
                 iam.AlertUserLogin();
             } else {
-                alert("Network is unreachable, Please try again later");
+                alert(l4i.T("network error, please try again later"));
             }
         });
 
@@ -157,6 +159,10 @@ iam.load_index = function() {
             callback: ep.done('pinfo'),
         });
 
+        iam.ApiCmd("langsrv/locale", {
+            callback: ep.done("lang"),
+        });
+
         iam.TplCmd("index", {
             callback: ep.done("tpl"),
         });
@@ -164,13 +170,14 @@ iam.load_index = function() {
 }
 
 iam.AlertUserLogin = function() {
-    l4iAlert.Open("warn", "You are not logged in, or your login session has expired. Please sign in again", {
-        close: false,
-        buttons: [{
-            title: "SIGN IN",
-            href: iam.base + "auth/login",
-        }],
-    });
+    l4iAlert.Open("warn",
+        l4i.T("You are not logged in, or your login session has expired. Please sign in again"), {
+            close: false,
+            buttons: [{
+                title: l4i.T("SIGN IN"),
+                href: iam.base + "auth/login",
+            }],
+        });
 }
 
 iam.ApiCmd = function(url, options) {
@@ -197,6 +204,10 @@ iam.api_cmd = function(url, options) {
     options.nocache = true;
 
     l4i.Ajax(url, options);
+}
+
+iam.TplPath = function(url) {
+    return iam.basetpl + url + ".tpl";
 }
 
 iam.TplCmd = function(url, options) {
@@ -234,7 +245,11 @@ iam.OpToolsRefresh = function(div_target) {
 
         var opt = $("#work-content").find(div_target);
         if (opt) {
-            $("#iam-module-navbar-optools").html(opt.html());
+            l4iTemplate.Render({
+                dstid: "iam-module-navbar-optools",
+                tplsrc: opt.html(),
+                data: {},
+            });
             iam.OpToolActive = div_target;
         }
     }

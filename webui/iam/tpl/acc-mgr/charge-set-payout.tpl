@@ -7,21 +7,21 @@
   <table class="iam-formtable">
     <tbody>
     <tr>
-      <td>Charge</td>
+      <td>ID</td>
       <td>
 	     {[=it.id]}
       </td>
     </tr>
 
     <tr>
-      <td>Product</td>
+      <td>{[=l4i.T("Product")]}</td>
       <td>
 	     {[=it.product]}
       </td>
     </tr>
 
     <tr>
-      <td>Payout</td>
+      <td>{[=l4i.T("Amount")]}</td>
       <td>
         <input type="text" class="form-control input-sm" name="payout" value="{[=it.prepay]}">
       </td>

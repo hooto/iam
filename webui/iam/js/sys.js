@@ -3,10 +3,13 @@ var iamSys = {
 }
 
 iamSys.Index = function() {
-    iam.TplCmd("sys-mgr/index", {
-        callback: function(err, data) {
+
+    l4iTemplate.Render({
+        dstid: "com-content",
+        tplurl: iam.TplPath("sys-mgr/index"),
+        data: {},
+        callback: function() {
             iam.OpToolsClean();
-            $("#com-content").html(data);
             l4i.UrlEventClean("iam-module-navbar-menus");
             l4i.UrlEventRegister("sys-mgr/general-set", iamSys.GeneralSet, "iam-module-navbar-menus");
             l4i.UrlEventRegister("sys-mgr/mailer-set", iamSys.MailerSet, "iam-module-navbar-menus");
@@ -41,7 +44,7 @@ iamSys.GeneralSet = function() {
         });
 
         ep.fail(function(err) {
-            alert("Error: Please try again later");
+            alert(l4i.T("network error, please try again later"));
         });
 
         iam.ApiCmd("sys-config/general", {
@@ -94,11 +97,7 @@ iamSys.GeneralSetCommit = function() {
                 return l4i.InnerAlert(alert_id, 'alert-danger', data.error.message);
             }
 
-            l4i.InnerAlert(alert_id, 'alert-success', "Successfully updated");
-
-        // window.setTimeout(function(){
-        //     iamSys.GeneralSet();
-        // }, 1000);
+            l4i.InnerAlert(alert_id, 'alert-success', l4i.T("Successfully %s", l4i.T("updated")));
         },
     });
 }
@@ -145,7 +144,7 @@ iamSys.MailerSet = function(name) {
         });
 
         ep.fail(function(err) {
-            alert("Error: Please try again later");
+            alert(l4i.T("network error, please try again later"));
         });
 
         iam.ApiCmd("sys-config/mailer", {
@@ -160,6 +159,7 @@ iamSys.MailerSet = function(name) {
 
 
 iamSys.MailerSetCommit = function() {
+
     var form = $("#iam-sysmgr-mailerset"),
         alert_id = "#iam-sysmgr-mailerset-alert";
     if (!form) {
@@ -193,11 +193,7 @@ iamSys.MailerSetCommit = function() {
                 return l4i.InnerAlert(alert_id, 'alert-danger', data.error.message);
             }
 
-            l4i.InnerAlert(alert_id, 'alert-success', "Successfully updated");
-
-        // window.setTimeout(function(){
-        //     iamSys.GeneralSet();
-        // }, 1000);
+            l4i.InnerAlert(alert_id, 'alert-success', l4i.T("Successfully %s", l4i.T("updated")));
         },
     });
 }

@@ -46,8 +46,9 @@ iamLogin.LoginCommit = function() {
                     return iamLogin.InnerAlert(alertId, 'alert-danger', "Unknown Error");
                 }
 
-                iamLogin.InnerAlert(alertId, 'alert-success', "Successfully Sign-on. Page redirecting ...");
-                // $("#iam-login-input-frame").hide(100);
+                iamLogin.InnerAlert(alertId, 'alert-success',
+                    l4i.T("Successfully %s", l4i.T("Sign in")) + ", " + l4i.T("Page redirecting ..."));
+                    // $("#iam-login-input-frame").hide(100);
 
                 window.setTimeout(function() {
                     window.location = data.redirect_uri;;
@@ -84,7 +85,7 @@ iamLogin.RetrieveCommit = function() {
             }
 
             iamLogin.InnerAlert(alertId, 'alert-success',
-                "The reset URL has been sent to your mailbox, please check your email.");
+                l4i.T("The reset URL has been sent to your mailbox, please check your email"));
             $(".iam-group").hide(200);
         },
         error: function(xhr, textStatus, error) {
@@ -98,7 +99,7 @@ iamLogin.PassResetCommit = function() {
     var alertId = "#iam-reg-passreset-form-alert",
         form = $("#iam-reg-passreset-form");
 
-    iamLogin.InnerAlert(alertId, 'alert-info', "Pending");
+    iamLogin.InnerAlert(alertId, 'alert-info', l4i.T("Pending"));
 
     $.ajax({
         type: "POST",
@@ -115,7 +116,7 @@ iamLogin.PassResetCommit = function() {
                 return iamLogin.InnerAlert(alertId, 'alert-danger', "Unknown Error");
             }
 
-            iamLogin.InnerAlert(alertId, 'alert-success', "Successfully Updated. Page redirecting");
+            iamLogin.InnerAlert(alertId, 'alert-success', l4i.T("Successfully %s", l4i.T("Updated")) + ", " + l4i.T("Page redirecting ..."));
             $(".iam-group").hide(200);
 
             window.setTimeout(function() {
@@ -144,10 +145,11 @@ iamLogin.SignupCommit = function() {
             }
 
             if (data.kind != "User") {
-                return iamLogin.InnerAlert(alertid, 'alert-danger', "Unknown Error");
+                return iamLogin.InnerAlert(alertid, 'alert-danger', l4i.T("Unknown Error"));
             }
 
-            iamLogin.InnerAlert(alertid, 'alert-success', "Successfully registration. Page redirecting");
+            iamLogin.InnerAlert(alertid, 'alert-success',
+                l4i.T("Successfully %s", l4i.T("registration")) + ", " + l4i.T("Page redirecting ..."));
             $(".iam-group").hide(600);
 
             window.setTimeout(function() {

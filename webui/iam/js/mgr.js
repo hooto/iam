@@ -39,7 +39,7 @@ iamMgr.Index = function() {
         });
 
         ep.fail(function(err) {
-            alert("Error: Please try again later");
+            alert(l4i.T("network error, please try again later"));
         });
 
         iam.MgrApiCmd("/user/panel-info", {

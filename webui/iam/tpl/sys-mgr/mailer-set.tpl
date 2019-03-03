@@ -2,7 +2,7 @@
 
   <div id="iam-sysmgr-mailerset-alert" class="alert hide"></div>
 
-  <div class="iam-form-group-title">Email SMTP server settings</div>
+  <div class="iam-form-group-title">{[=l4i.T("%s Settings", l4i.T("SMTP server"))]}</div>
 
   <table id="iam-sysmgr-mailerset" class="iam-formtable">
     <tbody>
@@ -74,7 +74,7 @@
     <tr>
 	  <td></td>
       <td>
-        <button type="submit" class="pure-button pure-button-primary" onclick="iamSys.MailerSetCommit()">Save</button>
+        <button type="submit" class="pure-button pure-button-primary" onclick="iamSys.MailerSetCommit()">{[=l4i.T("Save")]}</button>
       </td>
 	  <td></td>
     </tr>

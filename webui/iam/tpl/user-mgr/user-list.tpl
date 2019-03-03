@@ -5,8 +5,10 @@
 </style>
 
 <div id="iam-usermgr-list-alert" class="hide" style="margin:20px 0;"></div>
+<div class="iam-div-light" id="iam-usermgr-list"></div>
+<div id="iam-usermgr-list-pager"></div>
 
-<div class="iam-div-light">
+<script id="iam-usermgr-list-tpl" type="text/html">
 <table class="table table-hover valign-middle">
   <thead>
     <tr>
@@ -19,12 +21,7 @@
       <th></th>
     </tr>
   </thead>
-  <tbody id="iam-usermgr-list"></tbody>
-</table>
-<div id="iam-usermgr-list-pager"></div>
-</div>
-
-<script id="iam-usermgr-list-tpl" type="text/html">
+  <tbody >
 {[~it.items :v]}
 <tr>
   <td class="iam-monofont">{[=v.name]}</td>
@@ -48,15 +45,17 @@
   <td align="right">
     <button class="pure-button button-small"
       onclick="iamAccMgr.FundNew('{[=v.name]}')">
-      Recharge
+      {[=l4i.T("Recharge")]}
     </button>
     <button class="pure-button button-small"
       onclick="iamUserMgr.UserSetForm('{[=v.name]}')">
-      Setting
+      {[=l4i.T("Settings")]}
     </button>
   </td>
 </tr>
 {[~]}
+</tbody>
+</table>
 </script>
 
 <script id="iam-usermgr-list-pager-tpl" type="text/html">
@@ -85,7 +84,7 @@
 </li>
 <li class="iam-btn iam-btn-primary">
   <a href="#" onclick="iamUserMgr.UserSetForm()">
-     New User
+     {[=l4i.T("New %s", l4i.T("User"))]} 
   </a>
 </li>
 </script>

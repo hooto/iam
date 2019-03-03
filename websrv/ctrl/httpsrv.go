@@ -39,9 +39,5 @@ func NewModule() httpsrv.Module {
 	module.ControllerRegister(new(AppAuth))
 	module.ControllerRegister(new(iamclient.Auth))
 
-	// // TODO auto config
-	// httpsrv.Config.I18n(config.Config.Prefix + "/i18n/en.json")
-	// httpsrv.Config.I18n(config.Config.Prefix + "/i18n/zh_CN.json")
-
 	return module
 }

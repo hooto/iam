@@ -38,7 +38,7 @@
     {[if (v.prepay > 0 && v.payout == 0) {]}
 	<button class="pure-button button-small"
       onclick="iamAccMgr.ChargeSetPayout('{[=v.user]}', '{[=v.id]}')">
-      Close
+      {[=l4i.T("Close")]}
     </button>
 	{[}]}
   </td>

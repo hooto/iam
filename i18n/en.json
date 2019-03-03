@@ -1,22 +1,9 @@
 {
   "locale": "en",
-  "lang": "English",
-  "data": [
+  "items": [
     {
-      "key": "browser-reject-desc",
-      "val": "This Application are not fully supported in this browser/version"
-    },
-    {
-      "key": "browser-reject-advice-desc",
-      "val": "Please download one the following browsers. Install or Upgrade to the latest version"
-    },
-    {
-      "key": "username-format-prompt",
-      "val": "Username must begin with a letter, and between %v and %v characters long"
-    },
-    {
-      "key": "x-is-not-valid",
-      "val": "`%s` is not valid"
+      "key": "msg-no-auth-apps",
+      "val": "No authorized application to access your account yet ..."
     }
   ]
 }

@@ -17,10 +17,12 @@ var iamAccMgr = {
 }
 
 iamAccMgr.Index = function() {
-    iam.TplCmd("acc-mgr/index", {
-        callback: function(err, data) {
+    l4iTemplate.Render({
+        dstid: "com-content",
+        tplurl: iam.TplPath("acc-mgr/index"),
+        data: {},
+        callback: function() {
             iam.OpToolsClean();
-            $("#com-content").html(data);
             l4i.UrlEventClean("iam-module-navbar-menus");
             l4i.UrlEventRegister("acc-mgr/fund-list", iamAccMgr.FundList, "iam-module-navbar-menus");
             l4i.UrlEventRegister("acc-mgr/charge-list", iamAccMgr.ChargeList, "iam-module-navbar-menus");
@@ -79,7 +81,7 @@ iamAccMgr.FundList = function() {
         });
 
         ep.fail(function(err) {
-            alert("Error: Please try again later");
+            alert(l4i.T("network error, please try again later"));
         });
 
         iam.ApiCmd("account-mgr/fund-list", {
@@ -120,12 +122,12 @@ iamAccMgr.FundNew = function(username) {
                 width: 800,
                 height: 600,
                 data: data,
-                title: "Account Recharge",
+                title: l4i.T("Account Recharge"),
                 buttons: [{
-                    title: "Cancel",
+                    title: l4i.T("Cancel"),
                     onclick: "l4iModal.Close()",
                 }, {
-                    title: "Commit",
+                    title: l4i.T("Commit"),
                     onclick: "iamAccMgr.FundNewCommit()",
                     style: "btn btn-primary",
                 }],
@@ -133,7 +135,7 @@ iamAccMgr.FundNew = function(username) {
         });
 
         ep.fail(function(err) {
-            alert("Error: Please try again later");
+            alert(l4i.T("network error, please try again later"));
         });
 
         iam.TplCmd("acc-mgr/fund-new", {
@@ -143,13 +145,14 @@ iamAccMgr.FundNew = function(username) {
 }
 
 iamAccMgr.FundNewCommit = function() {
+
     var form = $("#iam-accmgr-fund-form"),
         alert_id = "#iam-accmgr-fund-alert",
         req = l4i.Clone(iamAccMgr.fund_def);
 
     try {
         if (!form) {
-            throw "Can Not Found FORM";
+            throw l4i.T("%s Not Found", "FORM");
         }
 
         req.user = form.find("input[name=user]").val();
@@ -179,10 +182,11 @@ iamAccMgr.FundNewCommit = function() {
                 if (data.error) {
                     return l4i.InnerAlert(alert_id, 'alert-danger', data.error.message);
                 }
-                return l4i.InnerAlert(alert_id, 'alert-danger', "network error");
+                return l4i.InnerAlert(alert_id, 'alert-danger',
+                    l4i.T("network error, please try again later"));
             }
 
-            l4i.InnerAlert(alert_id, 'alert-success', "Successfully updated");
+            l4i.InnerAlert(alert_id, 'alert-success', l4i.T("Successfully %s", l4i.T("updated")));
 
             window.setTimeout(function() {
                 l4iModal.Close();
@@ -220,12 +224,12 @@ iamAccMgr.FundSet = function(id) {
                 width: 800,
                 height: 500,
                 data: data,
-                title: "Account Fund Edit",
+                title: l4i.T("Change %s", l4i.T("Account Fund")),
                 buttons: [{
-                    title: "Cancel",
+                    title: l4i.T("Cancel"),
                     onclick: "l4iModal.Close()",
                 }, {
-                    title: "Commit",
+                    title: l4i.T("Commit"),
                     onclick: "iamAccMgr.FundSetCommit()",
                     style: "btn btn-primary",
                 }],
@@ -233,7 +237,7 @@ iamAccMgr.FundSet = function(id) {
         });
 
         ep.fail(function(err) {
-            alert("Error: Please try again later");
+            alert(l4i.T("network error, please try again later"));
         });
 
         iam.ApiCmd("account-mgr/fund-entry?id=" + id, {
@@ -254,7 +258,7 @@ iamAccMgr.FundSetCommit = function() {
 
     try {
         if (!form) {
-            throw "Can Not Found FORM";
+            throw l4i.T("%s Not Found", "FORM");
         }
 
         req.id = form.find("input[name=id]").val();
@@ -284,10 +288,11 @@ iamAccMgr.FundSetCommit = function() {
                 if (data.error) {
                     return l4i.InnerAlert(alert_id, 'alert-danger', data.error.message);
                 }
-                return l4i.InnerAlert(alert_id, 'alert-danger', "network error");
+                return l4i.InnerAlert(alert_id, 'alert-danger',
+                    l4i.T("network error, please try again later"));
             }
 
-            l4i.InnerAlert(alert_id, 'alert-success', "Successfully updated");
+            l4i.InnerAlert(alert_id, 'alert-success', l4i.T("Successfully %s", l4i.T("updated")));
 
             window.setTimeout(function() {
                 l4iModal.Close();
@@ -322,6 +327,7 @@ iamAccMgr.ChargeList = function() {
             }
 
             $("#work-content").html(tpl);
+            iam.OpToolsClean();
 
             data._fund_types = l4i.Clone(iamAcc.fund_types);
 
@@ -333,7 +339,7 @@ iamAccMgr.ChargeList = function() {
         });
 
         ep.fail(function(err) {
-            alert("Error: Please try again later");
+            alert(l4i.T("network error, please try again later"));
         });
 
         iam.ApiCmd("account-mgr/charge-list", {
@@ -361,12 +367,12 @@ iamAccMgr.ChargeSetPayout = function(user, id) {
                 width: 800,
                 height: 400,
                 data: data,
-                title: "Account Charge Close",
+                title: l4i.T("Close %s", l4i.T("Account Charge")),
                 buttons: [{
-                    title: "Cancel",
+                    title: l4i.T("Cancel"),
                     onclick: "l4iModal.Close()",
                 }, {
-                    title: "Commit",
+                    title: l4i.T("Commit"),
                     onclick: "iamAccMgr.ChargeSetPayoutCommit()",
                     style: "btn btn-primary",
                 }],
@@ -374,7 +380,7 @@ iamAccMgr.ChargeSetPayout = function(user, id) {
         });
 
         ep.fail(function(err) {
-            alert("Error: Please try again later");
+            alert(l4i.T("network error, please try again later"));
         });
 
         iam.ApiCmd("account-mgr/charge-entry?id=" + id + "&user=" + user, {
@@ -395,7 +401,7 @@ iamAccMgr.ChargeSetPayoutCommit = function() {
 
     try {
         if (!form) {
-            throw "Can Not Found FORM";
+            throw l4i.T("%s Not Found", "FORM");
         }
 
         req.id = form.find("input[name=id]").val();
@@ -419,10 +425,11 @@ iamAccMgr.ChargeSetPayoutCommit = function() {
                 if (data.error) {
                     return l4i.InnerAlert(alert_id, 'alert-danger', data.error.message);
                 }
-                return l4i.InnerAlert(alert_id, 'alert-danger', "network error");
+                return l4i.InnerAlert(alert_id, 'alert-danger',
+                    l4i.T("network error, please try again later"));
             }
 
-            l4i.InnerAlert(alert_id, 'alert-success', "Successfully updated");
+            l4i.InnerAlert(alert_id, 'alert-success', l4i.T("Successfully %s", l4i.T("updated")));
 
             window.setTimeout(function() {
                 l4iModal.Close();

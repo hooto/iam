@@ -4,7 +4,7 @@
 
   <div id="iam-sysmgr-generalset" class="form-horizontal">
 
-  <div class="iam-form-group-title">Service Information</div>
+  <div class="iam-form-group-title">{[=l4i.T("%s Information", l4i.T("Service"))]}</div>
   <table class="iam-formtable">
     <tbody>
     <tr>
@@ -16,7 +16,7 @@
         <div class="iam-callout iam-callout-primary">
           <h4>IAM Service Name</h4>
           <p>
-            Will be used in the website name, e-mail signature ...
+            Will be displayed in the website name, e-mail signature ...
           </p>
         </div>
       </td>
@@ -31,7 +31,7 @@
         <div class="iam-callout iam-callout-primary">
           <h4>Banner Title</h4>
           <p>
-            Will be used in the website banner
+            Will be displayed in the website banner
           </p>
         </div>
       </td>
@@ -39,7 +39,7 @@
     </tbody>
   </table>
 
-  <div class="iam-form-group-title">User Registration Settings</div>
+  <div class="iam-form-group-title">{[=l4i.T("%s Settings", l4i.T("User Registration"))]}</div>
 
   <table class="iam-formtable">
     <tbody>
@@ -56,7 +56,7 @@
         <div class="iam-callout iam-callout-primary">
           <h4>Disable Registration</h4>
           <p>
-            Disable Visitors to register accounts
+            Disable Visitors to create new account
           </p>
         </div>
       </div>
@@ -82,7 +82,7 @@
     </div>
     -->
 
-  <div class="iam-form-group-title">Messages</div>
+  <div class="iam-form-group-title">{[=l4i.T("Messages")]}</div>
 
   <table class="iam-formtable">
     <tbody>
@@ -97,7 +97,7 @@
     <tr>
 	  <td></td>
       <td>
-        <button type="submit" class="pure-button pure-button-primary" onclick="iamSys.GeneralSetCommit()">Save</button>
+        <button type="submit" class="pure-button pure-button-primary" onclick="iamSys.GeneralSetCommit()">{[=l4i.T("Save")]}</button>
       </td>
 	  <td></td>
     </tr>

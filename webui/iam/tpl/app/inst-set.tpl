@@ -14,13 +14,13 @@
 
   <input type="hidden" name="instid" value="{[=it.meta.id]}">
 
-  <label class="iam-form-group-title">Application Information</label>
+  <label class="iam-form-group-title">{[=l4i.T("%s Information", l4i.T("Application"))]}</label>
 
   <table class="iam-formtable">
     <tbody>
     <tr>
       <td width="200px">
-        Name
+        {[=l4i.T("Name")]}
       </td>
       <td>
         <input type="text" class="form-control" name="app_title" value="{[=it.app_title]}">
@@ -29,7 +29,7 @@
 
     <tr>
       <td>
-        Status
+        {[=l4i.T("Status")]}
       </td>
       <td>
         {[~it._statusls :v]}
@@ -41,7 +41,7 @@
     </tr>
 
     <tr>
-      <td>Access URL</td>
+      <td>{[=l4i.T("%s URL", l4i.T("Access"))]}</td>
       <td>
         <input type="text" class="form-control" name="url" value="{[=it.url]}">
       </td>
@@ -50,19 +50,19 @@
   </table>
 
   {[? it.privileges.length > 0]}
-  <label class="iam-form-group-title">Privilege Information</label>
+  <label class="iam-form-group-title">{[=l4i.T("%s Information", l4i.T("Privilege"))]}</label>
 
   <table class="iam-formtable">
     <tbody>
     <tr>
-      <td width="200px">Privileges</td>
+      <td width="200px">{[=l4i.T("Privileges")]}</td>
       <td>
         <table>
         <thead>
           <tr>
-            <th>Privilege</th>
-            <th>Description</th>
-            <th>Roles</th>
+            <th>{[=l4i.T("Privilege")]}</th>
+            <th>{[=l4i.T("Description")]}</th>
+            <th>{[=l4i.T("Roles")]}</th>
           </tr>
         </thead>
         <tbody>

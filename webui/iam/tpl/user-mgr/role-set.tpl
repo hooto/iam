@@ -3,26 +3,26 @@
 <div id="iam-usermgr-roleset" class="form-horizontal">
   <input type="hidden" name="roleid" value="{[=it.id]}">
     
-  <div class="iam-form-group-title">Role Information</div>
+  <div class="iam-form-group-title">{[=l4i.T("%s Information", l4i.T("Role"))]}</div>
 
   <table class="iam-formtable">
     <tbody>
     <tr>
-      <td width="200px">Name</label>
+      <td width="200px">{[=l4i.T("Name")]}</label>
       <td>
         <input type="text" class="form-control" name="name" value="{[=it.name]}">
       </td>
     </tr>
 
     <tr>
-      <td>Description</label>
+      <td>{[=l4i.T("Description")]}</label>
       <td>
         <input type="text" class="form-control" name="desc" value="{[=it.desc]}">
       </td>
     </tr>
 
     <tr>
-      <td>Status</label>
+      <td>{[=l4i.T("Status")]}</label>
       <td>
         {[~it._statusls :v]}
           <span class="iam-form-checkbox">

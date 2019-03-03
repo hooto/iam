@@ -15,6 +15,7 @@
 package ctrl
 
 import (
+	"github.com/hooto/hlang4g/hlang"
 	"github.com/hooto/httpsrv"
 	"github.com/lessos/lessgo/types"
 
@@ -33,30 +34,33 @@ func (c User) PanelInfoAction() {
 	rsp := map[string]interface{}{}
 	//
 	nav := []map[string]string{
-		{"path": "app/index", "title": "Authorized Apps"},
-		{"path": "access-key/index", "title": "Keys"},
-		{"path": "account/index", "title": "Acount"},
+		{"path": "app/index",
+			"title": hlang.StdLangFeed.Translate(c.Request.Locale, "Authorized Apps")},
+		{"path": "access-key/index",
+			"title": hlang.StdLangFeed.Translate(c.Request.Locale, "Keys")},
+		{"path": "account/index",
+			"title": hlang.StdLangFeed.Translate(c.Request.Locale, "Account")},
 	}
 
 	if iamclient.SessionAccessAllowed(c.Session, "user.admin", config.Config.InstanceID) {
 		nav = append(nav, map[string]string{
 			"path":  "user-mgr/index",
-			"title": "Users",
+			"title": hlang.StdLangFeed.Translate(c.Request.Locale, "Users"),
 		})
 		nav = append(nav, map[string]string{
 			"path":  "acc-mgr/index",
-			"title": "Accounts",
+			"title": hlang.StdLangFeed.Translate(c.Request.Locale, "Accounts"),
 		})
 	}
 
 	if iamclient.SessionAccessAllowed(c.Session, "sys.admin", config.Config.InstanceID) {
 		nav = append(nav, map[string]string{
 			"path":  "app-mgr/index",
-			"title": "Apps",
+			"title": hlang.StdLangFeed.Translate(c.Request.Locale, "Apps"),
 		})
 		nav = append(nav, map[string]string{
 			"path":  "sys-mgr/index",
-			"title": "System",
+			"title": hlang.StdLangFeed.Translate(c.Request.Locale, "System"),
 		})
 	}
 

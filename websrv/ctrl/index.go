@@ -49,6 +49,7 @@ func (c Index) IndexAction() {
   <script src="/iam/~/iam/js/main.js?v=` + config.VersionHash + `"></script>
   <script type="text/javascript">
 	iam.version = "` + config.VersionHash + `";
+	iam.lang = "` + c.Request.Locale + `";
     window.onload = iam.Boot();
   </script>
 </head>

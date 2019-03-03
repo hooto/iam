@@ -24,22 +24,19 @@
 </style>
 
 <div class="iam-div-light">
-  <table class="table table-hover valign-middle">
-    <thead>
-      <tr>
-        <th>Access Key</th>
-        <th>Description</th>
-        <th width="35%">Bounds</th>
-        <th>Action</th>
-        <th>Created</th>
-        <th></th>
-      </tr>
-    </thead>
-    <tbody id="iam-aklist"></tbody>
-  </table>
-</div>
 
-<script id="iam-aklist-tpl" type="text/html">
+<table class="table table-hover valign-middle">
+<thead>
+  <tr>
+    <th>Access Key</th>
+    <th>{[=l4i.T("Description")]}</th>
+    <th width="35%">{[=l4i.T("Bound instances")]}</th>
+    <th>Action</th>
+    <th>{[=l4i.T("Created")]}</th>
+    <th></th>
+  </tr>
+</thead>
+<tbody id="iam-aklist">
 {[~it.items :v]}
 <tr>
   <td class="iam-monofont">
@@ -47,6 +44,10 @@
   </td>
   <td>{[=v.desc]}</td>
   <td>
+    <button class="pure-button button-small"
+      onclick="iamAccessKey.Bind('{[=v.access_key]}')">
+	  <span class="fa fa-plus"></span>
+    </button>
     {[~v.bounds :bv]}
     <span class="label label-success boundop">{[=bv.name]} <a href="#" onclick="iamAccessKey.UnBind('{[=v.access_key]}', '{[=bv.name]}')">&times;</a></span>
     {[~]}
@@ -60,25 +61,26 @@
   <td align="right">
     <button class="pure-button button-small"
       onclick="iamAccessKey.Del('{[=v.access_key]}')">
-      Delete
-    </button>
-    <button class="pure-button button-small"
-      onclick="iamAccessKey.Bind('{[=v.access_key]}')">
-      Bind New
+      <span class="fa fa-times-circle"></span>
+      {[=l4i.T("Delete")]}
     </button>
     <button class="pure-button button-small"
       onclick="iamAccessKey.Set('{[=v.access_key]}')">
-      Setting
+      <span class="fa fa-cog"></span>
+      {[=l4i.T("Settings")]}
     </button>
   </td>
 </tr>
 {[~]}
-</script>
+</tbody>
+</table>
+
+</div>
 
 <script type="text/html" id="iam-aklist-optools">
 <li class="iam-btn iam-btn-primary">
   <a href="#" onclick="iamAccessKey.Set()">
-     New Access Key
+     {[=l4i.T("New %s", "Access Key")]}
   </a>
 </li>
 </script>

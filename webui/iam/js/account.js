@@ -11,10 +11,12 @@ var iamAcc = {
 
 iamAcc.Index = function() {
     iam.OpToolActive = null;
-    iam.TplCmd("account/index", {
-        callback: function(err, data) {
+    l4iTemplate.Render({
+        dstid: "com-content",
+        tplurl: iam.TplPath("account/index"),
+        data: {},
+        callback: function() {
             iam.OpToolsClean();
-            $("#com-content").html(data);
             l4i.UrlEventClean("iam-module-navbar-menus");
             l4i.UrlEventRegister("account/fund-list", iamAcc.FundList, "iam-module-navbar-menus");
             l4i.UrlEventRegister("account/charge-list", iamAcc.ChargeList, "iam-module-navbar-menus");
@@ -89,7 +91,7 @@ iamAcc.FundList = function() {
         });
 
         ep.fail(function(err) {
-            alert("Error: Please try again later");
+            alert(l4i.T("network error, please try again later"));
         });
 
         iam.ApiCmd("account/fund-list", {
@@ -138,7 +140,7 @@ iamAcc.ChargeList = function() {
         });
 
         ep.fail(function(err) {
-            alert("Error: Please try again later");
+            alert(l4i.T("network error, please try again later"));
         });
 
         iam.ApiCmd("account/charge-list", {
@@ -180,7 +182,8 @@ iamAcc.PayoutList = function() {
             // iam.OpToolsRefresh("#iam-acc-payoutlist-optools");
             //
             if (data.items.length < 1) {
-                return l4i.InnerAlert(alert_id, 'alert-info', "No Payout Statement Found at this Moment");
+                return l4i.InnerAlert(alert_id, 'alert-info',
+                    l4i.T("No Payout Statement Found at this Moment"));
             }
 
             data._fund_types = l4i.Clone(iamAcc.fund_types);
@@ -193,7 +196,7 @@ iamAcc.PayoutList = function() {
         });
 
         ep.fail(function(err) {
-            alert("Error: Please try again later");
+            alert(l4i.T("network error, please try again later"));
         });
 
         iam.ApiCmd("account/charge-payout-list", {

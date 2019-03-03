@@ -6,33 +6,33 @@
 <div id="iam-resetpass-frame" class="iam-reg-frame">
 <div id="iam-resetpass-box" class="iam-reg-box">
 
-  <div class="iam-reg-msg01">{{T . "Reset your password"}}</div>
+  <div class="iam-reg-msg01">{{T .LANG "Reset your password"}}</div>
 
   <form id="iam-resetpass-form" class="iam-reg-form" action="#retrieve" onsubmit="return false;">
 
     <input type="hidden" name="redirect_token" value="{{.redirect_token}}">
 
     <div id="iam-resetpass-form-alert" class="alert alert-info iam-groups">
-      <p>Enter the username and email address you use to sign in.</p>
-      <p>The System will sent a URL to your email to reset the password.</p>
+      <p>{{T .LANG "Enter the username and email address you use to sign in"}}.</p>
+      <p>{{T .LANG "The System will sent a URL to your email to reset the password"}}.</p>
     </div>
 
     <div class="iam-group">
-      <input type="text" class="iam-input" name="username" placeholder="{{T . "Username"}}">
+      <input type="text" class="iam-input" name="username" placeholder="{{T .LANG "Username"}}">
     </div>
 
     <div class="iam-group">
-      <input type="text" class="iam-input" name="email" placeholder="{{T . "Email"}}">
+      <input type="text" class="iam-input" name="email" placeholder="{{T .LANG "Email"}}">
     </div>
 
     <div class="iam-group">
-      <button type="submit" class="iam-btn" onclick="iamLogin.RetrieveCommit()">{{T . "Next"}}</button>
+      <button type="submit" class="iam-btn" onclick="iamLogin.RetrieveCommit()">{{T .LANG "Next"}}</button>
     </div>
 
   </form>
 
   <div class="ref-action">
-    <a href="/iam/service/login?redirect_token={{.redirect_token}}">Sign in with your Account</a>
+    <a href="/iam/service/login?redirect_token={{.redirect_token}}">{{T .LANG "Sign in with your Account"}}</a>
   </div>
 
   <div class="footer">

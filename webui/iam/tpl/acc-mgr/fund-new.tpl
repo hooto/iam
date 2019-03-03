@@ -12,7 +12,7 @@
     </tr>
 
     <tr>
-      <td>Fund Type</td>
+      <td>{[=l4i.T("Type")]}</td>
       <td>
 	    <select name="type" class="form-control">
         {[~it._fund_types :v]}
@@ -23,28 +23,28 @@
     </tr>
 
     <tr>
-      <td>Ecoin Amount</td>
+      <td>{[=l4i.T("Amount")]}</td>
       <td>
         <input type="text" class="form-control" name="amount" value="">
       </td>
     </tr>
 
     <tr>
-      <td>Product Limits</td>
+      <td>{[=l4i.T("Product Type Limit")]}</td>
       <td>
         <input type="text" class="form-control" name="exp_product_limits" value="sys/pod">
       </td>
     </tr>
 
     <tr>
-      <td>Product Max</td>
+      <td>{[=l4i.T("Product Number Limit")]}</td>
       <td>
-        <input type="text" class="form-control" name="exp_product_max" value="0">
+        <input type="text" class="form-control" name="exp_product_max" value="1">
       </td>
     </tr>
 
     <tr>
-      <td>Comment</td>
+      <td>{[=l4i.T("Comment")]}</td>
       <td>
         <input type="text" class="form-control" name="comment" value="">
       </td>

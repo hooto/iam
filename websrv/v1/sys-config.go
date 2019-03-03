@@ -111,17 +111,14 @@ func (c SysConfig) GeneralSetAction() {
 		}
 
 		if v.Value == "" {
-			if obj := store.Data.KvProgDel(iamapi.DataSysConfigKey(v.Name), nil); !obj.OK() {
-				sets.Error = types.NewErrorMeta("500", "DB ERROR "+obj.Bytex().String())
-				return
-			}
+			store.Data.KvProgDel(iamapi.DataSysConfigKey(v.Name), nil)
 			if v.Name == "service_login_form_alert_msg" {
 				config.Config.ServiceLoginFormAlertMsg = ""
 			}
 		} else {
 
 			if obj := store.Data.KvProgPut(iamapi.DataSysConfigKey(v.Name), skv.NewKvEntry(v.Value), nil); !obj.OK() {
-				sets.Error = types.NewErrorMeta("500", "DB ERROR "+obj.Bytex().String())
+				sets.Error = types.NewErrorMeta("500", "DB ERROR #2 "+obj.Bytex().String())
 				return
 			}
 		}

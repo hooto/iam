@@ -41,10 +41,12 @@ var iamUserMgr = {
 }
 
 iamUserMgr.Index = function() {
-    iam.TplCmd("user-mgr/index", {
-        callback: function(err, data) {
+    l4iTemplate.Render({
+        dstid: "com-content",
+        tplurl: iam.TplPath("user-mgr/index"),
+        data: {},
+        callback: function() {
             iam.OpToolsClean();
-            $("#com-content").html(data);
             l4i.UrlEventClean("iam-module-navbar-menus");
             l4i.UrlEventRegister("user-mgr/user-list", iamUserMgr.UserList, "iam-module-navbar-menus");
             l4i.UrlEventRegister("user-mgr/role-list", iamUserMgr.RoleList, "iam-module-navbar-menus");
@@ -84,14 +86,19 @@ iamUserMgr.UserList = function() {
                 }
             }
 
-            $("#work-content").html(tpl);
-            iam.OpToolsRefresh("#iam-usermgr-list-optools");
-
             l4iTemplate.Render({
-                dstid: "iam-usermgr-list",
-                tplid: "iam-usermgr-list-tpl",
-                data: data,
-                success: function() {
+                dstid: "work-content",
+                tplsrc: tpl,
+                callback: function() {
+
+                    iam.OpToolsRefresh("#iam-usermgr-list-optools");
+
+                    l4iTemplate.Render({
+                        dstid: "iam-usermgr-list",
+                        tplid: "iam-usermgr-list-tpl",
+                        data: data,
+                    });
+
                     l4iTemplate.Render({
                         dstid: "iam-usermgr-list-pager",
                         tplid: "iam-usermgr-list-pager-tpl",
@@ -102,7 +109,7 @@ iamUserMgr.UserList = function() {
         });
 
         ep.fail(function(err) {
-            alert("Error: Please try again later");
+            alert(l4i.T("network error, please try again later"));
         });
 
         iam.ApiCmd("user-mgr/user-list" + uri, {
@@ -133,9 +140,9 @@ iamUserMgr.UserSetForm = function(username) {
             }
 
             if (data._isnew) {
-                data._form_title = "New User";
+                data._form_title = l4i.T("New %s", l4i.T("User"));
             } else {
-                data._form_title = "User Setting";
+                data._form_title = l4i.T("%s Settings", l4i.T("User"));
             }
 
             if (!data.login.display_name) {
@@ -188,10 +195,10 @@ iamUserMgr.UserSetForm = function(username) {
                 data: data,
                 title: data._form_title,
                 buttons: [{
-                    title: "Cancel",
+                    title: l4i.T("Cancel"),
                     onclick: "l4iModal.Close()",
                 }, {
-                    title: "Save",
+                    title: l4i.T("Save"),
                     onclick: "iamUserMgr.UserSetCommit()",
                     style: "btn btn-primary",
                 }],
@@ -199,7 +206,7 @@ iamUserMgr.UserSetForm = function(username) {
         });
 
         ep.fail(function(err) {
-            alert("Error: Please try again later");
+            alert(l4i.T("network error, please try again later"));
         });
 
         if (iamUserMgr.roles) {
@@ -229,7 +236,7 @@ iamUserMgr.UserSetForm = function(username) {
 
 iamUserMgr.UserSetCommit = function() {
     var form = $("#iam-usermgr-userset"),
-        alert_id = "#iam-usermgr-userset-alert",
+        alertId = "#iam-usermgr-userset-alert",
         req = l4i.Clone(iamUserMgr.userEntryDef);
 
     try {
@@ -253,7 +260,7 @@ iamUserMgr.UserSetCommit = function() {
         });
 
     } catch (err) {
-        return l4i.InnerAlert(alert_id, 'alert-danger', err);
+        return l4i.InnerAlert(alertId, 'error', err);
     }
 
     iam.ApiCmd("user-mgr/user-set", {
@@ -262,14 +269,14 @@ iamUserMgr.UserSetCommit = function() {
         callback: function(err, data) {
 
             if (err) {
-                return l4i.InnerAlert(alert_id, 'alert-danger', err);
+                return l4i.InnerAlert(alertId, 'error', err);
             }
 
             if (!data || data.error) {
-                return l4i.InnerAlert(alert_id, 'alert-danger', data.error.message);
+                return l4i.InnerAlert(alertId, 'error', data.error.message);
             }
 
-            l4i.InnerAlert(alert_id, 'alert-success', "Successfully updated");
+            l4i.InnerAlert(alertId, 'ok', l4i.T("Successfully %s", l4i.T("updated")));
 
             window.setTimeout(function() {
                 l4iModal.Close();
@@ -309,7 +316,7 @@ iamUserMgr.RoleList = function() {
         });
 
         ep.fail(function(err) {
-            alert("Error: Please try again later");
+            alert(l4i.T("network error, please try again later"));
         });
 
         iam.ApiCmd("user-mgr/role-list?status=0", {
@@ -332,9 +339,9 @@ iamUserMgr.RoleSet = function(roleid) {
             }
 
             if (data._isnew) {
-                data._form_title = "New Role";
+                data._form_title = l4i.T("New %s", l4i.T("Role"));
             } else {
-                data._form_title = "Role Setting";
+                data._form_title = l4i.T("%s Settings", l4i.T("Role"));
             }
 
             if (!data.desc) {
@@ -350,10 +357,10 @@ iamUserMgr.RoleSet = function(roleid) {
                 data: data,
                 title: data._form_title,
                 buttons: [{
-                    title: "Cancel",
+                    title: l4i.T("Cancel"),
                     onclick: "l4iModal.Close()",
                 }, {
-                    title: "Save",
+                    title: l4i.T("Save"),
                     onclick: "iamUserMgr.RoleSetCommit()",
                     style: "btn btn-primary",
                 }],
@@ -361,7 +368,7 @@ iamUserMgr.RoleSet = function(roleid) {
         });
 
         ep.fail(function(err) {
-            alert("Error: Please try again later");
+            alert(l4i.T("network error, please try again later"));
         });
 
         if (roleid) {
@@ -379,15 +386,15 @@ iamUserMgr.RoleSet = function(roleid) {
 }
 
 iamUserMgr.RoleSetCommit = function() {
-    var form = $("#iam-usermgr-roleset"),
-        alert_id = "#iam-usermgr-roleset-alert";
 
-    var req = {
-        id: parseInt(form.find("input[name=roleid]").val()),
-        name: form.find("input[name=name]").val(),
-        status: parseInt(form.find("input[name=status]:checked").val()),
-        desc: form.find("input[name=desc]").val(),
-    }
+    var form = $("#iam-usermgr-roleset"),
+        alertId = "#iam-usermgr-roleset-alert",
+        req = {
+            id: parseInt(form.find("input[name=roleid]").val()),
+            name: form.find("input[name=name]").val(),
+            status: parseInt(form.find("input[name=status]:checked").val()),
+            desc: form.find("input[name=desc]").val(),
+        };
 
     iam.ApiCmd("user-mgr/role-set", {
         method: "PUT",
@@ -395,14 +402,14 @@ iamUserMgr.RoleSetCommit = function() {
         callback: function(err, data) {
 
             if (err) {
-                return l4i.InnerAlert(alert_id, 'alert-danger', err);
+                return l4i.InnerAlert(alertId, 'error', err);
             }
 
             if (!data || data.error) {
-                return l4i.InnerAlert(alert_id, 'alert-danger', data.error.message);
+                return l4i.InnerAlert(alertId, 'error', data.error.message);
             }
 
-            l4i.InnerAlert(alert_id, 'alert-success', "Successfully updated");
+            l4i.InnerAlert(alertId, 'ok', l4i.T("Successfully %s", l4i.T("updated")));
 
             window.setTimeout(function() {
                 l4iModal.Close();

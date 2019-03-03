@@ -38,7 +38,7 @@
     <button class="pure-button button-small"
       onclick="iamUserMgr.RoleSet('{[=v.id]}')">
 	  <span class="fa fa-cog"></span>
-      Setting
+      {[=l4i.T("Settings")]}
     </button>
   </td>
 </tr>
@@ -48,7 +48,7 @@
 <script type="text/html" id="iam-usermgr-rolelist-optools">
 <li class="iam-btn iam-btn-primary">
   <a href="#" onclick="iamUserMgr.RoleSet()">
-     New Role
+    {[=l4i.T("New %s", l4i.T("Role"))]}
   </a>
 </li>
 </script>

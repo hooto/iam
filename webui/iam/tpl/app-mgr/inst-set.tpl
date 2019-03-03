@@ -14,19 +14,19 @@
 
   <input type="hidden" name="instid" value="{[=it.meta.id]}">
 
-  <div class="iam-form-group-title">Application Information</div>
+  <div class="iam-form-group-title">{[=l4i.T("%s Information", l4i.T("Application"))]}</div>
 
   <table class="iam-formtable">
     <tbody>
     <tr>
-      <td width="200px">Name</td>
+      <td width="200px">{[=l4i.T("Name")]}</td>
       <td>
         <input type="text" class="form-control" name="app_title" value="{[=it.app_title]}">
       </td>
     </tr>
 
     <tr>
-      <td>Status</td>
+      <td>{[=l4i.T("Status")]}</td>
       <td>
         {[~it._statusls :v]}
           <span class="iam-form-checkbox">
@@ -37,7 +37,7 @@
     </tr>
 
     <tr>
-      <td>Access URL</td>
+      <td>{[=l4i.T("%s URL", l4i.T("Access"))]}</td>
       <td>
         <input type="text" class="form-control" name="url" value="{[=it.url]}">
       </td>
@@ -47,11 +47,11 @@
 
 
   {[ if (it.privileges.length > 0) { ]}
-  <div class="iam-form-group-title">Privilege Information</div>
+  <div class="iam-form-group-title">{[=l4i.T("%s Information", l4i.T("Privilege"))]}</div>
   <table class="iam-formtable">
     <tbody>
     <tr>
-      <td width="200px">Privileges</td>
+      <td width="200px">{[=l4i.T("Privileges")]}</td>
       <td>
         <table>
         <thead>

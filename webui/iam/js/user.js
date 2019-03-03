@@ -29,7 +29,7 @@ iamUser.Overview = function() {
         });
 
         ep.fail(function(err) {
-            alert("Error: Please try again later");
+            alert(l4i.T("network error, please try again later"));
         });
 
         iam.ApiCmd("account/user-entry", {
@@ -55,12 +55,13 @@ iamUser.PassSetForm = function() {
                 tplsrc: tpl,
                 width: 800,
                 height: 350,
-                title: "Change Password",
+                data: {},
+                title: l4i.T("Change %s", l4i.T("Password")),
                 buttons: [{
-                    title: "Cancel",
+                    title: l4i.T("Cancel"),
                     onclick: "l4iModal.Close()",
                 }, {
-                    title: "Save",
+                    title: l4i.T("Save"),
                     onclick: "iamUser.PassSetCommit()",
                     style: "btn btn-primary",
                 }],
@@ -79,7 +80,7 @@ iamUser.PassSetCommit = function() {
     };
 
     if (req.new_password != form.find("input[name=passwd_confirm]").val()) {
-        return l4i.InnerAlert(alert_id, 'alert-danger', "Passwords do not match");
+        return l4i.InnerAlert(alert_id, 'alert-danger', l4i.T("Passwords do not match"));
     }
 
     iam.ApiCmd("user/pass-set", {
@@ -95,7 +96,7 @@ iamUser.PassSetCommit = function() {
                 return l4i.InnerAlert(alert_id, 'alert-danger', data.error.message);
             }
 
-            l4i.InnerAlert(alert_id, 'alert-success', "Successfully updated");
+            l4i.InnerAlert(alert_id, 'alert-success', l4i.T("Successfully %s", l4i.T("updated")));
 
             window.setTimeout(function() {
                 l4iModal.Close();
@@ -121,12 +122,12 @@ iamUser.EmailSetForm = function() {
                 },
                 width: 800,
                 height: 350,
-                title: "Change Email",
+                title: l4i.T("Change %s", l4i.T("Email")),
                 buttons: [{
-                    title: "Cancel",
+                    title: l4i.T("Cancel"),
                     onclick: "l4iModal.Close()",
                 }, {
-                    title: "Save",
+                    title: l4i.T("Save"),
                     onclick: "iamUser.EmailSetCommit()",
                     style: "btn btn-primary",
                 }],
@@ -134,7 +135,7 @@ iamUser.EmailSetForm = function() {
         });
 
         ep.fail(function(err) {
-            alert("Error: Please try again later");
+            alert(l4i.T("network error, please try again later"));
         });
 
         iam.ApiCmd("user/profile", {
@@ -169,7 +170,7 @@ iamUser.EmailSetCommit = function() {
                 return l4i.InnerAlert(alert_id, 'alert-danger', data.error.message);
             }
 
-            l4i.InnerAlert(alert_id, 'alert-success', "Successfully updated");
+            l4i.InnerAlert(alert_id, 'alert-success', l4i.T("Successfully %s", l4i.T("updated")));
 
             window.setTimeout(function() {
                 l4iModal.Close();
@@ -202,12 +203,12 @@ iamUser.ProfileSetForm = function() {
                 data: data,
                 width: 800,
                 height: 400,
-                title: "Change Profile",
+                title: l4i.T("Change %s", l4i.T("Profile")),
                 buttons: [{
-                    title: "Cancel",
+                    title: l4i.T("Cancel"),
                     onclick: "l4iModal.Close()",
                 }, {
-                    title: "Save",
+                    title: l4i.T("Save"),
                     onclick: "iamUser.ProfileSetCommit()",
                     style: "btn btn-primary",
                 }],
@@ -215,7 +216,7 @@ iamUser.ProfileSetForm = function() {
         });
 
         ep.fail(function(err) {
-            alert("Error: Please try again later");
+            alert(l4i.T("network error, please try again later"));
         });
 
         iam.ApiCmd("user/profile", {
@@ -253,7 +254,7 @@ iamUser.ProfileSetCommit = function() {
                 return l4i.InnerAlert(alert_id, 'alert-danger', data.error.message);
             }
 
-            l4i.InnerAlert(alert_id, 'alert-success', "Successfully updated");
+            l4i.InnerAlert(alert_id, 'alert-success', l4i.T("Successfully %s", l4i.T("updated")));
 
             window.setTimeout(function() {
                 l4iModal.Close();
@@ -275,12 +276,12 @@ iamUser.PhotoSetForm = function(username) {
                 data: {
                     username: username
                 },
-                title: "Change Photo",
+                title: l4i.T("Change %s", l4i.T("Photo")),
                 buttons: [{
-                    title: "Cancel",
+                    title: l4i.T("Cancel"),
                     onclick: "l4iModal.Close()",
                 }, {
-                    title: "Save",
+                    title: l4i.T("Save"),
                     onclick: "iamUser.PhotoSetCommit()",
                     style: "btn btn-primary",
                 }],
@@ -290,6 +291,7 @@ iamUser.PhotoSetForm = function(username) {
 }
 
 iamUser.PhotoSetCommit = function() {
+
     var files = document.getElementById('iam-user-photo-set-file').files,
         alert_id = "#iam-user-photo-set-alert";
 
@@ -300,7 +302,7 @@ iamUser.PhotoSetCommit = function() {
     for (var i = 0, file; file = files[i]; ++i) {
 
         if (file.size > 2 * 1024 * 1024) {
-            return l4i.InnerAlert("iam-user-photo-set-alert", 'alert-danger', 'The file is too large to upload');
+            return l4i.InnerAlert(alert_id, 'alert-danger', 'The file is too large to upload');
         }
 
         var reader = new FileReader();
@@ -330,7 +332,7 @@ iamUser.PhotoSetCommit = function() {
                             return l4i.InnerAlert(alert_id, 'alert-danger', data.error.message);
                         }
 
-                        l4i.InnerAlert(alert_id, 'alert-success', "Successfully updated");
+                        l4i.InnerAlert(alert_id, 'alert-success', l4i.T("Successfully %s", l4i.T("updated")));
 
                         window.setTimeout(function() {
                             l4iModal.Close();

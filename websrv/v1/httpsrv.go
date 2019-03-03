@@ -15,7 +15,9 @@
 package v1
 
 import (
+	"github.com/hooto/hlang4g/hlang"
 	"github.com/hooto/httpsrv"
+	"github.com/hooto/iam/config"
 )
 
 func NewModule() httpsrv.Module {
@@ -37,6 +39,14 @@ func NewModule() httpsrv.Module {
 	module.ControllerRegister(new(AppMgr))
 	module.ControllerRegister(new(AccountMgr))
 	module.ControllerRegister(new(SysConfig))
+
+	// TODO auto config
+	hlang.StdLangFeed.LoadMessages(config.Prefix+"/i18n/en.json", true)
+	hlang.StdLangFeed.LoadMessages(config.Prefix+"/i18n/zh-CN.json", true)
+
+	if hlang.StdLangFeed.Init() {
+		module.ControllerRegister(new(hlang.Langsrv))
+	}
 
 	return module
 }

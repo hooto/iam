@@ -13,6 +13,7 @@
         <th>ID</th>
         <th>App ID</th>
         <th>App Name</th>
+        <th>User</th>
         <th>Version</th>
         <th>Status</th>
         <th>Created</th>
@@ -32,6 +33,7 @@
   <td class="iam-monofont">{[=v.meta.id]}</td>
   <td>{[=v.app_id]}</td>
   <td>{[=v.app_title]}</td>
+  <td>{[=v.meta.user]}</td>
   <td>{[=v.version]}</td>
   <td>
     {[~it._statusls :sv]}
@@ -44,7 +46,7 @@
     <button class="pure-button button-small"
       onclick="iamAppMgr.InstSetForm('{[=v.meta.id]}')">
       <span class="fa fa-cog"></span>
-      Setting
+      {[=l4i.T("Settings")]}
     </button>
   </td>
 </tr>

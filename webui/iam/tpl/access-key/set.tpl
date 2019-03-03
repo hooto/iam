@@ -11,13 +11,13 @@
 <table id="iam-ak-set" class="iam-formtable valign-middle">
   <input type="hidden" name="access_key" value="{[=it.access_key]}">
   <tr>
-    <td width="200px">Description</td>
+    <td width="200px">{[=l4i.T("Description")]}</td>
     <td>
       <input name="desc" type="text" class="form-control" value="{[=it.desc]}">
     </td>
   </tr>
   <tr>
-    <td>Action</td>
+    <td>{[=l4i.T("Action")]}</td>
     <td>
       {[~it._actionls :v]}
         <span class="iam-form-checkbox">
