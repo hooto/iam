@@ -26,7 +26,7 @@ iam.Boot = function() {
     });
 
     seajs.use([
-        "~/twbs/css/bootstrap.css",
+        "~/bs/4/css/bootstrap.css",
         "~/jquery/jquery.js",
         "~/lessui/js/browser-detect.js",
     ], function() {
@@ -47,11 +47,12 @@ iam.Boot = function() {
             "~/lessui/js/lessui.js",
             "~/lessui/css/lessui.css",
             "~/purecss/css/pure.css",
+            "~/fa/css/fa.css",
         ], function() {
 
             seajs.use([
                 "~/iam/css/main.css" + iam.debug_uri(),
-                "~/twbs/js/bootstrap.js",
+                // "~/bs/4/js/bootstrap.js",
                 "~/iam/js/mgr.js" + iam.debug_uri(),
                 "~/iam/js/user.js" + iam.debug_uri(),
                 "~/iam/js/app.js" + iam.debug_uri(),

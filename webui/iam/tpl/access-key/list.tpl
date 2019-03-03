@@ -24,13 +24,13 @@
 </style>
 
 <div class="iam-div-light">
-  <table class="table table-hover">
+  <table class="table table-hover valign-middle">
     <thead>
       <tr>
         <th>Access Key</th>
         <th>Description</th>
-        <th>Action</th>
         <th width="35%">Bounds</th>
+        <th>Action</th>
         <th>Created</th>
         <th></th>
       </tr>
@@ -47,26 +47,26 @@
   </td>
   <td>{[=v.desc]}</td>
   <td>
-    {[~it._actionls :sv]}
-    {[ if (v.action == sv.action) { ]}{[=sv.title]}{[ } ]}
-    {[~]}
-  </td>
-  <td>
     {[~v.bounds :bv]}
     <span class="label label-success boundop">{[=bv.name]} <a href="#" onclick="iamAccessKey.UnBind('{[=v.access_key]}', '{[=bv.name]}')">&times;</a></span>
     {[~]}
   </td>
+  <td>
+    {[~it._actionls :sv]}
+    {[ if (v.action == sv.action) { ]}{[=sv.title]}{[ } ]}
+    {[~]}
+  </td>
   <td>{[=l4i.MetaTimeParseFormat(v.created, "Y-m-d")]}</td>
   <td align="right">
-    <button class="pure-button button-xsmall"
-      onclick="iamAccessKey.Bind('{[=v.access_key]}')">
-      Bind New
-    </button>
-    <button class="pure-button button-xsmall"
+    <button class="pure-button button-small"
       onclick="iamAccessKey.Del('{[=v.access_key]}')">
       Delete
     </button>
-    <button class="pure-button button-xsmall"
+    <button class="pure-button button-small"
+      onclick="iamAccessKey.Bind('{[=v.access_key]}')">
+      Bind New
+    </button>
+    <button class="pure-button button-small"
       onclick="iamAccessKey.Set('{[=v.access_key]}')">
       Setting
     </button>

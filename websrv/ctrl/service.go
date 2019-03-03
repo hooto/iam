@@ -56,6 +56,8 @@ func (c Service) LoginAction() {
 	if config.Config.ServiceLoginFormAlertMsg != "" {
 		c.Data["alert_msg"] = config.Config.ServiceLoginFormAlertMsg
 	}
+
+	c.Data["sys_version_hash"] = config.VersionHash
 }
 
 func (c Service) SignOutAction() {

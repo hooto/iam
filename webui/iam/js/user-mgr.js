@@ -184,7 +184,7 @@ iamUserMgr.UserSetForm = function(username) {
             l4iModal.Open({
                 tplsrc: tpl,
                 width: 800,
-                height: 600,
+                height: 800,
                 data: data,
                 title: data._form_title,
                 buttons: [{
@@ -345,7 +345,7 @@ iamUserMgr.RoleSet = function(roleid) {
 
             l4iModal.Open({
                 tplsrc: tpl,
-                width: 600,
+                width: 800,
                 height: 400,
                 data: data,
                 title: data._form_title,

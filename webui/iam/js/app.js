@@ -122,14 +122,14 @@ iamApp.InstSetForm = function(instid) {
 
             l4iModal.Open({
                 tplsrc: tpl,
-                width: 900,
+                width: 1000,
                 height: 600,
                 data: data,
                 title: "App Instance Setting",
                 buttons: [{
                     title: "Delete",
                     onclick: "iamApp.InstDelCommit()",
-                    style: "pull-left",
+                    style: "pull-left btn btn-danger",
                 }, {
                     title: "Cancel",
                     onclick: "l4iModal.Close()",

@@ -5,7 +5,7 @@
 </style>
 
 <div class="iam-div-light">
-  <table class="table table-hover">
+  <table class="table table-hover valign-middle">
     <thead>
       <tr>
         <th>ID</th>
@@ -35,8 +35,9 @@
   <td>{[=l4i.MetaTimeParseFormat(v.created, "Y-m-d")]}</td>
   <td>{[=l4i.MetaTimeParseFormat(v.updated, "Y-m-d")]}</td>
   <td align="right">
-    <button class="pure-button button-xsmall"
+    <button class="pure-button button-small"
       onclick="iamUserMgr.RoleSet('{[=v.id]}')">
+	  <span class="fa fa-cog"></span>
       Setting
     </button>
   </td>

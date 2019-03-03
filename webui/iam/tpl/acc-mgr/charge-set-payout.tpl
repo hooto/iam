@@ -1,38 +1,31 @@
-<style>
-.form-horizontal {
-  margin: 0 15px;
-  padding: 2px;
-}
-.form-group {
-  margin-bottom: 5px;
-}
-</style>
-
-
 <div id="iam-accmgr-chargeset-payout-alert" class="alert hide"></div>
 
-<div id="iam-accmgr-chargeset-payout-form" class="form-horizontal">
-    <input type="hidden" name="id" value="{[=it.id]}">
-    <input type="hidden" name="user" value="{[=it.user]}">
+<div id="iam-accmgr-chargeset-payout-form">
+  <input type="hidden" name="id" value="{[=it.id]}">
+  <input type="hidden" name="user" value="{[=it.user]}">
 
-    <div class="form-group">
-      <label class="col-sm-3 control-label">Charge</label>
-      <div class="col-sm-9">
+  <table class="iam-formtable">
+    <tbody>
+    <tr>
+      <td>Charge</td>
+      <td>
 	     {[=it.id]}
-      </div>
-    </div>
+      </td>
+    </tr>
 
-    <div class="form-group">
-      <label class="col-sm-3 control-label">Product</label>
-      <div class="col-sm-9">
+    <tr>
+      <td>Product</td>
+      <td>
 	     {[=it.product]}
-      </div>
-    </div>
+      </td>
+    </tr>
 
-    <div class="form-group">
-      <label class="col-sm-3 control-label">Payout</label>
-      <div class="col-sm-9">
+    <tr>
+      <td>Payout</td>
+      <td>
         <input type="text" class="form-control input-sm" name="payout" value="{[=it.prepay]}">
-      </div>
-    </div>
+      </td>
+    </tr>
+    </tbody>
+  </table>
 </div>

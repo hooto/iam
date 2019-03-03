@@ -4,7 +4,8 @@
   <meta charset="utf-8">
   <title>IAM Service</title>
   <script src="/iam/~/zepto/zepto.js"></script>
-  <link rel="stylesheet" href="/iam/~/iam/css/reg.css" type="text/css">
+  <script src="/iam/~/iam/js/login.js?v={{.sys_version_hash}}"></script>
+  <link rel="stylesheet" href="/iam/~/iam/css/reg.css?v={{.sys_version_hash}}" type="text/css">
   <link rel="shortcut icon" href="/iam/~/iam/img/iam-s2-32.png" type="image/x-icon">
 </head>
 <body>
@@ -14,7 +15,7 @@
 
   <div class="iam-reg-msg01">{{T . "Sign in with your Account"}}</div>
 
-  <form id="iam-login-form" class="iam-reg-form" onsubmit="iamLoginCommit();return false;">
+  <form id="iam-login-form" class="iam-reg-form" onsubmit="return false;">
 
     <input type="hidden" name="redirect_token" value="{{.redirect_token}}">
 
@@ -32,7 +33,7 @@
       </div>
 
       <div class="iam-input-row">
-        <button type="submit" class="iam-btn iam-form-item" onclick="iamLoginCommit()">{{T . "Sign in"}}</button>
+        <button type="submit" class="iam-btn iam-form-item" onclick="iamLogin.LoginCommit()">{{T . "Sign in"}}</button>
       </div>
 
       <div>
@@ -59,67 +60,9 @@
 </div>
 
 <script type="text/javascript">
-function innerAlert (alertid, typeUI, msg, fadeTime) {
-	if (!fadeTime) {
-		fadeTime = 200;
-	}
-    if (!typeUI) {
-        return $(alertid).fadeOut(fadeTime);
-    }
-    var elem = $(alertid);
-    if (elem) {
-        elem.removeClass().addClass("alert " + typeUI).html(msg);
-        elem.fadeOut(fadeTime, function() {
-             elem.fadeIn(fadeTime);
-        });
-    }
-}
-
-function iamLoginCommit() {
-    event.preventDefault();
-    var alertid = "#iam-login-form-alert";
-    var formData = $("#iam-login-form").serialize();
-
-	$(".iam-form-item").attr("disabled", "disabled");
-    innerAlert(alertid, 'alert-info', "pending ...", 100);
-    setTimeout(function() {
-        $.ajax({
-            type    : "POST",
-            url     : "/iam/v1/service/login-auth",
-            data    : formData,
-            timeout : 10000,
-            success : function(data) {
-    
-                if (data.error) {
-    	            $(".iam-form-item").removeAttr("disabled");
-                    document.getElementById("iam-login-form-pwd").focus();
-                    return innerAlert(alertid, 'alert-danger', data.error.message);
-                }
-    
-                if (data.kind != "ServiceLoginAuth") {
-    	            $(".iam-form-item").removeAttr("disabled");
-                    return innerAlert(alertid, 'alert-danger', "Unknown Error");
-                }
-    
-                innerAlert(alertid, 'alert-success', "Successfully Sign-on. Page redirecting ...");
-                // $("#iam-login-input-frame").hide(100);
-    
-                window.setTimeout(function(){
-                    window.location = data.redirect_uri;;
-                }, 1500);
-            },
-            error: function(xhr, textStatus, error) {
-    	        $(".iam-form-item").removeAttr("disabled");
-                innerAlert(alertid, 'alert-danger', '{{T . "Internal Server Error"}}');
-            }
-        });
-    }, 300);
-}
-
 setTimeout(function() {
     document.getElementById("iam-login-form-username").focus();
 }, 200);
-
 </script>
 </body>
 </html>

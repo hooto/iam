@@ -32,7 +32,8 @@ iamAppMgr.Index = function() {
 }
 
 iamAppMgr.InstList = function() {
-    var uri = "";
+    var uri = "",
+        alertId = "#iam-appmgr-instls-alert";
     if (document.getElementById("iam_appmgr_instls_qry_text")) {
         var qt = $("#iam_appmgr_instls_qry_text").val();
         if (qt && qt.length > 0) {
@@ -44,8 +45,10 @@ iamAppMgr.InstList = function() {
 
         var ep = EventProxy.create('tpl', 'data', function(tpl, data) {
 
+            $("#work-content").html(tpl);
+
             if (!data || !data.items) {
-                return;
+                return l4i.InnerAlert(alertId, 'info', "No Items Yet ...");
             }
 
             data._statusls = iamUserMgr.statusls;
@@ -67,21 +70,12 @@ iamAppMgr.InstList = function() {
                 data.items[i]._privilegeNumber = data.items[i].privileges.length;
             }
 
-            $("#work-content").html(tpl);
             iam.OpToolsRefresh("#iam-appmgr-instls-optools");
 
             l4iTemplate.Render({
                 dstid: "iam-appmgr-instls",
                 tplid: "iam-appmgr-instls-tpl",
                 data: data,
-                success: function() {
-                    // TODO
-                    // l4iTemplate.Render({
-                    //     dstid  : "iam-appmgr-instls-pager",
-                    //     tplid  : "iam-appmgr-instls-pager-tpl",
-                    //     data   : l4i.Pager(data.meta),
-                    // });
-                },
             });
         });
 
@@ -128,14 +122,14 @@ iamAppMgr.InstSetForm = function(instid) {
 
             l4iModal.Open({
                 tplsrc: tpl,
-                width: 900,
+                width: 1000,
                 height: 600,
                 data: data,
                 title: "App Instance Setting",
                 buttons: [{
                     title: "Delete",
                     onclick: "iamAppMgr.InstDelCommit()",
-                    style: "pull-left",
+                    style: "btn btn-outline-danger",
                 }, {
                     title: "Cancel",
                     onclick: "l4iModal.Close()",

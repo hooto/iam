@@ -1,7 +1,6 @@
 body {
-  min-width: 980px;
-  /*background-color: #f9f9f9;*/
-  background-color: #eee;
+  min-width: 1100px;
+  background-color: #f5f5f5;
   padding: 0 10px;
 }
 
@@ -152,6 +151,10 @@ body {
   margin-left: 0;
 }
 
+.iam-nav>li>img {
+  display: block;
+}
+
 .iam-nav>li>a {
   padding: 0 10px;
   display: block;
@@ -181,6 +184,22 @@ body {
   font-weight: bold;
 }
 
+#work-content table {
+  margin-bottom: 0;
+}
+
+#work-content table th,
+#work-content table td {}
+
+#work-content table.valign-middle td,
+#work-content table.valign-middle th {
+  vertical-align: middle !important;
+}
+
+#l4i-modal table.valign-middle td,
+#l4i-modal table.valign-middle th {
+  vertical-align: middle !important;
+}
 
 #iam-module-navbar {
   clear: both;
@@ -493,3 +512,87 @@ button {
   color: #fff !important;
   background-color: rgb(0, 120, 231);
 }
+
+.iam-formtable,
+.iam-formtable table {
+  width: 100%;
+}
+
+.iam-formtable table.valign-middle td,
+.iam-formtable table.valign-middle th {
+  vertical-align: middle !important;
+}
+
+.iam-formtable-row-line,
+.iam-formtable-tr-line {
+  border-bottom: 1px solid rgba(0, 0, 0, 0.1) !important;
+}
+
+.iam-formtable-tr-line:last-child {
+  border-bottom: 0 !important;
+}
+
+.iam-formtable>tbody>tr {
+  border-bottom: 1px solid rgba(0, 0, 0, 0.1);
+}
+
+.iam-formtable>tbody>tr:last-child {
+  border-bottom: 0;
+}
+
+
+.iam-formtable>tbody>tr>td {
+  padding: 10px 20px 10px 0;
+  _vertical-align: top;
+}
+
+.iam-formtable>tbody>tr>td:last-child {
+  padding-right: 0;
+}
+
+.iam-formtable.iam-formtable-title-right>tbody>tr>td:first-child {
+  text-align: right;
+}
+
+.iam-formtable>tbody>tr>td:first-child {
+  font-weight: bold;
+}
+
+.iam-formtable tbody>tr.hover:hover {
+  cursor: pointer;
+  background-color: rgba(0, 0, 0, 0.05);
+}
+
+.iam-formtable table td,
+.iam-formtable table th {
+  padding: 2px 30px 2px 0;
+}
+
+.iam-formtable table td:last-child,
+.iam-formtable table th:last-child {
+  padding-right: 0 !important;
+}
+
+.iam-formtable-space-x0050 td,
+.iam-formtable-space-x0050 th {
+  padding: 0.50rem 1.00rem 0.50rem 0 !important;
+}
+
+.iam-formtable-space-x0100 td,
+.iam-formtable-space-x0100 th {
+  padding: 1.00rem 2.00rem 1.00rem 0 !important;
+}
+
+.iam-formtable .input-group {
+  margin-bottom: 0 !important;
+}
+
+
+.hide {
+  display: none;
+}
+
+.btn-default {
+  background-color: buttonface !important; 
+}
+

@@ -1,47 +1,40 @@
-<style>
-.form-horizontal {
-  margin: 0 15px;
-  padding: 2px;
-}
-.form-group {
-  margin-bottom: 5px;
-}
-</style>
-
 <div id="iam-accmgr-fund-alert" class="alert hide"></div>
 
 <div id="iam-accmgr-fund-form" class="form-horizontal">
-    <input type="hidden" name="id" value="{[=it.id]}">
-
-    <div class="form-group">
-      <label class="col-sm-3 control-label">Fund Type</label>
-      <div class="col-sm-9">
+  <input type="hidden" name="id" value="{[=it.id]}">
+  <table class="iam-formtable">
+    <tbody>
+    <tr>
+      <td width="200px">Fund Type</td>
+      <td>
 	    <select name="type" class="form-control">
         {[~it._fund_types :v]}
           <option value="{[=v.value]}" {[ if (it.type) { ]}selected{[ } ]}> {[=v.name]}
         {[~]}
 		</select>
-      </div>
-    </div>
+      </td>
+    </tr>
 
-    <div class="form-group">
-      <label class="col-sm-3 control-label">Product Limits</label>
-      <div class="col-sm-9">
+    <tr>
+      <td>Product Limits</td>
+      <td>
         <input type="text" class="form-control input-sm" name="exp_product_limits" value="{[=it.exp_product_limits]}">
-      </div>
-    </div>
+      </td>
+    </tr>
 
-    <div class="form-group">
-      <label class="col-sm-3 control-label">Product Max</label>
-      <div class="col-sm-9">
+    <tr>
+      <td>Product Max</td>
+      <td>
         <input type="text" class="form-control input-sm" name="exp_product_max" value="{[=it.exp_product_max]}">
-      </div>
-    </div>
+      </td>
+    </tr>
 
-    <div class="form-group">
-      <label class="col-sm-3 control-label">Comment</label>
-      <div class="col-sm-9">
+    <tr>
+      <td>Comment</td>
+      <td>
         <input type="text" class="form-control input-sm" name="comment" value="{[=it.comment]}">
-      </div>
-    </div>
+      </td>
+    </tr>
+    </tbody>
+  </table>
 </div>

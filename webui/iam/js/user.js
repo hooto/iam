@@ -53,7 +53,7 @@ iamUser.PassSetForm = function() {
 
             l4iModal.Open({
                 tplsrc: tpl,
-                width: 500,
+                width: 800,
                 height: 350,
                 title: "Change Password",
                 buttons: [{
@@ -119,7 +119,7 @@ iamUser.EmailSetForm = function() {
                 data: {
                     email: data.login.email,
                 },
-                width: 500,
+                width: 800,
                 height: 350,
                 title: "Change Email",
                 buttons: [{
@@ -200,7 +200,7 @@ iamUser.ProfileSetForm = function() {
             l4iModal.Open({
                 tplsrc: tpl,
                 data: data,
-                width: 600,
+                width: 800,
                 height: 400,
                 title: "Change Profile",
                 buttons: [{
@@ -270,7 +270,7 @@ iamUser.PhotoSetForm = function(username) {
 
             l4iModal.Open({
                 tplsrc: tpl,
-                width: 600,
+                width: 800,
                 height: 400,
                 data: {
                     username: username

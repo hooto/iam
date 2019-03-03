@@ -12,42 +12,48 @@
 
 <div id="iam-appmgr-instset" class="form-horizontal" action="#">
 
-    <input type="hidden" name="instid" value="{[=it.meta.id]}">
+  <input type="hidden" name="instid" value="{[=it.meta.id]}">
 
-    <label class="iam-form-group-title">Application Information</label>
+  <div class="iam-form-group-title">Application Information</div>
 
-    <div class="form-group">
-      <label class="col-sm-2 control-label">Name</label>
-      <div class="col-sm-10">
+  <table class="iam-formtable">
+    <tbody>
+    <tr>
+      <td width="200px">Name</td>
+      <td>
         <input type="text" class="form-control" name="app_title" value="{[=it.app_title]}">
-      </div>
-    </div>
+      </td>
+    </tr>
 
-    <div class="form-group">
-      <label class="col-sm-2 control-label">Status</label>
-      <div class="col-sm-10">
+    <tr>
+      <td>Status</td>
+      <td>
         {[~it._statusls :v]}
           <span class="iam-form-checkbox">
             <input type="radio" name="status" value="{[=v.status]}" {[ if (v.status == it.status) { ]}checked="checked"{[ } ]}> {[=v.title]}
           </span>
         {[~]}
-      </div>
-    </div>
+      </td>
+    </tr>
 
-    <div class="form-group">
-      <label class="col-sm-2 control-label">Access URL</label>
-      <div class="col-sm-10">
+    <tr>
+      <td>Access URL</td>
+      <td>
         <input type="text" class="form-control" name="url" value="{[=it.url]}">
-      </div>
-    </div>
+      </td>
+    </tr>
+    </tbody>
+  </table>
 
-    {[ if (it.privileges.length > 0) { ]}
-    <label class="iam-form-group-title">Privilege Information</label>
 
-    <div class="form-group">
-      <label class="col-sm-2 control-label">Privileges</label>
-      <div class="col-sm-10">
-        <table class="table">
+  {[ if (it.privileges.length > 0) { ]}
+  <div class="iam-form-group-title">Privilege Information</div>
+  <table class="iam-formtable">
+    <tbody>
+    <tr>
+      <td width="200px">Privileges</td>
+      <td>
+        <table>
         <thead>
           <tr>
             <th>Privilege</th>
@@ -78,9 +84,11 @@
           {[~]}
         </tbody>
         </table>
-      </div>
-    </div>
-    {[ } ]}
+      </td>
+    </tr>
+    </tbody>
+  </table>
+  {[ } ]}
 
 </div>
 

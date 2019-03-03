@@ -1,31 +1,25 @@
-<style type="text/css">
-.iam-akinfo td {
-    padding: 5px 0;
-    vertical-align: top;
-}
-</style>
-
-<table width="100%" class="iam-akinfo">
+<table class="iam-formtable valign-middle">
+<tbody>
   <tr>
-    <td width="120px"><strong>Access Key</strong></td>
+    <td width="200px">Access Key</td>
     <td class="iam-monofont">
       {[=it.access_key]}
     </td>
   </tr>
   <tr>
-    <td><strong>Secret Key</strong></td>
+    <td>Secret Key</td>
     <td class="iam-monofont">
       {[=it.secret_key]}
     </td>
   </tr>
   <tr>
-    <td><strong>Description</strong></td>
+    <td>Description</td>
     <td>
       {[=it.desc]}
     </td>
   </tr>
   <tr>
-    <td><strong>Action</strong></td>
+    <td>Action</td>
     <td>
       {[~it._actionls :v]}
       {[if (it.action == v.action) {]}{[=v.title]}{[}]}
@@ -33,12 +27,13 @@
     </td>
   </tr>
   <tr>
-    <td><strong>Bounds</strong></td>
+    <td>Bounds</td>
     <td class="iam-monofont">
       {[~it.bounds :bv]}
       <div style="padding-bottom:5px;">{[=bv.name]}</div>
       {[~]}
     </td>
   </tr>
+</tbody>
 </table>
 

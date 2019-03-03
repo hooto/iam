@@ -55,7 +55,7 @@ func (c AccountCharge) PreValidAction() {
 		rs.Decode(&ak)
 	}
 	if ak.AccessKey == "" || ak.AccessKey != auth_token.AccessKey {
-		set.Error = types.NewErrorMeta(iamapi.ErrCodeUnauthorized, "No Auth Found, AK "+ak.AccessKey)
+		set.Error = types.NewErrorMeta(iamapi.ErrCodeUnauthorized, "No Auth Found, AK "+auth_token.AccessKey)
 		return
 	}
 	if terr := auth_token.Valid(ak, c.Request.RawBody); terr != nil {
@@ -145,7 +145,7 @@ func (c AccountCharge) PrepayAction() {
 		rs.Decode(&ak)
 	}
 	if ak.AccessKey == "" || ak.AccessKey != auth_token.AccessKey {
-		set.Error = types.NewErrorMeta(iamapi.ErrCodeUnauthorized, "No Auth Found, AK "+ak.AccessKey)
+		set.Error = types.NewErrorMeta(iamapi.ErrCodeUnauthorized, "No Auth Found, AK "+auth_token.AccessKey)
 		return
 	}
 	if terr := auth_token.Valid(ak, c.Request.RawBody); terr != nil {
@@ -307,7 +307,7 @@ func (c AccountCharge) PayoutAction() {
 		rs.Decode(&ak)
 	}
 	if ak.AccessKey == "" || ak.AccessKey != auth_token.AccessKey {
-		set.Error = types.NewErrorMeta(iamapi.ErrCodeUnauthorized, "No Auth Found, AK "+ak.AccessKey)
+		set.Error = types.NewErrorMeta(iamapi.ErrCodeUnauthorized, "No Auth Found, AK "+auth_token.AccessKey)
 		return
 	}
 

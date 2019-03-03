@@ -10,9 +10,10 @@
   <div class="iam-reg-msg01">{{T . "Reset your Password"}}</div>
 
   {{if .pass_reset_id}}
-  <form id="iam-reg-passreset-form"  class="iam-reg-form" action="#forgot-pass">
+  <form id="iam-reg-passreset-form"  class="iam-reg-form" onsubmit="return false;">
 
     <input type="hidden" name="id" value="{{.pass_reset_id}}">
+    <input type="hidden" name="redirect_token" value="{{.redirect_token}}">
     <div class="iam-key alert alert-dark">{{.pass_reset_id}}</div>
 
     <div id="iam-reg-passreset-form-alert" class="alert hide"></div>
@@ -30,7 +31,7 @@
     </div>    
 
     <div class="iam-group">
-      <button type="submit" class="iam-btn">{{T . "Next"}}</button>
+      <button type="submit" class="iam-btn" onclick="iamLogin.PassResetCommit()">{{T . "Next"}}</button>
     </div>
 
   </form>
@@ -52,56 +53,9 @@
 
 
 <script>
-function innerAlert (alertid, type_ui, msg) {
-    if (!type_ui) {
-        return $(alertid).fadeOut(200);
-    }
-    var elem = $(alertid);
-    if (elem) {
-        elem.removeClass().addClass("alert " + type_ui).html(msg);
-        elem.fadeOut(200, function() {
-             elem.fadeIn(200);
-        });
-    }
-}
-
-$("input[name=email]").focus();
-
-//
-$("#iam-reg-passreset-form").submit(function(event) {
-
-    event.preventDefault();
-
-    innerAlert("#iam-reg-passreset-form-alert", 'alert-info', "Pending");
-
-    $.ajax({
-        type    : "POST",
-        url     : "/iam/reg/pass-reset-put",
-        data    : $("#iam-reg-passreset-form").serialize(),
-        timeout : 3000,
-        success : function(data) {
-
-            if (data.error) {
-                return innerAlert("#iam-reg-passreset-form-alert", 'alert-danger', data.error.message);
-            }
-
-            if (data.kind != "UserAuth") {
-                return innerAlert("#iam-reg-passreset-form-alert", 'alert-danger', "Unknown Error");
-            }
-                
-            innerAlert("#iam-reg-passreset-form-alert", 'alert-success', "Successfully Updated. Page redirecting");
-            $(".iam-group").hide(200);
-
-            window.setTimeout(function(){
-                window.location = "/iam/service/login?redirect_token={{.redirect_token}}";
-            }, 2000);
-        },
-        error: function(xhr, textStatus, error) {
-            innerAlert("#iam-reg-passreset-form-alert", 'alert-danger', '{{T . "Internal Server Error"}}');
-        }
-    });
-});
-
+setTimeout(function() {
+    $("#iam-reg-passreset-form").find("input[name=email]").focus();
+}, 200);
 </script>
 
 </body>

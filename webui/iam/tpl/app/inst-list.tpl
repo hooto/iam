@@ -9,7 +9,7 @@
 
 <script id="iam-app-insts-tpl" type="text/html">
 <div class="iam-div-light">
-  <table class="table table-hover">
+  <table class="table table-hover valign-middle">
     <thead>
       <tr>
         <th>ID</th>
@@ -37,8 +37,9 @@
         <td>{[=l4i.MetaTimeParseFormat(v.meta.created, "Y-m-d")]}</td>
         <td>{[=l4i.MetaTimeParseFormat(v.meta.updated, "Y-m-d")]}</td>
         <td align="right">
-          <button class="pure-button button-xsmall"
+          <button class="pure-button button-small"
             onclick="iamApp.InstSetForm('{[=v.meta.id]}')">
+            <span class="fa fa-cog"></span>
             Setting
           </button>
         </td>

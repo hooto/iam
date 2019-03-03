@@ -2,65 +2,67 @@
 
   <div id="iam-sysmgr-mailerset-alert" class="alert hide"></div>
 
-  <div id="iam-sysmgr-mailerset" class="form-horizontal">
+  <div class="iam-form-group-title">Email SMTP server settings</div>
 
-    <label class="iam-form-group-title">Email SMTP server settings</label>
-
-    <div class="form-group">
-      <label class="col-sm-3">SMTP server address</label>
-      <div class="col-sm-4">
+  <table id="iam-sysmgr-mailerset" class="iam-formtable">
+    <tbody>
+ 
+    <tr>
+      <td width="200px">SMTP server address</label>
+      <td width="40%">
         <input type="text" class="form-control" name="mailer_smtp_host" value="{[=it.smtp_host]}">
-      </div>
-    </div>
+      </td>
+	  <td></td>
+    </tr>
 
-    <div class="form-group">
-      <label class="col-sm-3">SMTP Port</label>
-      <div class="col-sm-4">
+    <tr>
+      <td>SMTP Port</label>
+      <td>
         <input type="text" class="form-control" name="mailer_smtp_port" value="{[=it.smtp_port]}">
-      </div>
-      <div class="col-sm-5">
+      </td>
+      <td>
         <div class="iam-callout iam-callout-primary">
           <p>
             Defaults to 25 for unencrypted and TLS SMTP,<br>and 465 for SSL SMTP.
           </p>
         </div>
-      </div>
-    </div>
+      </td>
+    </tr>
 
-    <div class="form-group">
-      <label class="col-sm-3">SMTP username</label>
-      <div class="col-sm-4">
+    <tr>
+      <td>SMTP username</label>
+      <td>
         <input type="text" class="form-control" name="mailer_smtp_user" value="{[=it.smtp_user]}">
-      </div>
-      <div class="col-sm-5">
+      </td>
+      <td>
         <div class="iam-callout iam-callout-primary">
           <p>
             Only enter a username if your SMTP server requires it.
           </p>
         </div>
-      </div>
-    </div>
+      </td>
+    </tr>
 
-    <div class="form-group">
-      <label class="col-sm-3">SMTP password</label>
-      <div class="col-sm-4">
+    <tr>
+      <td>SMTP password</label>
+      <td>
         <input type="password" class="form-control" name="mailer_smtp_pass" value="{[=it.smtp_pass]}">
-      </div>
-      <div class="col-sm-5">
+      </td>
+      <td>
         <div class="iam-callout iam-callout-primary">
           <p>
             Only enter a password if your SMTP server requires it.
           </p>
         </div>
-      </div>
-    </div>
+      </td>
+    </tr>
 
-    <!-- TODO <div class="form-group">
-      <label class="col-sm-3">SMTP encryption</label>
-      <div class="col-sm-4">
+    <!-- TODO <tr>
+      <td>SMTP encryption</label>
+      <td>
         <input type="text" class="form-control" name="" value="TODO" disabled>
       </div>
-      <div class="col-sm-5">
+      <td>
         <div class="iam-callout iam-callout-primary">
           <p>
             Enter the transport layer encryption required by your SMTP server.
@@ -69,12 +71,14 @@
       </div>
     </div> -->
 
-    <div class="form-group">
-      <div class="col-sm-offset-3 col-sm-4">
+    <tr>
+	  <td></td>
+      <td>
         <button type="submit" class="pure-button pure-button-primary" onclick="iamSys.MailerSetCommit()">Save</button>
-      </div>
-    </div>
-
-  </div>
+      </td>
+	  <td></td>
+    </tr>
+    </tbody>
+  </table>
 
 </div>

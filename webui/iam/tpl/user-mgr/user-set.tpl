@@ -1,47 +1,36 @@
-<style>
-.form-horizontal {
-  margin: 0 15px;
-  padding: 2px;
-}
-.form-group {
-  margin-bottom: 5px;
-}
-</style>
-
 <div id="iam-usermgr-userset-alert"></div>
 
 <div id="iam-usermgr-userset" class="form-horizontal">
 
-    <label class="iam-form-group-title">Login Information (Required)</label>
+  <div class="iam-form-group-title">Login Information (Required)</div>
 
-    {[ if (it.login.name == "") { ]}
-    <div class="form-group">
-      <label class="col-sm-2 control-label">Username</label>
-      <div class="col-sm-10">
-        <input type="text" class="form-control input-sm" name="login_name" value="{[=it.login.name]}">
-      </div>
-    </div>
-    {[ } else {]}
-    <input type="hidden" name="login_name" value="{[=it.login.name]}">
-    {[ } ]}
+  <table class="iam-formtable">
+    <tbody>
+ 
+    <tr>
+      <td width="200px">Username</td>
+      <td>
+        <input type="text" class="form-control" name="login_name" value="{[=it.login.name]}" {[? it.login.name.length > 0]}readonly{[?]}>
+      </td>
+    </tr>
 
-    <div class="form-group">
-      <label class="col-sm-2 control-label">Email</label>
-      <div class="col-sm-10">
-        <input type="text" class="form-control input-sm" name="login_email" value="{[=it.login.email]}">
-      </div>
-    </div>
+    <tr>
+      <td width="200px">Email</td>
+      <td>
+        <input type="text" class="form-control" name="login_email" value="{[=it.login.email]}">
+      </td>
+    </tr>
 
-    <div class="form-group">
-      <label class="col-sm-2 control-label">Password</label>
-      <div class="col-sm-10">
-        <input type="text" class="form-control input-sm" name="login_auth" value="{[=it.login._auth]}">
-      </div>
-    </div>
+    <tr>
+      <td>Password</td>
+      <td>
+        <input type="text" class="form-control" name="login_auth" value="{[=it.login._auth]}">
+      </td>
+    </tr>
 
-    <div class="form-group">
-      <label class="col-sm-2 control-label">Roles</label>
-      <div class="col-sm-10">
+    <tr>
+      <td>Roles</td>
+      <td>
         {[~it._roles.items :v]}
         <span class="iam-form-checkbox">
           {[ if (v.id == 100) { ]}
@@ -53,41 +42,48 @@
           {[ } ]}
         </span>
         {[~]}
-      </div>
-    </div>
+      </td>
+    </tr>
 
-    <div class="form-group">
-      <label class="col-sm-2 control-label">Status</label>
-      <div class="col-sm-10">
+    <tr>
+      <td>Status</td>
+      <td>
         {[~it._statusls :v]}
           <span class="iam-form-checkbox">
             <input type="radio" name="login_status" value="{[=v.status]}" {[ if (v.status == it.login.status) { ]}checked="checked"{[ } ]}> {[=v.title]}
           </span>
         {[~]}
-      </div>
-    </div>
+      </td>
+    </tr>
+    </tbody>
+  </table>
 
-    <label class="iam-form-group-title">Profile Information (Optional)</label>
+  <div class="iam-form-group-title">Profile Information (Optional)</div>
 
-    <div class="form-group">
-      <label class="col-sm-2 control-label">Display Name</label>
-      <div class="col-sm-10">
-        <input type="text" class="form-control input-sm" name="login_display_name" value="{[=it.login.display_name]}">
-      </div>
-    </div>
+  <table class="iam-formtable">
+    <tbody>
+    <tr>
+      <td width="200px">Display Name</td>
+      <td>
+        <input type="text" class="form-control" name="login_display_name" value="{[=it.login.display_name]}">
+      </td>
+    </tr>
 
-    <div class="form-group">
-      <label class="col-sm-2 control-label">Birthday</label>
-      <div class="col-sm-10">
-        <input type="text" class="form-control input-sm" name="profile_birthday" placeholder="Example : 1970-01-01" value="{[=it.profile.birthday]}">
-      </div>
-    </div>
+    <tr>
+      <td>Birthday</td>
+      <td>
+        <input type="text" class="form-control" name="profile_birthday" placeholder="Example : 1970-01-01" value="{[=it.profile.birthday]}">
+      </td>
+    </tr>
 
-    <div class="form-group">
-      <label class="col-sm-2 control-label">About</label>
-      <div class="col-sm-10">
-        <textarea class="form-control input-sm" rows="3" name="profile_about">{[=it.profile.about]}</textarea>
-      </div>
-    </div>
+    <tr>
+      <td>About</td>
+      <td>
+        <textarea class="form-control" rows="3" name="profile_about">{[=it.profile.about]}</textarea>
+      </td>
+    </tr>
+    </tbody>
+  </table>
 
 </div>
+

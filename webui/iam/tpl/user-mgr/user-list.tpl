@@ -7,14 +7,14 @@
 <div id="iam-usermgr-list-alert" class="hide" style="margin:20px 0;"></div>
 
 <div class="iam-div-light">
-<table class="table table-hover">
+<table class="table table-hover valign-middle">
   <thead>
     <tr>
       <th>Username</th>
       <th>Display Name</th>
       <th>Email</th>
-      <th>Status</th>
       <th>Roles</th>
+      <th>Status</th>
       <th>Updated</th>
       <th></th>
     </tr>
@@ -31,11 +31,6 @@
   <td>{[=v.display_name]}</td>
   <td>{[=v.email]}</td>
   <td>
-    {[~it._statusls :sv]}
-    {[ if (v.status == sv.status) { ]}{[=sv.title]}{[ } ]}
-    {[~]}
-  </td>
-  <td>
     {[~v.roles :rv]}
     {[~it._roles.items :drv]}
     {[ if (drv.id == rv) { ]}
@@ -44,13 +39,18 @@
     {[~]}
     {[~]}
   </td>
+  <td>
+    {[~it._statusls :sv]}
+    {[ if (v.status == sv.status) { ]}{[=sv.title]}{[ } ]}
+    {[~]}
+  </td>
   <td>{[=l4i.MetaTimeParseFormat(v.updated, "Y-m-d")]}</td>
   <td align="right">
-    <button class="pure-button button-xsmall"
+    <button class="pure-button button-small"
       onclick="iamAccMgr.FundNew('{[=v.name]}')">
       Recharge
     </button>
-    <button class="pure-button button-xsmall"
+    <button class="pure-button button-small"
       onclick="iamUserMgr.UserSetForm('{[=v.name]}')">
       Setting
     </button>

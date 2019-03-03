@@ -110,7 +110,7 @@ iamAccessKey.Info = function(akid) {
 
             l4iModal.Open({
                 tplsrc: tpl,
-                width: 700,
+                width: 800,
                 height: 350,
                 data: data,
                 title: "Access Key Info",
@@ -172,7 +172,7 @@ iamAccessKey.Set = function(akid) {
 
             l4iModal.Open({
                 tplsrc: tpl,
-                width: 600,
+                width: 800,
                 height: 300,
                 data: data,
                 title: data._form_title,
@@ -206,8 +206,8 @@ iamAccessKey.Set = function(akid) {
 }
 
 iamAccessKey.SetCommit = function() {
-    var form = $("#iam-akset"),
-        alert_id = "#iam-akset-alert";
+    var form = $("#iam-ak-set"),
+        alert_id = "#iam-ak-set-alert";
 
     var req = {
         access_key: form.find("input[name=access_key]").val(),
@@ -292,7 +292,7 @@ iamAccessKey.Bind = function(akid) {
 
             l4iModal.Open({
                 tplsrc: tpl,
-                width: 600,
+                width: 800,
                 height: 260,
                 title: "Bind Instance to this AccessKey",
                 data: {
@@ -321,8 +321,8 @@ iamAccessKey.Bind = function(akid) {
 
 
 iamAccessKey.BindCommit = function() {
-    var form = $("#iam-akbind"),
-        alert_id = "#iam-akbind-alert";
+    var form = $("#iam-ak-bind"),
+        alert_id = "#iam-ak-bind-alert";
 
     var url = "?access_key=" + form.find("input[name=access_key]").val();
     url += "&bound_name=" + form.find("input[name=bound_name]").val();

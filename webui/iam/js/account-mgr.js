@@ -118,7 +118,7 @@ iamAccMgr.FundNew = function(username) {
             l4iModal.Open({
                 tplsrc: tpl,
                 width: 800,
-                height: 400,
+                height: 600,
                 data: data,
                 title: "Account Recharge",
                 buttons: [{
@@ -217,8 +217,8 @@ iamAccMgr.FundSet = function(id) {
 
             l4iModal.Open({
                 tplsrc: tpl,
-                width: 700,
-                height: 400,
+                width: 800,
+                height: 500,
                 data: data,
                 title: "Account Fund Edit",
                 buttons: [{
@@ -358,7 +358,7 @@ iamAccMgr.ChargeSetPayout = function(user, id) {
 
             l4iModal.Open({
                 tplsrc: tpl,
-                width: 700,
+                width: 800,
                 height: 400,
                 data: data,
                 title: "Account Charge Close",

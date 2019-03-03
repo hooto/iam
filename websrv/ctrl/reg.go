@@ -45,6 +45,8 @@ func (c Reg) SignUpAction() {
 		iamapi.ServiceRedirectTokenValid(c.Params.Get("redirect_token")) {
 		c.Data["redirect_token"] = c.Params.Get("redirect_token")
 	}
+
+	c.Data["sys_version_hash"] = config.VersionHash
 }
 
 func (c Reg) SignUpRegAction() {
@@ -110,6 +112,7 @@ func (c Reg) RetrieveAction() {
 		iamapi.ServiceRedirectTokenValid(c.Params.Get("redirect_token")) {
 		c.Data["redirect_token"] = c.Params.Get("redirect_token")
 	}
+	c.Data["sys_version_hash"] = config.VersionHash
 }
 
 func (c Reg) RetrievePutAction() {
@@ -224,6 +227,8 @@ func (c Reg) PassResetAction() {
 		iamapi.ServiceRedirectTokenValid(c.Params.Get("redirect_token")) {
 		c.Data["redirect_token"] = c.Params.Get("redirect_token")
 	}
+
+	c.Data["sys_version_hash"] = config.VersionHash
 }
 
 func (c Reg) PassResetPutAction() {

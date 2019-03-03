@@ -1,5 +1,5 @@
 <div class="iam-div-light">
-  <table class="table table-hover">
+  <table class="table table-hover valign-middle">
     <thead>
       <tr>
         <th>ID</th>
@@ -36,7 +36,7 @@
   <td>{[=l4i.MetaTimeParseFormat(v.updated, "Y-m-d H:i")]}</td>
   <td align="right">
     {[if (v.prepay > 0 && v.payout == 0) {]}
-	<button class="pure-button button-xsmall"
+	<button class="pure-button button-small"
       onclick="iamAccMgr.ChargeSetPayout('{[=v.user]}', '{[=v.id]}')">
       Close
     </button>
