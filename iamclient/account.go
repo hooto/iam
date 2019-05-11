@@ -17,8 +17,8 @@ package iamclient
 import (
 	"fmt"
 
-	"github.com/hooto/iam/auth"
 	"github.com/hooto/iam/iamapi"
+	"github.com/hooto/iam/iamauth"
 	"github.com/lessos/lessgo/encoding/json"
 	"github.com/lessos/lessgo/net/httpclient"
 	"github.com/lessos/lessgo/types"
@@ -36,8 +36,8 @@ func AccountChargePreValid(req iamapi.AccountChargePrepay, ak iamapi.AccessKey) 
 
 	hc.Header("contentType", "application/json; charset=utf-8")
 
-	ac := auth.NewAuthCredentials(ak, js)
-	hc.Header(ac.HttpHeaderKey(), ac.HttpHeaderValue())
+	ac := iamauth.NewAppCredential(ak.AuthKey())
+	ac.SignHttpToken(hc.Req, js)
 
 	hc.Body(js)
 
@@ -60,8 +60,8 @@ func AccountChargePrepay(req iamapi.AccountChargePrepay, ak iamapi.AccessKey) ia
 
 	hc.Header("contentType", "application/json; charset=utf-8")
 
-	ac := auth.NewAuthCredentials(ak, js)
-	hc.Header(ac.HttpHeaderKey(), ac.HttpHeaderValue())
+	ac := iamauth.NewAppCredential(ak.AuthKey())
+	ac.SignHttpToken(hc.Req, js)
 
 	hc.Body(js)
 
@@ -81,10 +81,11 @@ func AccountChargePayout(req iamapi.AccountChargePayout, ak iamapi.AccessKey) ia
 		service_url_global(),
 	))
 	defer hc.Close()
+
 	hc.Header("contentType", "application/json; charset=utf-8")
 
-	ac := auth.NewAuthCredentials(ak, js)
-	hc.Header(ac.HttpHeaderKey(), ac.HttpHeaderValue())
+	ac := iamauth.NewAppCredential(ak.AuthKey())
+	ac.SignHttpToken(hc.Req, js)
 
 	hc.Body(js)
 

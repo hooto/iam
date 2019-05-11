@@ -20,7 +20,6 @@ import (
 	"encoding/hex"
 	"errors"
 	"regexp"
-	"strings"
 
 	"github.com/lessos/lessgo/crypto/idhash"
 	"github.com/lessos/lessgo/encoding/json"
@@ -70,16 +69,12 @@ type UserSession struct {
 	Roles        types.ArrayUint32 `json:"roles,omitempty"`
 	Groups       types.ArrayUint32 `json:"groups,omitempty"`
 	ClientAddr   string            `json:"client_addr,omitempty"`
-	Created      types.MetaTime    `json:"created"`
-	Expired      types.MetaTime    `json:"expired"`
+	Created      int64             `json:"created"`
+	Expired      int64             `json:"expired"`
 }
 
 func (s *UserSession) IsLogin() bool {
 	return (s.AccessToken != "")
-}
-
-func (s *UserSession) FullToken() string {
-	return s.UserName + "/" + s.AccessToken
 }
 
 func (s *UserSession) UserId() string {
@@ -231,38 +226,6 @@ type SysConfigMailer struct {
 	SmtpPort string `json:"smtp_port"`
 	SmtpUser string `json:"smtp_user"`
 	SmtpPass string `json:"smtp_pass"`
-}
-
-type AccessTokenFrontend string
-
-func NewAccessTokenFrontend(username, tk string) AccessTokenFrontend {
-	return AccessTokenFrontend(username + "/" + tk)
-}
-
-func (t *AccessTokenFrontend) Valid() bool {
-	return accessTokenFrontendRe2.MatchString(string(*t))
-}
-
-func (t *AccessTokenFrontend) SessionPath() string {
-	return string(*t)
-}
-
-func (t *AccessTokenFrontend) String() string {
-	return string(*t)
-}
-
-func (t *AccessTokenFrontend) User() string {
-	if n := strings.Index(string(*t), "/"); n > 0 {
-		return string(*t)[:n]
-	}
-	return ""
-}
-
-func (t *AccessTokenFrontend) Id() string {
-	if n := strings.Index(string(*t), "/"); n > 0 {
-		return string(*t)[n+1:]
-	}
-	return ""
 }
 
 type ServiceLoginAuth struct {

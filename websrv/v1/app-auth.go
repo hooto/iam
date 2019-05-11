@@ -20,13 +20,16 @@ import (
 
 	"github.com/hooto/hlog4g/hlog"
 	"github.com/hooto/httpsrv"
-	"github.com/hooto/iam/iamapi"
-	"github.com/hooto/iam/iamclient"
-	"github.com/hooto/iam/store"
 	"github.com/lessos/lessgo/crypto/idhash"
 	"github.com/lessos/lessgo/types"
 	"github.com/lynkdb/iomix/skv"
 	iox_utils "github.com/lynkdb/iomix/utils"
+
+	"github.com/hooto/iam/config"
+	"github.com/hooto/iam/iamapi"
+	"github.com/hooto/iam/iamauth"
+	"github.com/hooto/iam/iamclient"
+	"github.com/hooto/iam/store"
 )
 
 type AppAuth struct {
@@ -91,18 +94,13 @@ func (c AppAuth) RegisterAction() {
 		}
 	}
 
-	token := iamapi.AccessTokenFrontend(set.AccessToken)
-	if !token.Valid() {
-		set.Error = types.NewErrorMeta(iamapi.ErrCodeUnauthorized, "Unauthorized")
+	ap, err := iamauth.NewUserValidator(set.AccessToken)
+	if err != nil {
+		set.Error = types.NewErrorMeta(iamapi.ErrCodeUnauthorized, err.Error())
 		return
 	}
 
-	var session iamapi.UserSession
-	if obj := store.Data.KvProgGet(iamapi.DataSessionKey(token.User(), token.Id())); obj.OK() {
-		obj.Decode(&session)
-	}
-
-	if !session.IsLogin() {
+	if err := ap.SignValid(config.Config.AuthKeys); err != nil {
 		set.Error = types.NewErrorMeta(iamapi.ErrCodeUnauthorized, "Unauthorized")
 		return
 	}
@@ -131,11 +129,11 @@ func (c AppAuth) RegisterAction() {
 		set.Instance.Meta.Created = types.MetaTimeNow()
 		set.Instance.Meta.Updated = types.MetaTimeNow()
 		set.Instance.Status = 1
-		set.Instance.Meta.User = session.UserName
+		set.Instance.Meta.User = ap.Id
 
 	} else {
 
-		if prev.Meta.User != session.UserName {
+		if prev.Meta.User != ap.Id {
 			set.Error = types.NewErrorMeta(iamapi.ErrCodeUnauthorized, "Unauthorized")
 			return
 		}
@@ -316,7 +314,7 @@ func (c AppAuth) UserAccessKeyAction() {
 		AccessKey: user_ak.AccessKey,
 		SecretKey: user_ak.SecretKey,
 		Roles:     user.Roles,
-		Expired:   types.MetaTimeNow().Add("+864000s"),
+		Expired:   time.Now().Unix() + 864000,
 	}
 	hlog.Printf("info", "app-auth AccessKeySession")
 }

@@ -19,18 +19,21 @@ import (
 	"fmt"
 	"net/http"
 	"net/url"
+	"strconv"
 	"strings"
 	"time"
 
 	"github.com/hooto/hlog4g/hlog"
 	"github.com/hooto/httpsrv"
+	"github.com/lessos/lessgo/encoding/json"
 	"github.com/lessos/lessgo/pass"
 	"github.com/lessos/lessgo/types"
-	"github.com/lessos/lessgo/utils"
 	"github.com/lynkdb/iomix/skv"
 
 	"github.com/hooto/iam/base/role"
+	"github.com/hooto/iam/config"
 	"github.com/hooto/iam/iamapi"
+	"github.com/hooto/iam/iamauth"
 	"github.com/hooto/iam/store"
 )
 
@@ -38,7 +41,7 @@ type Service struct {
 	*httpsrv.Controller
 }
 
-func _url_host(requrl string) string {
+func urlHost(requrl string) string {
 
 	u, err := url.Parse(requrl)
 
@@ -86,8 +89,8 @@ func (c Service) LoginAuthAction() {
 	}
 
 	err_num := 0
-	err_key := iamapi.DataLoginErrorLimitKey(uname, addr)
-	if rs := store.Data.KvProgGet(err_key); rs.OK() {
+	err_key := iamapi.DataUserAuthDeny(uname, addr)
+	if rs := store.Data.KvGet(err_key); rs.OK() {
 		err_num = rs.Int()
 		if err_num > 10 {
 			rsp.Error = types.NewErrorMeta("400",
@@ -99,35 +102,33 @@ func (c Service) LoginAuthAction() {
 	if auth := user.Keys.Get(iamapi.UserKeyDefault); auth == nil ||
 		!pass.Check(c.Params.Get("passwd"), auth.String()) {
 		err_num++
-		store.Data.KvProgPut(err_key, skv.NewKvEntry(err_num), &skv.KvProgWriteOptions{
-			Expired: uint64(time.Now().Add(86400e9).UnixNano()),
+		store.Data.KvPut(err_key, err_num, &skv.KvWriteOptions{
+			Ttl: 86400 * 1000,
 		})
 		rsp.Error = types.NewErrorMeta("400", "incorrect username or password #02")
 		return
 	}
 
-	session := iamapi.UserSession{
-		AccessToken:  utils.StringNewRand(24),
-		RefreshToken: utils.StringNewRand(24),
-		UserName:     user.Name,
-		DisplayName:  user.DisplayName,
-		Roles:        user.Roles,
-		Groups:       user.Groups,
-		ClientAddr:   addr,
-		Created:      types.MetaTimeNow(),
-		Expired:      types.MetaTimeNow().Add("+864000s"),
-	}
+	var (
+		ttl = int64(864000)
+		ap  = iamauth.NewUserPayload(
+			user.Name,
+			user.DisplayName,
+			user.Roles,
+			user.Groups,
+			ttl,
+		)
+		js, _ = json.Encode(ap, "")
+	)
 
-	token := iamapi.NewAccessTokenFrontend(session.UserName, session.AccessToken)
-
-	if sobj := store.Data.KvProgPut(iamapi.DataSessionKey(session.UserName, session.AccessToken), skv.NewKvEntry(session), &skv.KvProgWriteOptions{
-		Expired: uint64(time.Now().Add(864000e9).UnixNano()),
-	}); !sobj.OK() {
-		rsp.Error = types.NewErrorMeta("500", sobj.Bytex().String())
+	if rs := store.Data.KvPut(iamapi.DataUserAuth(ap.Id, uint32(ap.Expired)), js, &skv.KvWriteOptions{
+		Ttl: ttl * 1000,
+	}); !rs.OK() {
+		rsp.Error = types.NewErrorMeta("500", rs.Bytex().String())
 		return
 	}
 
-	rsp.AccessToken = token.String()
+	rsp.AccessToken = ap.SignToken(config.Config.AuthKeys)
 
 	if len(c.Params.Get("redirect_token")) > 20 {
 
@@ -137,7 +138,7 @@ func (c Service) LoginAuthAction() {
 
 			rsp.RedirectUri = rt.RedirectUri
 
-			if _url_host(rsp.RedirectUri) != _url_host(c.Request.URL.Host) {
+			if urlHost(rsp.RedirectUri) != urlHost(c.Request.URL.Host) {
 
 				if strings.Index(rsp.RedirectUri, "?") == -1 {
 					rsp.RedirectUri += "?"
@@ -145,7 +146,8 @@ func (c Service) LoginAuthAction() {
 					rsp.RedirectUri += "&"
 				}
 
-				rsp.RedirectUri += iamapi.AccessTokenKey + "=" + rsp.AccessToken + "&expires_in=864000"
+				rsp.RedirectUri += iamapi.AccessTokenKey + "=" + rsp.AccessToken +
+					"&expires_in=" + strconv.Itoa(int(ttl))
 
 				if len(rt.State) > 0 {
 					rsp.RedirectUri += "&state=" + url.QueryEscape(rt.State)
@@ -159,34 +161,22 @@ func (c Service) LoginAuthAction() {
 		Value:    rsp.AccessToken,
 		Path:     "/",
 		HttpOnly: true,
-		Expires:  time.Now().Add(864000 * time.Second),
+		Expires:  time.Now().Add(time.Duration(ttl) * time.Second),
 	})
 
 	rsp.Kind = "ServiceLoginAuth"
 
-	hlog.Printf("info", "ServiceLoginAuth User %s", user.Name)
+	hlog.Printf("info", "Service/LoginAuth User %s", user.Name)
 }
 
 func (c Service) AuthAction() {
 
-	var set struct {
-		types.TypeMeta
-		iamapi.UserSession
-	}
+	var set types.TypeMeta
 	defer c.RenderJson(&set)
 
-	token := iamapi.AccessTokenFrontend(c.Params.Get(iamapi.AccessTokenKey))
-	if !token.Valid() {
-		set.Error = types.NewErrorMeta(iamapi.ErrCodeUnauthorized, "Unauthorized")
-		return
-	}
+	token := c.Params.Get(iamapi.AccessTokenKey)
 
-	if obj := store.Data.KvProgGet(iamapi.DataSessionKey(token.User(), token.Id())); obj.OK() {
-		obj.Decode(&set.UserSession)
-	}
-
-	if set.AccessToken == "" ||
-		set.Expired < types.MetaTimeNow() {
+	if _, err := iamauth.UserValid(token, config.Config.AuthKeys); err != nil {
 		set.Error = types.NewErrorMeta(iamapi.ErrCodeUnauthorized, "Unauthorized")
 		return
 	}
@@ -224,19 +214,8 @@ func (c Service) AccessAllowedAction() {
 		return
 	}
 
-	token := iamapi.AccessTokenFrontend(req.AccessToken)
-	if !token.Valid() {
-		rsp.Error = types.NewErrorMeta(iamapi.ErrCodeUnauthorized, "Unauthorized")
-		return
-	}
-
-	var session iamapi.UserSession
-	if obj := store.Data.KvProgGet(iamapi.DataSessionKey(token.User(), token.Id())); obj.OK() {
-		obj.Decode(&session)
-	}
-
-	if session.AccessToken == "" ||
-		session.Expired < types.MetaTimeNow() {
+	ap, err := iamauth.UserValid(req.AccessToken, config.Config.AuthKeys)
+	if err != nil {
 		rsp.Error = types.NewErrorMeta(iamapi.ErrCodeUnauthorized, "Unauthorized")
 		return
 	}
@@ -251,7 +230,7 @@ func (c Service) AccessAllowedAction() {
 	// 	return
 	// }
 
-	if !role.AccessAllowed(session.UserName, session.Roles, req.InstanceID, req.Privilege) {
+	if !role.AccessAllowed(ap.Id, ap.Roles, req.InstanceID, req.Privilege) {
 		rsp.Error = types.NewErrorMeta(iamapi.ErrCodeUnauthorized, "Unauthorized")
 		return
 	}

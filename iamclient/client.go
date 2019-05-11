@@ -21,11 +21,13 @@ import (
 	"sync"
 	"time"
 
-	"github.com/hooto/httpsrv"
-	"github.com/hooto/iam/iamapi"
 	"github.com/lessos/lessgo/encoding/json"
 	"github.com/lessos/lessgo/net/httpclient"
 	"github.com/lessos/lessgo/types"
+
+	"github.com/hooto/httpsrv"
+	"github.com/hooto/iam/iamapi"
+	"github.com/hooto/iam/iamauth"
 )
 
 const (
@@ -69,7 +71,7 @@ func innerExpiredClean() {
 	locker.Lock()
 	defer locker.Unlock()
 
-	tnow := types.MetaTimeNow()
+	tnow := time.Now().Unix()
 
 	for k, v := range sessions {
 
@@ -145,7 +147,7 @@ func SessionAccessAllowed(s *httpsrv.Session, privilege, client_id string) bool 
 func SessionInstance(s *httpsrv.Session) (session iamapi.UserSession, err error) {
 
 	if s == nil {
-		return iamapi.UserSession{}, errors.New("No Session Found")
+		return session, errors.New("No Session Found")
 	}
 
 	return Instance(s.Get(AccessTokenKey))
@@ -157,7 +159,17 @@ func Instance(token string) (session iamapi.UserSession, err error) {
 		return session, errors.New("Unauthorized")
 	}
 
-	if session, ok := sessions[token]; ok {
+	ap, err := iamauth.NewUserValidator(token)
+	if err != nil {
+		return session, err
+	}
+
+	if ap.IsExpired() {
+		return session, errors.New("auth expired")
+	}
+
+	// cache
+	if session, ok := sessions[ap.Id]; ok {
 		return session, nil
 	}
 
@@ -169,22 +181,23 @@ func Instance(token string) (session iamapi.UserSession, err error) {
 	))
 	defer hc.Close()
 
-	var us iamapi.UserSession
-
-	err = hc.ReplyJson(&us)
-	if err != nil || us.UserName == "" {
-		return session, errors.New("Unauthorized")
-	}
-
-	if types.MetaTimeNow() > us.Expired {
+	var us types.TypeMeta
+	if err = hc.ReplyJson(&us); err != nil || us.Kind != "UserSession" {
 		return session, errors.New("Unauthorized")
 	}
 
 	locker.Lock()
-	sessions[token] = us // TODO Cache API
+	sessions[ap.Id] = iamapi.UserSession{
+		AccessToken: token,
+		UserName:    ap.Id,
+		DisplayName: ap.Name,
+		Roles:       ap.Roles,
+		Groups:      ap.Groups,
+		Expired:     ap.Expired,
+	} // TODO Cache API
 	locker.Unlock()
 
-	return us, nil
+	return session, nil
 }
 
 func _is_login(token string) bool {

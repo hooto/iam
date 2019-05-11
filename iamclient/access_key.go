@@ -22,7 +22,6 @@ import (
 
 	"github.com/hooto/iam/iamapi"
 	"github.com/lessos/lessgo/net/httpclient"
-	"github.com/lessos/lessgo/types"
 )
 
 const (
@@ -58,7 +57,7 @@ func AccessKeySession(app_aka, user_aka iamapi.AccessKeyAuth) (iamapi.AccessKeyS
 		return session, errors.New("Unauthorized")
 	}
 
-	if types.MetaTimeNow() > session.Expired {
+	if time.Now().Unix() > session.Expired {
 		return session, errors.New("Unauthorized")
 	}
 

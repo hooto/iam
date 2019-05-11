@@ -18,6 +18,7 @@ import (
 	"encoding/base64"
 	"errors"
 
+	"github.com/hooto/iam/iamauth"
 	"github.com/lessos/lessgo/encoding/json"
 	"github.com/lessos/lessgo/types"
 )
@@ -30,6 +31,14 @@ type AccessKey struct {
 	Action      uint16           `json:"action,omitempty"`
 	Description string           `json:"desc,omitempty"`
 	Bounds      []AccessKeyBound `json:"bounds,omitempty"`
+}
+
+func (it *AccessKey) AuthKey() *iamauth.AuthKey {
+	return &iamauth.AuthKey{
+		User:      it.User,
+		AccessKey: it.AccessKey,
+		SecretKey: it.SecretKey,
+	}
 }
 
 type AccessKeyBound struct {
@@ -113,5 +122,5 @@ type AccessKeySession struct {
 	SecretKey string            `json:"sk"`
 	User      string            `json:"ur"`
 	Roles     types.ArrayUint32 `json:"rs"`
-	Expired   types.MetaTime    `json:"ex"`
+	Expired   int64             `json:"ex"` // unix seconds
 }

@@ -18,10 +18,10 @@ import (
 	"net/http"
 
 	"github.com/hooto/httpsrv"
+
 	"github.com/hooto/iam/config"
 	"github.com/hooto/iam/iamapi"
 	"github.com/hooto/iam/iamclient"
-	"github.com/hooto/iam/store"
 )
 
 type Service struct {
@@ -63,16 +63,6 @@ func (c Service) LoginAction() {
 func (c Service) SignOutAction() {
 
 	c.Data["access_token_key"] = iamclient.AccessTokenKey
-
-	token := iamapi.AccessTokenFrontend(c.Params.Get(iamclient.AccessTokenKey))
-	if !token.Valid() {
-		session, _ := iamclient.SessionInstance(c.Session)
-		token = iamapi.AccessTokenFrontend(session.FullToken())
-	}
-
-	if token.Valid() {
-		store.Data.KvProgDel(iamapi.DataSessionKey(token.User(), token.Id()), nil)
-	}
 
 	http.SetCookie(c.Response.Out, &http.Cookie{
 		Name:   iamclient.AccessTokenKey,

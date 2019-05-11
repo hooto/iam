@@ -16,8 +16,8 @@ package v1
 
 import (
 	"github.com/hooto/httpsrv"
-	"github.com/hooto/iam/auth"
 	"github.com/hooto/iam/iamapi"
+	"github.com/hooto/iam/iamauth"
 	"github.com/hooto/iam/store"
 	"github.com/lessos/lessgo/types"
 	"github.com/lynkdb/iomix/skv"
@@ -44,22 +44,22 @@ func (c AccountCharge) PreValidAction() {
 	}
 
 	//
-	auth_token, err := auth.NewAuthToken(c.Request.Header.Get(auth.HttpHeaderKey))
+	authValidator, err := iamauth.NewAppValidatorWithHttpRequest(c.Request.Request)
 	if err != nil {
-		set.Error = types.NewErrorMeta(iamapi.ErrCodeUnauthorized, "No Auth Found #01")
+		set.Error = types.NewErrorMeta(iamapi.ErrCodeUnauthorized, err.Error())
 		return
 	}
 
 	var ak iamapi.AccessKey
-	if rs := store.Data.KvProgGet(iamapi.DataAccessKeyKey(auth_token.User, auth_token.AccessKey)); rs.OK() {
+	if rs := store.Data.KvProgGet(iamapi.DataAccessKeyKey(authValidator.User, authValidator.AccessKey)); rs.OK() {
 		rs.Decode(&ak)
 	}
-	if ak.AccessKey == "" || ak.AccessKey != auth_token.AccessKey {
-		set.Error = types.NewErrorMeta(iamapi.ErrCodeUnauthorized, "No Auth Found, AK "+auth_token.AccessKey)
+	if ak.AccessKey == "" || ak.AccessKey != authValidator.AccessKey {
+		set.Error = types.NewErrorMeta(iamapi.ErrCodeUnauthorized, "No Auth Found, AK "+authValidator.AccessKey)
 		return
 	}
-	if terr := auth_token.Valid(ak, c.Request.RawBody); terr != nil {
-		set.Error = types.NewErrorMeta(iamapi.ErrCodeUnauthorized, "No Auth Found #03 "+terr.Message)
+	if terr := authValidator.SignValid( c.Request.RawBody, ak.AuthKey()); terr != nil {
+		set.Error = types.NewErrorMeta(iamapi.ErrCodeUnauthorized, "Auth Sign Failed")
 		return
 	}
 
@@ -134,22 +134,22 @@ func (c AccountCharge) PrepayAction() {
 	}
 
 	//
-	auth_token, err := auth.NewAuthToken(c.Request.Header.Get(auth.HttpHeaderKey))
+	authValidator, err := iamauth.NewAppValidatorWithHttpRequest(c.Request.Request)
 	if err != nil {
-		set.Error = types.NewErrorMeta(iamapi.ErrCodeUnauthorized, "No Auth Found #01")
+		set.Error = types.NewErrorMeta(iamapi.ErrCodeUnauthorized, err.Error())
 		return
 	}
 
 	var ak iamapi.AccessKey
-	if rs := store.Data.KvProgGet(iamapi.DataAccessKeyKey(auth_token.User, auth_token.AccessKey)); rs.OK() {
+	if rs := store.Data.KvProgGet(iamapi.DataAccessKeyKey(authValidator.User, authValidator.AccessKey)); rs.OK() {
 		rs.Decode(&ak)
 	}
-	if ak.AccessKey == "" || ak.AccessKey != auth_token.AccessKey {
-		set.Error = types.NewErrorMeta(iamapi.ErrCodeUnauthorized, "No Auth Found, AK "+auth_token.AccessKey)
+	if ak.AccessKey == "" || ak.AccessKey != authValidator.AccessKey {
+		set.Error = types.NewErrorMeta(iamapi.ErrCodeUnauthorized, "No Auth Found, AK "+authValidator.AccessKey)
 		return
 	}
-	if terr := auth_token.Valid(ak, c.Request.RawBody); terr != nil {
-		set.Error = types.NewErrorMeta(iamapi.ErrCodeUnauthorized, "No Auth Found #03 "+terr.Message)
+	if terr := authValidator.SignValid( c.Request.RawBody, ak.AuthKey()); terr != nil {
+		set.Error = types.NewErrorMeta(iamapi.ErrCodeUnauthorized, "Auth Sign Failed")
 		return
 	}
 
@@ -296,23 +296,22 @@ func (c AccountCharge) PayoutAction() {
 	}
 
 	//
-	auth_token, err := auth.NewAuthToken(c.Request.Header.Get(auth.HttpHeaderKey))
+	authValidator, err := iamauth.NewAppValidatorWithHttpRequest(c.Request.Request)
 	if err != nil {
-		set.Error = types.NewErrorMeta(iamapi.ErrCodeUnauthorized, "No Auth Found #01")
+		set.Error = types.NewErrorMeta(iamapi.ErrCodeUnauthorized, err.Error())
 		return
 	}
 
 	var ak iamapi.AccessKey
-	if rs := store.Data.KvProgGet(iamapi.DataAccessKeyKey(auth_token.User, auth_token.AccessKey)); rs.OK() {
+	if rs := store.Data.KvProgGet(iamapi.DataAccessKeyKey(authValidator.User, authValidator.AccessKey)); rs.OK() {
 		rs.Decode(&ak)
 	}
-	if ak.AccessKey == "" || ak.AccessKey != auth_token.AccessKey {
-		set.Error = types.NewErrorMeta(iamapi.ErrCodeUnauthorized, "No Auth Found, AK "+auth_token.AccessKey)
+	if ak.AccessKey == "" || ak.AccessKey != authValidator.AccessKey {
+		set.Error = types.NewErrorMeta(iamapi.ErrCodeUnauthorized, "No Auth Found, AK "+authValidator.AccessKey)
 		return
 	}
-
-	if terr := auth_token.Valid(ak, c.Request.RawBody); terr != nil {
-		set.Error = types.NewErrorMeta(iamapi.ErrCodeUnauthorized, "No Auth Found #03 "+terr.Message)
+	if terr := authValidator.SignValid( c.Request.RawBody, ak.AuthKey()); terr != nil {
+		set.Error = types.NewErrorMeta(iamapi.ErrCodeUnauthorized, "Auth Sign Failed")
 		return
 	}
 

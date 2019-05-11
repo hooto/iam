@@ -44,12 +44,17 @@ type Auth struct {
 
 func (c Auth) CbAction() {
 
+	exp := c.Params.Int64("expires_in")
+	if exp < 300 {
+		exp = 300
+	}
+
 	http.SetCookie(c.Response.Out, &http.Cookie{
 		Name:     AccessTokenKey,
 		Value:    c.Params.Get(AccessTokenKey),
 		Path:     "/",
 		HttpOnly: true,
-		Expires:  time.Now().Add(time.Second * time.Duration(c.Params.Int64("expires_in"))),
+		Expires:  time.Now().Add(time.Second * time.Duration(exp)),
 	})
 
 	if c.Params.Get("state") != "" {
