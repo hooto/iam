@@ -39,6 +39,7 @@ func NewModule() httpsrv.Module {
 	module.ControllerRegister(new(AppMgr))
 	module.ControllerRegister(new(AccountMgr))
 	module.ControllerRegister(new(SysConfig))
+	module.ControllerRegister(new(SysMsg))
 
 	// TODO auto config
 	hlang.StdLangFeed.LoadMessages(config.Prefix+"/i18n/en.json", true)

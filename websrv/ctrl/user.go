@@ -60,7 +60,11 @@ func (c User) PanelInfoAction() {
 		})
 		nav = append(nav, map[string]string{
 			"path":  "sys-mgr/index",
-			"title": hlang.StdLangFeed.Translate(c.Request.Locale, "System"),
+			"title": hlang.StdLangFeed.Translate(c.Request.Locale, "System Settings"),
+		})
+		nav = append(nav, map[string]string{
+			"path":  "sys-msg/index",
+			"title": hlang.StdLangFeed.Translate(c.Request.Locale, "System Messages"),
 		})
 	}
 

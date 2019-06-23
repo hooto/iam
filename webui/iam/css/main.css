@@ -513,6 +513,10 @@ button {
   background-color: rgb(0, 120, 231);
 }
 
+tbody>tr.hover:hover {
+  cursor: pointer;
+}
+
 .iam-formtable,
 .iam-formtable table {
   width: 100%;
@@ -593,6 +597,13 @@ button {
 }
 
 .btn-default {
-  background-color: buttonface !important; 
+  background-color: buttonface !important;
 }
 
+.pre-wrap {
+  white-space: pre-wrap;
+  white-space: -moz-pre-wrap;
+  white-space: -pre-wrap;
+  white-space: -o-pre-wrap;
+  word-wrap: break-word;
+}

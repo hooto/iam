@@ -36,6 +36,8 @@ const (
 	dataAccChargeUser = "ac"
 	dataAccChargeMgr  = "acm"
 	dataSysConfig     = "sc"
+	dataMsgQueue      = "mq"
+	dataMsgSent       = "ms"
 )
 
 func DataAppInstanceKey(id string) skv.KvProgKey {
@@ -118,4 +120,12 @@ func DataAccChargeMgrKey(id string) skv.KvProgKey {
 
 func DataAccChargeMgrKeyBytes(id []byte) skv.KvProgKey {
 	return skv.NewKvProgKey(dataPrefix, dataAccChargeMgr, id)
+}
+
+func DataMsgQueue(id string) []byte {
+	return []byte(dataPrefix + ":" + dataMsgQueue + ":" + id)
+}
+
+func DataMsgSent(id string) []byte {
+	return []byte(dataPrefix + ":" + dataMsgSent + ":" + id)
 }

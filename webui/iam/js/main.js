@@ -59,6 +59,7 @@ iam.Boot = function() {
                 "~/iam/js/access-key.js" + iam.debug_uri(),
                 "~/iam/js/account.js" + iam.debug_uri(),
                 "~/iam/js/sys.js" + iam.debug_uri(),
+                "~/iam/js/sys-msg.js" + iam.debug_uri(),
                 "~/iam/js/user-mgr.js" + iam.debug_uri(),
                 "~/iam/js/app-mgr.js" + iam.debug_uri(),
                 "~/iam/js/account-mgr.js" + iam.debug_uri(),
@@ -120,6 +121,10 @@ iam.load_index = function() {
 
                     case "sys-mgr/index":
                         l4i.UrlEventRegister("sys-mgr/index", iamSys.Index, "iam-topbar-nav-menus");
+                        break;
+
+                    case "sys-msg/index":
+                        l4i.UrlEventRegister("sys-msg/index", iamSysMsg.Index, "iam-topbar-nav-menus");
                         break;
                 }
             }

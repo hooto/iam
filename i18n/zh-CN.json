@@ -194,6 +194,10 @@
       "val": "确认你的新密码"
     },
     {
+      "key": "content",
+      "val": "内容"
+    },
+    {
       "key": "create account",
       "val": "创建帐号"
     },
@@ -276,6 +280,10 @@
     {
       "key": "mailer",
       "val": "邮箱投递"
+    },
+    {
+      "key": "message",
+      "val": "消息"
     },
     {
       "key": "messages",
@@ -374,6 +382,10 @@
       "val": "请稍后重试"
     },
     {
+      "key": "posted",
+      "val": "投递"
+    },
+    {
       "key": "prepaid statement",
       "val": "预付清单"
     },
@@ -406,6 +418,10 @@
       "val": "充值"
     },
     {
+      "key": "recipient",
+      "val": "接收者"
+    },
+    {
       "key": "registration",
       "val": "注册"
     },
@@ -416,6 +432,10 @@
     {
       "key": "reset your password",
       "val": "重置你的密码"
+    },
+    {
+      "key": "retry",
+      "val": "重试"
     },
     {
       "key": "retype password",
@@ -482,6 +502,10 @@
       "val": "保持登录状态"
     },
     {
+      "key": "subject",
+      "val": "主题"
+    },
+    {
       "key": "successful deleted",
       "val": "删除成功"
     },
@@ -508,6 +532,14 @@
     {
       "key": "system",
       "val": "系统"
+    },
+    {
+      "key": "system messages",
+      "val": "系统消息"
+    },
+    {
+      "key": "system settings",
+      "val": "系统设置"
     },
     {
       "key": "the reset url has been sent to your mailbox, please check your email",

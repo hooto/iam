@@ -14,6 +14,9 @@
 
 package iamapi
 
+//go:generate protoc --go_out=plugins=grpc:. types.proto
+//go:generate protobuf_slice "*.proto"
+
 import (
 	"encoding/base64"
 	"encoding/binary"
@@ -21,6 +24,7 @@ import (
 	"errors"
 	"regexp"
 
+	"github.com/golang/protobuf/proto"
 	"github.com/lessos/lessgo/crypto/idhash"
 	"github.com/lessos/lessgo/encoding/json"
 	"github.com/lessos/lessgo/types"
@@ -34,6 +38,7 @@ const (
 	ErrCodeUnauthorized    = "Unauthorized" // Need to login and fetch a new access-token
 	ErrCodeInvalidArgument = "InvalidArgument"
 	ErrCodeUnavailable     = "Unavailable"
+	ErrCodeServerError     = "ServerError"
 	ErrCodeInternalError   = "InternalError"
 	ErrCodeNotFound        = "NotFound"
 	ErrCodeAccChargeOut    = "AccChargeOut"
@@ -288,4 +293,22 @@ func HexStringToBytes(s string) []byte {
 		return []byte{}
 	}
 	return dec
+}
+
+func OpActionAllow(opbase, op uint32) bool {
+	return (op & opbase) == op
+}
+
+func OpActionRemove(opbase, op uint32) uint32 {
+	return (opbase | op) - (op)
+}
+
+func OpActionAppend(opbase, op uint32) uint32 {
+	return (opbase | op)
+}
+
+type WebServiceKind struct {
+	Kind  string           `json:"kind"`
+	Error *types.ErrorMeta `json:"error,omitempty"`
+	Data  proto.Message    `json:"data,omitempty"`
 }
