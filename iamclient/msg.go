@@ -26,7 +26,7 @@ import (
 	"github.com/lessos/lessgo/types"
 )
 
-func SysMsgPost(req iamapi.MsgItem, ak iamapi.AccessKey) error {
+func SysMsgPost(req iamapi.MsgItem, ak *iamapi.AccessKey) error {
 
 	req.Id = idhash.RandHexString(16)
 

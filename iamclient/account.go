@@ -24,7 +24,7 @@ import (
 	"github.com/lessos/lessgo/types"
 )
 
-func AccountChargePreValid(req iamapi.AccountChargePrepay, ak iamapi.AccessKey) iamapi.AccountChargePrepay {
+func AccountChargePreValid(req iamapi.AccountChargePrepay, ak *iamapi.AccessKey) iamapi.AccountChargePrepay {
 
 	js, _ := json.Encode(req, "")
 
@@ -48,7 +48,7 @@ func AccountChargePreValid(req iamapi.AccountChargePrepay, ak iamapi.AccessKey) 
 	return rsp
 }
 
-func AccountChargePrepay(req iamapi.AccountChargePrepay, ak iamapi.AccessKey) iamapi.AccountChargePrepay {
+func AccountChargePrepay(req iamapi.AccountChargePrepay, ak *iamapi.AccessKey) iamapi.AccountChargePrepay {
 
 	js, _ := json.Encode(req, "")
 
@@ -72,7 +72,7 @@ func AccountChargePrepay(req iamapi.AccountChargePrepay, ak iamapi.AccessKey) ia
 	return rsp
 }
 
-func AccountChargePayout(req iamapi.AccountChargePayout, ak iamapi.AccessKey) iamapi.AccountChargePayout {
+func AccountChargePayout(req iamapi.AccountChargePayout, ak *iamapi.AccessKey) iamapi.AccountChargePayout {
 
 	js, _ := json.Encode(req, "")
 
