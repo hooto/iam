@@ -38,7 +38,7 @@ type UserValidator struct {
 	sign      string
 }
 
-func NewUserPayload(id, name string, roles, groups []uint32, ttl int64) *UserPayload {
+func NewUserPayload(id, name string, roles []uint32, groups []string, ttl int64) *UserPayload {
 
 	if ttl < userAuthTtlMin {
 		ttl = userAuthTtlMin

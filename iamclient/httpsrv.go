@@ -32,6 +32,7 @@ type AuthSession struct {
 	PhotoUrl       string            `json:"photo_url"`
 	InstanceOwner  bool              `json:"instance_owner,omitempty"`
 	Roles          types.ArrayUint32 `json:"roles,omitempty"`
+	Groups         []string          `json:"groups,omitempty"`
 }
 
 func (s *AuthSession) UserId() string {
@@ -100,6 +101,7 @@ func (c Auth) SessionAction() {
 		set.DisplayName = session.DisplayName
 		set.PhotoUrl = service_prefix() + "/v1/service/photo/" + session.UserName
 		set.Roles = session.Roles
+		set.Groups = session.Groups
 
 		if InstanceOwner == set.UserName {
 			set.InstanceOwner = true

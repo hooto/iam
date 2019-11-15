@@ -71,18 +71,19 @@ func (c UserMgr) UserListAction() {
 		for _, obj := range rss {
 
 			var user iamapi.User
-			if err := obj.Decode(&user); err == nil {
-
-				if qt != "" && (!strings.Contains(user.Name, qt) &&
-					!strings.Contains(user.Email, qt)) {
-					continue
-				}
-
-				user.Id = ""
-				user.Keys = nil
-
-				ls.Items = append(ls.Items, user)
+			if err := obj.Decode(&user); err != nil {
+				continue
 			}
+
+			if qt != "" && (!strings.Contains(user.Name, qt) &&
+				!strings.Contains(user.Email, qt)) {
+				continue
+			}
+
+			user.Id = ""
+			user.Keys = nil
+
+			ls.Items = append(ls.Items, user)
 		}
 	}
 
@@ -123,7 +124,7 @@ func (c UserMgr) UserEntryAction() {
 	}
 
 	// login
-	if set.Login.Name == "" {
+	if set.Login.Name == "" || set.Login.Type == iamapi.UserTypeGroup {
 		set.Error = types.NewErrorMeta(iamapi.ErrCodeInvalidArgument, "User Not Found")
 		return
 	}
@@ -190,6 +191,11 @@ func (c UserMgr) UserSetAction() {
 	//
 	if obj := store.Data.KvProgGet(iamapi.DataUserKey(set.Login.Name)); obj.OK() {
 		obj.Decode(&prev.Login)
+	}
+
+	if prev.Login.Type == iamapi.UserTypeGroup {
+		set.Error = types.NewErrorMeta(iamapi.ErrCodeAccessDenied, "Access Denied")
+		return
 	}
 
 	//

@@ -14,6 +14,7 @@
     <tr>
       <th>Username</th>
       <th>Display Name</th>
+      <th>Type</th>
       <th>Email</th>
       <th>Roles</th>
       <th>Status</th>
@@ -26,6 +27,7 @@
 <tr>
   <td class="iam-monofont">{[=v.name]}</td>
   <td>{[=v.display_name]}</td>
+  <td>{[=v._type]}</td>
   <td>{[=v.email]}</td>
   <td>
     {[~v.roles :rv]}
@@ -47,10 +49,17 @@
       onclick="iamAccMgr.FundNew('{[=v.name]}')">
       {[=l4i.T("Recharge")]}
     </button>
+	{[? v._type_group]}
+    <button class="pure-button button-small"
+      onclick="iamUserMgr.GroupSetForm('{[=v.name]}')">
+      {[=l4i.T("Settings")]}
+    </button>
+	{[??]}
     <button class="pure-button button-small"
       onclick="iamUserMgr.UserSetForm('{[=v.name]}')">
       {[=l4i.T("Settings")]}
     </button>
+	{[?]}
   </td>
 </tr>
 {[~]}

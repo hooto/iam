@@ -40,6 +40,8 @@ func (c User) PanelInfoAction() {
 			"title": hlang.StdLangFeed.Translate(c.Request.Locale, "Keys")},
 		{"path": "account/index",
 			"title": hlang.StdLangFeed.Translate(c.Request.Locale, "Account")},
+		{"path": "user-group/index",
+			"title": hlang.StdLangFeed.Translate(c.Request.Locale, "Group")},
 	}
 
 	if iamclient.SessionAccessAllowed(c.Session, "user.admin", config.Config.InstanceID) {

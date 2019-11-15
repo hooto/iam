@@ -41,6 +41,18 @@ func AuthKeySliceGet(ls []*AuthKey, arg_accesskey string) *AuthKey {
 	return nil
 }
 
+func AuthKeySliceDel(ls []*AuthKey, arg_accesskey string) ([]*AuthKey, bool) {
+	object_slice_mu_AuthKey.Lock()
+	defer object_slice_mu_AuthKey.Unlock()
+	for i, v := range ls {
+		if v.AccessKey == arg_accesskey {
+			ls = append(ls[:i], ls[i+1:]...)
+			return ls, true
+		}
+	}
+	return ls, false
+}
+
 func AuthKeySliceEqual(ls, ls2 []*AuthKey) bool {
 	object_slice_mu_AuthKey.RLock()
 	defer object_slice_mu_AuthKey.RUnlock()
@@ -108,7 +120,7 @@ func (it *UserPayload) Equal(it2 *UserPayload) bool {
 		it.Id != it2.Id ||
 		it.Name != it2.Name ||
 		!PbUint32SliceEqual(it.Roles, it2.Roles) ||
-		!PbUint32SliceEqual(it.Groups, it2.Groups) ||
+		!PbStringSliceEqual(it.Groups, it2.Groups) ||
 		it.Expired != it2.Expired {
 		return false
 	}
@@ -136,6 +148,18 @@ func UserPayloadSliceGet(ls []*UserPayload, arg_id string) *UserPayload {
 		}
 	}
 	return nil
+}
+
+func UserPayloadSliceDel(ls []*UserPayload, arg_id string) ([]*UserPayload, bool) {
+	object_slice_mu_UserPayload.Lock()
+	defer object_slice_mu_UserPayload.Unlock()
+	for i, v := range ls {
+		if v.Id == arg_id {
+			ls = append(ls[:i], ls[i+1:]...)
+			return ls, true
+		}
+	}
+	return ls, false
 }
 
 func UserPayloadSliceEqual(ls, ls2 []*UserPayload) bool {

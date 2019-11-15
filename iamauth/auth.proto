@@ -26,7 +26,7 @@ message UserPayload {
     string id = 1; // struct:object_slice_key
     string name = 2;
     repeated uint32 roles = 4;
-    repeated uint32 groups = 5;
+    repeated string groups = 5;
     int64 expired = 9; // unix time in seconds
 }
 

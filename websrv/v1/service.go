@@ -63,23 +63,25 @@ func (c Service) LoginAuthAction() {
 	}
 	defer c.RenderJson(&rsp)
 
-	uname := strings.TrimSpace(strings.ToLower(c.Params.Get("uname")))
-
-	if uname == "" || c.Params.Get("passwd") == "" {
+	if c.Params.Get("passwd") == "" {
 		rsp.Error = types.NewErrorMeta("400", "Username or Password can not be empty")
 		return
 	}
 
-	var user iamapi.User
-	if obj := store.Data.KvProgGet(iamapi.DataUserKey(uname)); obj.OK() {
-		obj.Decode(&user)
-	} else {
-		rsp.Error = types.NewErrorMeta("500", "server error #01")
+	uname := iamapi.UserNameFilter(c.Params.Get("uname"))
+	if err := iamapi.UserNameValid(uname); err != nil {
+		rsp.Error = types.NewErrorMeta("400", "incorrect username or password")
 		return
 	}
 
-	if user.Name != uname {
-		rsp.Error = types.NewErrorMeta("400", "incorrect username or password #01")
+	user := store.UserGet(uname)
+	if user == nil {
+		rsp.Error = types.NewErrorMeta("400", "incorrect username or password")
+		return
+	}
+
+	if user.Type == iamapi.UserTypeGroup {
+		rsp.Error = types.NewErrorMeta("400", "incorrect username or password")
 		return
 	}
 
@@ -105,7 +107,7 @@ func (c Service) LoginAuthAction() {
 		store.Data.KvPut(err_key, err_num, &skv.KvWriteOptions{
 			Ttl: 86400 * 1000,
 		})
-		rsp.Error = types.NewErrorMeta("400", "incorrect username or password #02")
+		rsp.Error = types.NewErrorMeta("400", "incorrect username or password")
 		return
 	}
 
@@ -115,7 +117,7 @@ func (c Service) LoginAuthAction() {
 			user.Name,
 			user.DisplayName,
 			user.Roles,
-			user.Groups,
+			store.UserGroups(uname),
 			ttl,
 		)
 		js, _ = json.Encode(ap, "")

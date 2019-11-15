@@ -94,12 +94,11 @@ func (c Reg) SignUpRegAction() {
 		DisplayName: strings.Title(uname),
 		Status:      1,
 		Roles:       []uint32{100},
-		Groups:      []uint32{100},
 	}
 	user.Keys.Set(iamapi.UserKeyDefault, auth)
 
-	if obj := store.Data.KvProgPut(iamapi.DataUserKey(user.Name), skv.NewKvEntry(user), nil); !obj.OK() {
-		rsp.Error = &types.ErrorMeta{"500", obj.Bytex().String()}
+	if !store.UserSet(&user) {
+		rsp.Error = &types.ErrorMeta{"500", "Server Error"}
 		return
 	}
 

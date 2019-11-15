@@ -250,6 +250,10 @@
       "val": "通用"
     },
     {
+      "key": "group",
+      "val": "群组"
+    },
+    {
       "key": "hint",
       "val": "提示"
     },
@@ -280,6 +284,10 @@
     {
       "key": "mailer",
       "val": "邮箱投递"
+    },
+    {
+      "key": "member",
+      "val": "成员"
     },
     {
       "key": "message",
@@ -344,6 +352,10 @@
     {
       "key": "overview",
       "val": "概要"
+    },
+    {
+      "key": "owner",
+      "val": "所有者"
     },
     {
       "key": "page redirecting ...",

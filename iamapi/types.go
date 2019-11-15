@@ -22,7 +22,9 @@ import (
 	"encoding/binary"
 	"encoding/hex"
 	"errors"
+	"hash/crc32"
 	"regexp"
+	"strings"
 
 	"github.com/golang/protobuf/proto"
 	"github.com/lessos/lessgo/crypto/idhash"
@@ -51,12 +53,24 @@ var (
 	AppInstanceIdReg       = regexp.MustCompile("^[a-f0-9]{16,24}$")
 )
 
+func UserNameFilter(name string) string {
+	return strings.TrimSpace(strings.ToLower(name))
+}
+
 func UserIdBytes(name string) []byte {
 	return idhash.Hash([]byte(name), 4)
 }
 
 func UserId(name string) string {
 	return hex.EncodeToString(UserIdBytes(name))
+}
+
+func Hash32(v string) uint32 {
+	u32 := crc32.ChecksumIEEE([]byte(v))
+	if u32 < 200 {
+		u32 = 200
+	}
+	return u32
 }
 
 func UserNameValid(user string) error {
@@ -72,7 +86,7 @@ type UserSession struct {
 	UserName     string            `json:"username"`
 	DisplayName  string            `json:"display_name,omitempty"`
 	Roles        types.ArrayUint32 `json:"roles,omitempty"`
-	Groups       types.ArrayUint32 `json:"groups,omitempty"`
+	Groups       []string          `json:"groups,omitempty"`
 	ClientAddr   string            `json:"client_addr,omitempty"`
 	Created      int64             `json:"created"`
 	Expired      int64             `json:"expired"`
@@ -93,6 +107,10 @@ type UserAccessEntry struct {
 	InstanceID     string `json:"instance_id,omitempty"`
 }
 
+const (
+	UserTypeGroup uint32 = 1 << 1
+)
+
 type User struct {
 	Id          string            `json:"id,omitempty"`
 	Name        string            `json:"name"`
@@ -100,10 +118,12 @@ type User struct {
 	DisplayName string            `json:"display_name,omitempty"`
 	Keys        types.KvPairs     `json:"keys,omitempty"`
 	Roles       types.ArrayUint32 `json:"roles,omitempty"`
-	Groups      types.ArrayUint32 `json:"groups,omitempty"`
-	Status      uint8             `json:"status"`
-	Created     types.MetaTime    `json:"created"`
-	Updated     types.MetaTime    `json:"updated"`
+	Type        uint32            `json:"type,omitempty"`
+	Owners      []string          `json:"owners,omitempty"`
+	Members     []string          `json:"members,omitempty"`
+	Status      uint8             `json:"status,omitempty"`
+	Created     types.MetaTime    `json:"created,omitempty"`
+	Updated     types.MetaTime    `json:"updated,omitempty"`
 }
 
 type UserEntry struct {
@@ -126,6 +146,22 @@ type UserProfile struct {
 	Birthday    string         `json:"birthday,omitempty"`
 	About       string         `json:"about,omitempty"`
 	Updated     types.MetaTime `json:"updated,omitempty"`
+}
+
+type UserGroupItem struct {
+	types.TypeMeta `json:",inline"`
+	Name           string         `json:"name"`
+	DisplayName    string         `json:"display_name,omitempty"`
+	Owners         []string       `json:"owners,omitempty"`
+	Members        []string       `json:"members,omitempty"`
+	Status         uint8          `json:"status"`
+	Created        types.MetaTime `json:"created"`
+	Updated        types.MetaTime `json:"updated"`
+}
+
+type UserGroupList struct {
+	types.TypeMeta `json:",inline"`
+	Items          []*UserGroupItem `json:"items,omitempty"`
 }
 
 type UserPasswordSet struct {

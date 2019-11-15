@@ -27,6 +27,7 @@ func NewModule() httpsrv.Module {
 	module.ControllerRegister(new(Service))
 
 	module.ControllerRegister(new(User))
+	module.ControllerRegister(new(UserGroup))
 	module.ControllerRegister(new(Account))
 	module.ControllerRegister(new(AccountCharge))
 	module.ControllerRegister(new(App))

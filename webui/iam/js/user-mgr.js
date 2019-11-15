@@ -84,6 +84,13 @@ iamUserMgr.UserList = function() {
                 if (!data.items[i].display_name) {
                     data.items[i].display_name = "";
                 }
+                if (data.items[i].type &&
+                    data.items[i].type == iamUser.TypeGroup) {
+                    data.items[i]._type = "Group";
+                    data.items[i]._type_group = true;
+                } else {
+                    data.items[i]._type = "User";
+                }
             }
 
             l4iTemplate.Render({
@@ -416,6 +423,13 @@ iamUserMgr.RoleSetCommit = function() {
                 iamUserMgr.RoleList();
             }, 1000);
         },
+    });
+}
+
+
+iamUserMgr.GroupSetForm = function(name) {
+    iamUserGroup.SetForm(name, {
+        cb: iamUserMgr.UserList,
     });
 }
 

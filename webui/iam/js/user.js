@@ -1,5 +1,5 @@
 var iamUser = {
-
+    TypeGroup: (1 << 1),
 }
 
 iamUser.Overview = function() {

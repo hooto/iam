@@ -55,6 +55,7 @@ iam.Boot = function() {
                 // "~/bs/4/js/bootstrap.js",
                 "~/iam/js/mgr.js" + iam.debug_uri(),
                 "~/iam/js/user.js" + iam.debug_uri(),
+                "~/iam/js/user-group.js" + iam.debug_uri(),
                 "~/iam/js/app.js" + iam.debug_uri(),
                 "~/iam/js/access-key.js" + iam.debug_uri(),
                 "~/iam/js/account.js" + iam.debug_uri(),
@@ -105,6 +106,10 @@ iam.load_index = function() {
 
                     case "account/index":
                         l4i.UrlEventRegister("account/index", iamAcc.Index, "iam-topbar-nav-menus");
+                        break;
+
+                    case "user-group/index":
+                        l4i.UrlEventRegister("user-group/index", iamUserGroup.Index, "iam-topbar-nav-menus");
                         break;
 
                     case "user-mgr/index":

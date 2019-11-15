@@ -31,7 +31,7 @@ var (
 	tPayloadItem = &UserPayload{
 		Id:      "guest",
 		Roles:   []uint32{100, 200},
-		Groups:  []uint32{10000, 20000},
+		Groups:  []string{"staff"},
 		Expired: 2012345678,
 	}
 	tToken = tPayloadItem.SignToken(tKeys)
@@ -43,7 +43,7 @@ func Test_UserMain(t *testing.T) {
 		"guest",
 		"Guest",
 		[]uint32{100, 200},
-		[]uint32{10000, 20000},
+		[]string{"guest"},
 		86400)
 
 	pl.Expired = time.Now().Unix() + 1
