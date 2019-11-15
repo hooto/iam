@@ -47,6 +47,20 @@ var (
 
 type UserMgr struct {
 	*httpsrv.Controller
+	us iamapi.UserSession
+}
+
+func (c *UserMgr) Init() int {
+
+	c.us, _ = iamclient.SessionInstance(c.Session)
+
+	if !c.us.IsLogin() {
+		c.Response.Out.WriteHeader(401)
+		c.RenderJson(types.NewTypeErrorMeta(iamapi.ErrCodeUnauthorized, "Unauthorized"))
+		return 1
+	}
+
+	return 0
 }
 
 func (c UserMgr) UserListAction() {
@@ -143,6 +157,61 @@ func (c UserMgr) UserEntryAction() {
 	}
 
 	set.Profile = &profile
+
+	set.Kind = "User"
+}
+
+func (c UserMgr) UserGroupSetAction() {
+
+	set := types.TypeMeta{}
+	defer c.RenderJson(&set)
+
+	if c.us.UserName != "sysadmin" {
+		set.Error = types.NewErrorMeta(iamapi.ErrCodeAccessDenied, "Access Denied")
+		return
+	}
+
+	user := store.UserGet(c.Params.Get("name"))
+	if user == nil {
+		set.Error = types.NewErrorMeta("400", "Item Not Found")
+		return
+	}
+
+	var (
+		ugType   = uint32(c.Params.Int64("type"))
+		ugOwners = strings.Split(c.Params.Get("owners"), ",")
+	)
+
+	if ugType != user.Type ||
+		!iamapi.ArrayStringEqual(user.Owners, ugOwners) {
+
+		if ugType == iamapi.UserTypeGroup {
+
+			user.Type = iamapi.UserTypeGroup
+
+			if !iamapi.ArrayStringEqual(user.Owners, ugOwners) {
+				for _, v2 := range ugOwners {
+					if p := store.UserGet(v2); p != nil {
+						if !iamapi.ArrayStringHas(user.Owners, v2) {
+							user.Owners = append(user.Owners, v2)
+						}
+					}
+				}
+			}
+
+			if len(user.Owners) < 1 {
+				set.Error = types.NewErrorMeta("400", "Owner Not Found")
+				return
+			}
+
+		} else {
+			user.Type = 0
+		}
+
+		user.Updated = types.MetaTimeNow()
+
+		store.Data.KvProgPut(iamapi.DataUserKey(user.Name), skv.NewKvEntry(user), nil)
+	}
 
 	set.Kind = "User"
 }
