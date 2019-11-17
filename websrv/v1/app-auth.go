@@ -22,7 +22,6 @@ import (
 	"github.com/hooto/httpsrv"
 	"github.com/lessos/lessgo/crypto/idhash"
 	"github.com/lessos/lessgo/types"
-	"github.com/lynkdb/iomix/skv"
 	iox_utils "github.com/lynkdb/iomix/utils"
 
 	"github.com/hooto/iam/config"
@@ -49,7 +48,7 @@ func (c AppAuth) InfoAction() {
 	}
 
 	var inst iamapi.AppInstance
-	if obj := store.Data.KvProgGet(iamapi.DataAppInstanceKey(instid)); obj.OK() {
+	if obj := store.Data.NewReader(iamapi.ObjKeyAppInstance(instid)).Query(); obj.OK() {
 		obj.Decode(&inst)
 	}
 
@@ -120,7 +119,7 @@ func (c AppAuth) RegisterAction() {
 		prev iamapi.AppInstance
 	)
 
-	if obj := store.Data.KvProgGet(iamapi.DataAppInstanceKey(set.Instance.Meta.ID)); obj.OK() {
+	if obj := store.Data.NewReader(iamapi.ObjKeyAppInstance(set.Instance.Meta.ID)).Query(); obj.OK() {
 		obj.Decode(&prev)
 	}
 
@@ -143,8 +142,9 @@ func (c AppAuth) RegisterAction() {
 		set.Instance.Status = prev.Status
 	}
 
-	if obj := store.Data.KvProgPut(iamapi.DataAppInstanceKey(set.Instance.Meta.ID), skv.NewKvEntry(set.Instance), nil); !obj.OK() {
-		set.Error = types.NewErrorMeta(iamapi.ErrCodeInternalError, obj.Bytex().String())
+	if obj := store.Data.NewWriter(iamapi.ObjKeyAppInstance(set.Instance.Meta.ID), set.Instance).
+		Commit(); !obj.OK() {
+		set.Error = types.NewErrorMeta(iamapi.ErrCodeInternalError, obj.Message)
 		return
 	}
 
@@ -213,21 +213,21 @@ func (c AppAuth) RoleListAction() {
 	defer c.RenderJson(&sets)
 
 	// TODO app<->role
-	if objs := store.Data.KvProgScan(iamapi.DataRoleKey(0), iamapi.DataRoleKey(99999999), 100); objs.OK() {
+	if rs := store.Data.NewReader(nil).KeyRangeSet(
+		iamapi.ObjKeyRole(""), iamapi.ObjKeyRole("")).LimitNumSet(100).Query(); rs.OK() {
 
-		rss := objs.KvList()
-		for _, obj := range rss {
+		for _, obj := range rs.Items {
 
 			var role iamapi.UserRole
-			if err := obj.Decode(&role); err == nil {
+			if err := obj.DataValue().Decode(&role, nil); err == nil {
 
-				if role.Status == 0 || role.Id == 1 {
+				if role.Status == 0 || obj.Meta.IncrId == 1 {
 					continue
 				}
 
 				sets.Items = append(sets.Items, iamapi.UserRole{
+					Id:   uint32(obj.Meta.IncrId),
 					Name: role.Name,
-					Id:   role.Id,
 					Desc: role.Desc,
 				})
 			}
@@ -272,7 +272,7 @@ func (c AppAuth) UserAccessKeyAction() {
 	}
 
 	var app iamapi.AppInstance
-	if rs := store.Data.KvProgGet(iamapi.DataAppInstanceKey(app_aka.Key)); rs.OK() {
+	if rs := store.Data.NewReader(iamapi.ObjKeyAppInstance(app_aka.Key)).Query(); rs.OK() {
 		rs.Decode(&app)
 	}
 
@@ -287,7 +287,7 @@ func (c AppAuth) UserAccessKeyAction() {
 	}
 
 	var user_ak iamapi.AccessKey
-	if rs := store.Data.KvProgGet(iamapi.DataAccessKeyKey(username, access_key)); rs.OK() {
+	if rs := store.Data.NewReader(iamapi.ObjKeyAccessKey(username, access_key)).Query(); rs.OK() {
 		rs.Decode(&user_ak)
 	}
 
@@ -304,7 +304,7 @@ func (c AppAuth) UserAccessKeyAction() {
 	}
 
 	var user iamapi.User
-	if obj := store.Data.KvProgGet(iamapi.DataUserKey(username)); obj.OK() {
+	if obj := store.Data.NewReader(iamapi.ObjKeyUser(username)).Query(); obj.OK() {
 		obj.Decode(&user)
 	}
 

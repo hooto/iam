@@ -26,7 +26,7 @@ import (
 	"github.com/hooto/iam/iamapi"
 )
 
-func upgrade_v090(dbPrev skv.Connector, dbNext sko.Connector) error {
+func upgrade_v090(dbPrev skv.Connector, dbNext sko.ClientConnector) error {
 
 	if dbPrev == nil || dbNext == nil {
 		return errors.New("invalid connect")
@@ -43,13 +43,13 @@ func upgrade_v090(dbPrev skv.Connector, dbNext sko.Connector) error {
 
 		var (
 			offset = iamapi.DataAppInstanceKey("")
+			cutset = iamapi.DataAppInstanceKey("")
 			num    = 0
 		)
 
 		for {
 
-			rs := dbPrev.KvProgScan(offset,
-				iamapi.DataAppInstanceKey(""), limit)
+			rs := dbPrev.KvProgScan(offset, cutset, limit)
 			if !rs.OK() {
 				return errors.New("server error")
 			}
@@ -62,10 +62,11 @@ func upgrade_v090(dbPrev skv.Connector, dbNext sko.Connector) error {
 					return err
 				}
 
-				rw := dbNext.NewObjectWriter(iamapi.ObjKeyAppInstance(item.Meta.ID)).
-					DataValueSet(&item, nil)
-				if rs := dbNext.ObjectPut(rw); !rs.OK() {
+				if rs := dbNext.NewWriter(iamapi.ObjKeyAppInstance(item.Meta.ID), item).
+					ModeCreateSet(true).Commit(); !rs.OK() {
 					return fmt.Errorf("db err %s", rs.Message)
+				} else if rs.Meta.Created > 0 && rs.Meta.Updated == 0 {
+					continue
 				}
 
 				num += 1
@@ -78,7 +79,9 @@ func upgrade_v090(dbPrev skv.Connector, dbNext sko.Connector) error {
 			}
 		}
 
-		hlog.Printf("warn", "Upgrade App %d", num)
+		if num > 0 {
+			hlog.Printf("warn", "Upgrade App %d", num)
+		}
 		numAll += num
 	}
 
@@ -107,14 +110,21 @@ func upgrade_v090(dbPrev skv.Connector, dbNext sko.Connector) error {
 					return err
 				}
 
-				rw := dbNext.NewObjectWriter(iamapi.ObjKeyUser(item.Name)).
-					DataValueSet(&item, nil)
-				if rs := dbNext.ObjectPut(rw); !rs.OK() {
+				ow := sko.NewObjectWriter(iamapi.ObjKeyUser(item.Name), item).
+					ModeCreateSet(true).IncrNamespaceSet("user")
+				if item.Name == def_sysadmin {
+					ow.Meta.IncrId = 1
+				}
+
+				rs := dbNext.Commit(ow)
+				if !rs.OK() {
 					return fmt.Errorf("db err %s", rs.Message)
+				} else if rs.Meta.Created > 0 && rs.Meta.Updated == 0 {
+					continue
 				}
 
 				num += 1
-				hlog.Printf("warn", "Upgrade User %s", item.Name)
+				hlog.Printf("warn", "Upgrade User %s, Incr %d", item.Name, rs.Meta.IncrId)
 				users = append(users, item.Name)
 
 				offset = iamapi.DataUserKey(item.Name)
@@ -125,7 +135,9 @@ func upgrade_v090(dbPrev skv.Connector, dbNext sko.Connector) error {
 			}
 		}
 
-		hlog.Printf("warn", "Upgrade User %d", num)
+		if num > 0 {
+			hlog.Printf("warn", "Upgrade User %d", num)
+		}
 		numAll += num
 	}
 
@@ -153,10 +165,11 @@ func upgrade_v090(dbPrev skv.Connector, dbNext sko.Connector) error {
 					return err
 				}
 
-				rw := dbNext.NewObjectWriter(iamapi.ObjKeyAccessKey(user, item.AccessKey)).
-					DataValueSet(&item, nil)
-				if rs := dbNext.ObjectPut(rw); !rs.OK() {
+				if rs := dbNext.NewWriter(iamapi.ObjKeyAccessKey(user, item.AccessKey), item).
+					ModeCreateSet(true).Commit(); !rs.OK() {
 					return fmt.Errorf("db err %s", rs.Message)
+				} else if rs.Meta.Created > 0 && rs.Meta.Updated == 0 {
+					continue
 				}
 
 				num += 1
@@ -166,7 +179,9 @@ func upgrade_v090(dbPrev skv.Connector, dbNext sko.Connector) error {
 			break
 		}
 
-		hlog.Printf("warn", "Upgrade AK %s %d", user, num)
+		if num > 0 {
+			hlog.Printf("warn", "Upgrade AK %s %d", user, num)
+		}
 		numAll += num
 	}
 
@@ -199,10 +214,11 @@ func upgrade_v090(dbPrev skv.Connector, dbNext sko.Connector) error {
 					continue
 				}
 
-				rw := dbNext.NewObjectWriter(iamapi.ObjKeyUserProfile(item.Login.Name)).
-					DataValueSet(&item, nil)
-				if rs := dbNext.ObjectPut(rw); !rs.OK() {
+				if rs := dbNext.NewWriter(iamapi.ObjKeyUserProfile(item.Login.Name), item).
+					ModeCreateSet(true).Commit(); !rs.OK() {
 					return fmt.Errorf("db err %s", rs.Message)
+				} else if rs.Meta.Created > 0 && rs.Meta.Updated == 0 {
+					continue
 				}
 
 				num += 1
@@ -217,7 +233,57 @@ func upgrade_v090(dbPrev skv.Connector, dbNext sko.Connector) error {
 			}
 		}
 
-		hlog.Printf("warn", "Upgrade UserProfile %d", num)
+		if num > 0 {
+			hlog.Printf("warn", "Upgrade UserProfile %d", num)
+		}
+		numAll += num
+	}
+
+	// AccUser
+	if true {
+
+		var (
+			offset = iamapi.DataAccUserKey("")
+			num    = 0
+		)
+
+		for {
+
+			rs := dbPrev.KvProgScan(offset,
+				iamapi.DataAccUserKey(""), limit)
+			if !rs.OK() {
+				return errors.New("server error")
+			}
+
+			rss := rs.KvList()
+			for _, obj := range rss {
+
+				var item iamapi.AccountUser
+				if err := obj.Decode(&item); err != nil {
+					return err
+				}
+
+				if rs := dbNext.NewWriter(iamapi.ObjKeyAccUser(item.User), item).
+					ModeCreateSet(true).Commit(); !rs.OK() {
+					return fmt.Errorf("db err %s", rs.Message)
+				} else if rs.Meta.Created > 0 && rs.Meta.Updated == 0 {
+					continue
+				}
+
+				num += 1
+				hlog.Printf("warn", "Upgrade AccUser %s", item.User)
+
+				offset = iamapi.DataAccUserKey(item.User)
+			}
+
+			if len(rss) < limit {
+				break
+			}
+		}
+
+		if num > 0 {
+			hlog.Printf("warn", "Upgrade AccUser %d", num)
+		}
 		numAll += num
 	}
 
@@ -245,16 +311,18 @@ func upgrade_v090(dbPrev skv.Connector, dbNext sko.Connector) error {
 					return err
 				}
 
-				rw := dbNext.NewObjectWriter(iamapi.ObjKeyAccFundUser(item.User, item.Id)).
-					DataValueSet(&item, nil)
-				if rs := dbNext.ObjectPut(rw); !rs.OK() {
+				if rs := dbNext.NewWriter(iamapi.ObjKeyAccFundUser(item.User, item.Id), item).
+					ModeCreateSet(true).Commit(); !rs.OK() {
 					return fmt.Errorf("db err %s", rs.Message)
+				} else if rs.Meta.Created > 0 && rs.Meta.Updated == 0 {
+					continue
 				}
 
-				rw = dbNext.NewObjectWriter(iamapi.ObjKeyAccFundMgr(item.Id)).
-					DataValueSet(&item, nil)
-				if rs := dbNext.ObjectPut(rw); !rs.OK() {
+				if rs := dbNext.NewWriter(iamapi.ObjKeyAccFundMgr(item.Id), item).
+					ModeCreateSet(true).Commit(); !rs.OK() {
 					return fmt.Errorf("db err %s", rs.Message)
+				} else if rs.Meta.Created > 0 && rs.Meta.Updated == 0 {
+					continue
 				}
 
 				num += 1
@@ -268,7 +336,9 @@ func upgrade_v090(dbPrev skv.Connector, dbNext sko.Connector) error {
 			}
 		}
 
-		hlog.Printf("warn", "Upgrade AccFund %d", num)
+		if num > 0 {
+			hlog.Printf("warn", "Upgrade AccFund %d", num)
+		}
 		numAll += num
 	}
 
@@ -296,16 +366,18 @@ func upgrade_v090(dbPrev skv.Connector, dbNext sko.Connector) error {
 					return err
 				}
 
-				rw := dbNext.NewObjectWriter(iamapi.ObjKeyAccChargeUser(item.User, item.Id)).
-					DataValueSet(&item, nil)
-				if rs := dbNext.ObjectPut(rw); !rs.OK() {
+				if rs := dbNext.NewWriter(iamapi.ObjKeyAccChargeUser(item.User, item.Id), item).
+					ModeCreateSet(true).Commit(); !rs.OK() {
 					return fmt.Errorf("db err %s", rs.Message)
+				} else if rs.Meta.Created > 0 && rs.Meta.Updated == 0 {
+					continue
 				}
 
-				rw = dbNext.NewObjectWriter(iamapi.ObjKeyAccChargeMgr(item.Id)).
-					DataValueSet(&item, nil)
-				if rs := dbNext.ObjectPut(rw); !rs.OK() {
+				if rs := dbNext.NewWriter(iamapi.ObjKeyAccChargeMgr(item.Id), item).
+					ModeCreateSet(true).Commit(); !rs.OK() {
 					return fmt.Errorf("db err %s", rs.Message)
+				} else if rs.Meta.Created > 0 && rs.Meta.Updated == 0 {
+					continue
 				}
 
 				num += 1
@@ -319,7 +391,9 @@ func upgrade_v090(dbPrev skv.Connector, dbNext sko.Connector) error {
 			}
 		}
 
-		hlog.Printf("warn", "Upgrade AccCharge %d", num)
+		if num > 0 {
+			hlog.Printf("warn", "Upgrade AccCharge %d", num)
+		}
 		numAll += num
 	}
 
@@ -342,10 +416,11 @@ func upgrade_v090(dbPrev skv.Connector, dbNext sko.Connector) error {
 			rss := rs.KvList()
 			for _, obj := range rss {
 
-				rw := dbNext.NewObjectWriter(iamapi.ObjKeySysConfig(string(obj.Key))).
-					DataValueSet(obj.Bytex().String(), nil)
-				if rs := dbNext.ObjectPut(rw); !rs.OK() {
+				if rs := dbNext.NewWriter(iamapi.ObjKeySysConfig(string(obj.Key)), obj.Bytex().String()).
+					ModeCreateSet(true).Commit(); !rs.OK() {
 					return fmt.Errorf("db err %s", rs.Message)
+				} else if rs.Meta.Created > 0 && rs.Meta.Updated == 0 {
+					continue
 				}
 
 				num += 1
@@ -355,7 +430,9 @@ func upgrade_v090(dbPrev skv.Connector, dbNext sko.Connector) error {
 			break
 		}
 
-		hlog.Printf("warn", "Upgrade SysConfig %d", num)
+		if num > 0 {
+			hlog.Printf("warn", "Upgrade SysConfig %d", num)
+		}
 		numAll += num
 	}
 
@@ -363,8 +440,8 @@ func upgrade_v090(dbPrev skv.Connector, dbNext sko.Connector) error {
 	if true {
 
 		var (
-			offset = iamapi.DataMsgQueue("")
-			cutset = iamapi.DataMsgQueue("")
+			offset = iamapi.PrevDataMsgQueue("")
+			cutset = iamapi.PrevDataMsgQueue("")
 			num    = 0
 		)
 
@@ -387,16 +464,17 @@ func upgrade_v090(dbPrev skv.Connector, dbNext sko.Connector) error {
 					continue
 				}
 
-				rw := dbNext.NewObjectWriter(iamapi.ObjKeyMsgQueue(item.Id)).
-					DataValueSet(&item, nil)
-				if rs := dbNext.ObjectPut(rw); !rs.OK() {
+				if rs := dbNext.NewWriter(iamapi.ObjKeyMsgQueue(item.Id), item).
+					ModeCreateSet(true).Commit(); !rs.OK() {
 					return fmt.Errorf("db err %s", rs.Message)
+				} else if rs.Meta.Created > 0 && rs.Meta.Updated == 0 {
+					continue
 				}
 
 				num += 1
 				hlog.Printf("warn", "Upgrade MsgQueue %s", item.Id)
 
-				offset = iamapi.DataMsgQueue(item.Id)
+				offset = iamapi.PrevDataMsgQueue(item.Id)
 			}
 
 			if len(rss) < limit {
@@ -404,7 +482,9 @@ func upgrade_v090(dbPrev skv.Connector, dbNext sko.Connector) error {
 			}
 		}
 
-		hlog.Printf("warn", "Upgrade MsgQueue %d", num)
+		if num > 0 {
+			hlog.Printf("warn", "Upgrade MsgQueue %d", num)
+		}
 		numAll += num
 	}
 
@@ -412,8 +492,8 @@ func upgrade_v090(dbPrev skv.Connector, dbNext sko.Connector) error {
 	if true {
 
 		var (
-			offset = iamapi.DataMsgSent("")
-			cutset = iamapi.DataMsgSent("")
+			offset = iamapi.PrevDataMsgSent("")
+			cutset = iamapi.PrevDataMsgSent("")
 			num    = 0
 			tn     = uint32(time.Now().Unix())
 		)
@@ -441,16 +521,17 @@ func upgrade_v090(dbPrev skv.Connector, dbNext sko.Connector) error {
 					item.Created = tn
 				}
 
-				rw := dbNext.NewObjectWriter(iamapi.ObjKeyMsgSent(item.SentId())).
-					DataValueSet(&item, nil)
-				if rs := dbNext.ObjectPut(rw); !rs.OK() {
+				if rs := dbNext.NewWriter(iamapi.ObjKeyMsgSent(item.SentId()), item).
+					ModeCreateSet(true).Commit(); !rs.OK() {
 					return fmt.Errorf("db err %s", rs.Message)
+				} else if rs.Meta.Created > 0 && rs.Meta.Updated == 0 {
+					continue
 				}
 
 				num += 1
 				hlog.Printf("warn", "Upgrade MsgSent %s", item.SentId())
 
-				offset = iamapi.DataMsgSent(item.SentId())
+				offset = iamapi.PrevDataMsgSent(item.SentId())
 			}
 
 			if len(rss) < limit {
@@ -458,11 +539,15 @@ func upgrade_v090(dbPrev skv.Connector, dbNext sko.Connector) error {
 			}
 		}
 
-		hlog.Printf("warn", "Upgrade MsgSent %d", num)
+		if num > 0 {
+			hlog.Printf("warn", "Upgrade MsgSent %d", num)
+		}
 		numAll += num
 	}
 
-	hlog.Printf("warn", "Upgrade %d items, in %v", numAll, time.Since(tStart))
+	if numAll > 0 {
+		hlog.Printf("warn", "Upgrade %d items, in %v", numAll, time.Since(tStart))
+	}
 
 	return nil
 }

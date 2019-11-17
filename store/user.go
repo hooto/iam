@@ -18,8 +18,6 @@ import (
 	"sync"
 	"time"
 
-	"github.com/lynkdb/iomix/skv"
-
 	"github.com/hooto/iam/iamapi"
 )
 
@@ -65,7 +63,8 @@ func UserSet(user *iamapi.User) bool {
 	p, ok := userCaches[user.Name]
 	if !ok || p.Updated >= user.Updated {
 
-		if rs := Data.KvProgPut(iamapi.DataUserKey(user.Name), skv.NewKvEntry(user), nil); !rs.OK() {
+		if rs := Data.NewWriter(iamapi.ObjKeyUser(user.Name), user).
+			IncrNamespaceSet("user").Commit(); !rs.OK() {
 			return false
 		}
 
@@ -109,25 +108,24 @@ func userCacheRefresh() {
 		return
 	}
 
-	offset := iamapi.DataUserKey("")
+	offset := iamapi.ObjKeyUser("")
+	cutset := iamapi.ObjKeyUser("")
 
 	for {
 
-		rs := Data.KvProgScan(offset,
-			iamapi.DataUserKey(""), 1000)
+		rs := Data.NewReader(nil).KeyRangeSet(offset, cutset).LimitNumSet(1000).Query()
 		if !rs.OK() {
 			break
 		}
 
-		rss := rs.KvList()
-		for _, obj := range rss {
+		for _, obj := range rs.Items {
 
 			var user iamapi.User
 			if err := obj.Decode(&user); err != nil {
 				continue
 			}
 
-			offset = iamapi.DataUserKey(user.Name)
+			offset = iamapi.ObjKeyUser(user.Name)
 
 			p, ok := userCaches[user.Name]
 			if ok && p.Updated >= user.Updated {
@@ -147,7 +145,7 @@ func userCacheRefresh() {
 			}
 		}
 
-		if len(rss) < 1000 {
+		if !rs.Next {
 			break
 		}
 	}

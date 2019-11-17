@@ -18,7 +18,6 @@ import (
 	"time"
 
 	"github.com/hooto/httpsrv"
-	"github.com/lessos/lessgo/encoding/json"
 	"github.com/lessos/lessgo/types"
 
 	"github.com/hooto/iam/iamapi"
@@ -72,7 +71,7 @@ func (c SysMsg) PostAction() {
 	}
 
 	var ak iamapi.AccessKey
-	if rs := store.Data.KvProgGet(iamapi.DataAccessKeyKey(authValidator.User, authValidator.AccessKey)); rs.OK() {
+	if rs := store.Data.NewReader(iamapi.ObjKeyAccessKey(authValidator.User, authValidator.AccessKey)).Query(); rs.OK() {
 		rs.Decode(&ak)
 	}
 	if ak.AccessKey == "" || ak.AccessKey != authValidator.AccessKey {
@@ -86,10 +85,9 @@ func (c SysMsg) PostAction() {
 
 	set.Created = uint32(time.Now().Unix())
 
-	js, _ := json.Encode(set, "")
-
-	if rs := store.Data.KvNew(iamapi.DataMsgQueue(set.Id), js, nil); !rs.OK() {
-		rsp.Error = types.NewErrorMeta(iamapi.ErrCodeServerError, "server/db err "+rs.Bytex().String())
+	if rs := store.Data.NewWriter(iamapi.ObjKeyMsgQueue(set.Id), set).
+		ModeCreateSet(true).Commit(); !rs.OK() {
+		rsp.Error = types.NewErrorMeta(iamapi.ErrCodeServerError, "server/db err "+rs.Message)
 		return
 	}
 
@@ -108,23 +106,22 @@ func (c SysMsg) ListAction() {
 	defer c.RenderJson(&rsp)
 
 	var (
-		offset = iamapi.DataMsgSent("zzzz")
-		cutset = iamapi.DataMsgSent("")
-		limit  = 100
+		offset = iamapi.ObjKeyMsgSent("zzzzzzzz")
+		cutset = iamapi.ObjKeyMsgSent("")
+		limit  = int64(100)
 	)
 
-	rs := store.Data.KvRevScan(offset, cutset, limit)
+	rs := store.Data.NewReader(nil).KeyRangeSet(offset, cutset).
+		ModeRevRangeSet(true).LimitNumSet(limit).Query()
 	if !rs.OK() {
 		rsp.Error = types.NewErrorMeta(iamapi.ErrCodeServerError,
-			"server/db err "+rs.Bytex().String())
+			"server/db err "+rs.Message)
 		return
 	}
 
-	rss := rs.KvList()
-
-	for _, v := range rss {
+	for _, v := range rs.Items {
 		var item iamapi.MsgItem
-		if err := v.Decode(&item); err == nil {
+		if err := v.DataValue().Decode(&item, nil); err == nil {
 			item.Id = item.SentId()
 			rsp.Items = append(rsp.Items, &item)
 		}
@@ -150,14 +147,13 @@ func (c SysMsg) ItemAction() {
 		return
 	}
 
-	rs := store.Data.KvGet(iamapi.DataMsgSent(id))
-	if !rs.OK() {
+	if rs := store.Data.NewReader(iamapi.ObjKeyMsgSent(id)).Query(); !rs.OK() {
 		rsp.Error = types.NewErrorMeta(iamapi.ErrCodeServerError,
-			"server/db err "+rs.Bytex().String())
+			"server/db err "+rs.Message)
 		return
 	} else {
 		var item iamapi.MsgItem
-		if err := rs.Decode(&item); err == nil && item.Id != "" {
+		if err := rs.DataValue().Decode(&item, nil); err == nil && item.Id != "" {
 			rsp.Data = &item
 		}
 	}

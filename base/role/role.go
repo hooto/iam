@@ -57,12 +57,11 @@ func instPerms(instanceid string) *perm_map {
 		}
 	}
 
-	//
-	if obj := store.Data.KvProgGet(iamapi.DataAppInstanceKey(instanceid)); obj.OK() {
+	if rs := store.Data.NewReader(iamapi.ObjKeyAppInstance(instanceid)).Query(); rs.OK() {
 
 		var inst iamapi.AppInstance
 
-		if err := obj.Decode(&inst); err == nil {
+		if err := rs.Decode(&inst); err == nil {
 
 			for _, ip := range inst.Privileges {
 

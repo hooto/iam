@@ -25,10 +25,8 @@ import (
 
 	"github.com/hooto/hlog4g/hlog"
 	"github.com/hooto/httpsrv"
-	"github.com/lessos/lessgo/encoding/json"
 	"github.com/lessos/lessgo/pass"
 	"github.com/lessos/lessgo/types"
-	"github.com/lynkdb/iomix/skv"
 
 	"github.com/hooto/iam/base/role"
 	"github.com/hooto/iam/config"
@@ -91,9 +89,9 @@ func (c Service) LoginAuthAction() {
 	}
 
 	err_num := 0
-	err_key := iamapi.DataUserAuthDeny(uname, addr)
-	if rs := store.Data.KvGet(err_key); rs.OK() {
-		err_num = rs.Int()
+	err_key := iamapi.ObjKeyUserAuthDeny(uname, addr)
+	if rs := store.Data.NewReader(err_key).Query(); rs.OK() {
+		err_num = rs.DataValue().Int()
 		if err_num > 10 {
 			rsp.Error = types.NewErrorMeta("400",
 				fmt.Sprintf("more than %d times failed to verify this signin, please try again in 1 day later", err_num))
@@ -104,9 +102,7 @@ func (c Service) LoginAuthAction() {
 	if auth := user.Keys.Get(iamapi.UserKeyDefault); auth == nil ||
 		!pass.Check(c.Params.Get("passwd"), auth.String()) {
 		err_num++
-		store.Data.KvPut(err_key, err_num, &skv.KvWriteOptions{
-			Ttl: 86400 * 1000,
-		})
+		store.Data.NewWriter(err_key, err_num).ExpireSet(86400000).Commit()
 		rsp.Error = types.NewErrorMeta("400", "incorrect username or password")
 		return
 	}
@@ -120,13 +116,11 @@ func (c Service) LoginAuthAction() {
 			store.UserGroups(uname),
 			ttl,
 		)
-		js, _ = json.Encode(ap, "")
 	)
 
-	if rs := store.Data.KvPut(iamapi.DataUserAuth(ap.Id, uint32(ap.Expired)), js, &skv.KvWriteOptions{
-		Ttl: ttl * 1000,
-	}); !rs.OK() {
-		rsp.Error = types.NewErrorMeta("500", rs.Bytex().String())
+	if rs := store.Data.NewWriter(iamapi.ObjKeyUserAuth(ap.Id, uint32(ap.Expired)), ap).
+		ExpireSet(ttl * 1000).Commit(); !rs.OK() {
+		rsp.Error = types.NewErrorMeta("500", rs.Message)
 		return
 	}
 
@@ -257,7 +251,7 @@ func (c Service) PhotoAction() {
 
 		var profile iamapi.UserProfile
 
-		if obj := store.Data.KvProgGet(iamapi.DataUserProfileKey(uname)); obj.OK() {
+		if obj := store.Data.NewReader(iamapi.ObjKeyUserProfile(uname)).Query(); obj.OK() {
 			if err := obj.Decode(&profile); err == nil && len(profile.Photo) > 50 {
 				photo = profile.Photo
 			}

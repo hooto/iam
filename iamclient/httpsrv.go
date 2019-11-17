@@ -35,9 +35,11 @@ type AuthSession struct {
 	Groups         []string          `json:"groups,omitempty"`
 }
 
+/*
 func (s *AuthSession) UserId() string {
 	return iamapi.UserId(s.UserName)
 }
+*/
 
 type Auth struct {
 	*httpsrv.Controller

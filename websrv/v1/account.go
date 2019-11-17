@@ -50,9 +50,9 @@ func (c Account) UserEntryAction() {
 	}
 	defer c.RenderJson(&set)
 
-	if rs := store.Data.KvProgGet(
-		iamapi.DataAccUserKey(c.us.UserName),
-	); rs.OK() {
+	if rs := store.Data.NewReader(
+		iamapi.ObjKeyAccUser(c.us.UserName),
+	).Query(); rs.OK() {
 		rs.Decode(&set.AccountUser)
 	}
 
@@ -66,11 +66,11 @@ func (c Account) FundListAction() {
 	ls := types.ObjectList{}
 	defer c.RenderJson(&ls)
 
-	k := iamapi.DataAccFundUserKey(c.us.UserName, "")
-	if rs := store.Data.KvProgRevScan(k, k, 1000); rs.OK() {
-		rss := rs.KvList()
-		for _, v := range rss {
-
+	k1 := iamapi.ObjKeyAccFundUser(c.us.UserName, "zzzzzzzz")
+	k2 := iamapi.ObjKeyAccFundUser(c.us.UserName, "")
+	if rs := store.Data.NewReader(nil).KeyRangeSet(k1, k2).
+		ModeRevRangeSet(true).LimitNumSet(1000).Query(); rs.OK() {
+		for _, v := range rs.Items {
 			var set iamapi.AccountFund
 			if err := v.Decode(&set); err == nil {
 				ls.Items = append(ls.Items, set)
@@ -86,10 +86,11 @@ func (c Account) ChargeListAction() {
 	ls := types.ObjectList{}
 	defer c.RenderJson(&ls)
 
-	k := iamapi.DataAccChargeUserKey(c.us.UserName, "")
-	if rs := store.Data.KvProgRevScan(k, k, 1000); rs.OK() {
-		rss := rs.KvList()
-		for _, v := range rss {
+	k1 := iamapi.ObjKeyAccChargeUser(c.us.UserName, "zzzzzzzz")
+	k2 := iamapi.ObjKeyAccChargeUser(c.us.UserName, "")
+	if rs := store.Data.NewReader(nil).KeyRangeSet(k1, k2).
+		ModeRevRangeSet(true).LimitNumSet(1000).Query(); rs.OK() {
+		for _, v := range rs.Items {
 
 			var set iamapi.AccountCharge
 			if err := v.Decode(&set); err == nil {
@@ -108,10 +109,11 @@ func (c Account) ChargePayoutListAction() {
 	ls := types.ObjectList{}
 	defer c.RenderJson(&ls)
 
-	k := iamapi.DataAccChargeUserKey(c.us.UserName, "")
-	if rs := store.Data.KvProgRevScan(k, k, 1000); rs.OK() {
-		rss := rs.KvList()
-		for _, v := range rss {
+	k1 := iamapi.ObjKeyAccChargeUser(c.us.UserName, "zzzzzzzz")
+	k2 := iamapi.ObjKeyAccChargeUser(c.us.UserName, "")
+	if rs := store.Data.NewReader(nil).KeyRangeSet(k1, k2).
+		ModeRevRangeSet(true).LimitNumSet(1000).Query(); rs.OK() {
+		for _, v := range rs.Items {
 
 			var set iamapi.AccountCharge
 			if err := v.Decode(&set); err == nil {

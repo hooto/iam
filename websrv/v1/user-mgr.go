@@ -23,7 +23,6 @@ import (
 	"github.com/hooto/httpsrv"
 	"github.com/lessos/lessgo/pass"
 	"github.com/lessos/lessgo/types"
-	"github.com/lynkdb/iomix/skv"
 
 	"github.com/hooto/iam/base/signup"
 	"github.com/hooto/iam/config"
@@ -79,10 +78,10 @@ func (c UserMgr) UserListAction() {
 	)
 
 	// TODO page
-	if rs := store.Data.KvProgScan(iamapi.DataUserKey(""), iamapi.DataUserKey(""), 1000); rs.OK() {
+	if rs := store.Data.NewReader(nil).KeyRangeSet(
+		iamapi.ObjKeyUser(""), iamapi.ObjKeyUser("")).LimitNumSet(1000).Query(); rs.OK() {
 
-		rss := rs.KvList()
-		for _, obj := range rss {
+		for _, obj := range rs.Items {
 
 			var user iamapi.User
 			if err := obj.Decode(&user); err != nil {
@@ -94,7 +93,7 @@ func (c UserMgr) UserListAction() {
 				continue
 			}
 
-			user.Id = ""
+			// user.Id = ""
 			user.Keys = nil
 
 			ls.Items = append(ls.Items, user)
@@ -133,7 +132,7 @@ func (c UserMgr) UserEntryAction() {
 
 	uname := c.Params.Get("username")
 
-	if obj := store.Data.KvProgGet(iamapi.DataUserKey(uname)); obj.OK() {
+	if obj := store.Data.NewReader(iamapi.ObjKeyUser(uname)).Query(); obj.OK() {
 		obj.Decode(&set.Login)
 	}
 
@@ -147,7 +146,7 @@ func (c UserMgr) UserEntryAction() {
 
 	//
 	var profile iamapi.UserProfile
-	if obj := store.Data.KvProgGet(iamapi.DataUserProfileKey(uname)); obj.OK() {
+	if obj := store.Data.NewReader(iamapi.ObjKeyUserProfile(uname)).Query(); obj.OK() {
 		obj.Decode(&profile)
 
 		profile.About = html.EscapeString(profile.About)
@@ -210,7 +209,8 @@ func (c UserMgr) UserGroupSetAction() {
 
 		user.Updated = types.MetaTimeNow()
 
-		store.Data.KvProgPut(iamapi.DataUserKey(user.Name), skv.NewKvEntry(user), nil)
+		store.Data.NewWriter(iamapi.ObjKeyUser(user.Name), user).
+			IncrNamespaceSet("user").Commit()
 	}
 
 	set.Kind = "User"
@@ -241,7 +241,7 @@ func (c UserMgr) UserSetAction() {
 		return
 	}
 
-	set.Login.Id = iamapi.UserId(set.Login.Name)
+	// set.Login.Id = iamapi.UserId(set.Login.Name)
 
 	if auth := set.Login.Keys.Get(iamapi.UserKeyDefault); auth != nil {
 
@@ -258,7 +258,7 @@ func (c UserMgr) UserSetAction() {
 	var prev iamapi.UserEntry
 
 	//
-	if obj := store.Data.KvProgGet(iamapi.DataUserKey(set.Login.Name)); obj.OK() {
+	if obj := store.Data.NewReader(iamapi.ObjKeyUser(set.Login.Name)).Query(); obj.OK() {
 		obj.Decode(&prev.Login)
 	}
 
@@ -268,7 +268,7 @@ func (c UserMgr) UserSetAction() {
 	}
 
 	//
-	if prev.Login.Id == set.Login.Id {
+	if prev.Login.Name == set.Login.Name {
 
 		if set.Login.Email != "" {
 			prev.Login.Email = set.Login.Email
@@ -296,8 +296,9 @@ func (c UserMgr) UserSetAction() {
 	set.Login.Updated = types.MetaTimeNow()
 	sort.Sort(set.Login.Roles)
 
-	if obj := store.Data.KvProgPut(iamapi.DataUserKey(set.Login.Name), skv.NewKvEntry(set.Login), nil); !obj.OK() {
-		set.Error = types.NewErrorMeta("500", obj.Bytex().String())
+	if obj := store.Data.NewWriter(iamapi.ObjKeyUser(set.Login.Name), set.Login).
+		IncrNamespaceSet("user").Commit(); !obj.OK() {
+		set.Error = types.NewErrorMeta("500", obj.Message)
 		return
 	}
 
@@ -305,7 +306,7 @@ func (c UserMgr) UserSetAction() {
 
 		var profile iamapi.UserProfile
 
-		if obj := store.Data.KvProgGet(iamapi.DataUserProfileKey(set.Login.Name)); obj.OK() {
+		if obj := store.Data.NewReader(iamapi.ObjKeyUserProfile(set.Login.Name)).Query(); obj.OK() {
 
 			obj.Decode(&profile)
 
@@ -318,8 +319,9 @@ func (c UserMgr) UserSetAction() {
 			}
 		}
 
-		if obj := store.Data.KvProgPut(iamapi.DataUserProfileKey(set.Login.Name), skv.NewKvEntry(profile), nil); !obj.OK() {
-			set.Error = types.NewErrorMeta("500", obj.Bytex().String())
+		if obj := store.Data.NewWriter(
+			iamapi.ObjKeyUserProfile(set.Login.Name), profile).Commit(); !obj.OK() {
+			set.Error = types.NewErrorMeta("500", obj.Message)
 			return
 		}
 	}

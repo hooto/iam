@@ -36,7 +36,7 @@
   <td>{[=l4i.MetaTimeParseFormat(v.updated, "Y-m-d")]}</td>
   <td align="right">
     <button class="pure-button button-small"
-      onclick="iamUserMgr.RoleSet('{[=v.id]}')">
+      onclick="iamUserMgr.RoleSet('{[=v.name]}')">
 	  <span class="fa fa-cog"></span>
       {[=l4i.T("Settings")]}
     </button>

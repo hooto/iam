@@ -25,7 +25,6 @@ import (
 	"github.com/lessos/lessgo/types"
 	"github.com/lessos/lessgo/utils"
 	"github.com/lessos/lessgo/utilx"
-	"github.com/lynkdb/iomix/skv"
 
 	"github.com/hooto/iam/base/login"
 	"github.com/hooto/iam/base/signup"
@@ -70,11 +69,11 @@ func (c Reg) SignUpRegAction() {
 		return
 	}
 
-	uname := strings.TrimSpace(strings.ToLower(c.Params.Get("uname")))
-	userid := iamapi.UserId(uname)
+	uname := iamapi.UserNameFilter(c.Params.Get("uname")) // strings.TrimSpace(strings.ToLower(c.Params.Get("uname")))
+	// userid := iamapi.UserId(uname)
 
 	var user iamapi.User
-	if obj := store.Data.KvProgGet(iamapi.DataUserKey(uname)); obj.OK() {
+	if obj := store.Data.NewReader(iamapi.ObjKeyUser(uname)).Query(); obj.OK() {
 		obj.Decode(&user)
 	}
 
@@ -86,7 +85,7 @@ func (c Reg) SignUpRegAction() {
 	auth, _ := pass.HashDefault(c.Params.Get("passwd"))
 
 	user = iamapi.User{
-		Id:          userid,
+		// Id:          userid,
 		Name:        uname,
 		Created:     types.MetaTimeNow(),
 		Updated:     types.MetaTimeNow(),
@@ -136,14 +135,14 @@ func (c Reg) RetrievePutAction() {
 		return
 	}
 	uname := c.Params.Get("username")
-	userid := iamapi.UserId(uname)
+	// userid := iamapi.UserId(uname)
 
 	var user iamapi.User
-	if obj := store.Data.KvProgGet(iamapi.DataUserKey(uname)); obj.OK() {
+	if obj := store.Data.NewReader(iamapi.ObjKeyUser(uname)).Query(); obj.OK() {
 		obj.Decode(&user)
 	}
 
-	if user.Id != userid || user.Email != uemail {
+	if user.Name != uname || user.Email != uemail {
 		rsp.Error = &types.ErrorMeta{iamapi.ErrCodeInvalidArgument, "User Not Found"}
 		return
 	}
@@ -155,10 +154,9 @@ func (c Reg) RetrievePutAction() {
 		Expired:  utilx.TimeNowAdd("atom", "+3600s"),
 	}
 
-	if obj := store.Data.KvProgPut(iamapi.DataPasswordResetKey(reset.Id), skv.NewKvEntry(reset), &skv.KvProgWriteOptions{
-		Expired: uint64(time.Now().Add(3600e9).UnixNano()),
-	}); !obj.OK() {
-		rsp.Error = &types.ErrorMeta{"500", obj.Bytex().String()}
+	if obj := store.Data.NewWriter(iamapi.ObjKeyPasswordReset(reset.Id), reset).
+		ExpireSet(3600000).Commit(); !obj.OK() {
+		rsp.Error = &types.ErrorMeta{"500", obj.Message}
 		return
 	}
 
@@ -212,7 +210,7 @@ func (c Reg) PassResetAction() {
 	}
 
 	var reset iamapi.UserPasswordReset
-	if obj := store.Data.KvProgGet(iamapi.DataPasswordResetKey(c.Params.Get("id"))); obj.OK() {
+	if obj := store.Data.NewReader(iamapi.ObjKeyPasswordReset(c.Params.Get("id"))).Query(); obj.OK() {
 		obj.Decode(&reset)
 	}
 
@@ -249,7 +247,7 @@ func (c Reg) PassResetPutAction() {
 	}
 
 	var reset iamapi.UserPasswordReset
-	rsobj := store.Data.KvProgGet(iamapi.DataPasswordResetKey(c.Params.Get("id")))
+	rsobj := store.Data.NewReader(iamapi.ObjKeyPasswordReset(c.Params.Get("id"))).Query()
 	if rsobj.OK() {
 		rsobj.Decode(&reset)
 	}
@@ -265,13 +263,13 @@ func (c Reg) PassResetPutAction() {
 	}
 
 	var user iamapi.User
-	userid := iamapi.UserId(reset.UserName)
-	uobj := store.Data.KvProgGet(iamapi.DataUserKey(reset.UserName))
+	// userid := iamapi.UserId(reset.UserName)
+	uobj := store.Data.NewReader(iamapi.ObjKeyUser(reset.UserName)).Query()
 	if uobj.OK() {
 		uobj.Decode(&user)
 	}
 
-	if user.Id != userid {
+	if user.Name != reset.UserName {
 		rsp.Error = &types.ErrorMeta{iamapi.ErrCodeInvalidArgument, "User Not Found"}
 		return
 	}
@@ -281,12 +279,13 @@ func (c Reg) PassResetPutAction() {
 	auth, _ := pass.HashDefault(c.Params.Get("passwd"))
 	user.Keys.Set(iamapi.UserKeyDefault, auth)
 
-	if obj := store.Data.KvProgPut(iamapi.DataUserKey(reset.UserName), skv.NewKvEntry(user), nil); !obj.OK() {
-		rsp.Error = &types.ErrorMeta{"500", obj.Bytex().String()}
+	if obj := store.Data.NewWriter(iamapi.ObjKeyUser(reset.UserName), user).
+		IncrNamespaceSet("user").Commit(); !obj.OK() {
+		rsp.Error = &types.ErrorMeta{"500", obj.Message}
 		return
 	}
 
-	store.Data.KvProgDel(iamapi.DataPasswordResetKey(reset.Id), nil)
+	store.Data.NewWriter(iamapi.ObjKeyPasswordReset(reset.Id), nil).ModeDeleteSet(true).Commit()
 
 	rsp.Kind = "UserAuth"
 }

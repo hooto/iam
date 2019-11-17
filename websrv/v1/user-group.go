@@ -139,7 +139,7 @@ func (c UserGroup) SetAction() {
 
 	if prev == nil {
 		prev = &iamapi.User{
-			Id:      iamapi.UserId(set.Name),
+			// Id:      iamapi.UserId(set.Name),
 			Name:    set.Name,
 			Created: types.MetaTimeNow(),
 			Type:    iamapi.UserTypeGroup,

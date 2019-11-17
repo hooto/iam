@@ -22,7 +22,7 @@ import (
 	"github.com/hooto/iam/iamapi"
 	"github.com/hooto/iam/store"
 	"github.com/lessos/lessgo/types"
-	"github.com/lynkdb/iomix/skv"
+	"github.com/lynkdb/iomix/sko"
 )
 
 var (
@@ -52,32 +52,35 @@ func AccountChargeCloseRefresh() {
 	}()
 
 	var (
-		offset = iamapi.DataAccChargeMgrKey("")
-		cutset = iamapi.DataAccChargeMgrKey("")
+		offset = iamapi.ObjKeyAccChargeMgr("zzzzzzzz")
+		cutset = iamapi.ObjKeyAccChargeMgr("")
 		limit  = 100
 		num    = 10000 // TODO
 	)
 
 	for {
-		rs := store.Data.KvProgRevScan(offset, cutset, limit)
+
+		rs := store.Data.NewReader(nil).KeyRangeSet(offset, cutset).
+			ModeRevRangeSet(true).
+			LimitNumSet(int64(limit)).Query()
 		if !rs.OK() {
 			break
 		}
 
-		rss := rs.KvList()
-
-		for _, v := range rss {
+		for _, v := range rs.Items {
 
 			var set iamapi.AccountCharge
 			if err := v.Decode(&set); err != nil {
 				continue
 			}
 
+			offset = iamapi.ObjKeyAccChargeMgr(set.Id)
+
 			if set.Prepay == 0 || set.Payout > 0 {
 				continue
 			}
 
-			if set.TimeClose+accountChargeCloseTimeout > tn {
+			if (set.TimeClose + accountChargeCloseTimeout) > tn {
 				continue
 			}
 
@@ -89,7 +92,7 @@ func AccountChargeCloseRefresh() {
 			)
 
 			//
-			if rs := store.Data.KvProgGet(iamapi.DataAccChargeUserKey(set.User, set.Id)); rs.OK() {
+			if rs := store.Data.NewReader(iamapi.ObjKeyAccChargeUser(set.User, set.Id)).Query(); rs.OK() {
 				rs.Decode(&charge)
 			}
 			if charge.Id == "" || charge.Id != set.Id {
@@ -99,7 +102,7 @@ func AccountChargeCloseRefresh() {
 				continue
 			}
 
-			if rs := store.Data.KvProgGet(iamapi.DataAccUserKey(set.User)); rs.OK() {
+			if rs := store.Data.NewReader(iamapi.ObjKeyAccUser(set.User)).Query(); rs.OK() {
 				rs.Decode(&acc_user)
 			} else if !rs.NotFound() {
 				continue
@@ -108,14 +111,13 @@ func AccountChargeCloseRefresh() {
 				continue
 			}
 
-			sets := []skv.KvProgKeyValue{}
+			sets := []sko.ClientObjectItem{}
 			updated := uint64(types.MetaTimeNow())
 
 			if charge.Fund != "" {
 				var fund iamapi.AccountFund
-				if rs := store.Data.KvProgGet(
-					iamapi.DataAccFundUserKey(set.User, charge.Fund),
-				); rs.OK() {
+				if rs := store.Data.NewReader(
+					iamapi.ObjKeyAccFundUser(set.User, charge.Fund)).Query(); rs.OK() {
 					rs.Decode(&fund)
 				}
 				if fund.Id == "" || fund.Id != charge.Fund {
@@ -128,14 +130,14 @@ func AccountChargeCloseRefresh() {
 				fund.ExpProductInpay.Del(charge.Product)
 				fund.Updated = updated
 
-				sets = append(sets, skv.KvProgKeyValue{
-					Key: iamapi.DataAccFundUserKey(set.User, charge.Fund),
-					Val: skv.NewKvEntry(fund),
+				sets = append(sets, sko.ClientObjectItem{
+					Key:   iamapi.ObjKeyAccFundUser(set.User, charge.Fund),
+					Value: fund,
 				})
 
-				sets = append(sets, skv.KvProgKeyValue{
-					Key: iamapi.DataAccFundMgrKey(charge.Fund),
-					Val: skv.NewKvEntry(fund),
+				sets = append(sets, sko.ClientObjectItem{
+					Key:   iamapi.ObjKeyAccFundMgr(charge.Fund),
+					Value: fund,
 				})
 			}
 
@@ -150,36 +152,35 @@ func AccountChargeCloseRefresh() {
 			charge.Updated = updated
 
 			//
-			sets = append(sets, skv.KvProgKeyValue{
-				Key: iamapi.DataAccChargeUserKey(set.User, set.Id),
-				Val: skv.NewKvEntry(charge),
+			sets = append(sets, sko.ClientObjectItem{
+				Key:   iamapi.ObjKeyAccChargeUser(set.User, set.Id),
+				Value: charge,
 			})
-			sets = append(sets, skv.KvProgKeyValue{
-				Key: iamapi.DataAccUserKey(set.User),
-				Val: skv.NewKvEntry(acc_user),
+			sets = append(sets, sko.ClientObjectItem{
+				Key:   iamapi.ObjKeyAccUser(set.User),
+				Value: acc_user,
 			})
-			sets = append(sets, skv.KvProgKeyValue{
-				Key: iamapi.DataAccChargeMgrKey(set.Id),
-				Val: skv.NewKvEntry(charge),
+			sets = append(sets, sko.ClientObjectItem{
+				Key:   iamapi.ObjKeyAccChargeMgr(set.Id),
+				Value: charge,
 			})
 
 			hlog.Printf("warn", "iam/worker charge-payout force close, user %s, charge id %s",
 				set.User, set.Id)
 
 			for _, v := range sets {
-				if rs := store.Data.KvProgPut(v.Key, v.Val, nil); !rs.OK() {
+				if rs := store.Data.NewWriter(v.Key, v.Value).Commit(); !rs.OK() {
 					return
 				}
 			}
 		}
 
-		num -= len(rss)
+		num -= len(rs.Items)
 
-		if num < 1 || len(rss) < limit {
+		if len(rs.Items) < 1 || num < 1 || !rs.Next {
 			break
 		}
 
-		offset = iamapi.DataAccChargeMgrKeyBytes(rss[len(rss)-1].Key)
 	}
 
 	accountChargeCloseRefreshed = tn

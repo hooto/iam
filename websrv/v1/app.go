@@ -17,7 +17,6 @@ package v1
 import (
 	"github.com/hooto/httpsrv"
 	"github.com/lessos/lessgo/types"
-	"github.com/lynkdb/iomix/skv"
 
 	"github.com/hooto/iam/iamapi"
 	"github.com/hooto/iam/iamclient"
@@ -52,10 +51,11 @@ func (c App) InstListAction() {
 	ls := types.ObjectList{}
 	defer c.RenderJson(&ls)
 
-	if objs := store.Data.KvProgRevScan(iamapi.DataAppInstanceKey(""), iamapi.DataAppInstanceKey(""), 1000); objs.OK() {
+	if rs := store.Data.NewReader(nil).KeyRangeSet(
+		iamapi.ObjKeyAppInstance("zzzzzzzz"), iamapi.ObjKeyAppInstance("")).
+		ModeRevRangeSet(true).LimitNumSet(1000).Query(); rs.OK() {
 
-		rss := objs.KvList()
-		for _, obj := range rss {
+		for _, obj := range rs.Items {
 
 			var inst iamapi.AppInstance
 			if err := obj.Decode(&inst); err == nil {
@@ -78,7 +78,7 @@ func (c App) InstEntryAction() {
 	}
 	defer c.RenderJson(&set)
 
-	if obj := store.Data.KvProgGet(iamapi.DataAppInstanceKey(c.Params.Get("instid"))); obj.OK() {
+	if obj := store.Data.NewReader(iamapi.ObjKeyAppInstance(c.Params.Get("instid"))).Query(); obj.OK() {
 		obj.Decode(&set.AppInstance)
 	}
 
@@ -110,7 +110,7 @@ func (c App) InstSetAction() {
 	}
 
 	var prev iamapi.AppInstance
-	if obj := store.Data.KvProgGet(iamapi.DataAppInstanceKey(set.Meta.ID)); obj.OK() {
+	if obj := store.Data.NewReader(iamapi.ObjKeyAppInstance(set.Meta.ID)).Query(); obj.OK() {
 		obj.Decode(&prev)
 	}
 
@@ -130,8 +130,9 @@ func (c App) InstSetAction() {
 		prev.AppTitle = set.AppTitle
 		prev.Url = set.Url
 
-		if obj := store.Data.KvProgPut(iamapi.DataAppInstanceKey(set.Meta.ID), skv.NewKvEntry(prev), nil); !obj.OK() {
-			set.Error = types.NewErrorMeta(iamapi.ErrCodeInternalError, obj.Bytex().String())
+		if obj := store.Data.NewWriter(iamapi.ObjKeyAppInstance(set.Meta.ID), prev).
+			Commit(); !obj.OK() {
+			set.Error = types.NewErrorMeta(iamapi.ErrCodeInternalError, obj.Message)
 			return
 		}
 	}
@@ -147,7 +148,7 @@ func (c App) InstDelAction() {
 	inst_id := c.Params.Get("inst_id")
 
 	var prev iamapi.AppInstance
-	if obj := store.Data.KvProgGet(iamapi.DataAppInstanceKey(inst_id)); obj.OK() {
+	if obj := store.Data.NewReader(iamapi.ObjKeyAppInstance(inst_id)).Query(); obj.OK() {
 		obj.Decode(&prev)
 	}
 
@@ -161,8 +162,9 @@ func (c App) InstDelAction() {
 		return
 	}
 
-	if obj := store.Data.KvProgDel(iamapi.DataAppInstanceKey(inst_id), nil); !obj.OK() {
-		set.Error = types.NewErrorMeta(iamapi.ErrCodeInternalError, obj.Bytex().String())
+	if obj := store.Data.NewWriter(iamapi.ObjKeyAppInstance(inst_id), nil).
+		ModeDeleteSet(true).Commit(); !obj.OK() {
+		set.Error = types.NewErrorMeta(iamapi.ErrCodeInternalError, obj.Message)
 		return
 	}
 

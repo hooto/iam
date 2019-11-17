@@ -1,7 +1,6 @@
 <div id="iam-usermgr-roleset-alert" class="alert hide"></div>
     
 <div id="iam-usermgr-roleset" class="form-horizontal">
-  <input type="hidden" name="roleid" value="{[=it.id]}">
     
   <div class="iam-form-group-title">{[=l4i.T("%s Information", l4i.T("Role"))]}</div>
 
@@ -10,7 +9,7 @@
     <tr>
       <td width="200px">{[=l4i.T("Name")]}</label>
       <td>
-        <input type="text" class="form-control" name="name" value="{[=it.name]}">
+        <input type="text" class="form-control" name="name" value="{[=it.name]}" {[? it.name && it.name.length > 0]}readonly{[?]}>
       </td>
     </tr>
 

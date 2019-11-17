@@ -21,7 +21,6 @@ import (
 	"github.com/hooto/hlog4g/hlog"
 	"github.com/hooto/iam/iamapi"
 	"github.com/hooto/iam/store"
-	"github.com/lessos/lessgo/encoding/json"
 	"github.com/lessos/lessgo/net/email"
 )
 
@@ -46,8 +45,8 @@ func MsgQueueRefresh() {
 	}()
 
 	var (
-		offset = iamapi.DataMsgQueue("")
-		cutset = iamapi.DataMsgQueue("zzzz")
+		offset = iamapi.ObjKeyMsgQueue("")
+		cutset = iamapi.ObjKeyMsgQueue("")
 		limit  = 100
 	)
 
@@ -59,23 +58,21 @@ func MsgQueueRefresh() {
 			break
 		}
 
-		rs := store.Data.KvScan(offset, cutset, limit)
+		rs := store.Data.NewReader(nil).KeyRangeSet(offset, cutset).LimitNumSet(int64(limit)).Query()
 		if !rs.OK() {
 			hlog.Printf("info", "mailer scan err")
 			break
 		}
 
-		rss := rs.KvList()
-
-		for _, v := range rss {
+		for _, v := range rs.Items {
 
 			var item iamapi.MsgItem
-			if err := v.Decode(&item); err != nil {
+			if err := v.DataValue().Decode(&item, nil); err != nil {
 				hlog.Printf("info", "mailer err %s", err.Error())
 				continue
 			}
 
-			if rs := store.Data.KvProgGet(iamapi.DataUserKey(item.ToUser)); rs.OK() {
+			if rs := store.Data.NewReader(iamapi.ObjKeyUser(item.ToUser)).Query(); rs.OK() {
 				var userLogin iamapi.User
 				rs.Decode(&userLogin)
 				if iamapi.UserEmailRe2.MatchString(userLogin.Email) {
@@ -105,19 +102,17 @@ func MsgQueueRefresh() {
 				if item.Posted < 1 {
 					item.Posted = item.Updated
 				}
-				js, _ := json.Encode(item, "")
-				if rs := store.Data.KvPut(iamapi.DataMsgSent(item.SentId()), js, nil); rs.OK() {
-					store.Data.KvDel(iamapi.DataMsgQueue(item.Id))
+				if rs := store.Data.NewWriter(iamapi.ObjKeyMsgSent(item.SentId()), item).Commit(); rs.OK() {
+					store.Data.NewWriter(iamapi.ObjKeyMsgQueue(item.Id), nil).ModeDeleteSet(true).Commit()
 					hlog.Printf("info", "mailer post %s, to %s, retry %d, ok", item.Id, item.ToEmail, item.Retry)
 				}
 			} else {
-				js, _ := json.Encode(item, "")
-				store.Data.KvPut(iamapi.DataMsgQueue(item.Id), js, nil)
+				store.Data.NewWriter(iamapi.ObjKeyMsgQueue(item.Id), item).Commit()
 				hlog.Printf("warn", "mailer post %s, retry %d", item.Id, item.ToEmail, item.Retry)
 			}
 		}
 
-		if len(rss) < limit {
+		if !rs.Next {
 			break
 		}
 	}

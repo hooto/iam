@@ -48,22 +48,32 @@ const (
 
 var (
 	UserNameRe2            = regexp.MustCompile("^[a-z]{1}[a-z0-9]{3,29}$")
+	UserRoleNameRe2        = regexp.MustCompile("^[a-z]{1}[a-z0-9]{3,19}$")
 	UserEmailRe2           = regexp.MustCompile("^[_a-z0-9-]+(\\.[_a-z0-9-]+)*@[a-z0-9-]+(\\.[a-z0-9-]+)*(\\.[a-z]{2,10})$")
 	accessTokenFrontendRe2 = regexp.MustCompile("^[a-z0-9]{4,30}\\/[a-f0-9]{20,40}$")
 	AppInstanceIdReg       = regexp.MustCompile("^[a-f0-9]{16,24}$")
 )
 
 func UserNameFilter(name string) string {
-	return strings.TrimSpace(strings.ToLower(name))
+	name = strings.ToLower(name)
+	name2 := ""
+	for _, v := range name {
+		if (v >= 'a' && v <= 'z') || (v >= '0' || v <= '9') {
+			name2 += string(v)
+		}
+	}
+	return name2
 }
 
 func UserIdBytes(name string) []byte {
 	return idhash.Hash([]byte(name), 4)
 }
 
+/**
 func UserId(name string) string {
 	return hex.EncodeToString(UserIdBytes(name))
 }
+*/
 
 func Hash32(v string) uint32 {
 	u32 := crc32.ChecksumIEEE([]byte(v))
@@ -96,9 +106,11 @@ func (s *UserSession) IsLogin() bool {
 	return (s.AccessToken != "")
 }
 
+/**
 func (s *UserSession) UserId() string {
 	return UserId(s.UserName)
 }
+*/
 
 type UserAccessEntry struct {
 	types.TypeMeta `json:",inline"`
@@ -112,7 +124,7 @@ const (
 )
 
 type User struct {
-	Id          string            `json:"id,omitempty"`
+	// Id          string            `json:"id,omitempty"`
 	Name        string            `json:"name"`
 	Email       string            `json:"email,omitempty"`
 	DisplayName string            `json:"display_name,omitempty"`

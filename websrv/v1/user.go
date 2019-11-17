@@ -25,7 +25,6 @@ import (
 	"github.com/hooto/httpsrv"
 	"github.com/lessos/lessgo/pass"
 	"github.com/lessos/lessgo/types"
-	"github.com/lynkdb/iomix/skv"
 
 	"github.com/hooto/iam/base/login"
 	"github.com/hooto/iam/base/profile"
@@ -62,7 +61,7 @@ func (c User) ProfileAction() {
 	defer c.RenderJson(&set)
 
 	// profile
-	if obj := store.Data.KvProgGet(iamapi.DataUserProfileKey(c.us.UserName)); obj.OK() {
+	if obj := store.Data.NewReader(iamapi.ObjKeyUserProfile(c.us.UserName)).Query(); obj.OK() {
 		obj.Decode(&set.UserProfile)
 	}
 
@@ -71,7 +70,7 @@ func (c User) ProfileAction() {
 
 		// login
 		var user iamapi.User
-		if obj := store.Data.KvProgGet(iamapi.DataUserKey(c.us.UserName)); obj.OK() {
+		if obj := store.Data.NewReader(iamapi.ObjKeyUser(c.us.UserName)).Query(); obj.OK() {
 			obj.Decode(&user)
 		}
 
@@ -81,7 +80,7 @@ func (c User) ProfileAction() {
 		}
 
 		set.Login = &user
-		store.Data.KvProgPut(iamapi.DataUserProfileKey(c.us.UserName), skv.NewKvEntry(set), nil)
+		store.Data.NewWriter(iamapi.ObjKeyUserProfile(c.us.UserName), set).Commit()
 	}
 
 	set.Photo = ""
@@ -111,7 +110,7 @@ func (c User) ProfileSetAction() {
 
 	// login
 	var user iamapi.User
-	uobj := store.Data.KvProgGet(iamapi.DataUserKey(c.us.UserName))
+	uobj := store.Data.NewReader(iamapi.ObjKeyUser(c.us.UserName)).Query()
 	if uobj.OK() {
 		uobj.Decode(&user)
 	}
@@ -122,11 +121,11 @@ func (c User) ProfileSetAction() {
 	}
 	user.DisplayName = req.Login.DisplayName
 
-	store.Data.KvProgPut(iamapi.DataUserKey(c.us.UserName), skv.NewKvEntry(user), nil)
+	store.Data.NewWriter(iamapi.ObjKeyUser(c.us.UserName), user).Commit()
 
 	// profile
 	var profile iamapi.UserProfile
-	pobj := store.Data.KvProgGet(iamapi.DataUserProfileKey(c.us.UserName))
+	pobj := store.Data.NewReader(iamapi.ObjKeyUserProfile(c.us.UserName)).Query()
 	if pobj.OK() {
 		pobj.Decode(&profile)
 	}
@@ -137,7 +136,7 @@ func (c User) ProfileSetAction() {
 	profile.Login = &user
 	profile.Login.Keys = nil
 
-	store.Data.KvProgPut(iamapi.DataUserProfileKey(c.us.UserName), skv.NewKvEntry(profile), nil)
+	store.Data.NewWriter(iamapi.ObjKeyUserProfile(c.us.UserName), profile).Commit()
 
 	set.Kind = "UserProfile"
 }
@@ -161,7 +160,7 @@ func (c User) PassSetAction() {
 	}
 
 	var user iamapi.User
-	uobj := store.Data.KvProgGet(iamapi.DataUserKey(c.us.UserName))
+	uobj := store.Data.NewReader(iamapi.ObjKeyUser(c.us.UserName)).Query()
 	if uobj.OK() {
 		uobj.Decode(&user)
 	}
@@ -181,7 +180,7 @@ func (c User) PassSetAction() {
 	auth_key, _ := pass.HashDefault(req.NewPassword)
 	user.Keys.Set(iamapi.UserKeyDefault, auth_key)
 
-	store.Data.KvProgPut(iamapi.DataUserKey(c.us.UserName), skv.NewKvEntry(user), nil)
+	store.Data.NewWriter(iamapi.ObjKeyUser(c.us.UserName), user).Commit()
 
 	set.Kind = "UserPassword"
 }
@@ -207,7 +206,7 @@ func (c User) EmailSetAction() {
 	}
 
 	var user iamapi.User
-	uobj := store.Data.KvProgGet(iamapi.DataUserKey(c.us.UserName))
+	uobj := store.Data.NewReader(iamapi.ObjKeyUser(c.us.UserName)).Query()
 	if uobj.OK() {
 		uobj.Decode(&user)
 	}
@@ -225,13 +224,13 @@ func (c User) EmailSetAction() {
 
 	user.Email = req.Email
 	user.Updated = types.MetaTimeNow()
-	store.Data.KvProgPut(iamapi.DataUserKey(c.us.UserName), skv.NewKvEntry(user), nil)
+	store.Data.NewWriter(iamapi.ObjKeyUser(c.us.UserName), user).Commit()
 
-	if rs := store.Data.KvProgGet(iamapi.DataUserProfileKey(c.us.UserName)); rs.OK() {
+	if rs := store.Data.NewReader(iamapi.ObjKeyUserProfile(c.us.UserName)).Query(); rs.OK() {
 		var preprofile iamapi.UserProfile
 		if err := rs.Decode(&preprofile); err == nil {
 			preprofile.Login = &user
-			store.Data.KvProgPut(iamapi.DataUserProfileKey(c.us.UserName), skv.NewKvEntry(preprofile), nil)
+			store.Data.NewWriter(iamapi.ObjKeyUserProfile(c.us.UserName), preprofile).Commit()
 		}
 	}
 
@@ -260,7 +259,7 @@ func (c User) PhotoSetAction() {
 
 	// profile
 	var profile iamapi.UserProfile
-	pobj := store.Data.KvProgGet(iamapi.DataUserProfileKey(c.us.UserName))
+	pobj := store.Data.NewReader(iamapi.ObjKeyUserProfile(c.us.UserName)).Query()
 	if pobj.OK() {
 		pobj.Decode(&profile)
 	}
@@ -290,7 +289,7 @@ func (c User) PhotoSetAction() {
 	profile.Photo = "data:image/png;base64," + imgphoto
 	profile.PhotoSource = req.Data
 
-	store.Data.KvProgPut(iamapi.DataUserProfileKey(c.us.UserName), skv.NewKvEntry(profile), nil)
+	store.Data.NewWriter(iamapi.ObjKeyUserProfile(c.us.UserName), profile).Commit()
 
 	set.Kind = "UserPhoto"
 }
@@ -300,18 +299,19 @@ func (c User) RoleListAction() {
 	sets := iamapi.UserRoleList{}
 	defer c.RenderJson(&sets)
 
-	// TODO page
-	if objs := store.Data.KvProgScan(iamapi.DataRoleKey(0), iamapi.DataRoleKey(99999999), 1000); objs.OK() {
+	if rs := store.Data.NewReader(nil).KeyRangeSet(
+		iamapi.ObjKeyRole(""), iamapi.ObjKeyRole("")).LimitNumSet(1000).Query(); rs.OK() {
 
-		rss := objs.KvList()
-		for _, obj := range rss {
+		for _, obj := range rs.Items {
 
 			var role iamapi.UserRole
-			if err := obj.Decode(&role); err == nil {
+			if err := obj.DataValue().Decode(&role, nil); err == nil {
 
-				if role.Id == 1 {
+				if obj.Meta.IncrId == 1 {
 					continue
 				}
+
+				role.Id = uint32(obj.Meta.IncrId)
 
 				if role.Id <= 1000 || role.User == c.us.UserName {
 					sets.Items = append(sets.Items, role)

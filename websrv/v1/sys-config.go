@@ -15,8 +15,6 @@
 package v1
 
 import (
-	"github.com/lynkdb/iomix/skv"
-
 	"github.com/hooto/httpsrv"
 	"github.com/lessos/lessgo/types"
 
@@ -50,14 +48,14 @@ func (c SysConfig) GeneralAction() {
 		return
 	}
 
-	if objs := store.Data.KvProgScan(iamapi.DataSysConfigKey(""), iamapi.DataSysConfigKey(""), 1000); objs.OK() {
+	if rs := store.Data.NewReader(nil).KeyRangeSet(
+		iamapi.ObjKeySysConfig(""), iamapi.ObjKeySysConfig("")).LimitNumSet(1000).Query(); rs.OK() {
 
-		rss := objs.KvList()
-		for _, obj := range rss {
+		for _, obj := range rs.Items {
 
-			switch string(obj.Key) {
+			switch string(obj.Meta.Key) {
 			case "service_name", "webui_banner_title", "user_reg_disable", "service_login_form_alert_msg":
-				ls.Items.Set(string(obj.Key), obj.Bytex().String())
+				ls.Items.Set(string(obj.Meta.Key), obj.DataValue().String())
 			}
 		}
 	}
@@ -111,14 +109,16 @@ func (c SysConfig) GeneralSetAction() {
 		}
 
 		if v.Value == "" {
-			store.Data.KvProgDel(iamapi.DataSysConfigKey(v.Name), nil)
+			store.Data.NewWriter(iamapi.ObjKeySysConfig(v.Name), nil).
+				ModeDeleteSet(true).Commit()
 			if v.Name == "service_login_form_alert_msg" {
 				config.Config.ServiceLoginFormAlertMsg = ""
 			}
 		} else {
 
-			if obj := store.Data.KvProgPut(iamapi.DataSysConfigKey(v.Name), skv.NewKvEntry(v.Value), nil); !obj.OK() {
-				sets.Error = types.NewErrorMeta("500", "DB ERROR #2 "+obj.Bytex().String())
+			if obj := store.Data.NewWriter(iamapi.ObjKeySysConfig(v.Name), v.Value).
+				Commit(); !obj.OK() {
+				sets.Error = types.NewErrorMeta("500", "DB ERROR #2 "+obj.Message)
 				return
 			}
 		}
@@ -140,8 +140,8 @@ func (c SysConfig) MailerAction() {
 		return
 	}
 
-	if obj := store.Data.KvProgGet(iamapi.DataSysConfigKey("mailer")); obj.OK() {
-		ls.Items.Set("mailer", obj.Bytex().String())
+	if obj := store.Data.NewReader(iamapi.ObjKeySysConfig("mailer")).Query(); obj.OK() {
+		ls.Items.Set("mailer", obj.DataValue().String())
 	}
 
 	if val, ok := ls.Items.Get("mailer"); val.String() == "" || !ok {

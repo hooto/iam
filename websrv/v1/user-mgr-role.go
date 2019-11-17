@@ -16,7 +16,6 @@ package v1
 
 import (
 	"github.com/lessos/lessgo/types"
-	"github.com/lynkdb/iomix/skv"
 
 	"github.com/hooto/iam/config"
 	"github.com/hooto/iam/iamapi"
@@ -35,18 +34,19 @@ func (c UserMgr) RoleListAction() {
 	// 	return
 	// }
 
-	if objs := store.Data.KvProgScan(iamapi.DataRoleKey(0), iamapi.DataRoleKey(99999999), 1000); objs.OK() {
+	if rs := store.Data.NewReader(nil).KeyRangeSet(
+		iamapi.ObjKeyRole(""), iamapi.ObjKeyRole("")).LimitNumSet(1000).Query(); rs.OK() {
 
-		rss := objs.KvList()
-		for _, obj := range rss {
+		for _, obj := range rs.Items {
 
 			var role iamapi.UserRole
-			if err := obj.Decode(&role); err == nil {
+			if err := obj.DataValue().Decode(&role, nil); err == nil {
 
-				if role.Id == 1000 {
+				if obj.Meta.IncrId == 1000 {
 					continue
 				}
 
+				role.Id = uint32(obj.Meta.IncrId)
 				ls.Items = append(ls.Items, role)
 			}
 		}
@@ -68,11 +68,13 @@ func (c UserMgr) RoleEntryAction() {
 	// 	return
 	// }
 
-	if obj := store.Data.KvProgGet(iamapi.DataRoleKey(uint32(c.Params.Uint64("roleid")))); obj.OK() {
-		obj.Decode(&set.UserRole)
+	// TODO roleid
+	name := c.Params.Get("role_name")
+	if rs := store.Data.NewReader(iamapi.ObjKeyRole(name)).Query(); rs.OK() {
+		rs.DataValue().Decode(&set.UserRole, nil)
 	}
 
-	if set.Id == 0 {
+	if set.Name == "" {
 		set.Error = types.NewErrorMeta(iamapi.ErrCodeInvalidArgument, "Role Not Found")
 		return
 	}
@@ -83,8 +85,7 @@ func (c UserMgr) RoleEntryAction() {
 func (c UserMgr) RoleSetAction() {
 
 	var (
-		prev iamapi.UserRole
-		set  struct {
+		set struct {
 			types.TypeMeta
 			iamapi.UserRole
 		}
@@ -101,56 +102,39 @@ func (c UserMgr) RoleSetAction() {
 		return
 	}
 
-	if set.Name == "" {
-		set.Error = types.NewErrorMeta(iamapi.ErrCodeInvalidArgument, "Bad Request")
+	if !iamapi.UserRoleNameRe2.MatchString(set.Name) {
+		set.Error = types.NewErrorMeta(iamapi.ErrCodeInvalidArgument, "Invalid Role Name")
 		return
 	}
 
-	if set.Id == 0 {
+	rsp := store.Data.NewReader(iamapi.ObjKeyRole(set.Name)).Query()
 
-		if objs := store.Data.KvProgRevScan(iamapi.DataRoleKey(0), iamapi.DataRoleKey(99999999), 1); objs.OK() {
+	if rsp.NotFound() {
 
-			rss := objs.KvList()
-			for _, obj := range rss {
-
-				var last_role iamapi.UserRole
-				if err := obj.Decode(&last_role); err == nil {
-					set.Id = last_role.Id + 1
-					break
-				}
-			}
-		}
-
-		if set.Id == 0 {
-			set.Error = types.NewErrorMeta("500", "Server Error")
-			return
-		}
-
-		//
 		set.Created = types.MetaTimeNow()
 		set.User = "sysadmin"
 
+	} else if rsp.OK() {
+
+		var prev iamapi.UserRole
+		rsp.DataValue().Decode(&prev, nil)
+
+		if prev.Created > 0 {
+			prev.Desc = set.Desc
+			set.UserRole = prev
+		}
+
 	} else {
-
-		if obj := store.Data.KvProgGet(iamapi.DataRoleKey(set.Id)); obj.OK() {
-			obj.Decode(&prev)
-		}
-
-		if prev.Id != set.Id {
-			set.Error = types.NewErrorMeta(iamapi.ErrCodeInvalidArgument, "UserRole Not Found")
-			return
-		}
-
-		prev.Name = set.Name
-		prev.Desc = set.Desc
-		set.UserRole = prev
+		set.Error = types.NewErrorMeta("500", rsp.Message)
+		return
 	}
 
 	set.Updated = types.MetaTimeNow()
 	// roleset["privileges"] = strings.Join(c.Params.Values["privileges"], ",")
 
-	if obj := store.Data.KvProgPut(iamapi.DataRoleKey(set.Id), skv.NewKvEntry(set), nil); !obj.OK() {
-		set.Error = types.NewErrorMeta("500", obj.Bytex().String())
+	if rs := store.Data.NewWriter(iamapi.ObjKeyRole(set.Name), set.UserRole).
+		IncrNamespaceSet("role").Commit(); !rs.OK() {
+		set.Error = types.NewErrorMeta("500", rs.Message)
 		return
 	}
 

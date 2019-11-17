@@ -11,7 +11,6 @@ var iamUserMgr = {
         kind: "User",
         _isnew: true,
         login: {
-            id: "",
             name: "",
             email: "",
             display_name: "",
@@ -33,7 +32,6 @@ var iamUserMgr = {
     },
     roledef: {
         kind: "UserRole",
-        id: 0,
         name: "",
         status: 1,
         desc: "",
@@ -336,7 +334,7 @@ iamUserMgr.RoleList = function() {
     });
 }
 
-iamUserMgr.RoleSet = function(roleid) {
+iamUserMgr.RoleSet = function(role_name) {
     seajs.use(["ep"], function(EventProxy) {
 
         var ep = EventProxy.create('tpl', 'data', function(tpl, data) {
@@ -378,8 +376,8 @@ iamUserMgr.RoleSet = function(roleid) {
             alert(l4i.T("network error, please try again later"));
         });
 
-        if (roleid) {
-            iam.ApiCmd("user-mgr/role-entry?roleid=" + roleid, {
+        if (role_name) {
+            iam.ApiCmd("user-mgr/role-entry?role_name=" + role_name, {
                 callback: ep.done('data'),
             });
         } else {
@@ -397,7 +395,6 @@ iamUserMgr.RoleSetCommit = function() {
     var form = $("#iam-usermgr-roleset"),
         alertId = "#iam-usermgr-roleset-alert",
         req = {
-            id: parseInt(form.find("input[name=roleid]").val()),
             name: form.find("input[name=name]").val(),
             status: parseInt(form.find("input[name=status]:checked").val()),
             desc: form.find("input[name=desc]").val(),

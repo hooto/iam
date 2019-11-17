@@ -90,7 +90,7 @@ func (c User) EntryAction() {
 
 	// profile
 	var profile iamapi.UserProfile
-	if obj := store.Data.KvProgGet(iamapi.DataUserProfileKey(user)); obj.OK() {
+	if obj := store.Data.NewReader(iamapi.ObjKeyUserProfile(user)).Query(); obj.OK() {
 		obj.Decode(&profile)
 		set.Login = iamapi.User{
 			Name: user,
