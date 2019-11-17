@@ -313,9 +313,23 @@ func ServiceRedirectTokenDecode(tokenstr string) ServiceRedirectToken {
 	return token
 }
 
+func Uint32ToHexString(v uint32) string {
+	return BytesToHexString(Uint32ToBytes(v))
+}
+
+func Uint64ToHexString(v uint64) string {
+	return BytesToHexString(Uint64ToBytes(v))
+}
+
 func Uint32ToBytes(v uint32) []byte {
 	bs := make([]byte, 4)
 	binary.BigEndian.PutUint32(bs, v)
+	return bs
+}
+
+func Uint64ToBytes(v uint64) []byte {
+	bs := make([]byte, 8)
+	binary.BigEndian.PutUint64(bs, v)
 	return bs
 }
 

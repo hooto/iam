@@ -19,13 +19,13 @@ import (
 	"fmt"
 	"regexp"
 	"strings"
-	"time"
 
 	"github.com/hooto/hlog4g/hlog"
 	"github.com/lessos/lessgo/crypto/idhash"
 	"github.com/lessos/lessgo/crypto/phash"
 	"github.com/lessos/lessgo/net/email"
 	"github.com/lessos/lessgo/types"
+	"github.com/lynkdb/iomix/sko"
 	"github.com/lynkdb/iomix/skv"
 
 	"github.com/hooto/iam/config"
@@ -34,6 +34,7 @@ import (
 
 var (
 	Data                  skv.Connector
+	DataNext              sko.Connector
 	def_sysadmin          = "sysadmin"
 	def_sysadmin_password = "changeme"
 	app_inst_id_re        = regexp.MustCompile("^[0-9a-f]{16}$")
@@ -45,23 +46,25 @@ func Init() error {
 		return fmt.Errorf("iam.store connect not ready #1")
 	}
 
-	if rs := Data.KvProgPut(
-		skv.NewKvProgKey("iam", "test"),
-		skv.NewKvEntry("test"),
-		&skv.KvProgWriteOptions{
-			Expired: uint64(time.Now().Add(3e9).UnixNano()),
-		},
-	); !rs.OK() {
+	rw := DataNext.NewObjectWriter([]byte("iam:test")).
+		DataValueSet("test", nil).
+		ExpireSet(1000)
+	if rs := DataNext.ObjectPut(rw); !rs.OK() {
 		return fmt.Errorf("iam.store connect not ready #2 " + rs.String())
 	}
 
-	if rs := Data.KvProgGet(
-		skv.NewKvProgKey("iam", "test"),
-	); !rs.OK() ||
-		rs.Bytex().String() != "test" {
+	rr := DataNext.NewObjectReader().KeySet([]byte("iam:test"))
+	if rs := DataNext.ObjectQuery(rr); !rs.OK() ||
+		rs.DataValue().String() != "test" {
 		return fmt.Errorf("iam.store connect not ready #3")
 	} else {
 		hlog.Printf("info", "iam/data connect ok")
+	}
+
+	if config.Version == "0.9.0" {
+		if err := upgrade_v090(Data, DataNext); err != nil {
+			return err
+		}
 	}
 
 	return nil

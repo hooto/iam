@@ -21,24 +21,48 @@ import (
 
 const (
 	dataPrefix        = "iam"
-	dataAppInstance   = "ai"
-	dataUser          = "u"
-	dataUserAuth      = "ua"
-	dataUserAuthDeny  = "uad"
-	dataPassReset     = "pr"
-	dataAccessKey     = "ak"
-	dataRole          = "r"
-	dataRolePrivilege = "rp"
-	dataUserProfile   = "up"
-	dataAccUser       = "au"
-	dataAccFundUser   = "af"
-	dataAccFundMgr    = "afm"
-	dataAccChargeUser = "ac"
-	dataAccChargeMgr  = "acm"
-	dataSysConfig     = "sc"
-	dataMsgQueue      = "mq"
-	dataMsgSent       = "ms"
+	dataAppInstance   = "ai"  // sko
+	dataUser          = "u"   // sko
+	dataUserAuth      = "ua"  // skip
+	dataUserAuthDeny  = "uad" // skip
+	dataPassReset     = "pr"  // skip
+	dataAccessKey     = "ak"  // sko
+	dataRole          = "r"   // skip
+	dataRolePrivilege = "rp"  // skip
+	dataUserProfile   = "up"  // sko
+	dataAccUser       = "au"  // sko
+	dataAccFundUser   = "af"  // sko
+	dataAccFundMgr    = "afm" // sko
+	dataAccChargeUser = "ac"  // sko
+	dataAccChargeMgr  = "acm" // sko
+	dataSysConfig     = "sc"  // sko
+	dataMsgQueue      = "mq"  // sko
+	dataMsgSent       = "ms"  // sko
 )
+
+func ObjKeyAppInstance(key string) []byte {
+	return []byte(dataPrefix + ":" + dataAppInstance + ":" + key)
+}
+
+func ObjKeyUser(uname string) []byte {
+	return []byte(dataPrefix + ":" + dataUser + ":" + uname)
+}
+
+func ObjKeyAccessKey(uname, id string) []byte {
+	return []byte(dataPrefix + ":" + dataAccessKey + ":" + uname + ":" + id)
+}
+
+func ObjKeyRole(id uint64) []byte {
+	return []byte(dataPrefix + ":" + dataRole + ":" + Uint64ToHexString(id))
+}
+
+func ObjKeyUserProfile(uname string) []byte {
+	return []byte(dataPrefix + ":" + dataUserProfile + ":" + uname)
+}
+
+func ObjKeyAccUser(uname string) []byte {
+	return []byte(dataPrefix + ":" + dataAccUser + ":" + uname)
+}
 
 func DataAppInstanceKey(id string) skv.KvProgKey {
 	if id == "" {
@@ -93,6 +117,10 @@ func DataSysConfigKey(name string) skv.KvProgKey {
 	return skv.NewKvProgKey(dataPrefix, dataSysConfig, name)
 }
 
+func ObjKeySysConfig(name string) []byte {
+	return []byte(dataPrefix + ":" + dataSysConfig + ":" + name)
+}
+
 func DataAccUserKey(uname string) skv.KvProgKey {
 	if uname == "" {
 		return skv.NewKvProgKey(dataPrefix, dataAccUser, []byte{})
@@ -105,8 +133,16 @@ func DataAccFundUserKey(uname, id string) skv.KvProgKey {
 		UserIdBytes(uname), utils.HexStringToBytes(id))
 }
 
+func ObjKeyAccFundUser(uname, id string) []byte {
+	return []byte(dataPrefix + ":" + dataAccFundUser + ":" + uname + ":" + id)
+}
+
 func DataAccFundMgrKey(id string) skv.KvProgKey {
 	return skv.NewKvProgKey(dataPrefix, dataAccFundMgr, utils.HexStringToBytes(id))
+}
+
+func ObjKeyAccFundMgr(id string) []byte {
+	return []byte(dataPrefix + ":" + dataAccFundMgr + ":" + id)
 }
 
 func DataAccChargeUserKey(uname, id string) skv.KvProgKey {
@@ -114,8 +150,16 @@ func DataAccChargeUserKey(uname, id string) skv.KvProgKey {
 		UserIdBytes(uname), utils.HexStringToBytes(id))
 }
 
+func ObjKeyAccChargeUser(uname, id string) []byte {
+	return []byte(dataPrefix + ":" + dataAccChargeUser + ":" + uname + ":" + id)
+}
+
 func DataAccChargeMgrKey(id string) skv.KvProgKey {
 	return skv.NewKvProgKey(dataPrefix, dataAccChargeMgr, utils.HexStringToBytes(id))
+}
+
+func ObjKeyAccChargeMgr(id string) []byte {
+	return []byte(dataPrefix + ":" + dataAccChargeMgr + ":" + id)
 }
 
 func DataAccChargeMgrKeyBytes(id []byte) skv.KvProgKey {
@@ -126,6 +170,14 @@ func DataMsgQueue(id string) []byte {
 	return []byte(dataPrefix + ":" + dataMsgQueue + ":" + id)
 }
 
+func ObjKeyMsgQueue(id string) []byte {
+	return []byte(dataPrefix + ":" + dataMsgQueue + ":" + id)
+}
+
 func DataMsgSent(id string) []byte {
+	return []byte(dataPrefix + ":" + dataMsgSent + ":" + id)
+}
+
+func ObjKeyMsgSent(id string) []byte {
 	return []byte(dataPrefix + ":" + dataMsgSent + ":" + id)
 }
