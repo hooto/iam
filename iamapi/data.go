@@ -15,7 +15,6 @@
 package iamapi
 
 import (
-	"github.com/lynkdb/iomix/skv"
 	"github.com/lynkdb/iomix/utils"
 )
 
@@ -40,22 +39,8 @@ const (
 	dataMsgSent       = "ms"  // sko
 )
 
-func DataAppInstanceKey(id string) skv.KvProgKey {
-	if id == "" {
-		return skv.NewKvProgKey(dataPrefix, dataAppInstance, []byte{})
-	}
-	return skv.NewKvProgKey(dataPrefix, dataAppInstance, utils.HexStringToBytes(id))
-}
-
 func ObjKeyAppInstance(key string) []byte {
 	return []byte(dataPrefix + ":" + dataAppInstance + ":" + key)
-}
-
-func DataUserKey(uname string) skv.KvProgKey {
-	if uname == "" {
-		return skv.NewKvProgKey(dataPrefix, dataUser, []byte{})
-	}
-	return skv.NewKvProgKey(dataPrefix, dataUser, UserIdBytes(uname))
 }
 
 func ObjKeyUser(uname string) []byte {
@@ -63,20 +48,9 @@ func ObjKeyUser(uname string) []byte {
 		UserNameFilter(uname))
 }
 
-func DataUserProfileKey(uname string) skv.KvProgKey {
-	if uname == "" {
-		return skv.NewKvProgKey(dataPrefix, dataUserProfile, []byte{})
-	}
-	return skv.NewKvProgKey(dataPrefix, dataUserProfile, UserIdBytes(uname))
-}
-
 func ObjKeyUserProfile(uname string) []byte {
 	return []byte(dataPrefix + ":" + dataUserProfile + ":" +
 		UserNameFilter(uname))
-}
-
-func DataPasswordResetKey(id string) skv.KvProgKey {
-	return skv.NewKvProgKey(dataPrefix, dataPassReset, utils.HexStringToBytes(id))
 }
 
 func ObjKeyPasswordReset(id string) []byte {
@@ -103,41 +77,13 @@ func ObjKeyUserAuth(uname string, created uint32) []byte {
 		UserNameFilter(uname) + ":" + utils.Uint32ToHexString(created))
 }
 
-func DataAccessKeyKey(uname, id string) skv.KvProgKey {
-	return skv.NewKvProgKey(dataPrefix, dataAccessKey,
-		UserIdBytes(uname), utils.HexStringToBytes(id))
-}
-
 func ObjKeyAccessKey(uname, id string) []byte {
 	return []byte(dataPrefix + ":" + dataAccessKey + ":" +
 		UserNameFilter(uname) + ":" + id)
 }
 
-/**
-func DataRoleKey(id uint32) skv.KvProgKey {
-	return skv.NewKvProgKey(dataPrefix, dataRole, utils.Uint32ToBytes(id))
-}
-
-
-func DataRolePrivilegeKey(rid uint32, inst string) skv.KvProgKey {
-	return skv.NewKvProgKey(dataPrefix, dataRolePrivilege,
-		utils.Uint32ToBytes(rid), utils.HexStringToBytes(inst))
-}
-*/
-
-func DataSysConfigKey(name string) skv.KvProgKey {
-	return skv.NewKvProgKey(dataPrefix, dataSysConfig, name)
-}
-
 func ObjKeySysConfig(name string) []byte {
 	return []byte(dataPrefix + ":" + dataSysConfig + ":" + name)
-}
-
-func DataAccUserKey(uname string) skv.KvProgKey {
-	if uname == "" {
-		return skv.NewKvProgKey(dataPrefix, dataAccUser, []byte{})
-	}
-	return skv.NewKvProgKey(dataPrefix, dataAccUser, UserIdBytes(uname))
 }
 
 func ObjKeyAccUser(uname string) []byte {
@@ -145,27 +91,13 @@ func ObjKeyAccUser(uname string) []byte {
 		UserNameFilter(uname))
 }
 
-func DataAccFundUserKey(uname, id string) skv.KvProgKey {
-	return skv.NewKvProgKey(dataPrefix, dataAccFundUser,
-		UserIdBytes(uname), utils.HexStringToBytes(id))
-}
-
 func ObjKeyAccFundUser(uname, id string) []byte {
 	return []byte(dataPrefix + ":" + dataAccFundUser + ":" +
 		UserNameFilter(uname) + ":" + id)
 }
 
-func DataAccFundMgrKey(id string) skv.KvProgKey {
-	return skv.NewKvProgKey(dataPrefix, dataAccFundMgr, utils.HexStringToBytes(id))
-}
-
 func ObjKeyAccFundMgr(id string) []byte {
 	return []byte(dataPrefix + ":" + dataAccFundMgr + ":" + id)
-}
-
-func DataAccChargeUserKey(uname, id string) skv.KvProgKey {
-	return skv.NewKvProgKey(dataPrefix, dataAccChargeUser,
-		UserIdBytes(uname), utils.HexStringToBytes(id))
 }
 
 func ObjKeyAccChargeUser(uname, id string) []byte {
@@ -173,16 +105,8 @@ func ObjKeyAccChargeUser(uname, id string) []byte {
 		UserNameFilter(uname) + ":" + id)
 }
 
-func DataAccChargeMgrKey(id string) skv.KvProgKey {
-	return skv.NewKvProgKey(dataPrefix, dataAccChargeMgr, utils.HexStringToBytes(id))
-}
-
 func ObjKeyAccChargeMgr(id string) []byte {
 	return []byte(dataPrefix + ":" + dataAccChargeMgr + ":" + id)
-}
-
-func DataAccChargeMgrKeyBytes(id []byte) skv.KvProgKey {
-	return skv.NewKvProgKey(dataPrefix, dataAccChargeMgr, id)
 }
 
 func PrevDataMsgQueue(id string) []byte {

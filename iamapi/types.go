@@ -69,11 +69,9 @@ func UserIdBytes(name string) []byte {
 	return idhash.Hash([]byte(name), 4)
 }
 
-/**
 func UserId(name string) string {
 	return hex.EncodeToString(UserIdBytes(name))
 }
-*/
 
 func Hash32(v string) uint32 {
 	u32 := crc32.ChecksumIEEE([]byte(v))
@@ -106,11 +104,9 @@ func (s *UserSession) IsLogin() bool {
 	return (s.AccessToken != "")
 }
 
-/**
 func (s *UserSession) UserId() string {
 	return UserId(s.UserName)
 }
-*/
 
 type UserAccessEntry struct {
 	types.TypeMeta `json:",inline"`

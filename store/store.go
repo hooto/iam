@@ -21,19 +21,16 @@ import (
 	"strings"
 
 	"github.com/hooto/hlog4g/hlog"
-	// "github.com/lessos/lessgo/crypto/idhash"
 	"github.com/lessos/lessgo/crypto/phash"
 	"github.com/lessos/lessgo/net/email"
 	"github.com/lessos/lessgo/types"
 	"github.com/lynkdb/iomix/sko"
-	"github.com/lynkdb/iomix/skv"
 
 	"github.com/hooto/iam/config"
 	"github.com/hooto/iam/iamapi"
 )
 
 var (
-	DataPrev              skv.Connector
 	Data                  sko.ClientConnector
 	def_sysadmin          = "sysadmin"
 	def_sysadmin_password = "changeme"
@@ -42,7 +39,7 @@ var (
 
 func Init() error {
 
-	if DataPrev == nil || Data == nil {
+	if Data == nil {
 		return fmt.Errorf("iam.store connect not ready #1")
 	}
 
@@ -55,12 +52,6 @@ func Init() error {
 		return fmt.Errorf("iam.store connect not ready #3")
 	} else {
 		hlog.Printf("info", "iam/data connect ok")
-	}
-
-	if config.Version == "0.9.0" {
-		if err := upgrade_v090(DataPrev, Data); err != nil {
-			return err
-		}
 	}
 
 	return nil
