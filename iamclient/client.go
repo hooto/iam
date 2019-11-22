@@ -43,12 +43,9 @@ var (
 )
 
 var (
-	sessions     = map[string]iamapi.UserSession{}
-	sessions_aks = map[string]iamapi.AccessKeySession{}
-	sessions_tto = time.Now()
-	locker       sync.RWMutex
-	c_roles            = iamapi.UserRoleList{}
-	c_roles_tto  int64 = 0
+	locker      sync.RWMutex
+	c_roles           = iamapi.UserRoleList{}
+	c_roles_tto int64 = 0
 )
 
 func Expired(ttl int) time.Time {
@@ -60,38 +57,6 @@ func service_url_global() string {
 		return ServiceUrlGlobal
 	}
 	return ServiceUrl
-}
-
-func innerExpiredClean() {
-
-	if sessions_tto.After(time.Now()) {
-		return
-	}
-
-	locker.Lock()
-	defer locker.Unlock()
-
-	tnow := time.Now().Unix()
-
-	for k, v := range sessions {
-
-		if v.Expired > tnow {
-			continue
-		}
-
-		delete(sessions, k)
-	}
-
-	for k, v := range sessions_aks {
-
-		if v.Expired > tnow {
-			continue
-		}
-
-		delete(sessions_aks, k)
-	}
-
-	sessions_tto = time.Now().Add(time.Second * 60)
 }
 
 func service_prefix() string {
@@ -122,17 +87,13 @@ func SessionAccessToken(s *httpsrv.Session) string {
 	return s.Get(AccessTokenKey)
 }
 
-func SesionSet(s *httpsrv.Session) error {
-	return nil
-}
-
 func SessionIsLogin(s *httpsrv.Session) bool {
 
 	if s == nil {
 		return false
 	}
 
-	return _is_login(s.Get(AccessTokenKey))
+	return tokenIsLogin(s.Get(AccessTokenKey))
 }
 
 func SessionAccessAllowed(s *httpsrv.Session, privilege, client_id string) bool {
@@ -141,35 +102,43 @@ func SessionAccessAllowed(s *httpsrv.Session, privilege, client_id string) bool 
 		return false
 	}
 
-	return _access_allowed(privilege, s.Get(AccessTokenKey), client_id)
+	return tokenAccessAllowed(privilege, s.Get(AccessTokenKey), client_id)
 }
 
-func SessionInstance(s *httpsrv.Session) (session iamapi.UserSession, err error) {
+func SessionInstance(s *httpsrv.Session) (iamapi.UserSession, error) {
 
 	if s == nil {
-		return session, errors.New("No Session Found")
+		return iamapi.UserSession{}, errors.New("No Session Found")
 	}
 
-	return Instance(s.Get(AccessTokenKey))
+	sess, err := Instance(s.Get(AccessTokenKey))
+	if err != nil {
+		return iamapi.UserSession{}, err
+	}
+
+	return *sess, nil
 }
 
-func Instance(token string) (session iamapi.UserSession, err error) {
+func Instance(token string) (*iamapi.UserSession, error) {
 
 	if ServiceUrl == "" || token == "" {
-		return session, errors.New("Unauthorized")
+		return nil, errors.New("Unauthorized")
 	}
 
 	ap, err := iamauth.NewUserValidator(token)
 	if err != nil {
-		return session, err
+		return nil, err
 	}
 
 	if ap.IsExpired() {
-		return session, errors.New("auth expired")
+		return nil, errors.New("auth expired")
 	}
 
+	tn := time.Now().Unix()
+
 	// cache
-	if session, ok := sessions[ap.Id]; ok {
+	session := SessionCache(ap.Id)
+	if session != nil && !sessionCacheRefresh(session, tn) {
 		return session, nil
 	}
 
@@ -179,28 +148,39 @@ func Instance(token string) (session iamapi.UserSession, err error) {
 		AccessTokenKey,
 		token,
 	))
+	hc.SetTimeout(3000)
 	defer hc.Close()
 
 	var us types.TypeMeta
-	if err = hc.ReplyJson(&us); err != nil || us.Kind != "UserSession" {
-		return session, errors.New("Unauthorized")
+	if err = hc.ReplyJson(&us); err != nil {
+		err = errors.New("Network error, please try again later")
+	} else if us.Kind != "UserSession" {
+		if us.Error != nil {
+			err = errors.New("Unauthorized " + us.Error.Message)
+		} else {
+			err = errors.New("Unauthorized")
+		}
+	} else {
+
+		session = &iamapi.UserSession{
+			AccessToken: token,
+			UserName:    ap.Id,
+			DisplayName: ap.Name,
+			Roles:       ap.Roles,
+			Groups:      ap.Groups,
+			Expired:     ap.Expired,
+		}
+		SessionSync(session, tn)
 	}
 
-	locker.Lock()
-	sessions[ap.Id] = iamapi.UserSession{
-		AccessToken: token,
-		UserName:    ap.Id,
-		DisplayName: ap.Name,
-		Roles:       ap.Roles,
-		Groups:      ap.Groups,
-		Expired:     ap.Expired,
-	} // TODO Cache API
-	locker.Unlock()
+	if err != nil && session == nil {
+		return nil, err
+	}
 
 	return session, nil
 }
 
-func _is_login(token string) bool {
+func tokenIsLogin(token string) bool {
 
 	if _, err := Instance(token); err != nil {
 		return false
@@ -209,9 +189,9 @@ func _is_login(token string) bool {
 	return true
 }
 
-func _access_allowed(privilege, token, instanceid string) bool {
+func tokenAccessAllowed(privilege, token, instanceid string) bool {
 
-	if !_is_login(token) {
+	if !tokenIsLogin(token) {
 		return false
 	}
 
@@ -224,6 +204,7 @@ func _access_allowed(privilege, token, instanceid string) bool {
 	js, _ := json.Encode(req, "")
 	hc := httpclient.Post(ServiceUrl + "/v1/service/access-allowed")
 	hc.Header("contentType", "application/json; charset=utf-8")
+	hc.SetTimeout(3000)
 	hc.Body(js)
 	defer hc.Close()
 
@@ -254,6 +235,7 @@ func AppRoleList(s *httpsrv.Session, appid string) (*iamapi.UserRoleList, error)
 		token,
 		appid,
 	))
+	hc.SetTimeout(3000)
 	defer hc.Close()
 
 	var rls iamapi.UserRoleList

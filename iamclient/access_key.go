@@ -34,9 +34,9 @@ const (
 	auth_reqtime_range  int64 = 600
 )
 
-func AccessKeySession(app_aka, user_aka iamapi.AccessKeyAuth) (iamapi.AccessKeySession, error) {
+func AccessKeySession(app_aka, user_aka iamapi.AccessKeyAuth) (*iamapi.AccessKeySession, error) {
 
-	if session, ok := sessions_aks[user_aka.Key]; ok {
+	if session := akSessionCache(user_aka.Key); session != nil {
 		return session, nil
 	}
 
@@ -47,25 +47,28 @@ func AccessKeySession(app_aka, user_aka iamapi.AccessKeyAuth) (iamapi.AccessKeyS
 		user_aka.Key,
 	))
 	defer hc.Close()
-
 	hc.Header("Auth", app_aka.Encode())
 
-	var session iamapi.AccessKeySession
+	var (
+		session iamapi.AccessKeySession
+		tn      = time.Now().Unix()
+	)
 
 	err := hc.ReplyJson(&session)
-	if err != nil || session.SecretKey == "" {
-		return session, errors.New("Unauthorized")
+	if err != nil {
+		err = errors.New("Network error, please try again later")
+	} else if session.SecretKey == "" ||
+		session.Expired <= tn {
+		err = errors.New("Unauthorized")
+	} else {
+		akSessionSync(&session)
 	}
 
-	if time.Now().Unix() > session.Expired {
-		return session, errors.New("Unauthorized")
+	if err != nil {
+		return nil, err
 	}
 
-	locker.Lock()
-	sessions_aks[session.AccessKey] = session // TODO Cache API
-	locker.Unlock()
-
-	return session, nil
+	return &session, nil
 }
 
 /*

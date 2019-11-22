@@ -149,4 +149,6 @@ func userCacheRefresh() {
 			break
 		}
 	}
+
+	userRefreshed = tn
 }

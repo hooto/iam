@@ -98,6 +98,7 @@ type UserSession struct {
 	ClientAddr   string            `json:"client_addr,omitempty"`
 	Created      int64             `json:"created"`
 	Expired      int64             `json:"expired"`
+	Cached       int64             `json:"cached,omitempty"`
 }
 
 func (s *UserSession) IsLogin() bool {
@@ -106,6 +107,20 @@ func (s *UserSession) IsLogin() bool {
 
 func (s *UserSession) UserId() string {
 	return UserId(s.UserName)
+}
+
+func (s *UserSession) AccessAllow(name string) bool {
+	if name != "" {
+		if name == s.UserName {
+			return true
+		}
+		for _, v := range s.Groups {
+			if name == v {
+				return true
+			}
+		}
+	}
+	return false
 }
 
 type UserAccessEntry struct {
