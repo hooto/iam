@@ -27,7 +27,7 @@ type AccessKey struct {
 	User        string           `json:"user,omitempty"`
 	AccessKey   string           `json:"access_key"`
 	SecretKey   string           `json:"secret_key,omitempty"`
-	Created     uint64           `json:"created,omitempty"`
+	Created     types.MetaTime   `json:"created,omitempty"`
 	Action      uint16           `json:"action,omitempty"`
 	Description string           `json:"desc,omitempty"`
 	Bounds      []AccessKeyBound `json:"bounds,omitempty"`
@@ -42,8 +42,8 @@ func (it *AccessKey) AuthKey() *iamauth.AuthKey {
 }
 
 type AccessKeyBound struct {
-	Name    string `json:"name"`
-	Created uint64 `json:"created,omitempty"`
+	Name    string         `json:"name"`
+	Created types.MetaTime `json:"created,omitempty"`
 }
 
 func (it AccessKeyBound) IterKey() string {

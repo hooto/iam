@@ -112,7 +112,7 @@ func AccountChargeCloseRefresh() {
 			}
 
 			sets := []sko.ClientObjectItem{}
-			updated := uint64(types.MetaTimeNow())
+			updated := types.MetaTimeNow()
 
 			if charge.Fund != "" {
 				var fund iamapi.AccountFund

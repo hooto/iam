@@ -33,7 +33,7 @@
     {[ if (v.status == sv.status) { ]}{[=sv.title]}{[ } ]}
     {[~]}
   </td>
-  <td>{[=l4i.MetaTimeParseFormat(v.updated, "Y-m-d")]}</td>
+  <td>{[=l4i.UnixMillisecondFormat(v.updated, "Y-m-d")]}</td>
   <td align="right">
     <button class="pure-button button-small"
       onclick="iamUserGroup.SetForm('{[=v.name]}')">

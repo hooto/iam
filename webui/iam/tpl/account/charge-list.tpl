@@ -26,7 +26,7 @@
   <td>{[=v.prepay]}</td>
   <td>{[=l4i.UnixTimeFormat(v.time_start, "Y-m-d H:i")]}</td>
   <td>{[=l4i.UnixTimeFormat(v.time_close, "Y-m-d H:i")]}</td>
-  <td>{[=l4i.MetaTimeParseFormat(v.updated, "Y-m-d H:i")]}</td>
+  <td>{[=l4i.UnixMillisecondFormat(v.updated, "Y-m-d H:i")]}</td>
 </tr>
 {[~]}
 </script>

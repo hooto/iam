@@ -57,7 +57,7 @@
     {[ if (v.action == sv.action) { ]}{[=sv.title]}{[ } ]}
     {[~]}
   </td>
-  <td>{[=l4i.MetaTimeParseFormat(v.created, "Y-m-d")]}</td>
+  <td>{[=l4i.UnixMillisecondFormat(v.created, "Y-m-d")]}</td>
   <td align="right">
     <button class="pure-button button-small"
       onclick="iamAccessKey.Del('{[=v.access_key]}')">

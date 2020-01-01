@@ -242,7 +242,7 @@ func AccessKeyInitData(ak iamapi.AccessKey) error {
 		return errors.New("No User Set")
 	}
 
-	ak.Created = uint64(types.MetaTimeNow())
+	ak.Created = types.MetaTimeNow()
 	ak.Action = 1
 	if rs := Data.NewWriter(iamapi.ObjKeyAccessKey(ak.User, ak.AccessKey), ak).
 		ModeCreateSet(true).Commit(); !rs.OK() {
@@ -258,7 +258,7 @@ func AccessKeyReset(ak iamapi.AccessKey) error {
 		return errors.New("No User Set")
 	}
 
-	ak.Created = uint64(types.MetaTimeNow())
+	ak.Created = types.MetaTimeNow()
 	ak.Action = 1
 
 	if rs := Data.NewWriter(iamapi.ObjKeyAccessKey(ak.User, ak.AccessKey), ak).

@@ -107,7 +107,7 @@ func (c AccountMgr) ReBalanceAction() {
 
 				au.Balance = balance
 				au.Prepay = prepay
-				au.Updated = uint64(types.MetaTimeNow())
+				au.Updated = types.MetaTimeNow()
 
 				store.Data.NewWriter(iamapi.ObjKeyAccUser(uname), au).Commit()
 				rsp.Changed++
@@ -238,7 +238,7 @@ func (c AccountMgr) FundNewAction() {
 	)
 
 	set.Id = iamapi.BytesToHexString(set_id)
-	set.Created = uint64(types.MetaTimeSet(tn.UTC()))
+	set.Created = types.MetaTimeSet(tn)
 	set.Updated = set.Created
 	set.Operator = c.us.UserName
 	set.Priority = 8
@@ -317,7 +317,7 @@ func (c AccountMgr) FundSetAction() {
 		return
 	}
 
-	set_prev.Updated = uint64(types.MetaTimeNow())
+	set_prev.Updated = types.MetaTimeNow()
 	set_prev.Comment = set.Comment
 	set_prev.Type = set.Type
 	set_prev.ExpProductLimits = set.ExpProductLimits
@@ -477,7 +477,7 @@ func (c AccountMgr) ChargeSetPayoutAction() {
 	}
 
 	sets := []sko.ClientObjectItem{}
-	updated := uint64(types.MetaTimeNow())
+	updated := types.MetaTimeNow()
 
 	if charge.Fund != "" {
 		var fund iamapi.AccountFund

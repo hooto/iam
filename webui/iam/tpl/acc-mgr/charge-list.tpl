@@ -33,7 +33,7 @@
   <td>{[=v.payout]}</td>
   <td>{[=l4i.UnixTimeFormat(v.time_start, "Y-m-d H:i")]}</td>
   <td>{[=l4i.UnixTimeFormat(v.time_close, "Y-m-d H:i")]}</td>
-  <td>{[=l4i.MetaTimeParseFormat(v.updated, "Y-m-d H:i")]}</td>
+  <td>{[=l4i.UnixMillisecondFormat(v.updated, "Y-m-d H:i")]}</td>
   <td align="right">
     {[if (v.prepay > 0 && v.payout == 0) {]}
 	<button class="pure-button button-small"

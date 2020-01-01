@@ -134,7 +134,7 @@ func (c AccessKey) SetAction() {
 
 	if prev.AccessKey == "" {
 		prev = set.AccessKey
-		prev.Created = uint64(types.MetaTimeNow())
+		prev.Created = types.MetaTimeNow()
 	} else {
 
 		prev.Action = set.AccessKey.Action
@@ -143,7 +143,7 @@ func (c AccessKey) SetAction() {
 		for _, v := range set.AccessKey.Bounds {
 			types.IterObjectLookup(prev.Bounds, v.Name, func(idx int) {
 				if idx == -1 {
-					v.Created = uint64(types.MetaTimeNow())
+					v.Created = types.MetaTimeNow()
 					prev.Bounds = append(prev.Bounds, v)
 				}
 			})
@@ -213,7 +213,7 @@ func (c AccessKey) BindAction() {
 		if idx == -1 {
 			ak.Bounds = append(ak.Bounds, iamapi.AccessKeyBound{
 				Name:    bname,
-				Created: uint64(types.MetaTimeNow()),
+				Created: types.MetaTimeNow(),
 			})
 		}
 	})

@@ -44,7 +44,7 @@
   </td>
   <td>{[=v.operator]}</td>
   <td>{[=v.comment]}</td>
-  <td>{[=l4i.MetaTimeParseFormat(v.created, "Y-m-d")]}</td>
+  <td>{[=l4i.UnixMillisecondFormat(v.created, "Y-m-d")]}</td>
   <td align="right">
 	<button class="pure-button button-small"
       onclick="iamAccMgr.FundSet('{[=v.id]}')">

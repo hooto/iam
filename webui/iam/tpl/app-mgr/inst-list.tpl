@@ -40,8 +40,8 @@
     {[ if (v.status == sv.status) { ]}{[=sv.title]}{[ } ]}
     {[~]}
   </td>
-  <td>{[=l4i.MetaTimeParseFormat(v.meta.created, "Y-m-d")]}</td>
-  <td>{[=l4i.MetaTimeParseFormat(v.meta.updated, "Y-m-d")]}</td>
+  <td>{[=l4i.UnixMillisecondFormat(v.meta.created, "Y-m-d")]}</td>
+  <td>{[=l4i.UnixMillisecondFormat(v.meta.updated, "Y-m-d")]}</td>
   <td align="right">
     <button class="pure-button button-small"
       onclick="iamAppMgr.InstSetForm('{[=v.meta.id]}')">

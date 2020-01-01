@@ -48,10 +48,10 @@ func AccountCurrencyTypeValid(v uint8) bool {
 
 // iam/acc_user/user-id
 type AccountUser struct {
-	User    string  `json:"user"`
-	Balance float64 `json:"balance"`
-	Prepay  float64 `json:"prepay"`
-	Updated uint64  `json:"updated"`
+	User    string         `json:"user"`
+	Balance float64        `json:"balance"`
+	Prepay  float64        `json:"prepay"`
+	Updated types.MetaTime `json:"updated"`
 }
 
 type AccountCurrencyOption struct {
@@ -73,8 +73,8 @@ type AccountFund struct {
 	Payout           float64                   `json:"payout"`
 	Priority         uint8                     `json:"priority"`
 	Options          types.Labels              `json:"options,emitempty"`
-	Created          uint64                    `json:"created"`
-	Updated          uint64                    `json:"updated"`
+	Created          types.MetaTime            `json:"created"`
+	Updated          types.MetaTime            `json:"updated"`
 	Comment          string                    `json:"comment,omitempty"`
 	ExpProductLimits types.ArrayNameIdentifier `json:"exp_product_limits,omitempty"`
 	ExpProductMax    int                       `json:"exp_product_max,omitempty"`
@@ -93,8 +93,8 @@ type AccountCharge struct {
 	Payout         float64              `json:"payout"`
 	TimeStart      uint32               `json:"time_start"`
 	TimeClose      uint32               `json:"time_close"`
-	Created        uint64               `json:"created"`
-	Updated        uint64               `json:"updated"`
+	Created        types.MetaTime       `json:"created"`
+	Updated        types.MetaTime       `json:"updated"`
 	Comment        string               `json:"comment,omitempty"`
 }
 

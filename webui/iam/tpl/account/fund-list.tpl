@@ -45,7 +45,7 @@
 	<div>{[=pv]}</div>
     {[~]}
   </td>
-  <td>{[=l4i.MetaTimeParseFormat(v.created, "Y-m-d H:i")]}</td>
+  <td>{[=l4i.UnixMillisecondFormat(v.created, "Y-m-d H:i")]}</td>
 </tr>
 {[~]}
 </script>

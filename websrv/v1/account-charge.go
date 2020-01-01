@@ -173,7 +173,7 @@ func (c AccountCharge) PrepayAction() {
 
 	if charge_id != charge.Id {
 		charge.Id = charge_id
-		charge.Created = uint64(types.MetaTimeNow())
+		charge.Created = types.MetaTimeNow()
 		charge.User = set.User
 	}
 
@@ -182,7 +182,7 @@ func (c AccountCharge) PrepayAction() {
 	charge.TimeClose = set.TimeClose
 
 	charge.Prepay = set.Prepay
-	charge.Updated = uint64(types.MetaTimeNow())
+	charge.Updated = types.MetaTimeNow()
 	charge.Comment = set.Comment
 
 	var acc_user iamapi.AccountUser
@@ -240,7 +240,7 @@ func (c AccountCharge) PrepayAction() {
 	}
 
 	active.Prepay = iamapi.AccountFloat64Round(active.Prepay+charge.Prepay, 2)
-	active.Updated = uint64(types.MetaTimeNow())
+	active.Updated = types.MetaTimeNow()
 	active.ExpProductInpay.Set(charge.Product)
 
 	acc_user.Balance = iamapi.AccountFloat64Round(acc_user.Balance-charge.Prepay, 2)
@@ -344,7 +344,7 @@ func (c AccountCharge) PayoutAction() {
 	if charge_id != charge.Id {
 
 		charge.Id = charge_id
-		charge.Created = uint64(types.MetaTimeNow())
+		charge.Created = types.MetaTimeNow()
 		charge.User = set.User
 
 		charge.Product = set.Product
@@ -357,7 +357,7 @@ func (c AccountCharge) PayoutAction() {
 	}
 
 	charge.Payout = set.Payout
-	charge.Updated = uint64(types.MetaTimeNow())
+	charge.Updated = types.MetaTimeNow()
 	charge.Comment = set.Comment
 
 	var (
@@ -408,7 +408,7 @@ func (c AccountCharge) PayoutAction() {
 	}
 
 	active.Payout = iamapi.AccountFloat64Round(active.Payout+charge.Payout, 2)
-	active.Updated = uint64(types.MetaTimeNow())
+	active.Updated = types.MetaTimeNow()
 	active.ExpProductInpay.Del(charge.Product)
 
 	acc_user.Balance = iamapi.AccountFloat64Round(acc_user.Balance-charge.Payout, 2)
