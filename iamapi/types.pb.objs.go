@@ -20,6 +20,7 @@ func (it *MsgItem) Equal(it2 *MsgItem) bool {
 		it.Title != it2.Title ||
 		it.Body != it2.Body ||
 		it.Retry != it2.Retry ||
+		it.Type != it2.Type ||
 		it.Log != it2.Log ||
 		it.Posted != it2.Posted ||
 		it.Created != it2.Created ||

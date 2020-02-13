@@ -16,17 +16,23 @@ syntax = "proto3";
 
 package iamapi;
 
+enum MsgType {
+	TEXT = 0;
+	HTML = 1;
+}
+
 message MsgItem {
-    string id = 1; // struct:object_slice_key
+	string id = 1; // struct:object_slice_key
 	uint32 action = 2;
-    string to_user = 3;
-    string to_email = 4;
-    string from_user = 5;
-    string from_email = 6;
+	string to_user = 3;
+	string to_email = 4;
+	string from_user = 5;
+	string from_email = 6;
 	uint32 priority = 7;
 	string title = 8;
 	string body = 9;
 	uint32 retry = 10;
+	MsgType type = 11;
 	string log = 12;
 	uint32 posted = 13;
 	uint32 created = 14;

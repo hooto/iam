@@ -103,11 +103,11 @@ func MsgQueueRefresh() {
 					item.Posted = item.Updated
 				}
 				if rs := store.Data.NewWriter(iamapi.ObjKeyMsgSent(item.SentId()), item).Commit(); rs.OK() {
-					store.Data.NewWriter(iamapi.ObjKeyMsgQueue(item.Id), nil).ModeDeleteSet(true).Commit()
+					store.Data.NewWriter(v.Meta.Key, nil).ModeDeleteSet(true).Commit()
 					hlog.Printf("info", "mailer post %s, to %s, retry %d, ok", item.Id, item.ToEmail, item.Retry)
 				}
 			} else {
-				store.Data.NewWriter(iamapi.ObjKeyMsgQueue(item.Id), item).Commit()
+				store.Data.NewWriter(v.Meta.Key, item).Commit()
 				hlog.Printf("warn", "mailer post %s, retry %d", item.Id, item.ToEmail, item.Retry)
 			}
 		}

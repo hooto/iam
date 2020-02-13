@@ -83,7 +83,9 @@ func (c SysMsg) PostAction() {
 		return
 	}
 
-	set.Created = uint32(time.Now().Unix())
+	if set.Created < 1 {
+		set.Created = uint32(time.Now().Unix())
+	}
 
 	if rs := store.Data.NewWriter(iamapi.ObjKeyMsgQueue(set.Id), set).
 		ModeCreateSet(true).Commit(); !rs.OK() {
