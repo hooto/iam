@@ -113,7 +113,8 @@ func userCacheRefresh() {
 
 	for {
 
-		rs := Data.NewReader(nil).KeyRangeSet(offset, cutset).LimitNumSet(1000).Query()
+		rs := Data.NewReader(nil).KeyRangeSet(offset, cutset).
+			LimitNumSet(1000).Query()
 		if !rs.OK() {
 			break
 		}

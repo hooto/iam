@@ -15,6 +15,7 @@
 package worker
 
 import (
+	"strings"
 	"sync"
 	"time"
 
@@ -58,7 +59,8 @@ func MsgQueueRefresh() {
 			break
 		}
 
-		rs := store.Data.NewReader(nil).KeyRangeSet(offset, cutset).LimitNumSet(int64(limit)).Query()
+		rs := store.Data.NewReader(nil).KeyRangeSet(offset, cutset).
+			LimitNumSet(int64(limit)).Query()
 		if !rs.OK() {
 			hlog.Printf("info", "mailer scan err")
 			break
@@ -72,17 +74,54 @@ func MsgQueueRefresh() {
 				continue
 			}
 
-			if rs := store.Data.NewReader(iamapi.ObjKeyUser(item.ToUser)).Query(); rs.OK() {
-				var userLogin iamapi.User
-				rs.Decode(&userLogin)
-				if iamapi.UserEmailRe2.MatchString(userLogin.Email) {
-					item.ToEmail = userLogin.Email
+			toMail := []string{}
+			if item.ToEmail != "" {
+				toMail = strings.Split(item.ToEmail, ";")
+			}
+
+			if len(toMail) == 0 {
+
+				if u := store.UserGet(item.ToUser); u != nil {
+
+					if u.Type == iamapi.UserTypeGroup {
+
+						for _, ov := range u.Owners {
+							if ou := store.UserGet(ov); ou != nil {
+								if iamapi.UserEmailRe2.MatchString(ou.Email) {
+									toMail = append(toMail, ou.Email)
+								}
+							}
+						}
+
+					} else if iamapi.UserEmailRe2.MatchString(u.Email) {
+						toMail = append(toMail, u.Email)
+					}
 				}
 			}
 
+			/**
+			if rs := store.Data.NewReader(iamapi.ObjKeyUser(item.ToUser)).Query(); rs.OK() {
+				var userLogin iamapi.User
+				rs.Decode(&userLogin)
+
+				if userLogin.Type == iamapi.UserTypeGroup {
+					//
+				} else {
+
+					if iamapi.UserEmailRe2.MatchString(userLogin.Email) {
+						// item.ToEmail = userLogin.Email
+						toMail = append(toMail, userLogin.Email)
+					}
+				}
+			}
+			*/
+
 			item.Updated = uint32(time.Now().Unix())
 
-			if item.ToEmail != "" {
+			if len(toMail) > 0 {
+
+				item.ToEmail = strings.Join(toMail, ";")
+
 				if err := msgPost(mailer, item); err != nil {
 					item.Retry += 1
 					if item.Retry < 10 {
