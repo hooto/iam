@@ -50,6 +50,6 @@ func (it *MsgItem) SentId() string {
 }
 
 type MsgList struct {
-	types.TypeMeta `json:",inline"`
-	Items          []*MsgItem `json:"items"`
+	types.TypeMeta `json:",inline" toml:",inline"`
+	Items          []*MsgItem `json:"items" toml:"items"`
 }

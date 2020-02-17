@@ -24,13 +24,13 @@ import (
 )
 
 type AccessKey struct {
-	User        string           `json:"user,omitempty"`
-	AccessKey   string           `json:"access_key"`
-	SecretKey   string           `json:"secret_key,omitempty"`
-	Created     types.MetaTime   `json:"created,omitempty"`
-	Action      uint16           `json:"action,omitempty"`
-	Description string           `json:"desc,omitempty"`
-	Bounds      []AccessKeyBound `json:"bounds,omitempty"`
+	User        string           `json:"user,omitempty" toml:"user,omitempty"`
+	AccessKey   string           `json:"access_key" toml:"access_key"`
+	SecretKey   string           `json:"secret_key,omitempty" toml:"secret_key,omitempty"`
+	Created     types.MetaTime   `json:"created,omitempty" toml:"created,omitempty"`
+	Action      uint16           `json:"action,omitempty" toml:"action,omitempty"`
+	Description string           `json:"desc,omitempty" toml:"desc,omitempty"`
+	Bounds      []AccessKeyBound `json:"bounds,omitempty" toml:"bounds,omitempty"`
 }
 
 func (it *AccessKey) AuthKey() *iamauth.AuthKey {
@@ -42,8 +42,8 @@ func (it *AccessKey) AuthKey() *iamauth.AuthKey {
 }
 
 type AccessKeyBound struct {
-	Name    string         `json:"name"`
-	Created types.MetaTime `json:"created,omitempty"`
+	Name    string         `json:"name" toml:"name"`
+	Created types.MetaTime `json:"created,omitempty" toml:"created,omitempty"`
 }
 
 func (it AccessKeyBound) IterKey() string {
@@ -53,11 +53,11 @@ func (it AccessKeyBound) IterKey() string {
 type AccessKeyBounds []AccessKeyBound
 
 type AccessKeyAuth struct {
-	Type  string `json:"t"`
-	User  string `json:"u"`
-	Key   string `json:"k"`
-	Time  int64  `json:"rt"`
-	Token string `json:"tk"`
+	Type  string `json:"t" toml:"t"`
+	User  string `json:"u" toml:"u"`
+	Key   string `json:"k" toml:"k"`
+	Time  int64  `json:"rt" toml:"rt"`
+	Token string `json:"tk" toml:"tk"`
 }
 
 func (t AccessKeyAuth) Encode() string {
@@ -118,9 +118,9 @@ func AccessKeyAuthDecode(auth string) (AccessKeyAuth, error) {
 // Access Key SESSION
 // K1(2)VERIFY-SIGNATURE(36)PAYLOAD-DATA
 type AccessKeySession struct {
-	AccessKey string            `json:"ak"`
-	SecretKey string            `json:"sk"`
-	User      string            `json:"ur"`
-	Roles     types.ArrayUint32 `json:"rs"`
-	Expired   int64             `json:"ex"` // unix seconds
+	AccessKey string            `json:"ak" toml:"ak"`
+	SecretKey string            `json:"sk" toml:"sk"`
+	User      string            `json:"ur" toml:"ur"`
+	Roles     types.ArrayUint32 `json:"rs" toml:"rs"`
+	Expired   int64             `json:"ex" toml:"ex"` // unix seconds
 }

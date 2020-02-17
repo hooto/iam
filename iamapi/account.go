@@ -48,54 +48,54 @@ func AccountCurrencyTypeValid(v uint8) bool {
 
 // iam/acc_user/user-id
 type AccountUser struct {
-	User    string         `json:"user"`
-	Balance float64        `json:"balance"`
-	Prepay  float64        `json:"prepay"`
-	Updated types.MetaTime `json:"updated"`
+	User    string         `json:"user" toml:"user"`
+	Balance float64        `json:"balance" toml:"balance"`
+	Prepay  float64        `json:"prepay" toml:"prepay"`
+	Updated types.MetaTime `json:"updated" toml:"updated"`
 }
 
 type AccountCurrencyOption struct {
-	Name  string       `json:"name"`
-	Items types.Labels `json:"items,omitempty"`
+	Name  string       `json:"name" toml:"name"`
+	Items types.Labels `json:"items,omitempty" toml:"items,omitempty"`
 }
 
 // iam/acc_fund/user-id/rand-id
 // iam/acc_fund_mgr/rand-id
 type AccountFund struct {
-	Id               string                    `json:"id"`
-	Type             uint8                     `json:"type"`
-	User             string                    `json:"user"`
-	Operator         string                    `json:"operator,omitempty"`
-	CashType         uint16                    `json:"cash_type,omitempty"`
-	CashAmount       float32                   `json:"cash_amount,omitempty"`
-	Amount           float64                   `json:"amount"`
-	Prepay           float64                   `json:"prepay"`
-	Payout           float64                   `json:"payout"`
-	Priority         uint8                     `json:"priority"`
-	Options          types.Labels              `json:"options,emitempty"`
-	Created          types.MetaTime            `json:"created"`
-	Updated          types.MetaTime            `json:"updated"`
-	Comment          string                    `json:"comment,omitempty"`
-	ExpProductLimits types.ArrayNameIdentifier `json:"exp_product_limits,omitempty"`
-	ExpProductMax    int                       `json:"exp_product_max,omitempty"`
-	ExpProductInpay  types.ArrayNameIdentifier `json:"exp_product_inpay,omitempty"`
+	Id               string                    `json:"id" toml:"id"`
+	Type             uint8                     `json:"type" toml:"type"`
+	User             string                    `json:"user" toml:"user"`
+	Operator         string                    `json:"operator,omitempty" toml:"operator,omitempty"`
+	CashType         uint16                    `json:"cash_type,omitempty" toml:"cash_type,omitempty"`
+	CashAmount       float32                   `json:"cash_amount,omitempty" toml:"cash_amount,omitempty"`
+	Amount           float64                   `json:"amount" toml:"amount"`
+	Prepay           float64                   `json:"prepay" toml:"prepay"`
+	Payout           float64                   `json:"payout" toml:"payout"`
+	Priority         uint8                     `json:"priority" toml:"priority"`
+	Options          types.Labels              `json:"options,emitempty" toml:"options,emitempty"`
+	Created          types.MetaTime            `json:"created" toml:"created"`
+	Updated          types.MetaTime            `json:"updated" toml:"updated"`
+	Comment          string                    `json:"comment,omitempty" toml:"comment,omitempty"`
+	ExpProductLimits types.ArrayNameIdentifier `json:"exp_product_limits,omitempty" toml:"exp_product_limits,omitempty"`
+	ExpProductMax    int                       `json:"exp_product_max,omitempty" toml:"exp_product_max,omitempty"`
+	ExpProductInpay  types.ArrayNameIdentifier `json:"exp_product_inpay,omitempty" toml:"exp_product_inpay,omitempty"`
 }
 
 // iam/acc_charge/user-id/hash-id
 // iam/acc_charge_mgr/hash-id
 type AccountCharge struct {
-	types.TypeMeta `json:",inline"`
-	Id             string               `json:"id"`
-	Fund           string               `json:"fund"`
-	User           string               `json:"user"`
-	Product        types.NameIdentifier `json:"product"`
-	Prepay         float64              `json:"prepay"`
-	Payout         float64              `json:"payout"`
-	TimeStart      uint32               `json:"time_start"`
-	TimeClose      uint32               `json:"time_close"`
-	Created        types.MetaTime       `json:"created"`
-	Updated        types.MetaTime       `json:"updated"`
-	Comment        string               `json:"comment,omitempty"`
+	types.TypeMeta `json:",inline" toml:",inline"`
+	Id             string               `json:"id" toml:"id"`
+	Fund           string               `json:"fund" toml:"fund"`
+	User           string               `json:"user" toml:"user"`
+	Product        types.NameIdentifier `json:"product" toml:"product"`
+	Prepay         float64              `json:"prepay" toml:"prepay"`
+	Payout         float64              `json:"payout" toml:"payout"`
+	TimeStart      uint32               `json:"time_start" toml:"time_start"`
+	TimeClose      uint32               `json:"time_close" toml:"time_close"`
+	Created        types.MetaTime       `json:"created" toml:"created"`
+	Updated        types.MetaTime       `json:"updated" toml:"updated"`
+	Comment        string               `json:"comment,omitempty" toml:"comment,omitempty"`
 }
 
 func AccountChargeId(prod types.NameIdentifier, start uint32) ([]byte, string) {
@@ -120,13 +120,13 @@ const (
 )
 
 type AccountChargePrepay struct {
-	types.TypeMeta `json:",inline"`
-	User           string               `json:"user"`
-	Product        types.NameIdentifier `json:"product"`
-	Prepay         float64              `json:"prepay"`
-	TimeStart      uint32               `json:"time_start"`
-	TimeClose      uint32               `json:"time_close"`
-	Comment        string               `json:"comment,omitempty"`
+	types.TypeMeta `json:",inline" toml:",inline"`
+	User           string               `json:"user" toml:"user"`
+	Product        types.NameIdentifier `json:"product" toml:"product"`
+	Prepay         float64              `json:"prepay" toml:"prepay"`
+	TimeStart      uint32               `json:"time_start" toml:"time_start"`
+	TimeClose      uint32               `json:"time_close" toml:"time_close"`
+	Comment        string               `json:"comment,omitempty" toml:"comment,omitempty"`
 }
 
 func (this *AccountChargePrepay) Valid() error {
@@ -159,14 +159,14 @@ func (this *AccountChargePrepay) Valid() error {
 }
 
 type AccountChargePayout struct {
-	types.TypeMeta `json:",inline"`
-	Id             string               `json:"id"`
-	User           string               `json:"user"`
-	Product        types.NameIdentifier `json:"product"`
-	Payout         float64              `json:"payout"`
-	TimeStart      uint32               `json:"time_start"`
-	TimeClose      uint32               `json:"time_close"`
-	Comment        string               `json:"comment,omitempty"`
+	types.TypeMeta `json:",inline" toml:",inline"`
+	Id             string               `json:"id" toml:"id"`
+	User           string               `json:"user" toml:"user"`
+	Product        types.NameIdentifier `json:"product" toml:"product"`
+	Payout         float64              `json:"payout" toml:"payout"`
+	TimeStart      uint32               `json:"time_start" toml:"time_start"`
+	TimeClose      uint32               `json:"time_close" toml:"time_close"`
+	Comment        string               `json:"comment,omitempty" toml:"comment,omitempty"`
 }
 
 func (this *AccountChargePayout) Valid() error {

@@ -46,24 +46,24 @@ func (MsgType) EnumDescriptor() ([]byte, []int) {
 }
 
 type MsgItem struct {
-	Id                   string   `protobuf:"bytes,1,opt,name=id,proto3" json:"id,omitempty"`
-	Action               uint32   `protobuf:"varint,2,opt,name=action,proto3" json:"action,omitempty"`
-	ToUser               string   `protobuf:"bytes,3,opt,name=to_user,json=toUser,proto3" json:"to_user,omitempty"`
-	ToEmail              string   `protobuf:"bytes,4,opt,name=to_email,json=toEmail,proto3" json:"to_email,omitempty"`
-	FromUser             string   `protobuf:"bytes,5,opt,name=from_user,json=fromUser,proto3" json:"from_user,omitempty"`
-	FromEmail            string   `protobuf:"bytes,6,opt,name=from_email,json=fromEmail,proto3" json:"from_email,omitempty"`
-	Priority             uint32   `protobuf:"varint,7,opt,name=priority,proto3" json:"priority,omitempty"`
-	Title                string   `protobuf:"bytes,8,opt,name=title,proto3" json:"title,omitempty"`
-	Body                 string   `protobuf:"bytes,9,opt,name=body,proto3" json:"body,omitempty"`
-	Retry                uint32   `protobuf:"varint,10,opt,name=retry,proto3" json:"retry,omitempty"`
-	Type                 MsgType  `protobuf:"varint,11,opt,name=type,proto3,enum=iamapi.MsgType" json:"type,omitempty"`
-	Log                  string   `protobuf:"bytes,12,opt,name=log,proto3" json:"log,omitempty"`
-	Posted               uint32   `protobuf:"varint,13,opt,name=posted,proto3" json:"posted,omitempty"`
-	Created              uint32   `protobuf:"varint,14,opt,name=created,proto3" json:"created,omitempty"`
-	Updated              uint32   `protobuf:"varint,15,opt,name=updated,proto3" json:"updated,omitempty"`
-	XXX_NoUnkeyedLiteral struct{} `json:"-"`
-	XXX_unrecognized     []byte   `json:"-"`
-	XXX_sizecache        int32    `json:"-"`
+	Id                   string   `protobuf:"bytes,1,opt,name=id,proto3" json:"id,omitempty" toml:"id,omitempty"`
+	Action               uint32   `protobuf:"varint,2,opt,name=action,proto3" json:"action,omitempty" toml:"action,omitempty"`
+	ToUser               string   `protobuf:"bytes,3,opt,name=to_user,json=toUser,proto3" json:"to_user,omitempty" toml:"to_user,omitempty"`
+	ToEmail              string   `protobuf:"bytes,4,opt,name=to_email,json=toEmail,proto3" json:"to_email,omitempty" toml:"to_email,omitempty"`
+	FromUser             string   `protobuf:"bytes,5,opt,name=from_user,json=fromUser,proto3" json:"from_user,omitempty" toml:"from_user,omitempty"`
+	FromEmail            string   `protobuf:"bytes,6,opt,name=from_email,json=fromEmail,proto3" json:"from_email,omitempty" toml:"from_email,omitempty"`
+	Priority             uint32   `protobuf:"varint,7,opt,name=priority,proto3" json:"priority,omitempty" toml:"priority,omitempty"`
+	Title                string   `protobuf:"bytes,8,opt,name=title,proto3" json:"title,omitempty" toml:"title,omitempty"`
+	Body                 string   `protobuf:"bytes,9,opt,name=body,proto3" json:"body,omitempty" toml:"body,omitempty"`
+	Retry                uint32   `protobuf:"varint,10,opt,name=retry,proto3" json:"retry,omitempty" toml:"retry,omitempty"`
+	Type                 MsgType  `protobuf:"varint,11,opt,name=type,proto3,enum=iamapi.MsgType" json:"type,omitempty" toml:"type,omitempty"`
+	Log                  string   `protobuf:"bytes,12,opt,name=log,proto3" json:"log,omitempty" toml:"log,omitempty"`
+	Posted               uint32   `protobuf:"varint,13,opt,name=posted,proto3" json:"posted,omitempty" toml:"posted,omitempty"`
+	Created              uint32   `protobuf:"varint,14,opt,name=created,proto3" json:"created,omitempty" toml:"created,omitempty"`
+	Updated              uint32   `protobuf:"varint,15,opt,name=updated,proto3" json:"updated,omitempty" toml:"updated,omitempty"`
+	XXX_NoUnkeyedLiteral struct{} `json:"-" toml:"-"`
+	XXX_unrecognized     []byte   `json:"-" toml:"-"`
+	XXX_sizecache        int32    `json:"-" toml:"-"`
 }
 
 func (m *MsgItem) Reset()         { *m = MsgItem{} }

@@ -89,16 +89,16 @@ func UserNameValid(user string) error {
 }
 
 type UserSession struct {
-	AccessToken  string            `json:"access_token"`
-	RefreshToken string            `json:"refresh_token,omitempty"`
-	UserName     string            `json:"username"`
-	DisplayName  string            `json:"display_name,omitempty"`
-	Roles        types.ArrayUint32 `json:"roles,omitempty"`
-	Groups       []string          `json:"groups,omitempty"`
-	ClientAddr   string            `json:"client_addr,omitempty"`
-	Created      int64             `json:"created"`
-	Expired      int64             `json:"expired"`
-	Cached       int64             `json:"cached,omitempty"`
+	AccessToken  string            `json:"access_token" toml:"access_token"`
+	RefreshToken string            `json:"refresh_token,omitempty" toml:"refresh_token,omitempty"`
+	UserName     string            `json:"username" toml:"username"`
+	DisplayName  string            `json:"display_name,omitempty" toml:"display_name,omitempty"`
+	Roles        types.ArrayUint32 `json:"roles,omitempty" toml:"roles,omitempty"`
+	Groups       []string          `json:"groups,omitempty" toml:"groups,omitempty"`
+	ClientAddr   string            `json:"client_addr,omitempty" toml:"client_addr,omitempty"`
+	Created      int64             `json:"created" toml:"created"`
+	Expired      int64             `json:"expired" toml:"expired"`
+	Cached       int64             `json:"cached,omitempty" toml:"cached,omitempty"`
 }
 
 func (s *UserSession) IsLogin() bool {
@@ -124,10 +124,10 @@ func (s *UserSession) AccessAllow(name string) bool {
 }
 
 type UserAccessEntry struct {
-	types.TypeMeta `json:",inline"`
-	AccessToken    string `json:"access_token"`
-	Privilege      string `json:"privilege"`
-	InstanceID     string `json:"instance_id,omitempty"`
+	types.TypeMeta `json:",inline" toml:",inline"`
+	AccessToken    string `json:"access_token" toml:"access_token"`
+	Privilege      string `json:"privilege" toml:"privilege"`
+	InstanceID     string `json:"instance_id,omitempty" toml:"instance_id,omitempty"`
 }
 
 const (
@@ -135,174 +135,174 @@ const (
 )
 
 type User struct {
-	// Id          string            `json:"id,omitempty"`
-	Name        string            `json:"name"`
-	Email       string            `json:"email,omitempty"`
-	DisplayName string            `json:"display_name,omitempty"`
-	Keys        types.KvPairs     `json:"keys,omitempty"`
-	Roles       types.ArrayUint32 `json:"roles,omitempty"`
-	Type        uint32            `json:"type,omitempty"`
-	Owners      []string          `json:"owners,omitempty"`
-	Members     []string          `json:"members,omitempty"`
-	Status      uint8             `json:"status,omitempty"`
-	Created     types.MetaTime    `json:"created,omitempty"`
-	Updated     types.MetaTime    `json:"updated,omitempty"`
+	// Id          string            `json:"id,omitempty" toml:"id,omitempty"`
+	Name        string            `json:"name" toml:"name"`
+	Email       string            `json:"email,omitempty" toml:"email,omitempty"`
+	DisplayName string            `json:"display_name,omitempty" toml:"display_name,omitempty"`
+	Keys        types.KvPairs     `json:"keys,omitempty" toml:"keys,omitempty"`
+	Roles       types.ArrayUint32 `json:"roles,omitempty" toml:"roles,omitempty"`
+	Type        uint32            `json:"type,omitempty" toml:"type,omitempty"`
+	Owners      []string          `json:"owners,omitempty" toml:"owners,omitempty"`
+	Members     []string          `json:"members,omitempty" toml:"members,omitempty"`
+	Status      uint8             `json:"status,omitempty" toml:"status,omitempty"`
+	Created     types.MetaTime    `json:"created,omitempty" toml:"created,omitempty"`
+	Updated     types.MetaTime    `json:"updated,omitempty" toml:"updated,omitempty"`
 }
 
 type UserEntry struct {
-	types.TypeMeta `json:",inline"`
-	Login          User         `json:"login,omitempty"`
-	Profile        *UserProfile `json:"profile,omitempty"`
+	types.TypeMeta `json:",inline" toml:",inline"`
+	Login          User         `json:"login,omitempty" toml:"login,omitempty"`
+	Profile        *UserProfile `json:"profile,omitempty" toml:"profile,omitempty"`
 }
 
 type UserList struct {
-	types.TypeMeta `json:",inline"`
-	Meta           types.ListMeta `json:"meta,omitempty"`
-	Items          []User         `json:"items,omitempty"`
+	types.TypeMeta `json:",inline" toml:",inline"`
+	Meta           types.ListMeta `json:"meta,omitempty" toml:"meta,omitempty"`
+	Items          []User         `json:"items,omitempty" toml:"items,omitempty"`
 }
 
 type UserProfile struct {
-	Login       *User          `json:"login,omitempty"`
-	Gender      uint8          `json:"gender,omitempty"`
-	Photo       string         `json:"photo,omitempty"`
-	PhotoSource string         `json:"photo_source,omitempty"`
-	Birthday    string         `json:"birthday,omitempty"`
-	About       string         `json:"about,omitempty"`
-	Updated     types.MetaTime `json:"updated,omitempty"`
+	Login       *User          `json:"login,omitempty" toml:"login,omitempty"`
+	Gender      uint8          `json:"gender,omitempty" toml:"gender,omitempty"`
+	Photo       string         `json:"photo,omitempty" toml:"photo,omitempty"`
+	PhotoSource string         `json:"photo_source,omitempty" toml:"photo_source,omitempty"`
+	Birthday    string         `json:"birthday,omitempty" toml:"birthday,omitempty"`
+	About       string         `json:"about,omitempty" toml:"about,omitempty"`
+	Updated     types.MetaTime `json:"updated,omitempty" toml:"updated,omitempty"`
 }
 
 type UserGroupItem struct {
-	types.TypeMeta `json:",inline"`
-	Name           string         `json:"name"`
-	DisplayName    string         `json:"display_name,omitempty"`
-	Owners         []string       `json:"owners,omitempty"`
-	Members        []string       `json:"members,omitempty"`
-	Status         uint8          `json:"status"`
-	Created        types.MetaTime `json:"created"`
-	Updated        types.MetaTime `json:"updated"`
+	types.TypeMeta `json:",inline" toml:",inline"`
+	Name           string         `json:"name" toml:"name"`
+	DisplayName    string         `json:"display_name,omitempty" toml:"display_name,omitempty"`
+	Owners         []string       `json:"owners,omitempty" toml:"owners,omitempty"`
+	Members        []string       `json:"members,omitempty" toml:"members,omitempty"`
+	Status         uint8          `json:"status" toml:"status"`
+	Created        types.MetaTime `json:"created" toml:"created"`
+	Updated        types.MetaTime `json:"updated" toml:"updated"`
 }
 
 type UserGroupList struct {
-	types.TypeMeta `json:",inline"`
-	Items          []*UserGroupItem `json:"items,omitempty"`
+	types.TypeMeta `json:",inline" toml:",inline"`
+	Items          []*UserGroupItem `json:"items,omitempty" toml:"items,omitempty"`
 }
 
 type UserPasswordSet struct {
-	types.TypeMeta  `json:",inline"`
-	CurrentPassword string `json:"current_password,omitempty"`
-	NewPassword     string `json:"new_password,omitempty"`
+	types.TypeMeta  `json:",inline" toml:",inline"`
+	CurrentPassword string `json:"current_password,omitempty" toml:"current_password,omitempty"`
+	NewPassword     string `json:"new_password,omitempty" toml:"new_password,omitempty"`
 }
 
 type UserPasswordReset struct {
-	types.TypeMeta `json:",inline"`
-	Id             string `json:"id,omitempty"`
-	UserName       string `json:"username,omitempty"`
-	Email          string `json:"email,omitempty"`
-	Expired        string `json:"expired,omitempty"`
+	types.TypeMeta `json:",inline" toml:",inline"`
+	Id             string `json:"id,omitempty" toml:"id,omitempty"`
+	UserName       string `json:"username,omitempty" toml:"username,omitempty"`
+	Email          string `json:"email,omitempty" toml:"email,omitempty"`
+	Expired        string `json:"expired,omitempty" toml:"expired,omitempty"`
 }
 
 type UserEmailSet struct {
-	types.TypeMeta `json:",inline"`
-	Auth           string `json:"auth,omitempty"`
-	Email          string `json:"email,omitempty"`
+	types.TypeMeta `json:",inline" toml:",inline"`
+	Auth           string `json:"auth,omitempty" toml:"auth,omitempty"`
+	Email          string `json:"email,omitempty" toml:"email,omitempty"`
 }
 
 type UserPhotoSet struct {
-	types.TypeMeta `json:",inline"`
-	Name           string `json:"name,omitempty"`
-	Size           int    `json:"size,omitempty"`
-	Data           string `json:"data,omitempty"`
+	types.TypeMeta `json:",inline" toml:",inline"`
+	Name           string `json:"name,omitempty" toml:"name,omitempty"`
+	Size           int    `json:"size,omitempty" toml:"size,omitempty"`
+	Data           string `json:"data,omitempty" toml:"data,omitempty"`
 }
 
 type UserRole struct {
-	Id         uint32         `json:"id"`
-	Name       string         `json:"name"`
-	User       string         `json:"user,omitempty"`
-	Status     uint8          `json:"status,omitempty"`
-	Desc       string         `json:"desc,omitempty"`
-	Privileges []string       `json:"privileges,omitempty"`
-	Created    types.MetaTime `json:"created,omitempty"`
-	Updated    types.MetaTime `json:"updated,omitempty"`
+	Id         uint32         `json:"id" toml:"id"`
+	Name       string         `json:"name" toml:"name"`
+	User       string         `json:"user,omitempty" toml:"user,omitempty"`
+	Status     uint8          `json:"status,omitempty" toml:"status,omitempty"`
+	Desc       string         `json:"desc,omitempty" toml:"desc,omitempty"`
+	Privileges []string       `json:"privileges,omitempty" toml:"privileges,omitempty"`
+	Created    types.MetaTime `json:"created,omitempty" toml:"created,omitempty"`
+	Updated    types.MetaTime `json:"updated,omitempty" toml:"updated,omitempty"`
 }
 
 type UserRoleList struct {
-	types.TypeMeta `json:",inline"`
-	Items          []UserRole `json:"items,omitempty"`
+	types.TypeMeta `json:",inline" toml:",inline"`
+	Items          []UserRole `json:"items,omitempty" toml:"items,omitempty"`
 }
 
 type UserPrivilege struct {
-	types.TypeMeta `json:",inline"`
-	Meta           types.InnerObjectMeta `json:"meta,omitempty"`
-	Instance       string                `json:"instance"`
-	Desc           string                `json:"desc,omitempty"`
+	types.TypeMeta `json:",inline" toml:",inline"`
+	Meta           types.InnerObjectMeta `json:"meta,omitempty" toml:"meta,omitempty"`
+	Instance       string                `json:"instance" toml:"instance"`
+	Desc           string                `json:"desc,omitempty" toml:"desc,omitempty"`
 }
 
 type UserPrivilegeList struct {
-	types.TypeMeta `json:",inline"`
-	Items          []UserPrivilege `json:"items,omitempty"`
+	types.TypeMeta `json:",inline" toml:",inline"`
+	Items          []UserPrivilege `json:"items,omitempty" toml:"items,omitempty"`
 }
 
 type AppPrivilege struct {
-	// ID        uint32   `json:"id,omitempty"`
-	Privilege string            `json:"privilege"`
-	Desc      string            `json:"desc,omitempty"`
-	Roles     types.ArrayUint32 `json:"roles,omitempty"`
-	// ExtRoles  types.ArrayUint32 `json:"extroles,omitempty"`
+	// ID        uint32   `json:"id,omitempty" toml:"id,omitempty"`
+	Privilege string            `json:"privilege" toml:"privilege"`
+	Desc      string            `json:"desc,omitempty" toml:"desc,omitempty"`
+	Roles     types.ArrayUint32 `json:"roles,omitempty" toml:"roles,omitempty"`
+	// ExtRoles  types.ArrayUint32 `json:"extroles,omitempty" toml:"extroles,omitempty"`
 }
 
 type AppInstance struct {
-	Meta       types.InnerObjectMeta `json:"meta,omitempty"`
-	AppID      string                `json:"app_id,omitempty"`
-	AppTitle   string                `json:"app_title,omitempty"`
-	Version    string                `json:"version,omitempty"`
-	Status     uint8                 `json:"status,omitempty"`
-	Url        string                `json:"url,omitempty"`
-	Privileges []AppPrivilege        `json:"privileges,omitempty"`
-	SecretKey  string                `json:"secret_key,omitempty"`
+	Meta       types.InnerObjectMeta `json:"meta,omitempty" toml:"meta,omitempty"`
+	AppID      string                `json:"app_id,omitempty" toml:"app_id,omitempty"`
+	AppTitle   string                `json:"app_title,omitempty" toml:"app_title,omitempty"`
+	Version    string                `json:"version,omitempty" toml:"version,omitempty"`
+	Status     uint8                 `json:"status,omitempty" toml:"status,omitempty"`
+	Url        string                `json:"url,omitempty" toml:"url,omitempty"`
+	Privileges []AppPrivilege        `json:"privileges,omitempty" toml:"privileges,omitempty"`
+	SecretKey  string                `json:"secret_key,omitempty" toml:"secret_key,omitempty"`
 }
 
 type AppInstanceList struct {
-	types.TypeMeta `json:",inline"`
-	Meta           types.ListMeta `json:"meta,omitempty"`
-	Items          []AppInstance  `json:"items,omitempty"`
+	types.TypeMeta `json:",inline" toml:",inline"`
+	Meta           types.ListMeta `json:"meta,omitempty" toml:"meta,omitempty"`
+	Items          []AppInstance  `json:"items,omitempty" toml:"items,omitempty"`
 }
 
 type AppAuthInfo struct {
-	types.TypeMeta `json:",inline"`
-	InstanceID     string `json:"instance_id"`
-	AppID          string `json:"app_id"`
-	// Version        string `json:"version,omitempty"`
+	types.TypeMeta `json:",inline" toml:",inline"`
+	InstanceID     string `json:"instance_id" toml:"instance_id"`
+	AppID          string `json:"app_id" toml:"app_id"`
+	// Version        string `json:"version,omitempty" toml:"version,omitempty"`
 }
 
 type AppInstanceRegister struct {
-	types.TypeMeta `json:",inline"`
-	AccessToken    string      `json:"access_token,omitempty"`
-	Instance       AppInstance `json:"instance"`
+	types.TypeMeta `json:",inline" toml:",inline"`
+	AccessToken    string      `json:"access_token,omitempty" toml:"access_token,omitempty"`
+	Instance       AppInstance `json:"instance" toml:"instance"`
 }
 
 type SysConfigList struct {
-	types.TypeMeta `json:",inline"`
-	Items          types.Labels `json:"items,omitempty"`
+	types.TypeMeta `json:",inline" toml:",inline"`
+	Items          types.Labels `json:"items,omitempty" toml:"items,omitempty"`
 }
 
 type SysConfigMailer struct {
-	SmtpHost string `json:"smtp_host"`
-	SmtpPort string `json:"smtp_port"`
-	SmtpUser string `json:"smtp_user"`
-	SmtpPass string `json:"smtp_pass"`
+	SmtpHost string `json:"smtp_host" toml:"smtp_host"`
+	SmtpPort string `json:"smtp_port" toml:"smtp_port"`
+	SmtpUser string `json:"smtp_user" toml:"smtp_user"`
+	SmtpPass string `json:"smtp_pass" toml:"smtp_pass"`
 }
 
 type ServiceLoginAuth struct {
-	types.TypeMeta `json:",inline"`
-	RedirectUri    string `json:"redirect_uri,omitempty"`
-	AccessToken    string `json:"access_token,omitempty"`
+	types.TypeMeta `json:",inline" toml:",inline"`
+	RedirectUri    string `json:"redirect_uri,omitempty" toml:"redirect_uri,omitempty"`
+	AccessToken    string `json:"access_token,omitempty" toml:"access_token,omitempty"`
 }
 
 type ServiceRedirectToken struct {
-	RedirectUri string `json:"uri,omitempty"`
-	State       string `json:"state,omitempty"`
-	ClientId    string `json:"cid,omitempty"`
-	Persistent  int    `json:"pt,omitempty"`
+	RedirectUri string `json:"uri,omitempty" toml:"uri,omitempty"`
+	State       string `json:"state,omitempty" toml:"state,omitempty"`
+	ClientId    string `json:"cid,omitempty" toml:"cid,omitempty"`
+	Persistent  int    `json:"pt,omitempty" toml:"pt,omitempty"`
 }
 
 func ServiceRedirectTokenValid(tokenstr string) bool {
@@ -381,7 +381,7 @@ func OpActionAppend(opbase, op uint32) uint32 {
 }
 
 type WebServiceKind struct {
-	Kind  string           `json:"kind"`
-	Error *types.ErrorMeta `json:"error,omitempty"`
-	Data  proto.Message    `json:"data,omitempty"`
+	Kind  string           `json:"kind" toml:"kind"`
+	Error *types.ErrorMeta `json:"error,omitempty" toml:"error,omitempty"`
+	Data  proto.Message    `json:"data,omitempty" toml:"data,omitempty"`
 }
