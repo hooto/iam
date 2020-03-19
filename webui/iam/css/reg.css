@@ -9,7 +9,7 @@ body {
   font-family: Arial, sans-serif;
   background-color: #222;
   color: #eee;
-  min-width: 500px;
+  min-width: 300px;
   display: block;
   height: 100%;
 }
@@ -21,7 +21,7 @@ body {
   display: flex;
   justify-content: center;
   align-items: center;
-  min-width: 500px;
+  min-width: 300px;
   min-height: 400px;
 }
 
@@ -33,7 +33,9 @@ body {
   text-decoration: underline;
 }
 
+
 .iam-reg-box {
+  min-width: 300px;
   width: 400px;
   position: absolute;
   left: 50%;
@@ -41,6 +43,13 @@ body {
   transform: translate(-50%, -50%);
   color: #555;
   margin: 0 auto;
+}
+
+@media screen and (max-width: 768px) {
+  .iam-reg-box {
+    min-width: 300px;
+    width: 90% !important;
+  }
 }
 
 .iam-reg-form {
@@ -197,6 +206,7 @@ body {
   text-align: center;
   margin: 20px 0;
   font-size: 14px;
+  background-color: transparent !important;
 }
 
 .iam-reg-box>.footer a {
@@ -270,4 +280,24 @@ button,
 input:focus {
   outline: 0 !important;
   border-color: #343a40 !important;
+}
+
+.iam-is-desktop {
+  display: block;
+}
+
+@media screen and (max-width: 768px) {
+  .iam-is-desktop {
+    display: none;
+  }
+}
+
+.iam-is-mobile {
+  display: block;
+}
+
+@media screen and (min-width: 768px) {
+  .iam-is-mobile {
+    display: none !important;
+  }
 }

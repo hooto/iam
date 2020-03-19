@@ -20,6 +20,7 @@ import (
 	"github.com/hooto/httpsrv"
 	"github.com/lessos/lessgo/types"
 
+	"github.com/hooto/iam/config"
 	"github.com/hooto/iam/iamapi"
 	"github.com/hooto/iam/iamclient"
 	"github.com/hooto/iam/store"
@@ -62,7 +63,8 @@ func (c UserGroup) ItemAction() {
 	}
 
 	if !iamapi.ArrayStringHas(p.Owners, c.us.UserName) &&
-		!iamapi.ArrayStringHas(p.Members, c.us.UserName) {
+		!iamapi.ArrayStringHas(p.Members, c.us.UserName) &&
+		!iamclient.SessionAccessAllowed(c.Session, "user.admin", config.Config.InstanceID) {
 		set.Error = types.NewErrorMeta(iamapi.ErrCodeAccessDenied, "Access Denied")
 		return
 	}
@@ -92,7 +94,8 @@ func (c UserGroup) ListAction() {
 		}
 
 		if !iamapi.ArrayStringHas(v.Owners, c.us.UserName) &&
-			!iamapi.ArrayStringHas(v.Members, c.us.UserName) {
+			!iamapi.ArrayStringHas(v.Members, c.us.UserName) &&
+			!iamclient.SessionAccessAllowed(c.Session, "user.admin", config.Config.InstanceID) {
 			continue
 		}
 
@@ -147,7 +150,8 @@ func (c UserGroup) SetAction() {
 		chg = true
 	} else {
 		if prev.Type != iamapi.UserTypeGroup ||
-			!iamapi.ArrayStringHas(prev.Owners, c.us.UserName) {
+			(!iamapi.ArrayStringHas(prev.Owners, c.us.UserName) &&
+				!iamclient.SessionAccessAllowed(c.Session, "user.admin", config.Config.InstanceID)) {
 			set.Error = types.NewErrorMeta(iamapi.ErrCodeAccessDenied, "Access Denied")
 			return
 		}

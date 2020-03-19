@@ -2,6 +2,7 @@
 <html lang="en">
 <head>
   <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>IAM Service</title>
   <script src="/iam/~/zepto/zepto.js"></script>
   <script src="/iam/~/lessui/js/lessui.js"></script>
