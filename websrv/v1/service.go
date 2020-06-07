@@ -92,7 +92,7 @@ func (c Service) LoginAuthAction() {
 	err_key := iamapi.ObjKeyUserAuthDeny(uname, addr)
 	if rs := store.Data.NewReader(err_key).Query(); rs.OK() {
 		err_num = rs.DataValue().Int()
-		if err_num > 10 {
+		if err_num >= 20 {
 			rsp.Error = types.NewErrorMeta("400",
 				fmt.Sprintf("more than %d times failed to verify this signin, please try again in 1 day later", err_num))
 			return
