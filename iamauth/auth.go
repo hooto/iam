@@ -14,8 +14,9 @@
 
 package iamauth
 
-//go:generate protoc --go_out=plugins=grpc:. auth.proto
+//go:generate protoc --proto_path=./ --go_out=./ --go_opt=paths=source_relative --go-grpc_out=. iamauth.proto
 //go:generate protobuf_slice "*.proto"
+//go:generate htoml-tag-fix iamauth.pb.go
 
 import (
 	"encoding/base64"
@@ -45,4 +46,11 @@ func base64pad(s string) string {
 		s += strings.Repeat("=", 4-n)
 	}
 	return s
+}
+
+func NewAuthKey() *AuthKey {
+	return &AuthKey{
+		AccessKey: idhash.RandHexString(16),
+		SecretKey: idhash.RandBase64String(40),
+	}
 }

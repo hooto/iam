@@ -24,14 +24,14 @@ import (
 	"github.com/lessos/lessgo/crypto/phash"
 	"github.com/lessos/lessgo/net/email"
 	"github.com/lessos/lessgo/types"
-	"github.com/lynkdb/iomix/sko"
+	kv2 "github.com/lynkdb/kvspec/go/kvspec/v2"
 
 	"github.com/hooto/iam/config"
 	"github.com/hooto/iam/iamapi"
 )
 
 var (
-	Data                  sko.ClientConnector
+	Data                  kv2.Client
 	def_sysadmin          = "sysadmin"
 	def_sysadmin_password = "changeme"
 	app_inst_id_re        = regexp.MustCompile("^[0-9a-f]{16}$")
@@ -97,10 +97,10 @@ func InitData() (err error) {
 		v.Created = tnm
 		v.Updated = tnm
 
-		rw := sko.NewObjectWriter(iamapi.ObjKeyRole(v.Name), v).
+		rw := Data.NewWriter(iamapi.ObjKeyRole(v.Name), v).
 			IncrNamespaceSet("role").ModeCreateSet(true)
 		rw.Meta.IncrId = uint64(v.Id)
-		if rs := Data.Commit(rw); !rs.OK() {
+		if rs := rw.Commit(); !rs.OK() {
 			return fmt.Errorf("db err %s", rs.Message)
 		}
 	}
@@ -183,10 +183,10 @@ func InitData() (err error) {
 
 		sysadm.Keys.Set(iamapi.UserKeyDefault, auth)
 
-		ow := sko.NewObjectWriter(iamapi.ObjKeyUser(def_sysadmin), sysadm).
+		ow := Data.NewWriter(iamapi.ObjKeyUser(def_sysadmin), sysadm).
 			ModeCreateSet(true).IncrNamespaceSet("user")
 		ow.Meta.IncrId = 1
-		if rs := Data.Commit(ow); !rs.OK() {
+		if rs := ow.Commit(); !rs.OK() {
 			return fmt.Errorf("db err %s", rs.Message)
 		}
 	}
@@ -201,7 +201,7 @@ func SysConfigRefresh() {
 
 		var mailer iamapi.SysConfigMailer
 
-		if err := rs.Decode(&mailer); err == nil && mailer.SmtpHost != "" {
+		if err := rs.DataValue().Decode(&mailer, nil); err == nil && mailer.SmtpHost != "" {
 
 			email.MailerRegister(
 				"def",
@@ -281,7 +281,7 @@ func AppInstanceRegister(inst iamapi.AppInstance) error {
 
 	var prev iamapi.AppInstance
 	if rs := Data.NewReader(iamapi.ObjKeyAppInstance(inst.Meta.ID)).Query(); rs.OK() {
-		rs.Decode(&prev)
+		rs.DataValue().Decode(&prev, nil)
 	}
 
 	if prev.Meta.ID == "" {

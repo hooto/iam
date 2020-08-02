@@ -44,13 +44,13 @@ var (
 )
 
 type ConfigCommon struct {
-	filepath                 string             `json:"-"`
-	InstanceID               string             `json:"instance_id"`
-	HttpPort                 uint16             `json:"http_port,omitempty"`
-	ServiceName              string             `json:"service_name"`
-	AuthKeys                 []*iamauth.AuthKey `json:"auth_keys"`
-	WebUiBannerTitle         string             `json:"-"`
-	ServiceLoginFormAlertMsg string             `json:"-"`
+	filepath                 string             `json:"-" toml:"-"`
+	InstanceID               string             `json:"instance_id" toml:"instance_id"`
+	HttpPort                 uint16             `json:"http_port,omitempty" toml:"http_port,omitempty"`
+	ServiceName              string             `json:"service_name" toml:"service_name"`
+	AuthKeys                 []*iamauth.AuthKey `json:"auth_keys" toml:"auth_keys"`
+	WebUiBannerTitle         string             `json:"-" toml:"-"`
+	ServiceLoginFormAlertMsg string             `json:"-" toml:"-"`
 }
 
 func (it *ConfigCommon) Flush() error {

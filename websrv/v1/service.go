@@ -69,17 +69,20 @@ func (c Service) LoginAuthAction() {
 	uname := iamapi.UserNameFilter(c.Params.Get("uname"))
 	if err := iamapi.UserNameValid(uname); err != nil {
 		rsp.Error = types.NewErrorMeta("400", "incorrect username or password")
+		hlog.Printf("info", "service/login-auth fail user %s", uname)
 		return
 	}
 
 	user := store.UserGet(uname)
 	if user == nil {
 		rsp.Error = types.NewErrorMeta("400", "incorrect username or password")
+		hlog.Printf("info", "service/login-auth fail user %s", uname)
 		return
 	}
 
 	if user.Type == iamapi.UserTypeGroup {
 		rsp.Error = types.NewErrorMeta("400", "incorrect username or password")
+		hlog.Printf("info", "service/login-auth fail user %s", uname)
 		return
 	}
 
@@ -104,6 +107,7 @@ func (c Service) LoginAuthAction() {
 		err_num++
 		store.Data.NewWriter(err_key, err_num).ExpireSet(86400000).Commit()
 		rsp.Error = types.NewErrorMeta("400", "incorrect username or password")
+		hlog.Printf("info", "service/login-auth fail user %s", uname)
 		return
 	}
 
@@ -162,7 +166,7 @@ func (c Service) LoginAuthAction() {
 
 	rsp.Kind = "ServiceLoginAuth"
 
-	hlog.Printf("info", "Service/LoginAuth User %s", user.Name)
+	hlog.Printf("info", "service/login-auth user %s", user.Name)
 }
 
 func (c Service) AuthAction() {

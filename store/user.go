@@ -18,6 +18,7 @@ import (
 	"sync"
 	"time"
 
+	"github.com/hooto/hlog4g/hlog"
 	"github.com/hooto/iam/iamapi"
 )
 
@@ -109,11 +110,11 @@ func userCacheRefresh() {
 	}
 
 	offset := iamapi.ObjKeyUser("")
-	cutset := iamapi.ObjKeyUser("")
+	cutset := append(iamapi.ObjKeyUser(""), 0xff)
 
 	for {
 
-		rs := Data.NewReader(nil).KeyRangeSet(offset, cutset).
+		rs := Data.NewReader().KeyRangeSet(offset, cutset).
 			LimitNumSet(1000).Query()
 		if !rs.OK() {
 			break
@@ -150,6 +151,8 @@ func userCacheRefresh() {
 			break
 		}
 	}
+
+	hlog.Printf("debug", "data/user cache refreshed %d", len(userCaches))
 
 	userRefreshed = tn
 }

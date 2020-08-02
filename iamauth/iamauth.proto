@@ -16,6 +16,9 @@ syntax = "proto3";
 
 package iamauth;
 
+option optimize_for = LITE_RUNTIME;
+option go_package = ".;iamauth";
+
 message AuthKey {
     string access_key = 1; // struct:object_slice_key
     string secret_key = 2;
