@@ -15,9 +15,9 @@
 package v1
 
 import (
+	"github.com/hooto/hauth/go/hauth/v1"
 	"github.com/hooto/httpsrv"
 	"github.com/hooto/iam/iamapi"
-	"github.com/hooto/iam/iamauth"
 	"github.com/hooto/iam/store"
 	"github.com/lessos/lessgo/types"
 	"github.com/lynkdb/iomix/sko"
@@ -44,7 +44,7 @@ func (c AccountCharge) PreValidAction() {
 	}
 
 	//
-	authValidator, err := iamauth.NewAppValidatorWithHttpRequest(c.Request.Request)
+	authValidator, err := hauth.NewAppValidatorWithHttpRequest(c.Request.Request)
 	if err != nil {
 		set.Error = types.NewErrorMeta(iamapi.ErrCodeUnauthorized, err.Error())
 		return
@@ -134,7 +134,7 @@ func (c AccountCharge) PrepayAction() {
 	}
 
 	//
-	authValidator, err := iamauth.NewAppValidatorWithHttpRequest(c.Request.Request)
+	authValidator, err := hauth.NewAppValidatorWithHttpRequest(c.Request.Request)
 	if err != nil {
 		set.Error = types.NewErrorMeta(iamapi.ErrCodeUnauthorized, err.Error())
 		return
@@ -295,7 +295,7 @@ func (c AccountCharge) PayoutAction() {
 	}
 
 	//
-	authValidator, err := iamauth.NewAppValidatorWithHttpRequest(c.Request.Request)
+	authValidator, err := hauth.NewAppValidatorWithHttpRequest(c.Request.Request)
 	if err != nil {
 		set.Error = types.NewErrorMeta(iamapi.ErrCodeUnauthorized, err.Error())
 		return

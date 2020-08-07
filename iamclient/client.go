@@ -25,9 +25,9 @@ import (
 	"github.com/lessos/lessgo/net/httpclient"
 	"github.com/lessos/lessgo/types"
 
+	"github.com/hooto/hauth/go/hauth/v1"
 	"github.com/hooto/httpsrv"
 	"github.com/hooto/iam/iamapi"
-	"github.com/hooto/iam/iamauth"
 )
 
 const (
@@ -125,7 +125,7 @@ func Instance(token string) (*iamapi.UserSession, error) {
 		return nil, errors.New("Unauthorized")
 	}
 
-	ap, err := iamauth.NewUserValidator(token)
+	ap, err := hauth.NewUserValidator(token)
 	if err != nil {
 		return nil, err
 	}

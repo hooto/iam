@@ -28,10 +28,10 @@ import (
 	"github.com/lessos/lessgo/pass"
 	"github.com/lessos/lessgo/types"
 
+	"github.com/hooto/hauth/go/hauth/v1"
 	"github.com/hooto/iam/base/role"
 	"github.com/hooto/iam/config"
 	"github.com/hooto/iam/iamapi"
-	"github.com/hooto/iam/iamauth"
 	"github.com/hooto/iam/store"
 )
 
@@ -113,7 +113,7 @@ func (c Service) LoginAuthAction() {
 
 	var (
 		ttl = int64(864000)
-		ap  = iamauth.NewUserPayload(
+		ap  = hauth.NewUserPayload(
 			user.Name,
 			user.DisplayName,
 			user.Roles,
@@ -128,7 +128,7 @@ func (c Service) LoginAuthAction() {
 		return
 	}
 
-	rsp.AccessToken = ap.SignToken(config.Config.AuthKeys)
+	rsp.AccessToken = ap.SignToken(config.AuthKeyMgr)
 
 	if len(c.Params.Get("redirect_token")) > 20 {
 
@@ -176,7 +176,7 @@ func (c Service) AuthAction() {
 
 	token := c.Params.Get(iamapi.AccessTokenKey)
 
-	if _, err := iamauth.UserValid(token, config.Config.AuthKeys); err != nil {
+	if _, err := hauth.UserValid(token, config.AuthKeyMgr); err != nil {
 		set.Error = types.NewErrorMeta(iamapi.ErrCodeUnauthorized, "Unauthorized")
 		return
 	}
@@ -214,7 +214,7 @@ func (c Service) AccessAllowedAction() {
 		return
 	}
 
-	ap, err := iamauth.UserValid(req.AccessToken, config.Config.AuthKeys)
+	ap, err := hauth.UserValid(req.AccessToken, config.AuthKeyMgr)
 	if err != nil {
 		rsp.Error = types.NewErrorMeta(iamapi.ErrCodeUnauthorized, "Unauthorized")
 		return

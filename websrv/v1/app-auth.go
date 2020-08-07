@@ -24,9 +24,9 @@ import (
 	"github.com/lessos/lessgo/types"
 	iox_utils "github.com/lynkdb/iomix/utils"
 
+	"github.com/hooto/hauth/go/hauth/v1"
 	"github.com/hooto/iam/config"
 	"github.com/hooto/iam/iamapi"
-	"github.com/hooto/iam/iamauth"
 	"github.com/hooto/iam/iamclient"
 	"github.com/hooto/iam/store"
 )
@@ -93,13 +93,13 @@ func (c AppAuth) RegisterAction() {
 		}
 	}
 
-	ap, err := iamauth.NewUserValidator(set.AccessToken)
+	ap, err := hauth.NewUserValidator(set.AccessToken)
 	if err != nil {
 		set.Error = types.NewErrorMeta(iamapi.ErrCodeUnauthorized, err.Error())
 		return
 	}
 
-	if err := ap.SignValid(config.Config.AuthKeys); err != nil {
+	if err := ap.SignValid(config.AuthKeyMgr); err != nil {
 		set.Error = types.NewErrorMeta(iamapi.ErrCodeUnauthorized, "Unauthorized")
 		return
 	}

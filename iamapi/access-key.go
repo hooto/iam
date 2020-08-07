@@ -18,7 +18,7 @@ import (
 	"encoding/base64"
 	"errors"
 
-	"github.com/hooto/iam/iamauth"
+	"github.com/hooto/hauth/go/hauth/v1"
 	"github.com/lessos/lessgo/encoding/json"
 	"github.com/lessos/lessgo/types"
 )
@@ -33,8 +33,8 @@ type AccessKey struct {
 	Bounds      []AccessKeyBound `json:"bounds,omitempty" toml:"bounds,omitempty"`
 }
 
-func (it *AccessKey) AuthKey() *iamauth.AuthKey {
-	return &iamauth.AuthKey{
+func (it *AccessKey) AuthKey() *hauth.AuthKey {
+	return &hauth.AuthKey{
 		User:      it.User,
 		AccessKey: it.AccessKey,
 		SecretKey: it.SecretKey,

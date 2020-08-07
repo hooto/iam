@@ -18,14 +18,15 @@ import (
 	"os"
 	"path/filepath"
 
+	"github.com/hooto/htoml4g/htoml"
 	"github.com/lessos/lessgo/crypto/idhash"
 	"github.com/lessos/lessgo/encoding/json"
 
-	"github.com/hooto/iam/iamauth"
+	"github.com/hooto/hauth/go/hauth/v1"
 )
 
 const (
-	Version       = "0.9.0"
+	Version       = "0.9.1"
 	GroupMember   = 100
 	GroupSysAdmin = 1
 )
@@ -41,23 +42,18 @@ var (
 		WebUiBannerTitle:         "Account Panel",
 		ServiceLoginFormAlertMsg: "",
 	}
+	AuthKeyMgr     = hauth.NewAuthKeyManager()
+	configFilePath = ""
 )
 
 type ConfigCommon struct {
-	filepath                 string             `json:"-" toml:"-"`
-	InstanceID               string             `json:"instance_id" toml:"instance_id"`
-	HttpPort                 uint16             `json:"http_port,omitempty" toml:"http_port,omitempty"`
-	ServiceName              string             `json:"service_name" toml:"service_name"`
-	AuthKeys                 []*iamauth.AuthKey `json:"auth_keys" toml:"auth_keys"`
-	WebUiBannerTitle         string             `json:"-" toml:"-"`
-	ServiceLoginFormAlertMsg string             `json:"-" toml:"-"`
-}
-
-func (it *ConfigCommon) Flush() error {
-	if it.filepath == "" {
-		return nil
-	}
-	return json.EncodeToFile(it, it.filepath, "  ")
+	filepath                 string           `json:"-" toml:"-"`
+	InstanceID               string           `json:"instance_id" toml:"instance_id"`
+	HttpPort                 uint16           `json:"http_port,omitempty" toml:"http_port,omitempty"`
+	ServiceName              string           `json:"service_name" toml:"service_name"`
+	AuthKeys                 []*hauth.AuthKey `json:"auth_keys" toml:"auth_keys"`
+	WebUiBannerTitle         string           `json:"-" toml:"-"`
+	ServiceLoginFormAlertMsg string           `json:"-" toml:"-"`
 }
 
 func Setup(prefix string) error {
@@ -71,10 +67,18 @@ func Setup(prefix string) error {
 	}
 	Prefix = filepath.Clean(Prefix)
 
-	if err := json.DecodeFile(Prefix+"/etc/iam_config.json", &Config); err != nil && !os.IsNotExist(err) {
-		return err
+	configFilePath = Prefix + "/etc/iam_config.toml"
+
+	if err := htoml.DecodeFromFile(&Config, configFilePath); err != nil {
+
+		if !os.IsNotExist(err) {
+			return err
+		}
+
+		if err := json.DecodeFile(Prefix+"/etc/iam_config.json", &Config); err != nil && !os.IsNotExist(err) {
+			return err
+		}
 	}
-	Config.filepath = Prefix + "/etc/iam_config.json"
 
 	if Config.InstanceID == "" {
 		Config.InstanceID = idhash.RandHexString(16)
@@ -85,11 +89,18 @@ func Setup(prefix string) error {
 	}
 
 	if len(Config.AuthKeys) < 1 {
-		Config.AuthKeys = append(Config.AuthKeys, &iamauth.AuthKey{
+		Config.AuthKeys = append(Config.AuthKeys, &hauth.AuthKey{
 			AccessKey: idhash.RandHexString(8),
 			SecretKey: idhash.RandBase64String(40),
 		})
 	}
+	for _, v := range Config.AuthKeys {
+		AuthKeyMgr.KeySet(v)
+	}
 
-	return Config.Flush()
+	return Flush()
+}
+
+func Flush() error {
+	return htoml.EncodeToFile(Config, configFilePath, nil)
 }

@@ -20,8 +20,8 @@ import (
 	"github.com/hooto/httpsrv"
 	"github.com/lessos/lessgo/types"
 
+	"github.com/hooto/hauth/go/hauth/v1"
 	"github.com/hooto/iam/iamapi"
-	"github.com/hooto/iam/iamauth"
 	"github.com/hooto/iam/iamclient"
 	"github.com/hooto/iam/store"
 )
@@ -64,7 +64,7 @@ func (c SysMsg) PostAction() {
 	}
 
 	//
-	authValidator, err := iamauth.NewAppValidatorWithHttpRequest(c.Request.Request)
+	authValidator, err := hauth.NewAppValidatorWithHttpRequest(c.Request.Request)
 	if err != nil {
 		rsp.Error = types.NewErrorMeta(iamapi.ErrCodeUnauthorized, err.Error())
 		return
