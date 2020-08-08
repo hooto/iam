@@ -16,6 +16,7 @@ package ctrl
 
 import (
 	"github.com/hooto/httpsrv"
+	"github.com/hooto/iam/bindata"
 	"github.com/hooto/iam/config"
 	"github.com/hooto/iam/iamclient"
 )
@@ -28,9 +29,14 @@ func NewModule() httpsrv.Module {
 		Type:       httpsrv.RouteTypeStatic,
 		Path:       "~",
 		StaticPath: config.Prefix + "/webui",
+		BinFs:      bindata.NewFs("iam_ws_webui"),
 	})
 
-	module.TemplatePathSet(config.Prefix + "/websrv/views")
+	if viewfs := bindata.NewFs("iam_ws_views"); viewfs != nil {
+		module.TemplateFileSystemSet(viewfs)
+	} else {
+		module.TemplatePathSet(config.Prefix + "/websrv/views")
+	}
 
 	module.ControllerRegister(new(Index))
 	module.ControllerRegister(new(Service))

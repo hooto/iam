@@ -36,18 +36,12 @@ var (
 	VersionHash              = Version
 	Prefix                   = "/opt/hooto/iam"
 	UserRegistrationDisabled = false
-	Config                   = ConfigCommon{
-		InstanceID:               "",
-		ServiceName:              "hooto IAM Service",
-		WebUiBannerTitle:         "Account Panel",
-		ServiceLoginFormAlertMsg: "",
-	}
-	AuthKeyMgr     = hauth.NewAuthKeyManager()
-	configFilePath = ""
+	Config                   = &ConfigCommon{}
+	AuthKeyMgr               = hauth.NewAuthKeyManager()
+	configFilePath           = ""
 )
 
 type ConfigCommon struct {
-	filepath                 string           `json:"-" toml:"-"`
 	InstanceID               string           `json:"instance_id" toml:"instance_id"`
 	HttpPort                 uint16           `json:"http_port,omitempty" toml:"http_port,omitempty"`
 	ServiceName              string           `json:"service_name" toml:"service_name"`
@@ -56,20 +50,42 @@ type ConfigCommon struct {
 	ServiceLoginFormAlertMsg string           `json:"-" toml:"-"`
 }
 
+func (it *ConfigCommon) reset() {
+
+	if it.InstanceID == "" {
+		it.InstanceID = idhash.RandHexString(16)
+	}
+
+	if it.ServiceName == "" {
+		it.ServiceName = "hooto IAM Service"
+	}
+
+	if it.WebUiBannerTitle == "" {
+		it.WebUiBannerTitle = "Account Panel"
+	}
+
+	if len(it.AuthKeys) < 1 {
+		it.AuthKeys = append(it.AuthKeys, &hauth.AuthKey{
+			AccessKey: idhash.RandHexString(8),
+			SecretKey: idhash.RandBase64String(40),
+		})
+	}
+	for _, v := range it.AuthKeys {
+		AuthKeyMgr.KeySet(v)
+	}
+}
+
 func Setup(prefix string) error {
 
-	if prefix == "" {
-		if prefix, err = filepath.Abs(filepath.Dir(os.Args[0]) + "/.."); err == nil {
-			Prefix = prefix
-		}
+	if prefix != "" {
+		Prefix = filepath.Clean(prefix)
 	} else {
-		Prefix = prefix
+		Prefix, _ = filepath.Abs(filepath.Dir(os.Args[0]) + "/..")
 	}
-	Prefix = filepath.Clean(Prefix)
 
 	configFilePath = Prefix + "/etc/iam_config.toml"
 
-	if err := htoml.DecodeFromFile(&Config, configFilePath); err != nil {
+	if err := htoml.DecodeFromFile(Config, configFilePath); err != nil {
 
 		if !os.IsNotExist(err) {
 			return err
@@ -80,27 +96,31 @@ func Setup(prefix string) error {
 		}
 	}
 
-	if Config.InstanceID == "" {
-		Config.InstanceID = idhash.RandHexString(16)
-	}
-
-	if Config.ServiceName == "" {
-		Config.ServiceName = "hooto IAM Service"
-	}
-
-	if len(Config.AuthKeys) < 1 {
-		Config.AuthKeys = append(Config.AuthKeys, &hauth.AuthKey{
-			AccessKey: idhash.RandHexString(8),
-			SecretKey: idhash.RandBase64String(40),
-		})
-	}
-	for _, v := range Config.AuthKeys {
-		AuthKeyMgr.KeySet(v)
-	}
+	Config.reset()
 
 	return Flush()
 }
 
+func SetupConfig(prefix string, cfg *ConfigCommon) error {
+
+	if prefix != "" {
+		Prefix = filepath.Clean(prefix)
+	} else {
+		Prefix, _ = filepath.Abs(filepath.Dir(os.Args[0]) + "/..")
+	}
+
+	if cfg == nil {
+		cfg = &ConfigCommon{}
+	}
+	cfg.reset()
+
+	Config = cfg
+	return nil
+}
+
 func Flush() error {
-	return htoml.EncodeToFile(Config, configFilePath, nil)
+	if configFilePath != "" {
+		return htoml.EncodeToFile(Config, configFilePath, nil)
+	}
+	return nil
 }
