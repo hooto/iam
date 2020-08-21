@@ -14,7 +14,9 @@
 
 syntax = "proto3";
 
-package iamapi;
+package hooto.iamapi;
+
+option go_package = ".;iamapi";
 
 enum MsgType {
 	TEXT = 0;

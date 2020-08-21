@@ -1,19 +1,19 @@
 var iamAccessKey = {
     aks: null,
-    actionls: [{
-        action: 1,
+    statuses: [{
+        status: 1 << 1,
         title: "Active",
     }, {
-        action: 2,
-        title: "Stop",
+        status: 0,
+        title: "Disable",
     }],
     def: {
         kind: "AccessKey",
-        access_key: "",
-        secret_key: "",
-        action: 1,
-        desc: "",
-        bounds: [],
+        id: "",
+        secret: "",
+        status: (1 << 1),
+        scopes: [],
+        description: "",
     },
 }
 
@@ -49,21 +49,20 @@ iamAccessKey.List = function() {
 
             for (var i in aks.items) {
 
-                if (!aks.items[i].desc) {
-                    aks.items[i].desc = "";
+                if (!aks.items[i].description) {
+                    aks.items[i].description = "";
                 }
 
-                if (!aks.items[i].bounds) {
-                    aks.items[i].bounds = [];
+                if (!aks.items[i].status) {
+                    aks.items[i].status = 0;
                 }
 
-                aks.items[i]._bounds = [];
-                for (var j in aks.items[i].bounds) {
-                    aks.items[i]._bounds.push(aks.items[i].bounds[j].name);
+                if (!aks.items[i].scopes) {
+                    aks.items[i].scopes = [];
                 }
             }
 
-            aks._actionls = iamAccessKey.actionls;
+            aks._statuses = iamAccessKey.statuses;
 
             l4iTemplate.Render({
                 dstid: "work-content",
@@ -79,7 +78,7 @@ iamAccessKey.List = function() {
             alert(l4i.T("network error, please try again later"));
         });
 
-        iam.ApiCmd("access-key/list?action=0", {
+        iam.ApiCmd("access-key/list?status=0", {
             callback: ep.done('aks'),
         });
 
@@ -98,26 +97,30 @@ iamAccessKey.Info = function(akid) {
                 return;
             }
 
-            if (!data.desc) {
-                data.desc = "";
-            }
-            if (!data.access_key) {
-                data.access_key = "";
-            }
-            if (!data.action) {
-                data.action = 1;
-            }
-            if (!data.bounds) {
-                data.bounds = [];
+            if (!data.item) {
+                data.item = {};
             }
 
-            data._actionls = iamAccessKey.actionls;
+            if (!data.item.description) {
+                data.item.description = "";
+            }
+            if (!data.item.id) {
+                data.item.id = "";
+            }
+            if (!data.item.status) {
+                data.item.status = 0;
+            }
+            if (!data.item.scopes) {
+                data.item.scopes = [];
+            }
+
+            data._statuses = iamAccessKey.statuses;
 
             l4iModal.Open({
                 tplsrc: tpl,
                 width: 800,
                 height: 350,
-                data: data,
+                data: data.item,
                 title: "Access Key Info",
                 buttons: [{
                     title: l4i.T("Cancel"),
@@ -131,7 +134,7 @@ iamAccessKey.Info = function(akid) {
         });
 
         if (akid) {
-            iam.ApiCmd("access-key/entry?access_key=" + akid, {
+            iam.ApiCmd("access-key/entry?access_key_id=" + akid, {
                 callback: ep.done('data'),
             });
         } else {
@@ -160,26 +163,31 @@ iamAccessKey.Set = function(akid) {
                 data._form_title = l4i.T("%s Settings", "Access Key");
             }
 
-            if (!data.desc) {
-                data.desc = "";
-            }
-            if (!data.access_key) {
-                data.access_key = "";
-            }
-            if (!data.action) {
-                data.action = 1;
-            }
-            if (!data.bounds) {
-                data.bounds = [];
+
+            if (!data.item) {
+                data.item = {};
             }
 
-            data._actionls = iamAccessKey.actionls;
+            if (!data.item.description) {
+                data.item.description = "";
+            }
+            if (!data.item.id) {
+                data.item.id = "";
+            }
+            if (!data.item.status) {
+                data.item.status = 0;
+            }
+            if (!data.item.scopes) {
+                data.item.scopes = [];
+            }
+
+            data.item._statuses = iamAccessKey.statuses;
 
             l4iModal.Open({
                 tplsrc: tpl,
                 width: 800,
                 height: 300,
-                data: data,
+                data: data.item,
                 title: data._form_title,
                 buttons: [{
                     title: l4i.T("Cancel"),
@@ -197,7 +205,7 @@ iamAccessKey.Set = function(akid) {
         });
 
         if (akid) {
-            iam.ApiCmd("access-key/entry?access_key=" + akid, {
+            iam.ApiCmd("access-key/entry?access_key_id=" + akid, {
                 callback: ep.done('data'),
             });
         } else {
@@ -215,17 +223,19 @@ iamAccessKey.SetCommit = function() {
         alert_id = "#iam-ak-set-alert";
 
     var req = {
-        access_key: form.find("input[name=access_key]").val(),
-        action: parseInt(form.find("input[name=action]:checked").val()),
-        desc: form.find("input[name=desc]").val(),
-        bounds: [],
+        id: form.find("input[name=id]").val(),
+        status: parseInt(form.find("input[name=status]:checked").val()),
+        description: form.find("input[name=description]").val(),
+        scopes: [],
     }
 
     form.find("input[name=bound_item]").each(function() {
         var val = $(this).val();
-        if (val.length > 0) {
-            req.bounds.push({
-                name: val,
+        var ar = val.split("=");
+        if (ar.length == 2) {
+            req.scopes.push({
+                name: ar[0].trim(),
+                value: ar[1].trim(),
             });
         }
     });
@@ -272,7 +282,7 @@ iamAccessKey.Del = function(akid) {
 
 iamAccessKey.DelCommit = function(akid) {
     var alertid = "#iam-ak-del";
-    var uri = "access_key=" + akid;
+    var uri = "access_key_id=" + akid;
 
     iam.ApiCmd("access-key/del?" + uri, {
         callback: function(err, data) {
@@ -301,7 +311,7 @@ iamAccessKey.Bind = function(akid) {
                 height: 260,
                 title: l4i.T("Bind new instance to this %s", "AccessKey"),
                 data: {
-                    access_key: akid,
+                    id: akid,
                 },
                 buttons: [{
                     title: l4i.T("Cancel"),
@@ -329,8 +339,8 @@ iamAccessKey.BindCommit = function() {
     var form = $("#iam-ak-bind"),
         alert_id = "#iam-ak-bind-alert";
 
-    var url = "?access_key=" + form.find("input[name=access_key]").val();
-    url += "&bound_name=" + form.find("input[name=bound_name]").val();
+    var url = "?access_key_id=" + form.find("input[name=id]").val();
+    url += "&scope_content=" + form.find("input[name=scope_content]").val();
 
     iam.ApiCmd("access-key/bind" + url, {
         method: "GET",
@@ -374,7 +384,7 @@ iamAccessKey.UnBind = function(akid, name) {
 iamAccessKey.UnBindCommit = function(akid, name) {
 
     var alertid = "#iam-ak-unbind";
-    var url = "?access_key=" + akid + "&bound_name=" + name;
+    var url = "?access_key_id=" + akid + "&scope_content=" + name;
 
     iam.ApiCmd("access-key/unbind" + url, {
         method: "GET",

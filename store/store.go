@@ -20,6 +20,7 @@ import (
 	"regexp"
 	"strings"
 
+	"github.com/hooto/hauth/go/hauth/v1"
 	"github.com/hooto/hlog4g/hlog"
 	"github.com/lessos/lessgo/crypto/phash"
 	"github.com/lessos/lessgo/net/email"
@@ -35,9 +36,10 @@ var (
 	def_sysadmin          = "sysadmin"
 	def_sysadmin_password = "changeme"
 	app_inst_id_re        = regexp.MustCompile("^[0-9a-f]{16}$")
+	KeyMgr                = hauth.NewAccessKeyManager()
 )
 
-func Init() error {
+func Setup() error {
 
 	if Data == nil {
 		return fmt.Errorf("iam.store connect not ready #1")
@@ -54,17 +56,63 @@ func Init() error {
 		hlog.Printf("info", "iam/data connect ok")
 	}
 
+	for _, v := range config.Config.AccessKeys {
+		KeyMgr.KeySet(v)
+	}
+
 	return nil
 }
 
 func InitData() (err error) {
 
-	if err := Init(); err != nil {
+	if err := Setup(); err != nil {
 		return err
 	}
 
 	if len(config.Config.InstanceID) < 16 {
 		return fmt.Errorf("No InstanceID Setup")
+	}
+
+	// AccessKeyDep
+	akp := iamapi.ObjKeyAccessKeyDep("", "")
+	if rs := Data.NewReader().KeyRangeSet(akp, append(akp, []byte{0xff}...)).
+		LimitNumSet(1000).Query(); rs.OK() {
+
+		for _, v := range rs.Items {
+
+			var ak iamapi.AccessKeyDep
+			if err := v.Decode(&ak); err != nil {
+				continue
+			}
+
+			akNew := hauth.AccessKey{
+				Id:          ak.AccessKey,
+				Secret:      ak.SecretKey,
+				User:        ak.User,
+				Description: ak.Description,
+			}
+
+			if ak.Action == 1 {
+				akNew.Status = hauth.AccessKeyStatusActive
+			}
+
+			for _, v2 := range ak.Bounds {
+				ar := strings.Split(v2.Name, "/")
+				if len(ar) == 2 {
+					akNew.Scopes = append(akNew.Scopes, &hauth.ScopeFilter{
+						Name:  ar[0],
+						Value: ar[1],
+					})
+				}
+			}
+
+			if rs2 := Data.NewWriter(iamapi.NsAccessKey(ak.User, ak.AccessKey), akNew).
+				ModeCreateSet(true).Commit(); rs2.OK() {
+				hlog.Printf("info", "iam/access_key %s upgrade ok", akNew.Id)
+			}
+
+			KeyMgr.KeySet(&akNew)
+		}
 	}
 
 	tnm := types.MetaTimeNow()
@@ -237,34 +285,53 @@ func SysConfigRefresh() {
 	}
 }
 
-func AccessKeyInitData(ak iamapi.AccessKey) error {
+func AccessKeyInitData(ak *hauth.AccessKey) error {
+
 	if ak.User == "" {
-		return errors.New("No User Set")
+		ak.User = "sysadmin"
 	}
 
-	ak.Created = types.MetaTimeNow()
-	ak.Action = 1
-	if rs := Data.NewWriter(iamapi.ObjKeyAccessKey(ak.User, ak.AccessKey), ak).
-		ModeCreateSet(true).Commit(); !rs.OK() {
-		return rs.Error()
+	ak.Status = hauth.AccessKeyStatusActive
+
+	if rs := Data.NewReader(iamapi.NsAccessKey(ak.User, ak.Id)).Query(); rs.OK() {
+		var prev hauth.AccessKey
+		if err := rs.Decode(&prev); err != nil {
+			return err
+		}
+		if !ak.Equal(&prev) {
+			if rs := Data.NewWriter(iamapi.NsAccessKey(ak.User, ak.Id), ak).
+				Commit(); !rs.OK() {
+				return rs.Error()
+			}
+			hlog.Printf("warn", "IAM/AK ID %s, SEC %s, Refreshed", ak.Id, ak.Secret[:8])
+		}
+	} else {
+
+		if rs := Data.NewWriter(iamapi.NsAccessKey(ak.User, ak.Id), ak).
+			ModeCreateSet(true).Commit(); !rs.OK() {
+			return rs.Error()
+		}
 	}
+
+	KeyMgr.KeySet(ak)
 
 	return nil
 }
 
-func AccessKeyReset(ak iamapi.AccessKey) error {
+func AccessKeyReset(ak *hauth.AccessKey) error {
 
 	if ak.User == "" {
 		return errors.New("No User Set")
 	}
 
-	ak.Created = types.MetaTimeNow()
-	ak.Action = 1
+	ak.Status = hauth.AccessKeyStatusActive
 
-	if rs := Data.NewWriter(iamapi.ObjKeyAccessKey(ak.User, ak.AccessKey), ak).
+	if rs := Data.NewWriter(iamapi.NsAccessKey(ak.User, ak.Id), ak).
 		Commit(); !rs.OK() {
 		return rs.Error()
 	}
+
+	KeyMgr.KeySet(ak)
 
 	return nil
 }

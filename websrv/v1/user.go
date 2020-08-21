@@ -36,6 +36,7 @@ import (
 type User struct {
 	*httpsrv.Controller
 	us iamapi.UserSession
+	//
 }
 
 func (c *User) Init() int {

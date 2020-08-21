@@ -18,12 +18,11 @@ import (
 	"encoding/base64"
 	"errors"
 
-	"github.com/hooto/hauth/go/hauth/v1"
 	"github.com/lessos/lessgo/encoding/json"
 	"github.com/lessos/lessgo/types"
 )
 
-type AccessKey struct {
+type AccessKeyDep struct {
 	User        string           `json:"user,omitempty" toml:"user,omitempty"`
 	AccessKey   string           `json:"access_key" toml:"access_key"`
 	SecretKey   string           `json:"secret_key,omitempty" toml:"secret_key,omitempty"`
@@ -31,14 +30,6 @@ type AccessKey struct {
 	Action      uint16           `json:"action,omitempty" toml:"action,omitempty"`
 	Description string           `json:"desc,omitempty" toml:"desc,omitempty"`
 	Bounds      []AccessKeyBound `json:"bounds,omitempty" toml:"bounds,omitempty"`
-}
-
-func (it *AccessKey) AuthKey() *hauth.AuthKey {
-	return &hauth.AuthKey{
-		User:      it.User,
-		AccessKey: it.AccessKey,
-		SecretKey: it.SecretKey,
-	}
 }
 
 type AccessKeyBound struct {

@@ -28,11 +28,10 @@
 <table class="table table-hover valign-middle">
 <thead>
   <tr>
-    <th>Access Key</th>
+    <th>Access Key ID</th>
     <th>{[=l4i.T("Description")]}</th>
-    <th width="35%">{[=l4i.T("Bound instances")]}</th>
-    <th>Action</th>
-    <th>{[=l4i.T("Created")]}</th>
+    <th>Status</th>
+    <th width="35%">{[=l4i.T("Scopes")]}</th>
     <th></th>
   </tr>
 </thead>
@@ -40,32 +39,32 @@
 {[~it.items :v]}
 <tr>
   <td class="iam-monofont">
-    <a href="#info" onclick="iamAccessKey.Info('{[=v.access_key]}')">{[=v.access_key]}</a>
+    <a href="#info" onclick="iamAccessKey.Info('{[=v.id]}')">{[=v.id]}</a>
   </td>
-  <td>{[=v.desc]}</td>
+  <td>{[=v.description]}</td>
   <td>
-    <button class="pure-button button-small"
-      onclick="iamAccessKey.Bind('{[=v.access_key]}')">
-	  <span class="fa fa-plus"></span>
-    </button>
-    {[~v.bounds :bv]}
-    <span class="label label-success boundop">{[=bv.name]} <a href="#" onclick="iamAccessKey.UnBind('{[=v.access_key]}', '{[=bv.name]}')">&times;</a></span>
+    {[~it._statuses :sv]}
+    {[ if (v.status == sv.status) { ]}{[=sv.title]}{[ } ]}
     {[~]}
   </td>
   <td>
-    {[~it._actionls :sv]}
-    {[ if (v.action == sv.action) { ]}{[=sv.title]}{[ } ]}
+    {[~v.scopes :bv]}
+    <span class="label label-success boundop">{[=bv.name]} = {[=bv.value]} <a href="#" onclick="iamAccessKey.UnBind('{[=v.id]}', '{[=bv.name]}')">&times;</a></span>
     {[~]}
   </td>
-  <td>{[=l4i.UnixMillisecondFormat(v.created, "Y-m-d")]}</td>
   <td align="right">
+   <button class="pure-button button-small"
+      onclick="iamAccessKey.Bind('{[=v.id]}')">
+      <span class="fa fa-plus"></span>
+      {[=l4i.T("New Scope")]}
+    </button>
     <button class="pure-button button-small"
-      onclick="iamAccessKey.Del('{[=v.access_key]}')">
+      onclick="iamAccessKey.Del('{[=v.id]}')">
       <span class="fa fa-times-circle"></span>
       {[=l4i.T("Delete")]}
     </button>
     <button class="pure-button button-small"
-      onclick="iamAccessKey.Set('{[=v.access_key]}')">
+      onclick="iamAccessKey.Set('{[=v.id]}')">
       <span class="fa fa-cog"></span>
       {[=l4i.T("Settings")]}
     </button>

@@ -16,8 +16,10 @@ package v1
 
 import (
 	"fmt"
+	"strings"
 	"time"
 
+	"github.com/hooto/hauth/go/hauth/v1"
 	"github.com/hooto/httpsrv"
 	"github.com/lessos/lessgo/crypto/idhash"
 	"github.com/lessos/lessgo/types"
@@ -53,26 +55,23 @@ func (c *AccessKey) Init() int {
 
 func (c AccessKey) EntryAction() {
 
-	var set struct {
-		types.TypeMeta
-		*iamapi.AccessKey `json:",omitempty"`
-	}
+	var set types.WebServiceResult
 	defer c.RenderJson(&set)
 
-	id := c.Params.Get("access_key")
+	id := c.Params.Get("access_key_id")
 	if id == "" {
 		set.Error = types.NewErrorMeta(iamapi.ErrCodeNotFound, "Access Key Not Found")
 		return
 	}
 
-	var ak iamapi.AccessKey
-	if rs := store.Data.NewReader(iamapi.ObjKeyAccessKey(c.us.UserName, id)).Query(); rs.OK() {
+	var ak hauth.AccessKey
+	if rs := store.Data.NewReader(iamapi.NsAccessKey(c.us.UserName, id)).Query(); rs.OK() {
 		rs.Decode(&ak)
 	}
 
-	if ak.AccessKey != "" && ak.AccessKey == id {
+	if ak.Id != "" && ak.Id == id {
 		set.Kind = "AccessKey"
-		set.AccessKey = &ak
+		set.Item = ak
 	} else {
 		set.Error = types.NewErrorMeta(iamapi.ErrCodeNotFound, "Access Key Not Found")
 	}
@@ -80,16 +79,16 @@ func (c AccessKey) EntryAction() {
 
 func (c AccessKey) ListAction() {
 
-	ls := types.ObjectList{}
+	var ls types.WebServiceResult
 	defer c.RenderJson(&ls)
 
-	k1 := iamapi.ObjKeyAccessKey(c.us.UserName, "zzzzzzzz")
-	k2 := iamapi.ObjKeyAccessKey(c.us.UserName, "")
+	k1 := iamapi.NsAccessKey(c.us.UserName, "zzzzzzzz")
+	k2 := iamapi.NsAccessKey(c.us.UserName, "")
 	if rs := store.Data.NewReader(nil).KeyRangeSet(k1, k2).
 		ModeRevRangeSet(true).LimitNumSet(int64(ak_limit)).Query(); rs.OK() {
 
 		for _, v := range rs.Items {
-			var ak iamapi.AccessKey
+			var ak hauth.AccessKey
 			if err := v.Decode(&ak); err == nil {
 				ls.Items = append(ls.Items, ak)
 			}
@@ -103,7 +102,7 @@ func (c AccessKey) SetAction() {
 
 	var set struct {
 		types.TypeMeta
-		iamapi.AccessKey
+		hauth.AccessKey
 	}
 	defer c.RenderJson(&set)
 
@@ -112,53 +111,47 @@ func (c AccessKey) SetAction() {
 		return
 	}
 
-	var prev iamapi.AccessKey
-	if len(set.AccessKey.AccessKey) < 16 {
-		set.AccessKey.AccessKey = iox_utils.Uint32ToHexString(uint32(time.Now().Unix())) + idhash.RandHexString(8)
+	var prev hauth.AccessKey
+	if len(set.AccessKey.Id) < 16 {
+		set.AccessKey.Id = iox_utils.Uint32ToHexString(uint32(time.Now().Unix())) + idhash.RandHexString(8)
 	} else {
 
 		if rs := store.Data.NewReader(
-			iamapi.ObjKeyAccessKey(c.us.UserName, set.AccessKey.AccessKey)).Query(); rs.OK() {
+			iamapi.NsAccessKey(c.us.UserName, set.AccessKey.Id)).Query(); rs.OK() {
 			rs.Decode(&prev)
 		}
 	}
 
 	if rs := store.Data.NewReader(nil).KeyRangeSet(
-		iamapi.ObjKeyAccessKey(c.us.UserName, ""), iamapi.ObjKeyAccessKey(c.us.UserName, "")).
+		iamapi.NsAccessKey(c.us.UserName, ""), iamapi.NsAccessKey(c.us.UserName, "")).
 		LimitNumSet(int64(ak_limit + 1)).Query(); rs.OK() {
-		if len(rs.Items) > ak_limit && prev.AccessKey == "" {
+		if len(rs.Items) > ak_limit && prev.Id == "" {
 			set.Error = types.NewErrorMeta(iamapi.ErrCodeInvalidArgument, fmt.Sprintf("Num Out Range (%d)", ak_limit))
 			return
 		}
 	}
 
-	if prev.AccessKey == "" {
+	if prev.Id == "" {
 		prev = set.AccessKey
-		prev.Created = types.MetaTimeNow()
 	} else {
 
-		prev.Action = set.AccessKey.Action
+		prev.Status = set.AccessKey.Status
 		prev.Description = set.AccessKey.Description
 
-		for _, v := range set.AccessKey.Bounds {
-			types.IterObjectLookup(prev.Bounds, v.Name, func(idx int) {
-				if idx == -1 {
-					v.Created = types.MetaTimeNow()
-					prev.Bounds = append(prev.Bounds, v)
-				}
-			})
+		for _, v := range set.AccessKey.Scopes {
+			prev.ScopeSet(v)
 		}
 	}
 
-	if len(prev.SecretKey) < 40 {
-		prev.SecretKey = idhash.RandBase64String(40)
+	if len(prev.Secret) < 40 {
+		prev.Secret = idhash.RandBase64String(40)
 	}
 
 	if len(prev.User) < 1 {
 		prev.User = c.us.UserName
 	}
 
-	if rs := store.Data.NewWriter(iamapi.ObjKeyAccessKey(c.us.UserName, prev.AccessKey), prev).
+	if rs := store.Data.NewWriter(iamapi.NsAccessKey(c.us.UserName, prev.Id), prev).
 		Commit(); rs.OK() {
 		set.Kind = "AccessKey"
 	} else {
@@ -171,13 +164,13 @@ func (c AccessKey) DelAction() {
 	var set types.TypeMeta
 	defer c.RenderJson(&set)
 
-	id := c.Params.Get("access_key")
+	id := c.Params.Get("access_key_id")
 	if id == "" {
 		set.Error = types.NewErrorMeta(iamapi.ErrCodeNotFound, "Access Key Not Found")
 		return
 	}
 
-	if rs := store.Data.NewWriter(iamapi.ObjKeyAccessKey(c.us.UserName, id), nil).
+	if rs := store.Data.NewWriter(iamapi.NsAccessKey(c.us.UserName, id), nil).
 		ModeDeleteSet(true).Commit(); rs.OK() {
 		set.Kind = "AccessKey"
 	} else {
@@ -191,34 +184,35 @@ func (c AccessKey) BindAction() {
 	defer c.RenderJson(&set)
 
 	var (
-		id    = c.Params.Get("access_key")
-		bname = c.Params.Get("bound_name")
+		id    = c.Params.Get("access_key_id")
+		bname = c.Params.Get("scope_content")
 	)
 	if id == "" && bname == "" {
 		set.Error = types.NewErrorMeta(iamapi.ErrCodeNotFound, "Access Key Not Found")
 		return
 	}
 
-	var ak iamapi.AccessKey
-	if rs := store.Data.NewReader(iamapi.ObjKeyAccessKey(c.us.UserName, id)).Query(); rs.OK() {
+	var ak hauth.AccessKey
+	if rs := store.Data.NewReader(iamapi.NsAccessKey(c.us.UserName, id)).Query(); rs.OK() {
 		rs.Decode(&ak)
 	}
 
-	if id != ak.AccessKey {
+	if id != ak.Id {
 		set.Error = types.NewErrorMeta(iamapi.ErrCodeNotFound, "Access Key Not Found")
 		return
 	}
 
-	types.IterObjectLookup(ak.Bounds, bname, func(idx int) {
-		if idx == -1 {
-			ak.Bounds = append(ak.Bounds, iamapi.AccessKeyBound{
-				Name:    bname,
-				Created: types.MetaTimeNow(),
-			})
-		}
-	})
+	ar := strings.Split(bname, "=")
+	if len(ar) != 2 {
+		set.Error = types.NewErrorMeta(iamapi.ErrCodeNotFound, "Invalid Bound Value")
+		return
+	}
 
-	if rs := store.Data.NewWriter(iamapi.ObjKeyAccessKey(c.us.UserName, ak.AccessKey), ak).
+	ak.ScopeSet(hauth.NewScopeFilter(
+		strings.TrimSpace(ar[0]),
+		strings.TrimSpace(ar[1])))
+
+	if rs := store.Data.NewWriter(iamapi.NsAccessKey(c.us.UserName, ak.Id), ak).
 		Commit(); rs.OK() {
 		set.Kind = "AccessKey"
 	} else {
@@ -232,31 +226,38 @@ func (c AccessKey) UnbindAction() {
 	defer c.RenderJson(&set)
 
 	var (
-		id    = c.Params.Get("access_key")
-		bname = c.Params.Get("bound_name")
+		id    = c.Params.Get("access_key_id")
+		bname = c.Params.Get("scope_content")
 	)
 	if id == "" && bname == "" {
 		set.Error = types.NewErrorMeta(iamapi.ErrCodeNotFound, "Access Key Not Found")
 		return
 	}
 
-	var ak iamapi.AccessKey
-	if rs := store.Data.NewReader(iamapi.ObjKeyAccessKey(c.us.UserName, id)).Query(); rs.OK() {
+	var ak hauth.AccessKey
+	if rs := store.Data.NewReader(iamapi.NsAccessKey(c.us.UserName, id)).Query(); rs.OK() {
 		rs.Decode(&ak)
 	}
 
-	if id != ak.AccessKey {
+	if id != ak.Id {
 		set.Error = types.NewErrorMeta(iamapi.ErrCodeNotFound, "Access Key Not Found")
 		return
 	}
 
-	types.IterObjectLookup(ak.Bounds, bname, func(idx int) {
-		if idx >= 0 {
-			ak.Bounds = append(ak.Bounds[:idx], ak.Bounds[idx+1:]...)
-		}
-	})
+	ar := strings.Split(bname, "=")
+	if len(ar) > 2 {
+		set.Error = types.NewErrorMeta(iamapi.ErrCodeNotFound, "Invalid Bound Value")
+		return
+	}
 
-	if rs := store.Data.NewWriter(iamapi.ObjKeyAccessKey(c.us.UserName, ak.AccessKey), ak).
+	bname = strings.TrimSpace(ar[0])
+	if bname == "" {
+		set.Error = types.NewErrorMeta(iamapi.ErrCodeNotFound, "Invalid Bound Value")
+		return
+	}
+	ak.ScopeDel(bname)
+
+	if rs := store.Data.NewWriter(iamapi.NsAccessKey(c.us.UserName, ak.Id), ak).
 		Commit(); rs.OK() {
 		set.Kind = "AccessKey"
 	} else {

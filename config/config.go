@@ -18,11 +18,10 @@ import (
 	"os"
 	"path/filepath"
 
+	"github.com/hooto/hauth/go/hauth/v1"
 	"github.com/hooto/htoml4g/htoml"
 	"github.com/lessos/lessgo/crypto/idhash"
 	"github.com/lessos/lessgo/encoding/json"
-
-	"github.com/hooto/hauth/go/hauth/v1"
 )
 
 const (
@@ -37,17 +36,16 @@ var (
 	Prefix                   = "/opt/hooto/iam"
 	UserRegistrationDisabled = false
 	Config                   = &ConfigCommon{}
-	AuthKeyMgr               = hauth.NewAuthKeyManager()
 	configFilePath           = ""
 )
 
 type ConfigCommon struct {
-	InstanceID               string           `json:"instance_id" toml:"instance_id"`
-	HttpPort                 uint16           `json:"http_port,omitempty" toml:"http_port,omitempty"`
-	ServiceName              string           `json:"service_name" toml:"service_name"`
-	AuthKeys                 []*hauth.AuthKey `json:"auth_keys" toml:"auth_keys"`
-	WebUiBannerTitle         string           `json:"-" toml:"-"`
-	ServiceLoginFormAlertMsg string           `json:"-" toml:"-"`
+	InstanceID               string             `json:"instance_id" toml:"instance_id"`
+	HttpPort                 uint16             `json:"http_port,omitempty" toml:"http_port,omitempty"`
+	ServiceName              string             `json:"service_name" toml:"service_name"`
+	AccessKeys               []*hauth.AccessKey `json:"access_keys" toml:"access_keys"`
+	WebUiBannerTitle         string             `json:"-" toml:"-"`
+	ServiceLoginFormAlertMsg string             `json:"-" toml:"-"`
 }
 
 func (it *ConfigCommon) reset() {
@@ -64,14 +62,11 @@ func (it *ConfigCommon) reset() {
 		it.WebUiBannerTitle = "Account Panel"
 	}
 
-	if len(it.AuthKeys) < 1 {
-		it.AuthKeys = append(it.AuthKeys, &hauth.AuthKey{
-			AccessKey: idhash.RandHexString(8),
-			SecretKey: idhash.RandBase64String(40),
+	if len(it.AccessKeys) < 1 {
+		it.AccessKeys = append(it.AccessKeys, &hauth.AccessKey{
+			Id:     idhash.RandHexString(8),
+			Secret: idhash.RandBase64String(40),
 		})
-	}
-	for _, v := range it.AuthKeys {
-		AuthKeyMgr.KeySet(v)
 	}
 }
 

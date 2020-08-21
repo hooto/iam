@@ -25,7 +25,6 @@ import (
 	iox_utils "github.com/lynkdb/iomix/utils"
 
 	"github.com/hooto/hauth/go/hauth/v1"
-	"github.com/hooto/iam/config"
 	"github.com/hooto/iam/iamapi"
 	"github.com/hooto/iam/iamclient"
 	"github.com/hooto/iam/store"
@@ -93,13 +92,13 @@ func (c AppAuth) RegisterAction() {
 		}
 	}
 
-	ap, err := hauth.NewUserValidator(set.AccessToken)
+	ap, err := hauth.NewUserValidator(set.AccessToken, store.KeyMgr)
 	if err != nil {
 		set.Error = types.NewErrorMeta(iamapi.ErrCodeUnauthorized, err.Error())
 		return
 	}
 
-	if err := ap.SignValid(config.AuthKeyMgr); err != nil {
+	if err := ap.SignValid(); err != nil {
 		set.Error = types.NewErrorMeta(iamapi.ErrCodeUnauthorized, "Unauthorized")
 		return
 	}
@@ -286,20 +285,19 @@ func (c AppAuth) UserAccessKeyAction() {
 		return
 	}
 
-	var user_ak iamapi.AccessKey
-	if rs := store.Data.NewReader(iamapi.ObjKeyAccessKey(username, access_key)).Query(); rs.OK() {
+	var user_ak hauth.AccessKey
+	if rs := store.Data.NewReader(iamapi.NsAccessKey(username, access_key)).Query(); rs.OK() {
 		rs.Decode(&user_ak)
 	}
 
-	if user_ak.AccessKey != access_key ||
-		user_ak.Action != 1 {
+	if user_ak.Id != access_key ||
+		user_ak.Status != hauth.AccessKeyStatusActive {
 		set.Error = types.NewErrorMeta(iamapi.ErrCodeInvalidArgument, "Access Key Not Found")
 		return
 	}
 
-	user_bound := types.IterObjectGet(user_ak.Bounds, "app/"+app_aka.Key)
-	if user_bound == nil {
-		set.Error = types.NewErrorMeta(iamapi.ErrCodeInvalidArgument, "Access Key Not Found")
+	if err := user_ak.ScopeAllow(hauth.NewScopeFilter("app", app_aka.Key)); err != nil {
+		set.Error = types.NewErrorMeta(iamapi.ErrCodeInvalidArgument, err.Error())
 		return
 	}
 
@@ -311,7 +309,7 @@ func (c AppAuth) UserAccessKeyAction() {
 	set.Kind = "AccessKeySession"
 	set.AccessKeySession = iamapi.AccessKeySession{
 		User:      username,
-		AccessKey: user_ak.AccessKey,
+		AccessKey: user_ak.Id,
 		SecretKey: user_ak.SecretKey,
 		Roles:     user.Roles,
 		Expired:   time.Now().Unix() + 864000,

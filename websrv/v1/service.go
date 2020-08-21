@@ -30,7 +30,6 @@ import (
 
 	"github.com/hooto/hauth/go/hauth/v1"
 	"github.com/hooto/iam/base/role"
-	"github.com/hooto/iam/config"
 	"github.com/hooto/iam/iamapi"
 	"github.com/hooto/iam/store"
 )
@@ -128,7 +127,7 @@ func (c Service) LoginAuthAction() {
 		return
 	}
 
-	rsp.AccessToken = ap.SignToken(config.AuthKeyMgr)
+	rsp.AccessToken = ap.SignToken(store.KeyMgr)
 
 	if len(c.Params.Get("redirect_token")) > 20 {
 
@@ -176,7 +175,7 @@ func (c Service) AuthAction() {
 
 	token := c.Params.Get(iamapi.AccessTokenKey)
 
-	if _, err := hauth.UserValid(token, config.AuthKeyMgr); err != nil {
+	if _, err := hauth.UserValid(token, store.KeyMgr); err != nil {
 		set.Error = types.NewErrorMeta(iamapi.ErrCodeUnauthorized, "Unauthorized")
 		return
 	}
@@ -214,7 +213,7 @@ func (c Service) AccessAllowedAction() {
 		return
 	}
 
-	ap, err := hauth.UserValid(req.AccessToken, config.AuthKeyMgr)
+	ap, err := hauth.UserValid(req.AccessToken, store.KeyMgr)
 	if err != nil {
 		rsp.Error = types.NewErrorMeta(iamapi.ErrCodeUnauthorized, "Unauthorized")
 		return

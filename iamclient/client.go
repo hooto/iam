@@ -125,7 +125,7 @@ func Instance(token string) (*iamapi.UserSession, error) {
 		return nil, errors.New("Unauthorized")
 	}
 
-	ap, err := hauth.NewUserValidator(token)
+	ap, err := hauth.NewUserValidator(token, nil)
 	if err != nil {
 		return nil, err
 	}

@@ -44,23 +44,23 @@ func (c AccountCharge) PreValidAction() {
 	}
 
 	//
-	authValidator, err := hauth.NewAppValidatorWithHttpRequest(c.Request.Request)
+	av, err := hauth.NewAppValidatorWithHttpRequest(c.Request.Request, store.KeyMgr)
 	if err != nil {
 		set.Error = types.NewErrorMeta(iamapi.ErrCodeUnauthorized, err.Error())
 		return
 	}
 
-	var ak iamapi.AccessKey
+	var ak hauth.AccessKey
 	if rs := store.Data.NewReader(
-		iamapi.ObjKeyAccessKey(authValidator.User, authValidator.AccessKey)).Query(); rs.OK() {
+		iamapi.NsAccessKey(av.User, av.Id)).Query(); rs.OK() {
 		rs.Decode(&ak)
 	}
-	if ak.AccessKey == "" || ak.AccessKey != authValidator.AccessKey {
-		set.Error = types.NewErrorMeta(iamapi.ErrCodeUnauthorized, "No Auth Found, AK "+authValidator.AccessKey)
+	if ak.Id == "" || ak.Id != av.Id {
+		set.Error = types.NewErrorMeta(iamapi.ErrCodeUnauthorized, "No Auth Found, AK "+av.Id)
 		return
 	}
-	if terr := authValidator.SignValid(c.Request.RawBody, ak.AuthKey()); terr != nil {
-		set.Error = types.NewErrorMeta(iamapi.ErrCodeUnauthorized, "Auth Sign Failed")
+	if terr := av.SignValid(c.Request.RawBody); terr != nil {
+		set.Error = types.NewErrorMeta(iamapi.ErrCodeUnauthorized, "Auth Sign Failed, #1 AK "+av.Id)
 		return
 	}
 
@@ -134,23 +134,23 @@ func (c AccountCharge) PrepayAction() {
 	}
 
 	//
-	authValidator, err := hauth.NewAppValidatorWithHttpRequest(c.Request.Request)
+	av, err := hauth.NewAppValidatorWithHttpRequest(c.Request.Request, store.KeyMgr)
 	if err != nil {
 		set.Error = types.NewErrorMeta(iamapi.ErrCodeUnauthorized, err.Error())
 		return
 	}
 
-	var ak iamapi.AccessKey
+	var ak hauth.AccessKey
 	if rs := store.Data.NewReader(
-		iamapi.ObjKeyAccessKey(authValidator.User, authValidator.AccessKey)).Query(); rs.OK() {
+		iamapi.NsAccessKey(av.User, av.Id)).Query(); rs.OK() {
 		rs.Decode(&ak)
 	}
-	if ak.AccessKey == "" || ak.AccessKey != authValidator.AccessKey {
-		set.Error = types.NewErrorMeta(iamapi.ErrCodeUnauthorized, "No Auth Found, AK "+authValidator.AccessKey)
+	if ak.Id == "" || ak.Id != av.Id {
+		set.Error = types.NewErrorMeta(iamapi.ErrCodeUnauthorized, "No Auth Found, AK "+av.Id)
 		return
 	}
-	if terr := authValidator.SignValid(c.Request.RawBody, ak.AuthKey()); terr != nil {
-		set.Error = types.NewErrorMeta(iamapi.ErrCodeUnauthorized, "Auth Sign Failed")
+	if terr := av.SignValid(c.Request.RawBody); terr != nil {
+		set.Error = types.NewErrorMeta(iamapi.ErrCodeUnauthorized, "Auth Sign Failed, #2 AK "+av.Id)
 		return
 	}
 
@@ -295,23 +295,23 @@ func (c AccountCharge) PayoutAction() {
 	}
 
 	//
-	authValidator, err := hauth.NewAppValidatorWithHttpRequest(c.Request.Request)
+	av, err := hauth.NewAppValidatorWithHttpRequest(c.Request.Request, store.KeyMgr)
 	if err != nil {
 		set.Error = types.NewErrorMeta(iamapi.ErrCodeUnauthorized, err.Error())
 		return
 	}
 
-	var ak iamapi.AccessKey
+	var ak hauth.AccessKey
 	if rs := store.Data.NewReader(
-		iamapi.ObjKeyAccessKey(authValidator.User, authValidator.AccessKey)).Query(); rs.OK() {
+		iamapi.NsAccessKey(av.User, av.Id)).Query(); rs.OK() {
 		rs.Decode(&ak)
 	}
-	if ak.AccessKey == "" || ak.AccessKey != authValidator.AccessKey {
-		set.Error = types.NewErrorMeta(iamapi.ErrCodeUnauthorized, "No Auth Found, AK "+authValidator.AccessKey)
+	if ak.Id == "" || ak.Id != av.Id {
+		set.Error = types.NewErrorMeta(iamapi.ErrCodeUnauthorized, "No Auth Found, AK "+av.Id)
 		return
 	}
-	if terr := authValidator.SignValid(c.Request.RawBody, ak.AuthKey()); terr != nil {
-		set.Error = types.NewErrorMeta(iamapi.ErrCodeUnauthorized, "Auth Sign Failed")
+	if terr := av.SignValid(c.Request.RawBody); terr != nil {
+		set.Error = types.NewErrorMeta(iamapi.ErrCodeUnauthorized, "Auth Sign Failed, #3 AK "+av.Id)
 		return
 	}
 

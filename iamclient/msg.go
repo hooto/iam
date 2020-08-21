@@ -26,7 +26,7 @@ import (
 	"github.com/lessos/lessgo/types"
 )
 
-func SysMsgPost(req iamapi.MsgItem, ak *iamapi.AccessKey) error {
+func SysMsgPost(req iamapi.MsgItem, ak *hauth.AccessKey) error {
 
 	req.Id = idhash.RandHexString(16)
 
@@ -40,7 +40,7 @@ func SysMsgPost(req iamapi.MsgItem, ak *iamapi.AccessKey) error {
 
 	hc.Header("contentType", "application/json; charset=utf-8")
 
-	ac := hauth.NewAppCredential(ak.AuthKey())
+	ac := hauth.NewAppCredential(ak)
 	ac.SignHttpToken(hc.Req, js)
 
 	hc.Body(js)

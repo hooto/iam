@@ -25,7 +25,8 @@ const (
 	dataUserAuth      = "ua"  // skip
 	dataUserAuthDeny  = "uad" // skip
 	dataPassReset     = "pr"  // skip
-	dataAccessKey     = "ak"  // sko
+	dataAccessKey     = "ak2" // hauth
+	dataAccessKeyDep  = "ak"  // sko
 	dataRole          = "r"   // skip
 	dataRolePrivilege = "rp"  // skip
 	dataUserProfile   = "up"  // sko
@@ -77,8 +78,16 @@ func ObjKeyUserAuth(uname string, created uint32) []byte {
 		UserNameFilter(uname) + ":" + utils.Uint32ToHexString(created))
 }
 
-func ObjKeyAccessKey(uname, id string) []byte {
+func NsAccessKey(uname, id string) []byte {
 	return []byte(dataPrefix + ":" + dataAccessKey + ":" +
+		UserNameFilter(uname) + ":" + id)
+}
+
+func ObjKeyAccessKeyDep(uname, id string) []byte {
+	if uname == "" {
+		return []byte(dataPrefix + ":" + dataAccessKeyDep + ":")
+	}
+	return []byte(dataPrefix + ":" + dataAccessKeyDep + ":" +
 		UserNameFilter(uname) + ":" + id)
 }
 

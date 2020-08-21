@@ -9,19 +9,19 @@
 <div id="iam-ak-set-alert" class="alert hide"></div>
     
 <table id="iam-ak-set" class="iam-formtable valign-middle">
-  <input type="hidden" name="access_key" value="{[=it.access_key]}">
+  <input type="hidden" name="id" value="{[=it.id]}">
   <tr>
     <td width="200px">{[=l4i.T("Description")]}</td>
     <td>
-      <input name="desc" type="text" class="form-control" value="{[=it.desc]}">
+      <input name="desc" type="text" class="form-control" value="{[=it.description]}">
     </td>
   </tr>
   <tr>
-    <td>{[=l4i.T("Action")]}</td>
+    <td>{[=l4i.T("Status")]}</td>
     <td>
-      {[~it._actionls :v]}
+      {[~it._statuses :v]}
         <span class="iam-form-checkbox">
-          <input type="radio" name="action" value="{[=v.action]}" {[ if (v.action == it.action) { ]}checked="checked"{[ } ]}> {[=v.title]}
+          <input type="radio" name="status" value="{[=v.status]}" {[ if (v.status == it.status) { ]}checked="checked"{[ } ]}> {[=v.title]}
         </span>
       {[~]}
     </td>

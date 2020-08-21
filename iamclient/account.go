@@ -24,7 +24,7 @@ import (
 	"github.com/lessos/lessgo/types"
 )
 
-func AccountChargePreValid(req iamapi.AccountChargePrepay, ak *iamapi.AccessKey) iamapi.AccountChargePrepay {
+func AccountChargePreValid(req iamapi.AccountChargePrepay, ak *hauth.AccessKey) iamapi.AccountChargePrepay {
 
 	js, _ := json.Encode(req, "")
 
@@ -36,7 +36,7 @@ func AccountChargePreValid(req iamapi.AccountChargePrepay, ak *iamapi.AccessKey)
 
 	hc.Header("contentType", "application/json; charset=utf-8")
 
-	ac := hauth.NewAppCredential(ak.AuthKey())
+	ac := hauth.NewAppCredential(ak)
 	ac.SignHttpToken(hc.Req, js)
 
 	hc.Body(js)
@@ -48,7 +48,7 @@ func AccountChargePreValid(req iamapi.AccountChargePrepay, ak *iamapi.AccessKey)
 	return rsp
 }
 
-func AccountChargePrepay(req iamapi.AccountChargePrepay, ak *iamapi.AccessKey) iamapi.AccountChargePrepay {
+func AccountChargePrepay(req iamapi.AccountChargePrepay, ak *hauth.AccessKey) iamapi.AccountChargePrepay {
 
 	js, _ := json.Encode(req, "")
 
@@ -60,7 +60,7 @@ func AccountChargePrepay(req iamapi.AccountChargePrepay, ak *iamapi.AccessKey) i
 
 	hc.Header("contentType", "application/json; charset=utf-8")
 
-	ac := hauth.NewAppCredential(ak.AuthKey())
+	ac := hauth.NewAppCredential(ak)
 	ac.SignHttpToken(hc.Req, js)
 
 	hc.Body(js)
@@ -72,7 +72,7 @@ func AccountChargePrepay(req iamapi.AccountChargePrepay, ak *iamapi.AccessKey) i
 	return rsp
 }
 
-func AccountChargePayout(req iamapi.AccountChargePayout, ak *iamapi.AccessKey) iamapi.AccountChargePayout {
+func AccountChargePayout(req iamapi.AccountChargePayout, ak *hauth.AccessKey) iamapi.AccountChargePayout {
 
 	js, _ := json.Encode(req, "")
 
@@ -84,7 +84,7 @@ func AccountChargePayout(req iamapi.AccountChargePayout, ak *iamapi.AccessKey) i
 
 	hc.Header("contentType", "application/json; charset=utf-8")
 
-	ac := hauth.NewAppCredential(ak.AuthKey())
+	ac := hauth.NewAppCredential(ak)
 	ac.SignHttpToken(hc.Req, js)
 
 	hc.Body(js)

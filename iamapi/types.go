@@ -14,7 +14,7 @@
 
 package iamapi
 
-//go:generate protoc --go_out=plugins=grpc:. types.proto
+//go:generate protoc --proto_path=./ --go_opt=paths=source_relative --go_out=./ --go-grpc_out=./ ./types.proto
 //go:generate protobuf_slice "*.proto"
 
 import (

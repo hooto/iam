@@ -64,21 +64,21 @@ func (c SysMsg) PostAction() {
 	}
 
 	//
-	authValidator, err := hauth.NewAppValidatorWithHttpRequest(c.Request.Request)
+	av, err := hauth.NewAppValidatorWithHttpRequest(c.Request.Request, store.KeyMgr)
 	if err != nil {
 		rsp.Error = types.NewErrorMeta(iamapi.ErrCodeUnauthorized, err.Error())
 		return
 	}
 
-	var ak iamapi.AccessKey
-	if rs := store.Data.NewReader(iamapi.ObjKeyAccessKey(authValidator.User, authValidator.AccessKey)).Query(); rs.OK() {
+	var ak hauth.AccessKey
+	if rs := store.Data.NewReader(iamapi.NsAccessKey(av.User, av.Id)).Query(); rs.OK() {
 		rs.Decode(&ak)
 	}
-	if ak.AccessKey == "" || ak.AccessKey != authValidator.AccessKey {
-		rsp.Error = types.NewErrorMeta(iamapi.ErrCodeUnauthorized, "No Auth Found, AK "+authValidator.AccessKey)
+	if ak.Id == "" || ak.Id != av.Id {
+		rsp.Error = types.NewErrorMeta(iamapi.ErrCodeUnauthorized, "No Auth Found, AK "+av.Id)
 		return
 	}
-	if terr := authValidator.SignValid(c.Request.RawBody, ak.AuthKey()); terr != nil {
+	if terr := av.SignValid(c.Request.RawBody); terr != nil {
 		rsp.Error = types.NewErrorMeta(iamapi.ErrCodeUnauthorized, "Auth Sign Failed")
 		return
 	}
