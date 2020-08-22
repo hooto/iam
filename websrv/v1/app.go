@@ -18,9 +18,9 @@ import (
 	"github.com/hooto/httpsrv"
 	"github.com/lessos/lessgo/types"
 
+	"github.com/hooto/iam/data"
 	"github.com/hooto/iam/iamapi"
 	"github.com/hooto/iam/iamclient"
-	"github.com/hooto/iam/store"
 )
 
 const (
@@ -51,7 +51,7 @@ func (c App) InstListAction() {
 	ls := types.ObjectList{}
 	defer c.RenderJson(&ls)
 
-	if rs := store.Data.NewReader(nil).KeyRangeSet(
+	if rs := data.Data.NewReader(nil).KeyRangeSet(
 		iamapi.ObjKeyAppInstance("zzzzzzzz"), iamapi.ObjKeyAppInstance("")).
 		ModeRevRangeSet(true).LimitNumSet(1000).Query(); rs.OK() {
 
@@ -78,7 +78,7 @@ func (c App) InstEntryAction() {
 	}
 	defer c.RenderJson(&set)
 
-	if obj := store.Data.NewReader(iamapi.ObjKeyAppInstance(c.Params.Get("instid"))).Query(); obj.OK() {
+	if obj := data.Data.NewReader(iamapi.ObjKeyAppInstance(c.Params.Get("instid"))).Query(); obj.OK() {
 		obj.Decode(&set.AppInstance)
 	}
 
@@ -110,7 +110,7 @@ func (c App) InstSetAction() {
 	}
 
 	var prev iamapi.AppInstance
-	if obj := store.Data.NewReader(iamapi.ObjKeyAppInstance(set.Meta.ID)).Query(); obj.OK() {
+	if obj := data.Data.NewReader(iamapi.ObjKeyAppInstance(set.Meta.ID)).Query(); obj.OK() {
 		obj.Decode(&prev)
 	}
 
@@ -130,7 +130,7 @@ func (c App) InstSetAction() {
 		prev.AppTitle = set.AppTitle
 		prev.Url = set.Url
 
-		if obj := store.Data.NewWriter(iamapi.ObjKeyAppInstance(set.Meta.ID), prev).
+		if obj := data.Data.NewWriter(iamapi.ObjKeyAppInstance(set.Meta.ID), prev).
 			Commit(); !obj.OK() {
 			set.Error = types.NewErrorMeta(iamapi.ErrCodeInternalError, obj.Message)
 			return
@@ -148,7 +148,7 @@ func (c App) InstDelAction() {
 	inst_id := c.Params.Get("inst_id")
 
 	var prev iamapi.AppInstance
-	if obj := store.Data.NewReader(iamapi.ObjKeyAppInstance(inst_id)).Query(); obj.OK() {
+	if obj := data.Data.NewReader(iamapi.ObjKeyAppInstance(inst_id)).Query(); obj.OK() {
 		obj.Decode(&prev)
 	}
 
@@ -162,7 +162,7 @@ func (c App) InstDelAction() {
 		return
 	}
 
-	if obj := store.Data.NewWriter(iamapi.ObjKeyAppInstance(inst_id), nil).
+	if obj := data.Data.NewWriter(iamapi.ObjKeyAppInstance(inst_id), nil).
 		ModeDeleteSet(true).Commit(); !obj.OK() {
 		set.Error = types.NewErrorMeta(iamapi.ErrCodeInternalError, obj.Message)
 		return

@@ -114,7 +114,7 @@ iamAccessKey.Info = function(akid) {
                 data.item.scopes = [];
             }
 
-            data._statuses = iamAccessKey.statuses;
+            data.item._statuses = iamAccessKey.statuses;
 
             l4iModal.Open({
                 tplsrc: tpl,

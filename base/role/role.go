@@ -18,8 +18,8 @@ import (
 	"sync"
 	"time"
 
+	"github.com/hooto/iam/data"
 	"github.com/hooto/iam/iamapi"
-	"github.com/hooto/iam/store"
 	"github.com/lessos/lessgo/crypto/idhash"
 )
 
@@ -57,7 +57,7 @@ func instPerms(instanceid string) *perm_map {
 		}
 	}
 
-	if rs := store.Data.NewReader(iamapi.ObjKeyAppInstance(instanceid)).Query(); rs.OK() {
+	if rs := data.Data.NewReader(iamapi.ObjKeyAppInstance(instanceid)).Query(); rs.OK() {
 
 		var inst iamapi.AppInstance
 

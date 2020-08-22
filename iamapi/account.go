@@ -131,7 +131,7 @@ type AccountChargePrepay struct {
 
 func (this *AccountChargePrepay) Valid() error {
 
-	if !UserNameRe2.MatchString(this.User) {
+	if !UsernameRE.MatchString(this.User) {
 		return errors.New("Invalid User")
 	}
 
@@ -171,7 +171,7 @@ type AccountChargePayout struct {
 
 func (this *AccountChargePayout) Valid() error {
 
-	if !UserNameRe2.MatchString(this.User) {
+	if !UsernameRE.MatchString(this.User) {
 		return errors.New("Invalid User")
 	}
 

@@ -19,9 +19,9 @@ import (
 	"github.com/lessos/lessgo/types"
 
 	"github.com/hooto/iam/config"
+	"github.com/hooto/iam/data"
 	"github.com/hooto/iam/iamapi"
 	"github.com/hooto/iam/iamclient"
-	"github.com/hooto/iam/store"
 )
 
 type SysConfig struct {
@@ -48,7 +48,7 @@ func (c SysConfig) GeneralAction() {
 		return
 	}
 
-	if rs := store.Data.NewReader(nil).KeyRangeSet(
+	if rs := data.Data.NewReader(nil).KeyRangeSet(
 		iamapi.ObjKeySysConfig(""), iamapi.ObjKeySysConfig("")).LimitNumSet(1000).Query(); rs.OK() {
 
 		for _, obj := range rs.Items {
@@ -109,14 +109,14 @@ func (c SysConfig) GeneralSetAction() {
 		}
 
 		if v.Value == "" {
-			store.Data.NewWriter(iamapi.ObjKeySysConfig(v.Name), nil).
+			data.Data.NewWriter(iamapi.ObjKeySysConfig(v.Name), nil).
 				ModeDeleteSet(true).Commit()
 			if v.Name == "service_login_form_alert_msg" {
 				config.Config.ServiceLoginFormAlertMsg = ""
 			}
 		} else {
 
-			if obj := store.Data.NewWriter(iamapi.ObjKeySysConfig(v.Name), v.Value).
+			if obj := data.Data.NewWriter(iamapi.ObjKeySysConfig(v.Name), v.Value).
 				Commit(); !obj.OK() {
 				sets.Error = types.NewErrorMeta("500", "DB ERROR #2 "+obj.Message)
 				return
@@ -124,7 +124,7 @@ func (c SysConfig) GeneralSetAction() {
 		}
 	}
 
-	store.SysConfigRefresh()
+	data.SysConfigRefresh()
 
 	sets.Kind = "SysConfigList"
 }
@@ -140,7 +140,7 @@ func (c SysConfig) MailerAction() {
 		return
 	}
 
-	if obj := store.Data.NewReader(iamapi.ObjKeySysConfig("mailer")).Query(); obj.OK() {
+	if obj := data.Data.NewReader(iamapi.ObjKeySysConfig("mailer")).Query(); obj.OK() {
 		ls.Items.Set("mailer", obj.DataValue().String())
 	}
 

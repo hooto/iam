@@ -18,9 +18,9 @@ import (
 	"github.com/lessos/lessgo/types"
 
 	"github.com/hooto/iam/config"
+	"github.com/hooto/iam/data"
 	"github.com/hooto/iam/iamapi"
 	"github.com/hooto/iam/iamclient"
-	"github.com/hooto/iam/store"
 )
 
 func (c UserMgr) RoleListAction() {
@@ -34,7 +34,7 @@ func (c UserMgr) RoleListAction() {
 	// 	return
 	// }
 
-	if rs := store.Data.NewReader(nil).KeyRangeSet(
+	if rs := data.Data.NewReader(nil).KeyRangeSet(
 		iamapi.ObjKeyRole(""), iamapi.ObjKeyRole("")).LimitNumSet(1000).Query(); rs.OK() {
 
 		for _, obj := range rs.Items {
@@ -70,7 +70,7 @@ func (c UserMgr) RoleEntryAction() {
 
 	// TODO roleid
 	name := c.Params.Get("role_name")
-	if rs := store.Data.NewReader(iamapi.ObjKeyRole(name)).Query(); rs.OK() {
+	if rs := data.Data.NewReader(iamapi.ObjKeyRole(name)).Query(); rs.OK() {
 		rs.DataValue().Decode(&set.UserRole, nil)
 	}
 
@@ -102,12 +102,12 @@ func (c UserMgr) RoleSetAction() {
 		return
 	}
 
-	if !iamapi.UserRoleNameRe2.MatchString(set.Name) {
+	if !iamapi.UsernameRE.MatchString(set.Name) {
 		set.Error = types.NewErrorMeta(iamapi.ErrCodeInvalidArgument, "Invalid Role Name")
 		return
 	}
 
-	rsp := store.Data.NewReader(iamapi.ObjKeyRole(set.Name)).Query()
+	rsp := data.Data.NewReader(iamapi.ObjKeyRole(set.Name)).Query()
 
 	if rsp.NotFound() {
 
@@ -132,7 +132,7 @@ func (c UserMgr) RoleSetAction() {
 	set.Updated = types.MetaTimeNow()
 	// roleset["privileges"] = strings.Join(c.Params.Values["privileges"], ",")
 
-	if rs := store.Data.NewWriter(iamapi.ObjKeyRole(set.Name), set.UserRole).
+	if rs := data.Data.NewWriter(iamapi.ObjKeyRole(set.Name), set.UserRole).
 		IncrNamespaceSet("role").Commit(); !rs.OK() {
 		set.Error = types.NewErrorMeta("500", rs.Message)
 		return

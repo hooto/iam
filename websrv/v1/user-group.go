@@ -21,9 +21,9 @@ import (
 	"github.com/lessos/lessgo/types"
 
 	"github.com/hooto/iam/config"
+	"github.com/hooto/iam/data"
 	"github.com/hooto/iam/iamapi"
 	"github.com/hooto/iam/iamclient"
-	"github.com/hooto/iam/store"
 )
 
 type UserGroup struct {
@@ -56,7 +56,7 @@ func (c UserGroup) ItemAction() {
 		return
 	}
 
-	p := store.UserGet(name)
+	p := data.UserGet(name)
 	if p == nil || p.Type != iamapi.UserTypeGroup {
 		set.Error = types.NewErrorMeta(iamapi.ErrCodeInvalidArgument, "Item Not Found")
 		return
@@ -85,7 +85,7 @@ func (c UserGroup) ListAction() {
 	var ls iamapi.UserGroupList
 	defer c.RenderJson(&ls)
 
-	rss := store.UserGroupList()
+	rss := data.UserGroupList()
 
 	for _, v := range rss {
 
@@ -132,7 +132,7 @@ func (c UserGroup) SetAction() {
 	}
 
 	var (
-		prev = store.UserGet(set.Name)
+		prev = data.UserGet(set.Name)
 		chg  = false
 	)
 
@@ -171,7 +171,7 @@ func (c UserGroup) SetAction() {
 		prev.Owners = []string{c.us.UserName}
 		for _, v := range set.Owners {
 
-			p := store.UserGet(v)
+			p := data.UserGet(v)
 			if p == nil {
 				set.Error = types.NewErrorMeta(
 					iamapi.ErrCodeInvalidArgument, "User Not Found ("+v+")")
@@ -187,7 +187,7 @@ func (c UserGroup) SetAction() {
 		prev.Members = []string{c.us.UserName}
 		for _, v := range set.Members {
 
-			p := store.UserGet(v)
+			p := data.UserGet(v)
 			if p == nil {
 				set.Error = types.NewErrorMeta(
 					iamapi.ErrCodeInvalidArgument, "User Not Found ("+v+")")
@@ -206,7 +206,7 @@ func (c UserGroup) SetAction() {
 
 	if chg {
 		prev.Updated = types.MetaTimeNow()
-		if !store.UserSet(prev) {
+		if !data.UserSet(prev) {
 			set.Error = types.NewErrorMeta(iamapi.ErrCodeServerError, "Server Error")
 			return
 		}

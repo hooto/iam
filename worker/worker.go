@@ -19,10 +19,10 @@ import (
 	"time"
 
 	"github.com/hooto/hlog4g/hlog"
+	"github.com/hooto/iam/data"
 	"github.com/hooto/iam/iamapi"
-	"github.com/hooto/iam/store"
 	"github.com/lessos/lessgo/types"
-	"github.com/lynkdb/iomix/sko"
+	kv2 "github.com/lynkdb/kvspec/go/kvspec/v2"
 )
 
 var (
@@ -60,7 +60,7 @@ func AccountChargeCloseRefresh() {
 
 	for {
 
-		rs := store.Data.NewReader(nil).KeyRangeSet(offset, cutset).
+		rs := data.Data.NewReader(nil).KeyRangeSet(offset, cutset).
 			ModeRevRangeSet(true).
 			LimitNumSet(int64(limit)).Query()
 		if !rs.OK() {
@@ -92,7 +92,7 @@ func AccountChargeCloseRefresh() {
 			)
 
 			//
-			if rs := store.Data.NewReader(iamapi.ObjKeyAccChargeUser(set.User, set.Id)).Query(); rs.OK() {
+			if rs := data.Data.NewReader(iamapi.ObjKeyAccChargeUser(set.User, set.Id)).Query(); rs.OK() {
 				rs.Decode(&charge)
 			}
 			if charge.Id == "" || charge.Id != set.Id {
@@ -102,7 +102,7 @@ func AccountChargeCloseRefresh() {
 				continue
 			}
 
-			if rs := store.Data.NewReader(iamapi.ObjKeyAccUser(set.User)).Query(); rs.OK() {
+			if rs := data.Data.NewReader(iamapi.ObjKeyAccUser(set.User)).Query(); rs.OK() {
 				rs.Decode(&acc_user)
 			} else if !rs.NotFound() {
 				continue
@@ -111,12 +111,12 @@ func AccountChargeCloseRefresh() {
 				continue
 			}
 
-			sets := []sko.ClientObjectItem{}
+			sets := []kv2.ClientObjectItem{}
 			updated := types.MetaTimeNow()
 
 			if charge.Fund != "" {
 				var fund iamapi.AccountFund
-				if rs := store.Data.NewReader(
+				if rs := data.Data.NewReader(
 					iamapi.ObjKeyAccFundUser(set.User, charge.Fund)).Query(); rs.OK() {
 					rs.Decode(&fund)
 				}
@@ -130,12 +130,12 @@ func AccountChargeCloseRefresh() {
 				fund.ExpProductInpay.Del(charge.Product)
 				fund.Updated = updated
 
-				sets = append(sets, sko.ClientObjectItem{
+				sets = append(sets, kv2.ClientObjectItem{
 					Key:   iamapi.ObjKeyAccFundUser(set.User, charge.Fund),
 					Value: fund,
 				})
 
-				sets = append(sets, sko.ClientObjectItem{
+				sets = append(sets, kv2.ClientObjectItem{
 					Key:   iamapi.ObjKeyAccFundMgr(charge.Fund),
 					Value: fund,
 				})
@@ -152,15 +152,15 @@ func AccountChargeCloseRefresh() {
 			charge.Updated = updated
 
 			//
-			sets = append(sets, sko.ClientObjectItem{
+			sets = append(sets, kv2.ClientObjectItem{
 				Key:   iamapi.ObjKeyAccChargeUser(set.User, set.Id),
 				Value: charge,
 			})
-			sets = append(sets, sko.ClientObjectItem{
+			sets = append(sets, kv2.ClientObjectItem{
 				Key:   iamapi.ObjKeyAccUser(set.User),
 				Value: acc_user,
 			})
-			sets = append(sets, sko.ClientObjectItem{
+			sets = append(sets, kv2.ClientObjectItem{
 				Key:   iamapi.ObjKeyAccChargeMgr(set.Id),
 				Value: charge,
 			})
@@ -169,7 +169,7 @@ func AccountChargeCloseRefresh() {
 				set.User, set.Id)
 
 			for _, v := range sets {
-				if rs := store.Data.NewWriter(v.Key, v.Value).Commit(); !rs.OK() {
+				if rs := data.Data.NewWriter(v.Key, v.Value).Commit(); !rs.OK() {
 					return
 				}
 			}

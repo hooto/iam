@@ -25,9 +25,9 @@ import (
 	"github.com/lessos/lessgo/types"
 	iox_utils "github.com/lynkdb/iomix/utils"
 
+	"github.com/hooto/iam/data"
 	"github.com/hooto/iam/iamapi"
 	"github.com/hooto/iam/iamclient"
-	"github.com/hooto/iam/store"
 )
 
 var (
@@ -65,7 +65,7 @@ func (c AccessKey) EntryAction() {
 	}
 
 	var ak hauth.AccessKey
-	if rs := store.Data.NewReader(iamapi.NsAccessKey(c.us.UserName, id)).Query(); rs.OK() {
+	if rs := data.Data.NewReader(iamapi.NsAccessKey(c.us.UserName, id)).Query(); rs.OK() {
 		rs.Decode(&ak)
 	}
 
@@ -84,7 +84,7 @@ func (c AccessKey) ListAction() {
 
 	k1 := iamapi.NsAccessKey(c.us.UserName, "zzzzzzzz")
 	k2 := iamapi.NsAccessKey(c.us.UserName, "")
-	if rs := store.Data.NewReader(nil).KeyRangeSet(k1, k2).
+	if rs := data.Data.NewReader(nil).KeyRangeSet(k1, k2).
 		ModeRevRangeSet(true).LimitNumSet(int64(ak_limit)).Query(); rs.OK() {
 
 		for _, v := range rs.Items {
@@ -116,13 +116,13 @@ func (c AccessKey) SetAction() {
 		set.AccessKey.Id = iox_utils.Uint32ToHexString(uint32(time.Now().Unix())) + idhash.RandHexString(8)
 	} else {
 
-		if rs := store.Data.NewReader(
+		if rs := data.Data.NewReader(
 			iamapi.NsAccessKey(c.us.UserName, set.AccessKey.Id)).Query(); rs.OK() {
 			rs.Decode(&prev)
 		}
 	}
 
-	if rs := store.Data.NewReader(nil).KeyRangeSet(
+	if rs := data.Data.NewReader(nil).KeyRangeSet(
 		iamapi.NsAccessKey(c.us.UserName, ""), iamapi.NsAccessKey(c.us.UserName, "")).
 		LimitNumSet(int64(ak_limit + 1)).Query(); rs.OK() {
 		if len(rs.Items) > ak_limit && prev.Id == "" {
@@ -151,7 +151,7 @@ func (c AccessKey) SetAction() {
 		prev.User = c.us.UserName
 	}
 
-	if rs := store.Data.NewWriter(iamapi.NsAccessKey(c.us.UserName, prev.Id), prev).
+	if rs := data.Data.NewWriter(iamapi.NsAccessKey(c.us.UserName, prev.Id), prev).
 		Commit(); rs.OK() {
 		set.Kind = "AccessKey"
 	} else {
@@ -170,7 +170,7 @@ func (c AccessKey) DelAction() {
 		return
 	}
 
-	if rs := store.Data.NewWriter(iamapi.NsAccessKey(c.us.UserName, id), nil).
+	if rs := data.Data.NewWriter(iamapi.NsAccessKey(c.us.UserName, id), nil).
 		ModeDeleteSet(true).Commit(); rs.OK() {
 		set.Kind = "AccessKey"
 	} else {
@@ -193,7 +193,7 @@ func (c AccessKey) BindAction() {
 	}
 
 	var ak hauth.AccessKey
-	if rs := store.Data.NewReader(iamapi.NsAccessKey(c.us.UserName, id)).Query(); rs.OK() {
+	if rs := data.Data.NewReader(iamapi.NsAccessKey(c.us.UserName, id)).Query(); rs.OK() {
 		rs.Decode(&ak)
 	}
 
@@ -212,7 +212,7 @@ func (c AccessKey) BindAction() {
 		strings.TrimSpace(ar[0]),
 		strings.TrimSpace(ar[1])))
 
-	if rs := store.Data.NewWriter(iamapi.NsAccessKey(c.us.UserName, ak.Id), ak).
+	if rs := data.Data.NewWriter(iamapi.NsAccessKey(c.us.UserName, ak.Id), ak).
 		Commit(); rs.OK() {
 		set.Kind = "AccessKey"
 	} else {
@@ -235,7 +235,7 @@ func (c AccessKey) UnbindAction() {
 	}
 
 	var ak hauth.AccessKey
-	if rs := store.Data.NewReader(iamapi.NsAccessKey(c.us.UserName, id)).Query(); rs.OK() {
+	if rs := data.Data.NewReader(iamapi.NsAccessKey(c.us.UserName, id)).Query(); rs.OK() {
 		rs.Decode(&ak)
 	}
 
@@ -257,7 +257,7 @@ func (c AccessKey) UnbindAction() {
 	}
 	ak.ScopeDel(bname)
 
-	if rs := store.Data.NewWriter(iamapi.NsAccessKey(c.us.UserName, ak.Id), ak).
+	if rs := data.Data.NewWriter(iamapi.NsAccessKey(c.us.UserName, ak.Id), ak).
 		Commit(); rs.OK() {
 		set.Kind = "AccessKey"
 	} else {

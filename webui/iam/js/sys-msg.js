@@ -95,10 +95,10 @@ iamSysMsg.Info = function(msg_id) {
 
             l4iModal.Open({
                 tplsrc: tpl,
-                width: 900,
-                height: 700,
+                width: 1600,
+                height: 800,
                 data: data,
-                title: "Message",
+                title: l4i.T("Message"),
                 buttons: [{
                     title: l4i.T("Cancel"),
                     onclick: "l4iModal.Close()",

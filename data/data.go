@@ -12,7 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package store
+package data
 
 import (
 	"errors"
@@ -42,23 +42,57 @@ var (
 func Setup() error {
 
 	if Data == nil {
-		return fmt.Errorf("iam.store connect not ready #1")
+		return fmt.Errorf("iam.data connect not ready #1")
 	}
 
 	if rs := Data.NewWriter([]byte("iam:test"), "test").
 		ExpireSet(1000).Commit(); !rs.OK() {
-		return fmt.Errorf("iam.store connect not ready #2 " + rs.String())
+		return fmt.Errorf("iam.data connect not ready #2 " + rs.String())
 	}
 
 	if rs := Data.NewReader([]byte("iam:test")).Query(); !rs.OK() || rs.DataValue().String() != "test" {
-		return fmt.Errorf("iam.store connect not ready #3")
+		return fmt.Errorf("iam.data connect not ready #3")
 	} else {
 		hlog.Printf("info", "iam/data connect ok")
 	}
 
+	// AccessKey
+	var (
+		ak0 = iamapi.NsAccessKey("", "")
+		akz = append(iamapi.NsAccessKey("", ""), []byte{0xff}...)
+		akn = 0
+	)
+	for {
+
+		rs := Data.NewReader().KeyRangeSet(ak0, akz).
+			LimitNumSet(1000).Query()
+		if !rs.OK() {
+			break
+		}
+
+		for _, v := range rs.Items {
+
+			ak0 = v.Meta.Key
+
+			var ak hauth.AccessKey
+			if err := v.Decode(&ak); err == nil {
+				KeyMgr.KeySet(&ak)
+				continue
+			}
+		}
+
+		akn += len(rs.Items)
+
+		if len(rs.Items) < 1000 {
+			break
+		}
+	}
+	hlog.Printf("info", "iam/access_key data load %d", akn)
+
 	for _, v := range config.Config.AccessKeys {
 		KeyMgr.KeySet(v)
 	}
+	hlog.Printf("info", "iam/access_key conf load %d", len(config.Config.AccessKeys))
 
 	return nil
 }
@@ -109,9 +143,12 @@ func InitData() (err error) {
 			if rs2 := Data.NewWriter(iamapi.NsAccessKey(ak.User, ak.AccessKey), akNew).
 				ModeCreateSet(true).Commit(); rs2.OK() {
 				hlog.Printf("info", "iam/access_key %s upgrade ok", akNew.Id)
-			}
 
-			KeyMgr.KeySet(&akNew)
+				Data.NewWriter(v.Meta.Key, nil).
+					ModeDeleteSet(true).Commit()
+
+				KeyMgr.KeySet(&akNew)
+			}
 		}
 	}
 

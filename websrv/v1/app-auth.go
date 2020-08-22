@@ -25,9 +25,9 @@ import (
 	iox_utils "github.com/lynkdb/iomix/utils"
 
 	"github.com/hooto/hauth/go/hauth/v1"
+	"github.com/hooto/iam/data"
 	"github.com/hooto/iam/iamapi"
 	"github.com/hooto/iam/iamclient"
-	"github.com/hooto/iam/store"
 )
 
 type AppAuth struct {
@@ -47,7 +47,7 @@ func (c AppAuth) InfoAction() {
 	}
 
 	var inst iamapi.AppInstance
-	if obj := store.Data.NewReader(iamapi.ObjKeyAppInstance(instid)).Query(); obj.OK() {
+	if obj := data.Data.NewReader(iamapi.ObjKeyAppInstance(instid)).Query(); obj.OK() {
 		obj.Decode(&inst)
 	}
 
@@ -78,7 +78,7 @@ func (c AppAuth) RegisterAction() {
 	tn := uint32(time.Now().Unix())
 	if len(set.Instance.Meta.ID) > 0 {
 
-		if len(set.Instance.Meta.ID) < 16 || !iamapi.AppInstanceIdReg.MatchString(set.Instance.Meta.ID) {
+		if len(set.Instance.Meta.ID) < 16 || !iamapi.AppIdRE.MatchString(set.Instance.Meta.ID) {
 			set.Error = types.NewErrorMeta(iamapi.ErrCodeInvalidArgument, "Invalid Instance ID "+set.Instance.Meta.ID)
 			return
 		}
@@ -92,7 +92,7 @@ func (c AppAuth) RegisterAction() {
 		}
 	}
 
-	ap, err := hauth.NewUserValidator(set.AccessToken, store.KeyMgr)
+	ap, err := hauth.NewUserValidator(set.AccessToken, data.KeyMgr)
 	if err != nil {
 		set.Error = types.NewErrorMeta(iamapi.ErrCodeUnauthorized, err.Error())
 		return
@@ -118,7 +118,7 @@ func (c AppAuth) RegisterAction() {
 		prev iamapi.AppInstance
 	)
 
-	if obj := store.Data.NewReader(iamapi.ObjKeyAppInstance(set.Instance.Meta.ID)).Query(); obj.OK() {
+	if obj := data.Data.NewReader(iamapi.ObjKeyAppInstance(set.Instance.Meta.ID)).Query(); obj.OK() {
 		obj.Decode(&prev)
 	}
 
@@ -141,7 +141,7 @@ func (c AppAuth) RegisterAction() {
 		set.Instance.Status = prev.Status
 	}
 
-	if obj := store.Data.NewWriter(iamapi.ObjKeyAppInstance(set.Instance.Meta.ID), set.Instance).
+	if obj := data.Data.NewWriter(iamapi.ObjKeyAppInstance(set.Instance.Meta.ID), set.Instance).
 		Commit(); !obj.OK() {
 		set.Error = types.NewErrorMeta(iamapi.ErrCodeInternalError, obj.Message)
 		return
@@ -212,7 +212,7 @@ func (c AppAuth) RoleListAction() {
 	defer c.RenderJson(&sets)
 
 	// TODO app<->role
-	if rs := store.Data.NewReader(nil).KeyRangeSet(
+	if rs := data.Data.NewReader(nil).KeyRangeSet(
 		iamapi.ObjKeyRole(""), iamapi.ObjKeyRole("")).LimitNumSet(100).Query(); rs.OK() {
 
 		for _, obj := range rs.Items {
@@ -271,7 +271,7 @@ func (c AppAuth) UserAccessKeyAction() {
 	}
 
 	var app iamapi.AppInstance
-	if rs := store.Data.NewReader(iamapi.ObjKeyAppInstance(app_aka.Key)).Query(); rs.OK() {
+	if rs := data.Data.NewReader(iamapi.ObjKeyAppInstance(app_aka.Key)).Query(); rs.OK() {
 		rs.Decode(&app)
 	}
 
@@ -286,7 +286,7 @@ func (c AppAuth) UserAccessKeyAction() {
 	}
 
 	var user_ak hauth.AccessKey
-	if rs := store.Data.NewReader(iamapi.NsAccessKey(username, access_key)).Query(); rs.OK() {
+	if rs := data.Data.NewReader(iamapi.NsAccessKey(username, access_key)).Query(); rs.OK() {
 		rs.Decode(&user_ak)
 	}
 
@@ -302,7 +302,7 @@ func (c AppAuth) UserAccessKeyAction() {
 	}
 
 	var user iamapi.User
-	if obj := store.Data.NewReader(iamapi.ObjKeyUser(username)).Query(); obj.OK() {
+	if obj := data.Data.NewReader(iamapi.ObjKeyUser(username)).Query(); obj.OK() {
 		obj.Decode(&user)
 	}
 
@@ -310,7 +310,7 @@ func (c AppAuth) UserAccessKeyAction() {
 	set.AccessKeySession = iamapi.AccessKeySession{
 		User:      username,
 		AccessKey: user_ak.Id,
-		SecretKey: user_ak.SecretKey,
+		SecretKey: user_ak.Secret,
 		Roles:     user.Roles,
 		Expired:   time.Now().Unix() + 864000,
 	}

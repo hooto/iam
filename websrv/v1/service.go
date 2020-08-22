@@ -30,8 +30,8 @@ import (
 
 	"github.com/hooto/hauth/go/hauth/v1"
 	"github.com/hooto/iam/base/role"
+	"github.com/hooto/iam/data"
 	"github.com/hooto/iam/iamapi"
-	"github.com/hooto/iam/store"
 )
 
 type Service struct {
@@ -72,7 +72,7 @@ func (c Service) LoginAuthAction() {
 		return
 	}
 
-	user := store.UserGet(uname)
+	user := data.UserGet(uname)
 	if user == nil {
 		rsp.Error = types.NewErrorMeta("400", "incorrect username or password")
 		hlog.Printf("info", "service/login-auth fail user %s", uname)
@@ -92,7 +92,7 @@ func (c Service) LoginAuthAction() {
 
 	err_num := 0
 	err_key := iamapi.ObjKeyUserAuthDeny(uname, addr)
-	if rs := store.Data.NewReader(err_key).Query(); rs.OK() {
+	if rs := data.Data.NewReader(err_key).Query(); rs.OK() {
 		err_num = rs.DataValue().Int()
 		if err_num >= 20 {
 			rsp.Error = types.NewErrorMeta("400",
@@ -104,7 +104,7 @@ func (c Service) LoginAuthAction() {
 	if auth := user.Keys.Get(iamapi.UserKeyDefault); auth == nil ||
 		!pass.Check(c.Params.Get("passwd"), auth.String()) {
 		err_num++
-		store.Data.NewWriter(err_key, err_num).ExpireSet(86400000).Commit()
+		data.Data.NewWriter(err_key, err_num).ExpireSet(86400000).Commit()
 		rsp.Error = types.NewErrorMeta("400", "incorrect username or password")
 		hlog.Printf("info", "service/login-auth fail user %s", uname)
 		return
@@ -116,18 +116,18 @@ func (c Service) LoginAuthAction() {
 			user.Name,
 			user.DisplayName,
 			user.Roles,
-			store.UserGroups(uname),
+			data.UserGroups(uname),
 			ttl,
 		)
 	)
 
-	if rs := store.Data.NewWriter(iamapi.ObjKeyUserAuth(ap.Id, uint32(ap.Expired)), ap).
+	if rs := data.Data.NewWriter(iamapi.ObjKeyUserAuth(ap.Id, uint32(ap.Expired)), ap).
 		ExpireSet(ttl * 1000).Commit(); !rs.OK() {
 		rsp.Error = types.NewErrorMeta("500", rs.Message)
 		return
 	}
 
-	rsp.AccessToken = ap.SignToken(store.KeyMgr)
+	rsp.AccessToken = ap.SignToken(data.KeyMgr)
 
 	if len(c.Params.Get("redirect_token")) > 20 {
 
@@ -175,7 +175,7 @@ func (c Service) AuthAction() {
 
 	token := c.Params.Get(iamapi.AccessTokenKey)
 
-	if _, err := hauth.UserValid(token, store.KeyMgr); err != nil {
+	if _, err := hauth.UserValid(token, data.KeyMgr); err != nil {
 		set.Error = types.NewErrorMeta(iamapi.ErrCodeUnauthorized, "Unauthorized")
 		return
 	}
@@ -213,7 +213,7 @@ func (c Service) AccessAllowedAction() {
 		return
 	}
 
-	ap, err := hauth.UserValid(req.AccessToken, store.KeyMgr)
+	ap, err := hauth.UserValid(req.AccessToken, data.KeyMgr)
 	if err != nil {
 		rsp.Error = types.NewErrorMeta(iamapi.ErrCodeUnauthorized, "Unauthorized")
 		return
@@ -254,7 +254,7 @@ func (c Service) PhotoAction() {
 
 		var profile iamapi.UserProfile
 
-		if obj := store.Data.NewReader(iamapi.ObjKeyUserProfile(uname)).Query(); obj.OK() {
+		if obj := data.Data.NewReader(iamapi.ObjKeyUserProfile(uname)).Query(); obj.OK() {
 			if err := obj.Decode(&profile); err == nil && len(profile.Photo) > 50 {
 				photo = profile.Photo
 			}

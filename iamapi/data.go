@@ -20,24 +20,24 @@ import (
 
 const (
 	dataPrefix        = "iam"
-	dataAppInstance   = "ai"  // sko
-	dataUser          = "u"   // sko
+	dataAppInstance   = "ai"  // kv2
+	dataUser          = "u"   // kv2
 	dataUserAuth      = "ua"  // skip
 	dataUserAuthDeny  = "uad" // skip
 	dataPassReset     = "pr"  // skip
 	dataAccessKey     = "ak2" // hauth
-	dataAccessKeyDep  = "ak"  // sko
+	dataAccessKeyDep  = "ak"  // kv2
 	dataRole          = "r"   // skip
 	dataRolePrivilege = "rp"  // skip
-	dataUserProfile   = "up"  // sko
-	dataAccUser       = "au"  // sko
-	dataAccFundUser   = "af"  // sko
-	dataAccFundMgr    = "afm" // sko
-	dataAccChargeUser = "ac"  // sko
-	dataAccChargeMgr  = "acm" // sko
-	dataSysConfig     = "sc"  // sko
-	dataMsgQueue      = "mq"  // sko
-	dataMsgSent       = "ms"  // sko
+	dataUserProfile   = "up"  // kv2
+	dataAccUser       = "au"  // kv2
+	dataAccFundUser   = "af"  // kv2
+	dataAccFundMgr    = "afm" // kv2
+	dataAccChargeUser = "ac"  // kv2
+	dataAccChargeMgr  = "acm" // kv2
+	dataSysConfig     = "sc"  // kv2
+	dataMsgQueue      = "mq"  // kv2
+	dataMsgSent       = "ms"  // kv2
 )
 
 func ObjKeyAppInstance(key string) []byte {
@@ -79,6 +79,9 @@ func ObjKeyUserAuth(uname string, created uint32) []byte {
 }
 
 func NsAccessKey(uname, id string) []byte {
+	if uname == "" {
+		return []byte(dataPrefix + ":" + dataAccessKey + ":")
+	}
 	return []byte(dataPrefix + ":" + dataAccessKey + ":" +
 		UserNameFilter(uname) + ":" + id)
 }

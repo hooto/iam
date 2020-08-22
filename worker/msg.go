@@ -20,8 +20,8 @@ import (
 	"time"
 
 	"github.com/hooto/hlog4g/hlog"
+	"github.com/hooto/iam/data"
 	"github.com/hooto/iam/iamapi"
-	"github.com/hooto/iam/store"
 	"github.com/lessos/lessgo/net/email"
 )
 
@@ -59,7 +59,7 @@ func MsgQueueRefresh() {
 			break
 		}
 
-		rs := store.Data.NewReader(nil).KeyRangeSet(offset, cutset).
+		rs := data.Data.NewReader(nil).KeyRangeSet(offset, cutset).
 			LimitNumSet(int64(limit)).Query()
 		if !rs.OK() {
 			hlog.Printf("info", "mailer scan err")
@@ -81,26 +81,26 @@ func MsgQueueRefresh() {
 
 			if len(toMail) == 0 {
 
-				if u := store.UserGet(item.ToUser); u != nil {
+				if u := data.UserGet(item.ToUser); u != nil {
 
 					if u.Type == iamapi.UserTypeGroup {
 
 						for _, ov := range u.Owners {
-							if ou := store.UserGet(ov); ou != nil {
-								if iamapi.UserEmailRe2.MatchString(ou.Email) {
+							if ou := data.UserGet(ov); ou != nil {
+								if iamapi.EmailRE.MatchString(ou.Email) {
 									toMail = append(toMail, ou.Email)
 								}
 							}
 						}
 
-					} else if iamapi.UserEmailRe2.MatchString(u.Email) {
+					} else if iamapi.EmailRE.MatchString(u.Email) {
 						toMail = append(toMail, u.Email)
 					}
 				}
 			}
 
 			/**
-			if rs := store.Data.NewReader(iamapi.ObjKeyUser(item.ToUser)).Query(); rs.OK() {
+			if rs := data.Data.NewReader(iamapi.ObjKeyUser(item.ToUser)).Query(); rs.OK() {
 				var userLogin iamapi.User
 				rs.Decode(&userLogin)
 
@@ -108,7 +108,7 @@ func MsgQueueRefresh() {
 					//
 				} else {
 
-					if iamapi.UserEmailRe2.MatchString(userLogin.Email) {
+					if iamapi.EmailRE.MatchString(userLogin.Email) {
 						// item.ToEmail = userLogin.Email
 						toMail = append(toMail, userLogin.Email)
 					}
@@ -141,12 +141,12 @@ func MsgQueueRefresh() {
 				if item.Posted < 1 {
 					item.Posted = item.Updated
 				}
-				if rs := store.Data.NewWriter(iamapi.ObjKeyMsgSent(item.SentId()), item).Commit(); rs.OK() {
-					store.Data.NewWriter(v.Meta.Key, nil).ModeDeleteSet(true).Commit()
+				if rs := data.Data.NewWriter(iamapi.ObjKeyMsgSent(item.SentId()), item).Commit(); rs.OK() {
+					data.Data.NewWriter(v.Meta.Key, nil).ModeDeleteSet(true).Commit()
 					hlog.Printf("info", "mailer post %s, to %s, retry %d, ok", item.Id, item.ToEmail, item.Retry)
 				}
 			} else {
-				store.Data.NewWriter(v.Meta.Key, item).Commit()
+				data.Data.NewWriter(v.Meta.Key, item).Commit()
 				hlog.Printf("warn", "mailer post %s, retry %d", item.Id, item.ToEmail, item.Retry)
 			}
 		}

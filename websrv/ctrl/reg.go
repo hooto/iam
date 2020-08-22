@@ -29,8 +29,8 @@ import (
 	"github.com/hooto/iam/base/login"
 	"github.com/hooto/iam/base/signup"
 	"github.com/hooto/iam/config"
+	"github.com/hooto/iam/data"
 	"github.com/hooto/iam/iamapi"
-	"github.com/hooto/iam/store"
 )
 
 type Reg struct {
@@ -73,7 +73,7 @@ func (c Reg) SignUpRegAction() {
 	// userid := iamapi.UserId(uname)
 
 	var user iamapi.User
-	if obj := store.Data.NewReader(iamapi.ObjKeyUser(uname)).Query(); obj.OK() {
+	if obj := data.Data.NewReader(iamapi.ObjKeyUser(uname)).Query(); obj.OK() {
 		obj.Decode(&user)
 	}
 
@@ -96,7 +96,7 @@ func (c Reg) SignUpRegAction() {
 	}
 	user.Keys.Set(iamapi.UserKeyDefault, auth)
 
-	if !store.UserSet(&user) {
+	if !data.UserSet(&user) {
 		rsp.Error = &types.ErrorMeta{"500", "Server Error"}
 		return
 	}
@@ -138,7 +138,7 @@ func (c Reg) RetrievePutAction() {
 	// userid := iamapi.UserId(uname)
 
 	var user iamapi.User
-	if obj := store.Data.NewReader(iamapi.ObjKeyUser(uname)).Query(); obj.OK() {
+	if obj := data.Data.NewReader(iamapi.ObjKeyUser(uname)).Query(); obj.OK() {
 		obj.Decode(&user)
 	}
 
@@ -154,7 +154,7 @@ func (c Reg) RetrievePutAction() {
 		Expired:  utilx.TimeNowAdd("atom", "+3600s"),
 	}
 
-	if obj := store.Data.NewWriter(iamapi.ObjKeyPasswordReset(reset.Id), reset).
+	if obj := data.Data.NewWriter(iamapi.ObjKeyPasswordReset(reset.Id), reset).
 		ExpireSet(3600000).Commit(); !obj.OK() {
 		rsp.Error = &types.ErrorMeta{"500", obj.Message}
 		return
@@ -210,7 +210,7 @@ func (c Reg) PassResetAction() {
 	}
 
 	var reset iamapi.UserPasswordReset
-	if obj := store.Data.NewReader(iamapi.ObjKeyPasswordReset(c.Params.Get("id"))).Query(); obj.OK() {
+	if obj := data.Data.NewReader(iamapi.ObjKeyPasswordReset(c.Params.Get("id"))).Query(); obj.OK() {
 		obj.Decode(&reset)
 	}
 
@@ -247,7 +247,7 @@ func (c Reg) PassResetPutAction() {
 	}
 
 	var reset iamapi.UserPasswordReset
-	rsobj := store.Data.NewReader(iamapi.ObjKeyPasswordReset(c.Params.Get("id"))).Query()
+	rsobj := data.Data.NewReader(iamapi.ObjKeyPasswordReset(c.Params.Get("id"))).Query()
 	if rsobj.OK() {
 		rsobj.Decode(&reset)
 	}
@@ -264,7 +264,7 @@ func (c Reg) PassResetPutAction() {
 
 	var user iamapi.User
 	// userid := iamapi.UserId(reset.UserName)
-	uobj := store.Data.NewReader(iamapi.ObjKeyUser(reset.UserName)).Query()
+	uobj := data.Data.NewReader(iamapi.ObjKeyUser(reset.UserName)).Query()
 	if uobj.OK() {
 		uobj.Decode(&user)
 	}
@@ -279,13 +279,13 @@ func (c Reg) PassResetPutAction() {
 	auth, _ := pass.HashDefault(c.Params.Get("passwd"))
 	user.Keys.Set(iamapi.UserKeyDefault, auth)
 
-	if obj := store.Data.NewWriter(iamapi.ObjKeyUser(reset.UserName), user).
+	if obj := data.Data.NewWriter(iamapi.ObjKeyUser(reset.UserName), user).
 		IncrNamespaceSet("user").Commit(); !obj.OK() {
 		rsp.Error = &types.ErrorMeta{"500", obj.Message}
 		return
 	}
 
-	store.Data.NewWriter(iamapi.ObjKeyPasswordReset(reset.Id), nil).ModeDeleteSet(true).Commit()
+	data.Data.NewWriter(iamapi.ObjKeyPasswordReset(reset.Id), nil).ModeDeleteSet(true).Commit()
 
 	rsp.Kind = "UserAuth"
 }

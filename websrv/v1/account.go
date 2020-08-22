@@ -17,9 +17,9 @@ package v1
 import (
 	// "github.com/hooto/hlog4g/hlog"
 	"github.com/hooto/httpsrv"
+	"github.com/hooto/iam/data"
 	"github.com/hooto/iam/iamapi"
 	"github.com/hooto/iam/iamclient"
-	"github.com/hooto/iam/store"
 	"github.com/lessos/lessgo/types"
 )
 
@@ -50,7 +50,7 @@ func (c Account) UserEntryAction() {
 	}
 	defer c.RenderJson(&set)
 
-	if rs := store.Data.NewReader(
+	if rs := data.Data.NewReader(
 		iamapi.ObjKeyAccUser(c.us.UserName),
 	).Query(); rs.OK() {
 		rs.Decode(&set.AccountUser)
@@ -68,7 +68,7 @@ func (c Account) FundListAction() {
 
 	k1 := iamapi.ObjKeyAccFundUser(c.us.UserName, "zzzzzzzz")
 	k2 := iamapi.ObjKeyAccFundUser(c.us.UserName, "")
-	if rs := store.Data.NewReader(nil).KeyRangeSet(k1, k2).
+	if rs := data.Data.NewReader(nil).KeyRangeSet(k1, k2).
 		ModeRevRangeSet(true).LimitNumSet(1000).Query(); rs.OK() {
 		for _, v := range rs.Items {
 			var set iamapi.AccountFund
@@ -88,7 +88,7 @@ func (c Account) ChargeListAction() {
 
 	k1 := iamapi.ObjKeyAccChargeUser(c.us.UserName, "zzzzzzzz")
 	k2 := iamapi.ObjKeyAccChargeUser(c.us.UserName, "")
-	if rs := store.Data.NewReader(nil).KeyRangeSet(k1, k2).
+	if rs := data.Data.NewReader(nil).KeyRangeSet(k1, k2).
 		ModeRevRangeSet(true).LimitNumSet(1000).Query(); rs.OK() {
 		for _, v := range rs.Items {
 
@@ -111,7 +111,7 @@ func (c Account) ChargePayoutListAction() {
 
 	k1 := iamapi.ObjKeyAccChargeUser(c.us.UserName, "zzzzzzzz")
 	k2 := iamapi.ObjKeyAccChargeUser(c.us.UserName, "")
-	if rs := store.Data.NewReader(nil).KeyRangeSet(k1, k2).
+	if rs := data.Data.NewReader(nil).KeyRangeSet(k1, k2).
 		ModeRevRangeSet(true).LimitNumSet(1000).Query(); rs.OK() {
 		for _, v := range rs.Items {
 

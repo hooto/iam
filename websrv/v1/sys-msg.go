@@ -21,9 +21,9 @@ import (
 	"github.com/lessos/lessgo/types"
 
 	"github.com/hooto/hauth/go/hauth/v1"
+	"github.com/hooto/iam/data"
 	"github.com/hooto/iam/iamapi"
 	"github.com/hooto/iam/iamclient"
-	"github.com/hooto/iam/store"
 )
 
 type SysMsg struct {
@@ -64,14 +64,14 @@ func (c SysMsg) PostAction() {
 	}
 
 	//
-	av, err := hauth.NewAppValidatorWithHttpRequest(c.Request.Request, store.KeyMgr)
+	av, err := hauth.NewAppValidatorWithHttpRequest(c.Request.Request, data.KeyMgr)
 	if err != nil {
 		rsp.Error = types.NewErrorMeta(iamapi.ErrCodeUnauthorized, err.Error())
 		return
 	}
 
 	var ak hauth.AccessKey
-	if rs := store.Data.NewReader(iamapi.NsAccessKey(av.User, av.Id)).Query(); rs.OK() {
+	if rs := data.Data.NewReader(iamapi.NsAccessKey(av.User, av.Id)).Query(); rs.OK() {
 		rs.Decode(&ak)
 	}
 	if ak.Id == "" || ak.Id != av.Id {
@@ -87,7 +87,7 @@ func (c SysMsg) PostAction() {
 		set.Created = uint32(time.Now().Unix())
 	}
 
-	if rs := store.Data.NewWriter(iamapi.ObjKeyMsgQueue(set.Id), set).
+	if rs := data.Data.NewWriter(iamapi.ObjKeyMsgQueue(set.Id), set).
 		ModeCreateSet(true).Commit(); !rs.OK() {
 		rsp.Error = types.NewErrorMeta(iamapi.ErrCodeServerError, "server/db err "+rs.Message)
 		return
@@ -113,7 +113,7 @@ func (c SysMsg) ListAction() {
 		limit  = int64(100)
 	)
 
-	rs := store.Data.NewReader(nil).KeyRangeSet(offset, cutset).
+	rs := data.Data.NewReader(nil).KeyRangeSet(offset, cutset).
 		ModeRevRangeSet(true).LimitNumSet(limit).Query()
 	if !rs.OK() {
 		rsp.Error = types.NewErrorMeta(iamapi.ErrCodeServerError,
@@ -149,7 +149,7 @@ func (c SysMsg) ItemAction() {
 		return
 	}
 
-	if rs := store.Data.NewReader(iamapi.ObjKeyMsgSent(id)).Query(); !rs.OK() {
+	if rs := data.Data.NewReader(iamapi.ObjKeyMsgSent(id)).Query(); !rs.OK() {
 		rsp.Error = types.NewErrorMeta(iamapi.ErrCodeServerError,
 			"server/db err "+rs.Message)
 		return

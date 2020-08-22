@@ -15,12 +15,12 @@ func Validate(params *httpsrv.Params) error {
 	if len(params.Get("uname")) < 4 || len(params.Get("uname")) > 30 {
 		return errors.New("Username must be between 4 and 30 characters long")
 	}
-	if matched := iamapi.UserNameRe2.MatchString(params.Get("uname")); !matched {
+	if matched := iamapi.UsernameRE.MatchString(params.Get("uname")); !matched {
 		return errors.New("Username must consist of letters or numbers, and begin with a letter")
 	}
 
 	params.Set("email", strings.TrimSpace(strings.ToLower(params.Get("email"))))
-	if matched := iamapi.UserEmailRe2.MatchString(params.Get("email")); !matched {
+	if matched := iamapi.EmailRE.MatchString(params.Get("email")); !matched {
 		return errors.New("Email is not valid")
 	}
 
@@ -39,7 +39,7 @@ func Validate(params *httpsrv.Params) error {
 func ValidateEmail(user *iamapi.User) error {
 
 	user.Email = strings.ToLower(strings.TrimSpace(user.Email))
-	if matched := iamapi.UserEmailRe2.MatchString(user.Email); !matched {
+	if matched := iamapi.EmailRE.MatchString(user.Email); !matched {
 		return errors.New("Email is not valid")
 	}
 
@@ -52,7 +52,7 @@ func ValidateUsername(user *iamapi.User) error {
 	if len(user.Name) < 4 || len(user.Name) > 30 {
 		return errors.New("Username must be between 4 and 30 characters long")
 	}
-	if matched := iamapi.UserNameRe2.MatchString(user.Name); !matched {
+	if matched := iamapi.UsernameRE.MatchString(user.Name); !matched {
 		return errors.New("Username must consist of letters or numbers, and begin with a letter")
 	}
 

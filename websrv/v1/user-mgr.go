@@ -26,9 +26,9 @@ import (
 
 	"github.com/hooto/iam/base/signup"
 	"github.com/hooto/iam/config"
+	"github.com/hooto/iam/data"
 	"github.com/hooto/iam/iamapi"
 	"github.com/hooto/iam/iamclient"
-	"github.com/hooto/iam/store"
 )
 
 const (
@@ -78,7 +78,7 @@ func (c UserMgr) UserListAction() {
 	)
 
 	// TODO page
-	if rs := store.Data.NewReader(nil).KeyRangeSet(
+	if rs := data.Data.NewReader(nil).KeyRangeSet(
 		iamapi.ObjKeyUser(""), iamapi.ObjKeyUser("")).LimitNumSet(1000).Query(); rs.OK() {
 
 		for _, obj := range rs.Items {
@@ -132,7 +132,7 @@ func (c UserMgr) UserEntryAction() {
 
 	uname := c.Params.Get("username")
 
-	if obj := store.Data.NewReader(iamapi.ObjKeyUser(uname)).Query(); obj.OK() {
+	if obj := data.Data.NewReader(iamapi.ObjKeyUser(uname)).Query(); obj.OK() {
 		obj.Decode(&set.Login)
 	}
 
@@ -146,7 +146,7 @@ func (c UserMgr) UserEntryAction() {
 
 	//
 	var profile iamapi.UserProfile
-	if obj := store.Data.NewReader(iamapi.ObjKeyUserProfile(uname)).Query(); obj.OK() {
+	if obj := data.Data.NewReader(iamapi.ObjKeyUserProfile(uname)).Query(); obj.OK() {
 		obj.Decode(&profile)
 
 		profile.About = html.EscapeString(profile.About)
@@ -170,7 +170,7 @@ func (c UserMgr) UserGroupSetAction() {
 		return
 	}
 
-	user := store.UserGet(c.Params.Get("name"))
+	user := data.UserGet(c.Params.Get("name"))
 	if user == nil {
 		set.Error = types.NewErrorMeta("400", "Item Not Found")
 		return
@@ -190,7 +190,7 @@ func (c UserMgr) UserGroupSetAction() {
 
 			if !iamapi.ArrayStringEqual(user.Owners, ugOwners) {
 				for _, v2 := range ugOwners {
-					if p := store.UserGet(v2); p != nil {
+					if p := data.UserGet(v2); p != nil {
 						if !iamapi.ArrayStringHas(user.Owners, v2) {
 							user.Owners = append(user.Owners, v2)
 						}
@@ -209,7 +209,7 @@ func (c UserMgr) UserGroupSetAction() {
 
 		user.Updated = types.MetaTimeNow()
 
-		store.Data.NewWriter(iamapi.ObjKeyUser(user.Name), user).
+		data.Data.NewWriter(iamapi.ObjKeyUser(user.Name), user).
 			IncrNamespaceSet("user").Commit()
 	}
 
@@ -258,7 +258,7 @@ func (c UserMgr) UserSetAction() {
 	var prev iamapi.UserEntry
 
 	//
-	if obj := store.Data.NewReader(iamapi.ObjKeyUser(set.Login.Name)).Query(); obj.OK() {
+	if obj := data.Data.NewReader(iamapi.ObjKeyUser(set.Login.Name)).Query(); obj.OK() {
 		obj.Decode(&prev.Login)
 	}
 
@@ -296,7 +296,7 @@ func (c UserMgr) UserSetAction() {
 	set.Login.Updated = types.MetaTimeNow()
 	sort.Sort(set.Login.Roles)
 
-	if obj := store.Data.NewWriter(iamapi.ObjKeyUser(set.Login.Name), set.Login).
+	if obj := data.Data.NewWriter(iamapi.ObjKeyUser(set.Login.Name), set.Login).
 		IncrNamespaceSet("user").Commit(); !obj.OK() {
 		set.Error = types.NewErrorMeta("500", obj.Message)
 		return
@@ -306,7 +306,7 @@ func (c UserMgr) UserSetAction() {
 
 		var profile iamapi.UserProfile
 
-		if obj := store.Data.NewReader(iamapi.ObjKeyUserProfile(set.Login.Name)).Query(); obj.OK() {
+		if obj := data.Data.NewReader(iamapi.ObjKeyUserProfile(set.Login.Name)).Query(); obj.OK() {
 
 			obj.Decode(&profile)
 
@@ -319,7 +319,7 @@ func (c UserMgr) UserSetAction() {
 			}
 		}
 
-		if obj := store.Data.NewWriter(
+		if obj := data.Data.NewWriter(
 			iamapi.ObjKeyUserProfile(set.Login.Name), profile).Commit(); !obj.OK() {
 			set.Error = types.NewErrorMeta("500", obj.Message)
 			return

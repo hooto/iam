@@ -37,7 +37,7 @@ type AppAuth struct {
 // 	var prevVersion uint64
 // 	var prev iamapi.AppInstance
 
-// 	if obj := store.PvGet(btapi.ObjectPut{
+// 	if obj := data.PvGet(btapi.ObjectPut{
 // 		Meta: btapi.ObjectMeta{
 // 			Path: "/app-instance/" + set.Meta.ID,
 // 		},
@@ -62,7 +62,7 @@ type AppAuth struct {
 
 // 	setjs, _ := utils.JsonEncode(set)
 
-// 	if obj := store.PvPut(btapi.ObjectPut{
+// 	if obj := data.PvPut(btapi.ObjectPut{
 // 		Meta: btapi.ObjectMeta{
 // 			Path: "/app-instance/" + set.Meta.ID,
 // 		},

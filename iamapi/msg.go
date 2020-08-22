@@ -38,7 +38,7 @@ func (it *MsgItem) Valid() error {
 		return errors.New("invalid msg id")
 	}
 
-	if !UserNameRe2.MatchString(it.ToUser) {
+	if !UsernameRE.MatchString(it.ToUser) {
 		return errors.New("user not found")
 	}
 

@@ -23,6 +23,26 @@ enum MsgType {
 	HTML = 1;
 }
 
+message MsgTemplateEntry {
+	string name = 1;
+	MsgType type = 2;
+	repeated MsgTemplateLang items = 9;
+}
+
+message MsgTemplateLang {
+	string lang = 1;
+	string title = 2;
+	string body = 3;
+}
+
+message MsgEntry {
+	string id = 1;
+	string to_user = 3;
+	string from_user = 5;
+	MsgTemplateEntry template = 7;
+	uint32 created = 14;
+}
+
 message MsgItem {
 	string id = 1; // struct:object_slice_key
 	uint32 action = 2;
@@ -40,3 +60,5 @@ message MsgItem {
 	uint32 created = 14;
 	uint32 updated = 15;
 }
+
+

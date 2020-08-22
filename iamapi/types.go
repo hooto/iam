@@ -47,18 +47,16 @@ const (
 )
 
 var (
-	UserNameRe2            = regexp.MustCompile("^[a-z]{1}[a-z0-9]{3,29}$")
-	UserRoleNameRe2        = regexp.MustCompile("^[a-z]{1}[a-z0-9]{3,19}$")
-	UserEmailRe2           = regexp.MustCompile("^[_a-z0-9-]+(\\.[_a-z0-9-]+)*@[a-z0-9-]+(\\.[a-z0-9-]+)*(\\.[a-z]{2,10})$")
-	accessTokenFrontendRe2 = regexp.MustCompile("^[a-z0-9]{4,30}\\/[a-f0-9]{20,40}$")
-	AppInstanceIdReg       = regexp.MustCompile("^[a-f0-9]{16,24}$")
+	UsernameRE = regexp.MustCompile("^[a-z]{1}[a-z0-9-]{2,18}[a-z0-9]{1}$")
+	EmailRE    = regexp.MustCompile("^[_a-z0-9-]+(\\.[_a-z0-9-]+)*@[a-z0-9-]+(\\.[a-z0-9-]+)*(\\.[a-z]{2,10})$")
+	AppIdRE    = regexp.MustCompile("^[a-f0-9]{16,24}$")
 )
 
 func UserNameFilter(name string) string {
 	name = strings.ToLower(name)
 	name2 := ""
 	for _, v := range name {
-		if (v >= 'a' && v <= 'z') || (v >= '0' || v <= '9') {
+		if (v >= 'a' && v <= 'z') || (v >= '0' || v <= '9') || (v == '-') {
 			name2 += string(v)
 		}
 	}
@@ -82,7 +80,7 @@ func Hash32(v string) uint32 {
 }
 
 func UserNameValid(user string) error {
-	if UserNameRe2.MatchString(user) {
+	if UsernameRE.MatchString(user) {
 		return nil
 	}
 	return errors.New("Invalid UserName")

@@ -17,10 +17,10 @@ package v1
 import (
 	"github.com/hooto/hauth/go/hauth/v1"
 	"github.com/hooto/httpsrv"
+	"github.com/hooto/iam/data"
 	"github.com/hooto/iam/iamapi"
-	"github.com/hooto/iam/store"
 	"github.com/lessos/lessgo/types"
-	"github.com/lynkdb/iomix/sko"
+	kv2 "github.com/lynkdb/kvspec/go/kvspec/v2"
 )
 
 type AccountCharge struct {
@@ -44,14 +44,14 @@ func (c AccountCharge) PreValidAction() {
 	}
 
 	//
-	av, err := hauth.NewAppValidatorWithHttpRequest(c.Request.Request, store.KeyMgr)
+	av, err := hauth.NewAppValidatorWithHttpRequest(c.Request.Request, data.KeyMgr)
 	if err != nil {
 		set.Error = types.NewErrorMeta(iamapi.ErrCodeUnauthorized, err.Error())
 		return
 	}
 
 	var ak hauth.AccessKey
-	if rs := store.Data.NewReader(
+	if rs := data.Data.NewReader(
 		iamapi.NsAccessKey(av.User, av.Id)).Query(); rs.OK() {
 		rs.Decode(&ak)
 	}
@@ -67,7 +67,7 @@ func (c AccountCharge) PreValidAction() {
 	set.Prepay = iamapi.AccountFloat64Round(set.Prepay, 2)
 
 	var acc_user iamapi.AccountUser
-	if rs := store.Data.NewReader(iamapi.ObjKeyAccUser(set.User)).Query(); rs.OK() {
+	if rs := data.Data.NewReader(iamapi.ObjKeyAccUser(set.User)).Query(); rs.OK() {
 		rs.Decode(&acc_user)
 	} else if !rs.NotFound() {
 		set.Error = types.NewErrorMeta(iamapi.ErrCodeInternalError, "Server Error")
@@ -81,7 +81,7 @@ func (c AccountCharge) PreValidAction() {
 
 	actives := []iamapi.AccountFund{}
 	ka := iamapi.ObjKeyAccFundUser(set.User, "")
-	if rs := store.Data.NewReader(nil).KeyRangeSet(ka, ka).LimitNumSet(1000).Query(); rs.OK() {
+	if rs := data.Data.NewReader(nil).KeyRangeSet(ka, ka).LimitNumSet(1000).Query(); rs.OK() {
 		for _, v := range rs.Items {
 			var v2 iamapi.AccountFund
 			if err := v.Decode(&v2); err == nil {
@@ -134,14 +134,14 @@ func (c AccountCharge) PrepayAction() {
 	}
 
 	//
-	av, err := hauth.NewAppValidatorWithHttpRequest(c.Request.Request, store.KeyMgr)
+	av, err := hauth.NewAppValidatorWithHttpRequest(c.Request.Request, data.KeyMgr)
 	if err != nil {
 		set.Error = types.NewErrorMeta(iamapi.ErrCodeUnauthorized, err.Error())
 		return
 	}
 
 	var ak hauth.AccessKey
-	if rs := store.Data.NewReader(
+	if rs := data.Data.NewReader(
 		iamapi.NsAccessKey(av.User, av.Id)).Query(); rs.OK() {
 		rs.Decode(&ak)
 	}
@@ -159,7 +159,7 @@ func (c AccountCharge) PrepayAction() {
 		charge       iamapi.AccountCharge
 	)
 
-	if rs := store.Data.NewReader(
+	if rs := data.Data.NewReader(
 		iamapi.ObjKeyAccChargeUser(set.User, charge_id)).Query(); rs.OK() {
 		if err := rs.Decode(&charge); err == nil {
 			if charge.Prepay == set.Prepay {
@@ -186,7 +186,7 @@ func (c AccountCharge) PrepayAction() {
 	charge.Comment = set.Comment
 
 	var acc_user iamapi.AccountUser
-	if rs := store.Data.NewReader(iamapi.ObjKeyAccUser(charge.User)).Query(); rs.OK() {
+	if rs := data.Data.NewReader(iamapi.ObjKeyAccUser(charge.User)).Query(); rs.OK() {
 		rs.Decode(&acc_user)
 	} else if !rs.NotFound() {
 		set.Error = types.NewErrorMeta(iamapi.ErrCodeInternalError, "Server Error")
@@ -204,7 +204,7 @@ func (c AccountCharge) PrepayAction() {
 
 		actives := []iamapi.AccountFund{}
 		ka := iamapi.ObjKeyAccFundUser(charge.User, "")
-		if rs := store.Data.NewReader(nil).KeyRangeSet(ka, ka).LimitNumSet(1000).Query(); rs.OK() {
+		if rs := data.Data.NewReader(nil).KeyRangeSet(ka, ka).LimitNumSet(1000).Query(); rs.OK() {
 			for _, v := range rs.Items {
 				var v2 iamapi.AccountFund
 				if err := v.Decode(&v2); err == nil {
@@ -246,7 +246,7 @@ func (c AccountCharge) PrepayAction() {
 	acc_user.Balance = iamapi.AccountFloat64Round(acc_user.Balance-charge.Prepay, 2)
 	acc_user.Prepay = iamapi.AccountFloat64Round(acc_user.Prepay+charge.Prepay, 2)
 
-	sets := []sko.ClientObjectItem{
+	sets := []kv2.ClientObjectItem{
 		{
 			Key:   iamapi.ObjKeyAccFundUser(charge.User, active.Id),
 			Value: active,
@@ -270,7 +270,7 @@ func (c AccountCharge) PrepayAction() {
 	}
 
 	for _, v := range sets {
-		if rs := store.Data.NewWriter(v.Key, v.Value).Commit(); !rs.OK() {
+		if rs := data.Data.NewWriter(v.Key, v.Value).Commit(); !rs.OK() {
 			set.Error = types.NewErrorMeta(iamapi.ErrCodeInternalError, "IO Error")
 			return
 		}
@@ -295,14 +295,14 @@ func (c AccountCharge) PayoutAction() {
 	}
 
 	//
-	av, err := hauth.NewAppValidatorWithHttpRequest(c.Request.Request, store.KeyMgr)
+	av, err := hauth.NewAppValidatorWithHttpRequest(c.Request.Request, data.KeyMgr)
 	if err != nil {
 		set.Error = types.NewErrorMeta(iamapi.ErrCodeUnauthorized, err.Error())
 		return
 	}
 
 	var ak hauth.AccessKey
-	if rs := store.Data.NewReader(
+	if rs := data.Data.NewReader(
 		iamapi.NsAccessKey(av.User, av.Id)).Query(); rs.OK() {
 		rs.Decode(&ak)
 	}
@@ -318,7 +318,7 @@ func (c AccountCharge) PayoutAction() {
 	//
 	var acc_user iamapi.AccountUser
 	// hlog.Printf("info", "%s %s %d %d", set.User, userid, set.TimeStart, set.TimeClose)
-	if rs := store.Data.NewReader(iamapi.ObjKeyAccUser(set.User)).Query(); rs.OK() {
+	if rs := data.Data.NewReader(iamapi.ObjKeyAccUser(set.User)).Query(); rs.OK() {
 		rs.Decode(&acc_user)
 	} else if !rs.NotFound() {
 		set.Error = types.NewErrorMeta(iamapi.ErrCodeInternalError, "Server Error")
@@ -333,7 +333,7 @@ func (c AccountCharge) PayoutAction() {
 		_, charge_id = iamapi.AccountChargeId(set.Product, set.TimeStart)
 		charge       iamapi.AccountCharge
 	)
-	if rs := store.Data.NewReader(
+	if rs := data.Data.NewReader(
 		iamapi.ObjKeyAccChargeUser(set.User, charge_id),
 	).Query(); rs.OK() {
 		rs.Decode(&charge)
@@ -366,7 +366,7 @@ func (c AccountCharge) PayoutAction() {
 	)
 
 	ka := iamapi.ObjKeyAccFundUser(set.User, "")
-	if rs := store.Data.NewReader(nil).KeyRangeSet(ka, ka).LimitNumSet(1000).Query(); rs.OK() {
+	if rs := data.Data.NewReader(nil).KeyRangeSet(ka, ka).LimitNumSet(1000).Query(); rs.OK() {
 		for _, v := range rs.Items {
 			var v2 iamapi.AccountFund
 			if err := v.Decode(&v2); err == nil {
@@ -414,7 +414,7 @@ func (c AccountCharge) PayoutAction() {
 	acc_user.Balance = iamapi.AccountFloat64Round(acc_user.Balance-charge.Payout, 2)
 	acc_user.Updated = active.Updated
 
-	sets := []sko.ClientObjectItem{
+	sets := []kv2.ClientObjectItem{
 		{
 			Key:   iamapi.ObjKeyAccFundUser(set.User, active.Id),
 			Value: active,
@@ -438,7 +438,7 @@ func (c AccountCharge) PayoutAction() {
 	}
 
 	for _, v := range sets {
-		if rs := store.Data.NewWriter(v.Key, v.Value).Commit(); !rs.OK() {
+		if rs := data.Data.NewWriter(v.Key, v.Value).Commit(); !rs.OK() {
 			set.Error = types.NewErrorMeta(iamapi.ErrCodeInternalError, "IO Error")
 			return
 		}
