@@ -21,6 +21,7 @@ import (
 	"github.com/lessos/lessgo/types"
 
 	"github.com/hooto/hauth/go/hauth/v1"
+	"github.com/hooto/hmsg/go/hmsg/v1"
 	"github.com/hooto/iam/data"
 	"github.com/hooto/iam/iamapi"
 	"github.com/hooto/iam/iamclient"
@@ -49,7 +50,7 @@ func (c SysMsg) PostAction() {
 
 	var (
 		rsp types.TypeMeta
-		set iamapi.MsgItem
+		set hmsg.MsgItem
 	)
 	defer c.RenderJson(&rsp)
 
@@ -103,7 +104,7 @@ func (c SysMsg) ListAction() {
 	}
 
 	var (
-		rsp iamapi.MsgList
+		rsp types.ObjectList
 	)
 	defer c.RenderJson(&rsp)
 
@@ -122,7 +123,7 @@ func (c SysMsg) ListAction() {
 	}
 
 	for _, v := range rs.Items {
-		var item iamapi.MsgItem
+		var item hmsg.MsgItem
 		if err := v.DataValue().Decode(&item, nil); err == nil {
 			item.Id = item.SentId()
 			rsp.Items = append(rsp.Items, &item)
@@ -144,7 +145,7 @@ func (c SysMsg) ItemAction() {
 	)
 	defer c.RenderJson(&rsp)
 
-	if !iamapi.MsgIdReg.MatchString(id) {
+	if !hmsg.MsgIdRE.MatchString(id) {
 		rsp.Error = types.NewErrorMeta(iamapi.ErrCodeInvalidArgument, "invalid id")
 		return
 	}
@@ -154,7 +155,7 @@ func (c SysMsg) ItemAction() {
 			"server/db err "+rs.Message)
 		return
 	} else {
-		var item iamapi.MsgItem
+		var item hmsg.MsgItem
 		if err := rs.DataValue().Decode(&item, nil); err == nil && item.Id != "" {
 			rsp.Data = &item
 		}

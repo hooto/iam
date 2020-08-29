@@ -20,6 +20,7 @@ import (
 	"time"
 
 	"github.com/hooto/hlog4g/hlog"
+	"github.com/hooto/hmsg/go/hmsg/v1"
 	"github.com/hooto/iam/data"
 	"github.com/hooto/iam/iamapi"
 	"github.com/lessos/lessgo/net/email"
@@ -68,7 +69,7 @@ func MsgQueueRefresh() {
 
 		for _, v := range rs.Items {
 
-			var item iamapi.MsgItem
+			var item hmsg.MsgItem
 			if err := v.DataValue().Decode(&item, nil); err != nil {
 				hlog.Printf("info", "mailer err %s", err.Error())
 				continue
@@ -127,17 +128,17 @@ func MsgQueueRefresh() {
 					if item.Retry < 10 {
 						continue
 					}
-					item.Action = iamapi.MsgActionPostTimeout
+					item.Action = hmsg.MsgActionPostTimeout
 				} else {
-					item.Action = iamapi.MsgActionPostOK
+					item.Action = hmsg.MsgActionPostOK
 				}
 			} else {
-				item.Action = iamapi.MsgActionPostError
+				item.Action = hmsg.MsgActionPostError
 			}
 
-			if iamapi.OpActionAllow(item.Action, iamapi.MsgActionPostOK) ||
-				iamapi.OpActionAllow(item.Action, iamapi.MsgActionPostError) ||
-				iamapi.OpActionAllow(item.Action, iamapi.MsgActionPostTimeout) {
+			if iamapi.OpActionAllow(item.Action, hmsg.MsgActionPostOK) ||
+				iamapi.OpActionAllow(item.Action, hmsg.MsgActionPostError) ||
+				iamapi.OpActionAllow(item.Action, hmsg.MsgActionPostTimeout) {
 				if item.Posted < 1 {
 					item.Posted = item.Updated
 				}
@@ -157,6 +158,6 @@ func MsgQueueRefresh() {
 	}
 }
 
-func msgPost(mailer *email.Mailer, msg iamapi.MsgItem) error {
+func msgPost(mailer *email.Mailer, msg hmsg.MsgItem) error {
 	return mailer.SendMail(msg.ToEmail, msg.Title, msg.Body+"\n")
 }

@@ -19,7 +19,7 @@ ifndef V
 endif
 
 
-all: proto_build bindata_build
+all: bindata_build
 	@echo ""
 	@echo "build complete"
 	@echo ""

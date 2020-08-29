@@ -32,7 +32,7 @@ import (
 )
 
 var (
-	Data                  kv2.Client
+	Data                  kv2.ClientTable
 	def_sysadmin          = "sysadmin"
 	def_sysadmin_password = "changeme"
 	app_inst_id_re        = regexp.MustCompile("^[0-9a-f]{16}$")

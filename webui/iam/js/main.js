@@ -6,7 +6,7 @@ var iam = {
     api: "/iam/v1/",
     mgrapi: "/iam/",
     Session: null,
-    debug: true,
+    debug: false,
     OpToolActive: null,
 }
 

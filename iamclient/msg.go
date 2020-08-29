@@ -19,14 +19,14 @@ import (
 	"fmt"
 
 	"github.com/hooto/hauth/go/hauth/v1"
-	"github.com/hooto/iam/iamapi"
+	"github.com/hooto/hmsg/go/hmsg/v1"
 	"github.com/lessos/lessgo/crypto/idhash"
 	"github.com/lessos/lessgo/encoding/json"
 	"github.com/lessos/lessgo/net/httpclient"
 	"github.com/lessos/lessgo/types"
 )
 
-func SysMsgPost(req iamapi.MsgItem, ak *hauth.AccessKey) error {
+func SysMsgPost(req hmsg.MsgItem, ak *hauth.AccessKey) error {
 
 	req.Id = idhash.RandHexString(16)
 

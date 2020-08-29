@@ -309,7 +309,7 @@ iamAccessKey.Bind = function(akid) {
                 tplsrc: tpl,
                 width: 800,
                 height: 260,
-                title: l4i.T("Bind new instance to this %s", "AccessKey"),
+                title: l4i.T("Bind new scope to this %s", "AccessKey"),
                 data: {
                     id: akid,
                 },
