@@ -48,9 +48,8 @@ func Setup() error {
 	if rs := Data.NewWriter([]byte("iam:test"), "test").
 		ExpireSet(1000).Commit(); !rs.OK() {
 		return fmt.Errorf("iam.data connect not ready #2 " + rs.String())
-	}
 
-	if rs := Data.NewReader([]byte("iam:test")).Query(); !rs.OK() || rs.DataValue().String() != "test" {
+	} else if rs = Data.NewReader([]byte("iam:test")).Query(); !rs.OK() || rs.DataValue().String() != "test" {
 		return fmt.Errorf("iam.data connect not ready #3")
 	} else {
 		hlog.Printf("info", "iam/data connect ok")
@@ -77,6 +76,7 @@ func Setup() error {
 			var ak hauth.AccessKey
 			if err := v.Decode(&ak); err == nil {
 				KeyMgr.KeySet(&ak)
+				hlog.Printf("info", "iam/access_key load %s", ak.Id)
 				continue
 			}
 		}
@@ -105,51 +105,6 @@ func InitData() (err error) {
 
 	if len(config.Config.InstanceID) < 16 {
 		return fmt.Errorf("No InstanceID Setup")
-	}
-
-	// AccessKeyDep
-	akp := iamapi.ObjKeyAccessKeyDep("", "")
-	if rs := Data.NewReader().KeyRangeSet(akp, append(akp, []byte{0xff}...)).
-		LimitNumSet(1000).Query(); rs.OK() {
-
-		for _, v := range rs.Items {
-
-			var ak iamapi.AccessKeyDep
-			if err := v.Decode(&ak); err != nil {
-				continue
-			}
-
-			akNew := hauth.AccessKey{
-				Id:          ak.AccessKey,
-				Secret:      ak.SecretKey,
-				User:        ak.User,
-				Description: ak.Description,
-			}
-
-			if ak.Action == 1 {
-				akNew.Status = hauth.AccessKeyStatusActive
-			}
-
-			for _, v2 := range ak.Bounds {
-				ar := strings.Split(v2.Name, "/")
-				if len(ar) == 2 {
-					akNew.Scopes = append(akNew.Scopes, &hauth.ScopeFilter{
-						Name:  ar[0],
-						Value: ar[1],
-					})
-				}
-			}
-
-			if rs2 := Data.NewWriter(iamapi.NsAccessKey(ak.User, ak.AccessKey), akNew).
-				ModeCreateSet(true).Commit(); rs2.OK() {
-				hlog.Printf("info", "iam/access_key %s upgrade ok", akNew.Id)
-
-				Data.NewWriter(v.Meta.Key, nil).
-					ModeDeleteSet(true).Commit()
-
-				KeyMgr.KeySet(&akNew)
-			}
-		}
 	}
 
 	tnm := types.MetaTimeNow()
@@ -342,12 +297,14 @@ func AccessKeyInitData(ak *hauth.AccessKey) error {
 			}
 			hlog.Printf("warn", "IAM/AK ID %s, SEC %s, Refreshed", ak.Id, ak.Secret[:8])
 		}
+		hlog.Printf("warn", "IAM/AK ID %s, SEC %s, Refreshed", ak.Id, ak.Secret[:8])
 	} else {
 
 		if rs := Data.NewWriter(iamapi.NsAccessKey(ak.User, ak.Id), ak).
 			ModeCreateSet(true).Commit(); !rs.OK() {
 			return rs.Error()
 		}
+		hlog.Printf("warn", "IAM/AK ID %s, SEC %s, Refreshed", ak.Id, ak.Secret[:8])
 	}
 
 	KeyMgr.KeySet(ak)

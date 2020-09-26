@@ -30,6 +30,7 @@ var (
 	msgMu           sync.Mutex
 	msgQueuePending        = false
 	msgQueueTimeout uint32 = 864000
+	msgQueueCheckN  int64  = 0
 )
 
 func MsgQueueRefresh() {
@@ -56,7 +57,10 @@ func MsgQueueRefresh() {
 
 		mailer, err := email.MailerPull("def")
 		if err != nil {
-			hlog.Printf("warn", "mailer setup err %s", err.Error())
+			if msgQueueCheckN == 1 {
+				hlog.Printf("warn", "mailer setup err %s", err.Error())
+			}
+			msgQueueCheckN += 1
 			break
 		}
 

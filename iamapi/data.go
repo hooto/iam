@@ -26,7 +26,6 @@ const (
 	dataUserAuthDeny  = "uad" // skip
 	dataPassReset     = "pr"  // skip
 	dataAccessKey     = "ak2" // hauth
-	dataAccessKeyDep  = "ak"  // kv2
 	dataRole          = "r"   // skip
 	dataRolePrivilege = "rp"  // skip
 	dataUserProfile   = "up"  // kv2
@@ -83,14 +82,6 @@ func NsAccessKey(uname, id string) []byte {
 		return []byte(dataPrefix + ":" + dataAccessKey + ":")
 	}
 	return []byte(dataPrefix + ":" + dataAccessKey + ":" +
-		UserNameFilter(uname) + ":" + id)
-}
-
-func ObjKeyAccessKeyDep(uname, id string) []byte {
-	if uname == "" {
-		return []byte(dataPrefix + ":" + dataAccessKeyDep + ":")
-	}
-	return []byte(dataPrefix + ":" + dataAccessKeyDep + ":" +
 		UserNameFilter(uname) + ":" + id)
 }
 
