@@ -6,15 +6,11 @@ var iam = {
     api: "/iam/v1/",
     mgrapi: "/iam/",
     Session: null,
-    debug: true,
     OpToolActive: null,
 }
 
-iam.debug_uri = function() {
-    if (!iam.debug) {
-        return "?_=" + iam.version;
-    }
-    return "?_=" + Math.random();
+iam.hash_uri = function() {
+    return "?_=" + iam.version;
 }
 
 iam.Boot = function() {
@@ -51,26 +47,25 @@ iam.Boot = function() {
         ], function() {
 
             seajs.use([
-                "~/iam/css/main.css" + iam.debug_uri(),
+                "~/iam/css/main.css" + iam.hash_uri(),
                 // "~/bs/4/js/bootstrap.js",
-                "~/iam/js/mgr.js" + iam.debug_uri(),
-                "~/iam/js/user.js" + iam.debug_uri(),
-                "~/iam/js/user-group.js" + iam.debug_uri(),
-                "~/iam/js/app.js" + iam.debug_uri(),
-                "~/iam/js/access-key.js" + iam.debug_uri(),
-                "~/iam/js/account.js" + iam.debug_uri(),
-                "~/iam/js/sys.js" + iam.debug_uri(),
-                "~/iam/js/sys-msg.js" + iam.debug_uri(),
-                "~/iam/js/user-mgr.js" + iam.debug_uri(),
-                "~/iam/js/app-mgr.js" + iam.debug_uri(),
-                "~/iam/js/account-mgr.js" + iam.debug_uri(),
+                "~/iam/js/mgr.js" + iam.hash_uri(),
+                "~/iam/js/user.js" + iam.hash_uri(),
+                "~/iam/js/user-group.js" + iam.hash_uri(),
+                "~/iam/js/app.js" + iam.hash_uri(),
+                "~/iam/js/access-key.js" + iam.hash_uri(),
+                "~/iam/js/account.js" + iam.hash_uri(),
+                "~/iam/js/sys.js" + iam.hash_uri(),
+                "~/iam/js/sys-msg.js" + iam.hash_uri(),
+                "~/iam/js/user-mgr.js" + iam.hash_uri(),
+                "~/iam/js/app-mgr.js" + iam.hash_uri(),
+                "~/iam/js/account-mgr.js" + iam.hash_uri(),
             ], iam.load_index);
         });
     });
 }
 
 iam.load_index = function() {
-    l4i.debug = iam.debug;
 
     seajs.use(["ep"], function(EventProxy) {
 

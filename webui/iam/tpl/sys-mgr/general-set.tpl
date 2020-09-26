@@ -59,8 +59,8 @@
             Disable Visitors to create new account
           </p>
         </div>
-      </div>
-    </div>
+      </td>
+    </tr>
     </tbody>
   </table>
 

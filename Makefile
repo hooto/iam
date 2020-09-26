@@ -34,11 +34,9 @@ proto_build:
 	$(QUIET_BUILD)$(HTOML_TAG_FIX_CMD) $(HTOML_TAG_FIX_ARGS) $(CCLINK)
 
 bindata_build:
-	sed -i 's/debug:\ true/debug:\ false/g' webui/iam/js/main.js
 	$(QUIET_BUILD)$(BINDATA_CMD) $(BINDATA_ARGS_UI) $(CCLINK)
 	$(QUIET_BUILD)$(BINDATA_CMD) $(BINDATA_ARGS_VIEW) $(CCLINK)
 	$(QUIET_BUILD)$(BINDATA_CMD) $(BINDATA_ARGS_I18N) $(CCLINK)
-	sed -i 's/debug:\ false/debug:\ true/g' webui/iam/js/main.js
 
 bindata_clean:
 	rm -f bindata/iam_ws_webui/statik.go
