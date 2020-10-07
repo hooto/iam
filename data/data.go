@@ -19,9 +19,11 @@ import (
 	"fmt"
 	"regexp"
 	"strings"
+	"time"
 
 	"github.com/hooto/hauth/go/hauth/v1"
 	"github.com/hooto/hlog4g/hlog"
+	"github.com/lessos/lessgo/crypto/idhash"
 	"github.com/lessos/lessgo/crypto/phash"
 	"github.com/lessos/lessgo/net/email"
 	"github.com/lessos/lessgo/types"
@@ -32,11 +34,11 @@ import (
 )
 
 var (
-	Data                  kv2.ClientTable
-	def_sysadmin          = "sysadmin"
-	def_sysadmin_password = "changeme"
-	app_inst_id_re        = regexp.MustCompile("^[0-9a-f]{16}$")
-	KeyMgr                = hauth.NewAccessKeyManager()
+	Data                    kv2.ClientTable
+	def_sysadmin            = "sysadmin"
+	DefaultSysadminPassword = "changeme"
+	app_inst_id_re          = regexp.MustCompile("^[0-9a-f]{16}$")
+	KeyMgr                  = hauth.NewAccessKeyManager()
 )
 
 func Setup() error {
@@ -216,7 +218,7 @@ func InitData() (err error) {
 			Updated:     tnm,
 		}
 
-		auth, err := phash.Generate(def_sysadmin_password)
+		auth, err := phash.Generate(DefaultSysadminPassword)
 		if err != nil {
 			return err
 		}
@@ -228,6 +230,49 @@ func InitData() (err error) {
 		ow.Meta.IncrId = 1
 		if rs := ow.Commit(); !rs.OK() {
 			return fmt.Errorf("db err %s", rs.Message)
+		}
+
+		var (
+			tn     = time.Now()
+			set_id = append(iamapi.Uint32ToBytes(uint32(tn.Unix())), idhash.Rand(8)...) // 4 + 8
+		)
+
+		set := iamapi.AccountFund{
+			Id:               iamapi.BytesToHexString(set_id),
+			Amount:           100000,
+			Type:             iamapi.AccountCurrencyTypeVirtual,
+			User:             def_sysadmin,
+			Operator:         def_sysadmin,
+			ExpProductMax:    100,
+			ExpProductLimits: []types.NameIdentifier{"sys/pod"},
+			Created:          types.MetaTimeSet(tn),
+			Updated:          types.MetaTimeSet(tn),
+			Priority:         8,
+		}
+
+		acc_user := iamapi.AccountUser{
+			User:    def_sysadmin,
+			Balance: set.Amount,
+			Updated: set.Updated,
+		}
+
+		sets := []kv2.ClientObjectItem{
+			{
+				Key:   iamapi.ObjKeyAccFundMgr(set.Id),
+				Value: set,
+			},
+			{
+				Key:   iamapi.ObjKeyAccFundUser(set.User, set.Id),
+				Value: set,
+			},
+			{
+				Key:   iamapi.ObjKeyAccUser(set.User),
+				Value: acc_user,
+			},
+		}
+
+		for _, v := range sets {
+			Data.NewWriter(v.Key, v.Value).Commit()
 		}
 	}
 

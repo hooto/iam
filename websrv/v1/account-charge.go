@@ -69,13 +69,17 @@ func (c AccountCharge) PreValidAction() {
 	var acc_user iamapi.AccountUser
 	if rs := data.Data.NewReader(iamapi.ObjKeyAccUser(set.User)).Query(); rs.OK() {
 		rs.Decode(&acc_user)
+		if acc_user.User == "" && acc_user.Balance > 0 {
+			acc_user.User = set.User // bugfix
+			data.Data.NewWriter(iamapi.ObjKeyAccUser(set.User), acc_user).Commit()
+		}
 	} else if !rs.NotFound() {
 		set.Error = types.NewErrorMeta(iamapi.ErrCodeInternalError, "Server Error")
 		return
 	}
 
 	if acc_user.User == "" || acc_user.User != set.User {
-		set.Error = types.NewErrorMeta(iamapi.ErrCodeAccChargeOut, "Out of balance")
+		set.Error = types.NewErrorMeta(iamapi.ErrCodeAccChargeOut, "Out of balance #0003")
 		return
 	}
 
@@ -111,7 +115,7 @@ func (c AccountCharge) PreValidAction() {
 	}
 
 	if active.Id == "" {
-		set.Error = types.NewErrorMeta(iamapi.ErrCodeAccChargeOut, "Out of balance")
+		set.Error = types.NewErrorMeta(iamapi.ErrCodeAccChargeOut, "Out of balance #0002")
 		return
 	}
 
@@ -188,6 +192,10 @@ func (c AccountCharge) PrepayAction() {
 	var acc_user iamapi.AccountUser
 	if rs := data.Data.NewReader(iamapi.ObjKeyAccUser(charge.User)).Query(); rs.OK() {
 		rs.Decode(&acc_user)
+		if acc_user.User == "" && acc_user.Balance > 0 {
+			acc_user.User = set.User // bugfix
+			data.Data.NewWriter(iamapi.ObjKeyAccUser(set.User), acc_user).Commit()
+		}
 	} else if !rs.NotFound() {
 		set.Error = types.NewErrorMeta(iamapi.ErrCodeInternalError, "Server Error")
 		return
@@ -235,7 +243,7 @@ func (c AccountCharge) PrepayAction() {
 	}
 
 	if active.Id == "" || active.Id != charge.Fund {
-		set.Error = types.NewErrorMeta(iamapi.ErrCodeAccChargeOut, "Out of balance")
+		set.Error = types.NewErrorMeta(iamapi.ErrCodeAccChargeOut, "Out of balance #0001")
 		return
 	}
 
@@ -243,8 +251,8 @@ func (c AccountCharge) PrepayAction() {
 	active.Updated = types.MetaTimeNow()
 	active.ExpProductInpay.Set(charge.Product)
 
-	acc_user.Balance = iamapi.AccountFloat64Round(acc_user.Balance-charge.Prepay, 2)
-	acc_user.Prepay = iamapi.AccountFloat64Round(acc_user.Prepay+charge.Prepay, 2)
+	acc_user.Balance -= charge.Prepay
+	acc_user.Prepay += charge.Prepay
 
 	sets := []kv2.ClientObjectItem{
 		{
@@ -320,6 +328,10 @@ func (c AccountCharge) PayoutAction() {
 	// hlog.Printf("info", "%s %s %d %d", set.User, userid, set.TimeStart, set.TimeClose)
 	if rs := data.Data.NewReader(iamapi.ObjKeyAccUser(set.User)).Query(); rs.OK() {
 		rs.Decode(&acc_user)
+		if acc_user.User == "" && acc_user.Balance > 0 {
+			acc_user.User = set.User // bugfix
+			data.Data.NewWriter(iamapi.ObjKeyAccUser(set.User), acc_user).Commit()
+		}
 	} else if !rs.NotFound() {
 		set.Error = types.NewErrorMeta(iamapi.ErrCodeInternalError, "Server Error")
 		return
@@ -377,7 +389,7 @@ func (c AccountCharge) PayoutAction() {
 
 	for _, v := range actives {
 
-		balance := v.Amount - v.Payout - v.Prepay
+		balance := v.Amount - (v.Payout + v.Prepay)
 
 		if (charge.Fund == "" && set.Payout <= balance) ||
 			(charge.Fund != "" && charge.Fund == v.Id) {
@@ -411,7 +423,8 @@ func (c AccountCharge) PayoutAction() {
 	active.Updated = types.MetaTimeNow()
 	active.ExpProductInpay.Del(charge.Product)
 
-	acc_user.Balance = iamapi.AccountFloat64Round(acc_user.Balance-charge.Payout, 2)
+	acc_user.Balance += charge.Prepay
+	acc_user.Balance -= charge.Payout
 	acc_user.Updated = active.Updated
 
 	sets := []kv2.ClientObjectItem{
