@@ -423,8 +423,9 @@ func (c AccountCharge) PayoutAction() {
 	active.Updated = types.MetaTimeNow()
 	active.ExpProductInpay.Del(charge.Product)
 
-	acc_user.Balance += charge.Prepay
-	acc_user.Balance -= charge.Payout
+	acc_user.Balance = iamapi.AccountFloat64Round(
+		acc_user.Balance+charge.Prepay-charge.Payout, 2)
+
 	acc_user.Updated = active.Updated
 
 	sets := []kv2.ClientObjectItem{

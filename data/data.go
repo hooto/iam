@@ -19,6 +19,7 @@ import (
 	"fmt"
 	"regexp"
 	"strings"
+	"sync"
 	"time"
 
 	"github.com/hooto/hauth/go/hauth/v1"
@@ -39,9 +40,18 @@ var (
 	DefaultSysadminPassword = "changeme"
 	app_inst_id_re          = regexp.MustCompile("^[0-9a-f]{16}$")
 	KeyMgr                  = hauth.NewAccessKeyManager()
+	mu                      sync.RWMutex
+	inited                  = false
 )
 
 func Setup() error {
+
+	mu.Lock()
+	defer mu.Unlock()
+
+	if inited {
+		return nil
+	}
 
 	if Data == nil {
 		return fmt.Errorf("iam.data connect not ready #1")
@@ -78,7 +88,7 @@ func Setup() error {
 			var ak hauth.AccessKey
 			if err := v.Decode(&ak); err == nil {
 				KeyMgr.KeySet(&ak)
-				hlog.Printf("info", "iam/access_key load %s", ak.Id)
+				hlog.Printf("debug", "iam/access_key load %s", ak.Id)
 				continue
 			}
 		}
@@ -89,12 +99,15 @@ func Setup() error {
 			break
 		}
 	}
-	hlog.Printf("info", "iam/access_key data load %d", akn)
+	hlog.Printf("info", "iam/access_key load %d from database", akn)
 
+	//
 	for _, v := range config.Config.AccessKeys {
 		KeyMgr.KeySet(v)
 	}
-	hlog.Printf("info", "iam/access_key conf load %d", len(config.Config.AccessKeys))
+	hlog.Printf("info", "iam/access_key load %d from config", len(config.Config.AccessKeys))
+
+	inited = true
 
 	return nil
 }

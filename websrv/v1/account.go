@@ -56,6 +56,9 @@ func (c Account) UserEntryAction() {
 		rs.Decode(&set.AccountUser)
 	}
 
+	set.Balance = iamapi.AccountFloat64Round(set.Balance, 2)
+	set.Prepay = iamapi.AccountFloat64Round(set.Prepay, 2)
+
 	if set.AccountUser.User == c.us.UserName {
 		set.Kind = "AccountUser"
 	}
