@@ -4,7 +4,7 @@ PROTOC_ARGS = --proto_path=./iamapi/ --go_opt=paths=source_relative --go_out=./i
 HTOML_TAG_FIX_CMD = htoml-tag-fix
 HTOML_TAG_FIX_ARGS = iamapi/types.pb.go
 
-BINDATA_CMD = inpack bindata
+BINDATA_CMD = httpsrv-bindata
 BINDATA_ARGS_UI = -src webui/ -dst bindata/iam_ws_webui/ -inc js,css,png,svg,ico,tpl,woff2
 BINDATA_ARGS_VIEW = -src websrv/views/ -dst bindata/iam_ws_views/ -inc tpl
 BINDATA_ARGS_I18N = -src i18n/ -dst bindata/iam_i18n -inc json
