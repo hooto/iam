@@ -123,12 +123,16 @@ func MsgQueueRefresh() {
 
 			item.Updated = uint32(time.Now().Unix())
 
-			if len(toMail) > 0 {
+			if item.Created+(86400*10) < item.Updated {
+				item.Action = hmsg.MsgActionPostTimeout
+			} else if len(toMail) > 0 {
 
 				item.ToEmail = strings.Join(toMail, ";")
 
 				if err := msgPost(mailer, item); err != nil {
 					item.Retry += 1
+					data.Data.NewWriter(v.Meta.Key, item).Commit()
+					hlog.Printf("info", "mailer post %s, to %s, retry %d, err %s", item.Id, item.ToEmail, item.Retry, err.Error())
 					if item.Retry < 10 {
 						continue
 					}
@@ -149,6 +153,8 @@ func MsgQueueRefresh() {
 				if rs := data.Data.NewWriter(iamapi.ObjKeyMsgSent(item.SentId()), item).Commit(); rs.OK() {
 					data.Data.NewWriter(v.Meta.Key, nil).ModeDeleteSet(true).Commit()
 					hlog.Printf("info", "mailer post %s, to %s, retry %d, ok", item.Id, item.ToEmail, item.Retry)
+				} else {
+					hlog.Printf("info", "mailer post %s, to %s, retry %d, err %s", item.Id, item.ToEmail, item.Retry, rs.Message)
 				}
 			} else {
 				data.Data.NewWriter(v.Meta.Key, item).Commit()
