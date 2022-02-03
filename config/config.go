@@ -80,7 +80,7 @@ func Setup(prefix string) error {
 
 	configFilePath = Prefix + "/etc/iam_config.toml"
 
-	if err := htoml.DecodeFromFile(Config, configFilePath); err != nil {
+	if err := htoml.DecodeFromFile(configFilePath, Config); err != nil {
 
 		if !os.IsNotExist(err) {
 			return err
