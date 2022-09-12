@@ -138,6 +138,8 @@ func (c Auth) SignOutAction() {
 
 	if strings.Contains(referer, "?") {
 		referer += "&"
+	} else if referer == "" || referer[len(referer)-1] != '/' {
+		referer += "/?"
 	} else {
 		referer += "?"
 	}
