@@ -5,3 +5,4 @@ var
 doc
 test.go
 # bindata
+go.sum

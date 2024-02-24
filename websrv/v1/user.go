@@ -21,7 +21,7 @@ import (
 	"image/png"
 	"strings"
 
-	"github.com/eryx/imaging"
+	"github.com/disintegration/imaging"
 	"github.com/hooto/httpsrv"
 	"github.com/lessos/lessgo/pass"
 	"github.com/lessos/lessgo/types"

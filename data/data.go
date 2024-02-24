@@ -28,7 +28,7 @@ import (
 	"github.com/lessos/lessgo/crypto/phash"
 	"github.com/lessos/lessgo/net/email"
 	"github.com/lessos/lessgo/types"
-	kv2 "github.com/lynkdb/kvspec/go/kvspec/v2"
+	kv2 "github.com/lynkdb/kvspec/v2/go/kvspec"
 
 	"github.com/hooto/iam/config"
 	"github.com/hooto/iam/iamapi"
