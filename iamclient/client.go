@@ -84,7 +84,7 @@ func auth_service_url(service_url, client_id, redirect_uri, state string) string
 }
 
 func SessionAccessToken(s *httpsrv.Session) string {
-	return s.Get(AccessTokenKey)
+	return s.Value(AccessTokenKey)
 }
 
 func SessionIsLogin(s *httpsrv.Session) bool {
@@ -93,7 +93,7 @@ func SessionIsLogin(s *httpsrv.Session) bool {
 		return false
 	}
 
-	return tokenIsLogin(s.Get(AccessTokenKey))
+	return tokenIsLogin(s.Value(AccessTokenKey))
 }
 
 func SessionAccessAllowed(s *httpsrv.Session, privilege, client_id string) bool {
@@ -102,7 +102,7 @@ func SessionAccessAllowed(s *httpsrv.Session, privilege, client_id string) bool 
 		return false
 	}
 
-	return tokenAccessAllowed(privilege, s.Get(AccessTokenKey), client_id)
+	return tokenAccessAllowed(privilege, s.Value(AccessTokenKey), client_id)
 }
 
 func SessionInstance(s *httpsrv.Session) (iamapi.UserSession, error) {
@@ -111,7 +111,7 @@ func SessionInstance(s *httpsrv.Session) (iamapi.UserSession, error) {
 		return iamapi.UserSession{}, errors.New("No Session Found")
 	}
 
-	sess, err := Instance(s.Get(AccessTokenKey))
+	sess, err := Instance(s.Value(AccessTokenKey))
 	if err != nil {
 		return iamapi.UserSession{}, err
 	}
@@ -218,7 +218,7 @@ func tokenAccessAllowed(privilege, token, instanceid string) bool {
 
 func AppRoleList(s *httpsrv.Session, appid string) (*iamapi.UserRoleList, error) {
 
-	token := s.Get(AccessTokenKey)
+	token := s.Value(AccessTokenKey)
 	if ServiceUrl == "" || token == "" {
 		return nil, errors.New("Unauthorized")
 	}

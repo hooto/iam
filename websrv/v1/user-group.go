@@ -50,7 +50,7 @@ func (c UserGroup) ItemAction() {
 	var set iamapi.UserGroupItem
 	defer c.RenderJson(&set)
 
-	name := iamapi.UserNameFilter(c.Params.Get("name"))
+	name := iamapi.UserNameFilter(c.Params.Value("name"))
 	if err := iamapi.UserNameValid(name); err != nil {
 		set.Error = types.NewErrorMeta(iamapi.ErrCodeInvalidArgument, err.Error())
 		return

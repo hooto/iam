@@ -21,27 +21,29 @@ import (
 	"github.com/hooto/iam/config"
 )
 
-func NewModule() httpsrv.Module {
+func NewModule() *httpsrv.Module {
 
-	module := httpsrv.NewModule("iam_api")
+	mod := httpsrv.NewModule()
 
-	module.ControllerRegister(new(Service))
-
-	module.ControllerRegister(new(User))
-	module.ControllerRegister(new(UserGroup))
-	module.ControllerRegister(new(Account))
-	module.ControllerRegister(new(AccountCharge))
-	module.ControllerRegister(new(App))
-
-	module.ControllerRegister(new(AppAuth))
-	module.ControllerRegister(new(AccessKey))
-	module.ControllerRegister(new(Status))
-
-	module.ControllerRegister(new(UserMgr))
-	module.ControllerRegister(new(AppMgr))
-	module.ControllerRegister(new(AccountMgr))
-	module.ControllerRegister(new(SysConfig))
-	module.ControllerRegister(new(SysMsg))
+	mod.RegisterController(
+		//
+		new(Service),
+		//
+		new(User),
+		new(UserGroup),
+		new(Account),
+		new(AccountCharge),
+		new(App),
+		//
+		new(AppAuth),
+		new(AccessKey),
+		new(Status),
+		//
+		new(UserMgr),
+		new(AppMgr),
+		new(AccountMgr),
+		new(SysConfig),
+		new(SysMsg))
 
 	// TODO auto config
 	if fs := bindata.NewFs("iam_i18n"); fs != nil {
@@ -52,8 +54,8 @@ func NewModule() httpsrv.Module {
 	}
 
 	if hlang.StdLangFeed.Init() {
-		module.ControllerRegister(new(hlang.Langsrv))
+		mod.RegisterController(new(hlang.Langsrv))
 	}
 
-	return module
+	return mod
 }

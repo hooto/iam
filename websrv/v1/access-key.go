@@ -58,7 +58,7 @@ func (c AccessKey) EntryAction() {
 	var set types.WebServiceResult
 	defer c.RenderJson(&set)
 
-	id := c.Params.Get("access_key_id")
+	id := c.Params.Value("access_key_id")
 	if id == "" {
 		set.Error = types.NewErrorMeta(iamapi.ErrCodeNotFound, "Access Key Not Found")
 		return
@@ -164,7 +164,7 @@ func (c AccessKey) DelAction() {
 	var set types.TypeMeta
 	defer c.RenderJson(&set)
 
-	id := c.Params.Get("access_key_id")
+	id := c.Params.Value("access_key_id")
 	if id == "" {
 		set.Error = types.NewErrorMeta(iamapi.ErrCodeNotFound, "Access Key Not Found")
 		return
@@ -184,8 +184,8 @@ func (c AccessKey) BindAction() {
 	defer c.RenderJson(&set)
 
 	var (
-		id    = c.Params.Get("access_key_id")
-		bname = c.Params.Get("scope_content")
+		id    = c.Params.Value("access_key_id")
+		bname = c.Params.Value("scope_content")
 	)
 	if id == "" && bname == "" {
 		set.Error = types.NewErrorMeta(iamapi.ErrCodeNotFound, "Access Key Not Found")
@@ -226,8 +226,8 @@ func (c AccessKey) UnbindAction() {
 	defer c.RenderJson(&set)
 
 	var (
-		id    = c.Params.Get("access_key_id")
-		bname = c.Params.Get("scope_content")
+		id    = c.Params.Value("access_key_id")
+		bname = c.Params.Value("scope_content")
 	)
 	if id == "" && bname == "" {
 		set.Error = types.NewErrorMeta(iamapi.ErrCodeNotFound, "Access Key Not Found")

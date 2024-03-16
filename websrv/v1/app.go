@@ -78,7 +78,7 @@ func (c App) InstEntryAction() {
 	}
 	defer c.RenderJson(&set)
 
-	if obj := data.Data.NewReader(iamapi.ObjKeyAppInstance(c.Params.Get("instid"))).Query(); obj.OK() {
+	if obj := data.Data.NewReader(iamapi.ObjKeyAppInstance(c.Params.Value("instid"))).Query(); obj.OK() {
 		obj.Decode(&set.AppInstance)
 	}
 
@@ -145,7 +145,7 @@ func (c App) InstDelAction() {
 	var set types.TypeMeta
 	defer c.RenderJson(&set)
 
-	inst_id := c.Params.Get("inst_id")
+	inst_id := c.Params.Value("inst_id")
 
 	var prev iamapi.AppInstance
 	if obj := data.Data.NewReader(iamapi.ObjKeyAppInstance(inst_id)).Query(); obj.OK() {

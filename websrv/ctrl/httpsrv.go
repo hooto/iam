@@ -21,29 +21,28 @@ import (
 	"github.com/hooto/iam/iamclient"
 )
 
-func NewModule() httpsrv.Module {
+func NewModule() *httpsrv.Module {
 
-	module := httpsrv.NewModule("iam_ws")
+	mod := httpsrv.NewModule()
 
-	module.RouteSet(httpsrv.Route{
-		Type:       httpsrv.RouteTypeStatic,
-		Path:       "~",
-		StaticPath: config.Prefix + "/webui",
-		BinFs:      bindata.NewFs("iam_ws_webui"),
-	})
+	mod.RegisterFileServer("/~",
+		config.Prefix+"/webui",
+		bindata.NewFs("iam_ws_webui"),
+	)
 
 	if viewfs := bindata.NewFs("iam_ws_views"); viewfs != nil {
-		module.TemplateFileSystemSet(viewfs)
+		mod.SetTemplateFileSystem(viewfs)
 	} else {
-		module.TemplatePathSet(config.Prefix + "/websrv/views")
+		mod.SetTemplatePath(config.Prefix + "/websrv/views")
 	}
 
-	module.ControllerRegister(new(Index))
-	module.ControllerRegister(new(Service))
-	module.ControllerRegister(new(Reg))
-	module.ControllerRegister(new(User))
-	module.ControllerRegister(new(AppAuth))
-	module.ControllerRegister(new(iamclient.Auth))
+	mod.RegisterController(
+		new(Index),
+		new(Service),
+		new(Reg),
+		new(User),
+		new(AppAuth),
+		new(iamclient.Auth))
 
-	return module
+	return mod
 }

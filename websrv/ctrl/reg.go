@@ -40,9 +40,9 @@ type Reg struct {
 func (c Reg) SignUpAction() {
 	c.Data["user_reg_disable"] = config.UserRegistrationDisabled
 
-	if len(c.Params.Get("redirect_token")) > 20 &&
-		iamapi.ServiceRedirectTokenValid(c.Params.Get("redirect_token")) {
-		c.Data["redirect_token"] = c.Params.Get("redirect_token")
+	if len(c.Params.Value("redirect_token")) > 20 &&
+		iamapi.ServiceRedirectTokenValid(c.Params.Value("redirect_token")) {
+		c.Data["redirect_token"] = c.Params.Value("redirect_token")
 	}
 
 	c.Data["sys_version_hash"] = config.VersionHash
@@ -69,7 +69,7 @@ func (c Reg) SignUpRegAction() {
 		return
 	}
 
-	uname := iamapi.UserNameFilter(c.Params.Get("uname")) // strings.TrimSpace(strings.ToLower(c.Params.Get("uname")))
+	uname := iamapi.UserNameFilter(c.Params.Value("uname")) // strings.TrimSpace(strings.ToLower(c.Params.Value("uname")))
 	// userid := iamapi.UserId(uname)
 
 	var user iamapi.User
@@ -82,14 +82,14 @@ func (c Reg) SignUpRegAction() {
 		return
 	}
 
-	auth, _ := pass.HashDefault(c.Params.Get("passwd"))
+	auth, _ := pass.HashDefault(c.Params.Value("passwd"))
 
 	user = iamapi.User{
 		// Id:          userid,
 		Name:        uname,
 		Created:     types.MetaTimeNow(),
 		Updated:     types.MetaTimeNow(),
-		Email:       strings.TrimSpace(strings.ToLower(c.Params.Get("email"))),
+		Email:       strings.TrimSpace(strings.ToLower(c.Params.Value("email"))),
 		DisplayName: strings.Title(uname),
 		Status:      1,
 		Roles:       []uint32{100},
@@ -106,9 +106,9 @@ func (c Reg) SignUpRegAction() {
 
 func (c Reg) RetrieveAction() {
 
-	if len(c.Params.Get("redirect_token")) > 20 &&
-		iamapi.ServiceRedirectTokenValid(c.Params.Get("redirect_token")) {
-		c.Data["redirect_token"] = c.Params.Get("redirect_token")
+	if len(c.Params.Value("redirect_token")) > 20 &&
+		iamapi.ServiceRedirectTokenValid(c.Params.Value("redirect_token")) {
+		c.Data["redirect_token"] = c.Params.Value("redirect_token")
 	}
 	c.Data["sys_version_hash"] = config.VersionHash
 }
@@ -124,17 +124,17 @@ func (c Reg) RetrievePutAction() {
 
 	defer c.RenderJson(&rsp)
 
-	uemail, err := login.EmailSetValidate(c.Params.Get("email"))
+	uemail, err := login.EmailSetValidate(c.Params.Value("email"))
 	if err != nil {
 		rsp.Error = &types.ErrorMeta{iamapi.ErrCodeInvalidArgument, err.Error()}
 		return
 	}
 
-	if c.Params.Get("username") == "" {
+	if c.Params.Value("username") == "" {
 		rsp.Error = &types.ErrorMeta{iamapi.ErrCodeInvalidArgument, "User Not Found"}
 		return
 	}
-	uname := c.Params.Get("username")
+	uname := c.Params.Value("username")
 	// userid := iamapi.UserId(uname)
 
 	var user iamapi.User
@@ -167,9 +167,9 @@ func (c Reg) RetrievePutAction() {
 	}
 
 	rtstr := ""
-	if len(c.Params.Get("redirect_token")) > 20 &&
-		iamapi.ServiceRedirectTokenValid(c.Params.Get("redirect_token")) {
-		rtstr = "&redirect_token=" + c.Params.Get("redirect_token")
+	if len(c.Params.Value("redirect_token")) > 20 &&
+		iamapi.ServiceRedirectTokenValid(c.Params.Value("redirect_token")) {
+		rtstr = "&redirect_token=" + c.Params.Value("redirect_token")
 	}
 
 	// TODO tempate
@@ -189,11 +189,11 @@ func (c Reg) RetrievePutAction() {
 </body>
 </html>`, config.Config.ServiceName, c.Request.Host, reset.Id, rtstr, utilx.TimeNow("datetime"), config.Config.ServiceName)
 
-	err = mr.SendMail(c.Params.Get("email"), c.Translate("Reset your password"), body)
+	err = mr.SendMail(c.Params.Value("email"), c.Translate("Reset your password"), body)
 
 	if err != nil {
 		time.Sleep(2e9)
-		err = mr.SendMail(c.Params.Get("email"), c.Translate("Reset your password"), body)
+		err = mr.SendMail(c.Params.Value("email"), c.Translate("Reset your password"), body)
 	}
 
 	if err != nil {
@@ -205,24 +205,24 @@ func (c Reg) RetrievePutAction() {
 
 func (c Reg) PassResetAction() {
 
-	if c.Params.Get("id") == "" {
+	if c.Params.Value("id") == "" {
 		return
 	}
 
 	var reset iamapi.UserPasswordReset
-	if obj := data.Data.NewReader(iamapi.ObjKeyPasswordReset(c.Params.Get("id"))).Query(); obj.OK() {
+	if obj := data.Data.NewReader(iamapi.ObjKeyPasswordReset(c.Params.Value("id"))).Query(); obj.OK() {
 		obj.Decode(&reset)
 	}
 
-	if reset.Id != c.Params.Get("id") {
+	if reset.Id != c.Params.Value("id") {
 		return
 	}
 
-	c.Data["pass_reset_id"] = c.Params.Get("id")
+	c.Data["pass_reset_id"] = c.Params.Value("id")
 
-	if len(c.Params.Get("redirect_token")) > 20 &&
-		iamapi.ServiceRedirectTokenValid(c.Params.Get("redirect_token")) {
-		c.Data["redirect_token"] = c.Params.Get("redirect_token")
+	if len(c.Params.Value("redirect_token")) > 20 &&
+		iamapi.ServiceRedirectTokenValid(c.Params.Value("redirect_token")) {
+		c.Data["redirect_token"] = c.Params.Value("redirect_token")
 	}
 
 	c.Data["sys_version_hash"] = config.VersionHash
@@ -234,30 +234,30 @@ func (c Reg) PassResetPutAction() {
 
 	defer c.RenderJson(&rsp)
 
-	if c.Params.Get("id") == "" {
+	if c.Params.Value("id") == "" {
 		rsp.Error = &types.ErrorMeta{iamapi.ErrCodeInvalidArgument, "Token can not be null"}
 		return
 	}
 
 	if err := login.PassSetValidate(iamapi.UserPasswordSet{
-		NewPassword: c.Params.Get("passwd"),
+		NewPassword: c.Params.Value("passwd"),
 	}); err != nil {
 		rsp.Error = &types.ErrorMeta{iamapi.ErrCodeInvalidArgument, err.Error()}
 		return
 	}
 
 	var reset iamapi.UserPasswordReset
-	rsobj := data.Data.NewReader(iamapi.ObjKeyPasswordReset(c.Params.Get("id"))).Query()
+	rsobj := data.Data.NewReader(iamapi.ObjKeyPasswordReset(c.Params.Value("id"))).Query()
 	if rsobj.OK() {
 		rsobj.Decode(&reset)
 	}
 
-	if reset.Id != c.Params.Get("id") {
+	if reset.Id != c.Params.Value("id") {
 		rsp.Error = &types.ErrorMeta{iamapi.ErrCodeInvalidArgument, "Token not found"}
 		return
 	}
 
-	if reset.Email != c.Params.Get("email") {
+	if reset.Email != c.Params.Value("email") {
 		rsp.Error = &types.ErrorMeta{iamapi.ErrCodeInvalidArgument, "Email is not valid"}
 		return
 	}
@@ -276,7 +276,7 @@ func (c Reg) PassResetPutAction() {
 
 	user.Updated = types.MetaTimeNow()
 
-	auth, _ := pass.HashDefault(c.Params.Get("passwd"))
+	auth, _ := pass.HashDefault(c.Params.Value("passwd"))
 	user.Keys.Set(iamapi.UserKeyDefault, auth)
 
 	if obj := data.Data.NewWriter(iamapi.ObjKeyUser(reset.UserName), user).

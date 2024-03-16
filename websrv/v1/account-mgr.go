@@ -152,7 +152,7 @@ func (c AccountMgr) FundEntryAction() {
 	}
 	defer c.RenderJson(&set)
 
-	id := c.Params.Get("id")
+	id := c.Params.Value("id")
 	if len(id) < 16 {
 		set.Error = types.NewErrorMeta(iamapi.ErrCodeNotFound, "Object Not Found")
 		return
@@ -379,8 +379,8 @@ func (c AccountMgr) ChargeEntryAction() {
 	defer c.RenderJson(&set)
 
 	var (
-		id   = c.Params.Get("id")
-		user = c.Params.Get("user")
+		id   = c.Params.Value("id")
+		user = c.Params.Value("user")
 	)
 
 	if len(id) < 16 {

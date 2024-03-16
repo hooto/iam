@@ -74,7 +74,7 @@ func (c UserMgr) UserListAction() {
 	}
 
 	var (
-		qt = strings.ToLower(c.Params.Get("qry_text"))
+		qt = strings.ToLower(c.Params.Value("qry_text"))
 	)
 
 	// TODO page
@@ -130,7 +130,7 @@ func (c UserMgr) UserEntryAction() {
 		return
 	}
 
-	uname := c.Params.Get("username")
+	uname := c.Params.Value("username")
 
 	if obj := data.Data.NewReader(iamapi.ObjKeyUser(uname)).Query(); obj.OK() {
 		obj.Decode(&set.Login)
@@ -170,15 +170,15 @@ func (c UserMgr) UserGroupSetAction() {
 		return
 	}
 
-	user := data.UserGet(c.Params.Get("name"))
+	user := data.UserGet(c.Params.Value("name"))
 	if user == nil {
 		set.Error = types.NewErrorMeta("400", "Item Not Found")
 		return
 	}
 
 	var (
-		ugType   = uint32(c.Params.Int64("type"))
-		ugOwners = strings.Split(c.Params.Get("owners"), ",")
+		ugType   = uint32(c.Params.IntValue("type"))
+		ugOwners = strings.Split(c.Params.Value("owners"), ",")
 	)
 
 	if ugType != user.Type ||

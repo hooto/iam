@@ -79,7 +79,7 @@ func (c SysMsg) PostAction() {
 		rsp.Error = types.NewErrorMeta(iamapi.ErrCodeUnauthorized, "No Auth Found, AK "+av.Id)
 		return
 	}
-	if terr := av.SignValid(c.Request.RawBody); terr != nil {
+	if terr := av.SignValid(c.Request.RawBody()); terr != nil {
 		rsp.Error = types.NewErrorMeta(iamapi.ErrCodeUnauthorized, "Auth Sign Failed")
 		return
 	}
@@ -141,7 +141,7 @@ func (c SysMsg) ItemAction() {
 
 	var (
 		rsp iamapi.WebServiceKind
-		id  = c.Params.Get("id")
+		id  = c.Params.Value("id")
 	)
 	defer c.RenderJson(&rsp)
 

@@ -45,7 +45,7 @@ func (c AppMgr) InstListAction() {
 	}
 
 	var (
-		qt = strings.ToLower(c.Params.Get("qry_text"))
+		qt = strings.ToLower(c.Params.Value("qry_text"))
 	)
 
 	// TODO page
@@ -87,7 +87,7 @@ func (c AppMgr) InstEntryAction() {
 		return
 	}
 
-	if obj := data.Data.NewReader(iamapi.ObjKeyAppInstance(c.Params.Get("instid"))).Query(); obj.OK() {
+	if obj := data.Data.NewReader(iamapi.ObjKeyAppInstance(c.Params.Value("instid"))).Query(); obj.OK() {
 		obj.Decode(&set.AppInstance)
 	}
 
@@ -148,7 +148,7 @@ func (c AppMgr) InstDelAction() {
 	var set types.TypeMeta
 	defer c.RenderJson(&set)
 
-	inst_id := c.Params.Get("inst_id")
+	inst_id := c.Params.Value("inst_id")
 
 	if !iamclient.SessionAccessAllowed(c.Session, "sys.admin", config.Config.InstanceID) {
 		set.Error = types.NewErrorMeta(iamapi.ErrCodeAccessDenied, "Access Denied")

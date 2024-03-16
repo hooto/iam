@@ -35,18 +35,18 @@ func main() {
 
 	//
 	flag.Parse()
-	if err := config.Init(*flagPrefix); err != nil {
+	if err := config.Setup(*flagPrefix); err != nil {
 		fmt.Println(err)
 		os.Exit(1)
 	}
 
 	//
-	httpsrv.GlobalService.Config.HttpPort = config.Config.HttpPort
-	// httpsrv.GlobalService.Config.LessIdsServiceUrl = fmt.Sprintf("http://127.0.0.1:%d/iam", config.Config.HttpPort)
+	httpsrv.DefaultService.Config.HttpPort = config.Config.HttpPort
+	// httpsrv.DefaultService.Config.LessIdsServiceUrl = fmt.Sprintf("http://127.0.0.1:%d/iam", config.Config.HttpPort)
 
-	httpsrv.GlobalService.ModuleRegister("/iam/v1", v1.NewModule())
-	httpsrv.GlobalService.ModuleRegister("/iam/", ctrl.NewModule())
+	httpsrv.DefaultService.HandleModule("/iam/v1", v1.NewModule())
+	httpsrv.DefaultService.HandleModule("/iam", ctrl.NewModule())
 
 	//
-	httpsrv.GlobalService.Start()
+	httpsrv.DefaultService.Start()
 }

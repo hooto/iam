@@ -31,7 +31,7 @@ func (c Index) IndexAction() {
 		return
 	}
 
-	if c.Params.Get(iamclient.AccessTokenKey) != "" {
+	if c.Params.Value(iamclient.AccessTokenKey) != "" {
 		c.Redirect("/iam")
 		return
 	}

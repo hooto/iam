@@ -69,7 +69,7 @@ func (c UserMgr) RoleEntryAction() {
 	// }
 
 	// TODO roleid
-	name := c.Params.Get("role_name")
+	name := c.Params.Value("role_name")
 	if rs := data.Data.NewReader(iamapi.ObjKeyRole(name)).Query(); rs.OK() {
 		rs.DataValue().Decode(&set.UserRole, nil)
 	}

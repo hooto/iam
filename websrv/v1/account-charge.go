@@ -59,7 +59,7 @@ func (c AccountCharge) PreValidAction() {
 		set.Error = types.NewErrorMeta(iamapi.ErrCodeUnauthorized, "No Auth Found, AK "+av.Id)
 		return
 	}
-	if terr := av.SignValid(c.Request.RawBody); terr != nil {
+	if terr := av.SignValid(c.Request.RawBody()); terr != nil {
 		set.Error = types.NewErrorMeta(iamapi.ErrCodeUnauthorized, "Auth Sign Failed, #1 AK "+av.Id)
 		return
 	}
@@ -153,7 +153,7 @@ func (c AccountCharge) PrepayAction() {
 		set.Error = types.NewErrorMeta(iamapi.ErrCodeUnauthorized, "No Auth Found, AK "+av.Id)
 		return
 	}
-	if terr := av.SignValid(c.Request.RawBody); terr != nil {
+	if terr := av.SignValid(c.Request.RawBody()); terr != nil {
 		set.Error = types.NewErrorMeta(iamapi.ErrCodeUnauthorized, "Auth Sign Failed, #2 AK "+av.Id)
 		return
 	}
@@ -318,7 +318,7 @@ func (c AccountCharge) PayoutAction() {
 		set.Error = types.NewErrorMeta(iamapi.ErrCodeUnauthorized, "No Auth Found, AK "+av.Id)
 		return
 	}
-	if terr := av.SignValid(c.Request.RawBody); terr != nil {
+	if terr := av.SignValid(c.Request.RawBody()); terr != nil {
 		set.Error = types.NewErrorMeta(iamapi.ErrCodeUnauthorized, "Auth Sign Failed, #3 AK "+av.Id)
 		return
 	}

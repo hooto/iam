@@ -32,16 +32,16 @@ func (c Service) LoginAction() {
 
 	var rt iamapi.ServiceRedirectToken
 
-	if len(c.Params.Get("redirect_token")) > 20 {
-		rt = iamapi.ServiceRedirectTokenDecode(c.Params.Get("redirect_token"))
+	if len(c.Params.Value("redirect_token")) > 20 {
+		rt = iamapi.ServiceRedirectTokenDecode(c.Params.Value("redirect_token"))
 	}
 
-	if rt.RedirectUri == "" && c.Params.Get("redirect_uri") != "" {
+	if rt.RedirectUri == "" && c.Params.Value("redirect_uri") != "" {
 		rt = iamapi.ServiceRedirectToken{
-			RedirectUri: c.Params.Get("redirect_uri"),
-			State:       c.Params.Get("state"),
-			ClientId:    c.Params.Get("client_id"),
-			Persistent:  int(c.Params.Int64("persistent")),
+			RedirectUri: c.Params.Value("redirect_uri"),
+			State:       c.Params.Value("state"),
+			ClientId:    c.Params.Value("client_id"),
+			Persistent:  int(c.Params.IntValue("persistent")),
 		}
 	}
 

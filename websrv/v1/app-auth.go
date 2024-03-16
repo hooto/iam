@@ -40,7 +40,7 @@ func (c AppAuth) InfoAction() {
 
 	defer c.RenderJson(&set)
 
-	instid := c.Params.Get("instance_id")
+	instid := c.Params.Value("instance_id")
 	if instid == "" {
 		set.Error = types.NewErrorMeta(iamapi.ErrCodeNotFound, "App Instance Not Found")
 		return
@@ -245,8 +245,8 @@ func (c AppAuth) UserAccessKeyAction() {
 	defer c.RenderJson(&set)
 
 	var (
-		username   = c.Params.Get("user")
-		access_key = c.Params.Get("access_key")
+		username   = c.Params.Value("user")
+		access_key = c.Params.Value("access_key")
 	)
 	if username == "" || access_key == "" {
 		set.Error = types.NewErrorMeta(iamapi.ErrCodeInvalidArgument, "Bad Argument")
