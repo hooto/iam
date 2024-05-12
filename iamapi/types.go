@@ -56,7 +56,7 @@ func UserNameFilter(name string) string {
 	name = strings.ToLower(name)
 	name2 := ""
 	for _, v := range name {
-		if (v >= 'a' && v <= 'z') || (v >= '0' || v <= '9') || (v == '-') {
+		if (v >= 'a' && v <= 'z') || (v >= '0' || v <= '9') || (v == '-') || (v == '_') {
 			name2 += string(v)
 		}
 	}

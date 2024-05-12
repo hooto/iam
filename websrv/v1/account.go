@@ -52,8 +52,8 @@ func (c Account) UserEntryAction() {
 
 	if rs := data.Data.NewReader(
 		iamapi.ObjKeyAccUser(c.us.UserName),
-	).Query(); rs.OK() {
-		rs.Decode(&set.AccountUser)
+	).Exec(); rs.OK() {
+		rs.Item().JsonDecode(&set.AccountUser)
 	}
 
 	set.Balance = iamapi.AccountFloat64Round(set.Balance, 2)
@@ -69,13 +69,13 @@ func (c Account) FundListAction() {
 	ls := types.ObjectList{}
 	defer c.RenderJson(&ls)
 
-	k1 := iamapi.ObjKeyAccFundUser(c.us.UserName, "zzzzzzzz")
-	k2 := iamapi.ObjKeyAccFundUser(c.us.UserName, "")
-	if rs := data.Data.NewReader(nil).KeyRangeSet(k1, k2).
-		ModeRevRangeSet(true).LimitNumSet(1000).Query(); rs.OK() {
+	k1 := iamapi.ObjKeyAccFundUser(c.us.UserName, "")
+	k2 := iamapi.ObjKeyAccFundUser(c.us.UserName, "zzzzzzzz")
+	if rs := data.Data.NewRanger(k1, k2).
+		SetRevert(true).SetLimit(1000).Exec(); rs.OK() {
 		for _, v := range rs.Items {
 			var set iamapi.AccountFund
-			if err := v.Decode(&set); err == nil {
+			if err := v.JsonDecode(&set); err == nil {
 				ls.Items = append(ls.Items, set)
 			}
 		}
@@ -89,14 +89,14 @@ func (c Account) ChargeListAction() {
 	ls := types.ObjectList{}
 	defer c.RenderJson(&ls)
 
-	k1 := iamapi.ObjKeyAccChargeUser(c.us.UserName, "zzzzzzzz")
-	k2 := iamapi.ObjKeyAccChargeUser(c.us.UserName, "")
-	if rs := data.Data.NewReader(nil).KeyRangeSet(k1, k2).
-		ModeRevRangeSet(true).LimitNumSet(1000).Query(); rs.OK() {
+	k1 := iamapi.ObjKeyAccChargeUser(c.us.UserName, "")
+	k2 := iamapi.ObjKeyAccChargeUser(c.us.UserName, "zzzzzzzz")
+	if rs := data.Data.NewRanger(k1, k2).
+		SetRevert(true).SetLimit(1000).Exec(); rs.OK() {
 		for _, v := range rs.Items {
 
 			var set iamapi.AccountCharge
-			if err := v.Decode(&set); err == nil {
+			if err := v.JsonDecode(&set); err == nil {
 				if set.Prepay > 0 && set.Payout == 0 {
 					ls.Items = append(ls.Items, set)
 				}
@@ -112,14 +112,14 @@ func (c Account) ChargePayoutListAction() {
 	ls := types.ObjectList{}
 	defer c.RenderJson(&ls)
 
-	k1 := iamapi.ObjKeyAccChargeUser(c.us.UserName, "zzzzzzzz")
-	k2 := iamapi.ObjKeyAccChargeUser(c.us.UserName, "")
-	if rs := data.Data.NewReader(nil).KeyRangeSet(k1, k2).
-		ModeRevRangeSet(true).LimitNumSet(1000).Query(); rs.OK() {
+	k1 := iamapi.ObjKeyAccChargeUser(c.us.UserName, "")
+	k2 := iamapi.ObjKeyAccChargeUser(c.us.UserName, "zzzzzzzz")
+	if rs := data.Data.NewRanger(k1, k2).
+		SetRevert(true).SetLimit(1000).Exec(); rs.OK() {
 		for _, v := range rs.Items {
 
 			var set iamapi.AccountCharge
-			if err := v.Decode(&set); err == nil {
+			if err := v.JsonDecode(&set); err == nil {
 				if set.Payout > 0 {
 					ls.Items = append(ls.Items, set)
 				}

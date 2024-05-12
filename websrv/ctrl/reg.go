@@ -73,8 +73,8 @@ func (c Reg) SignUpRegAction() {
 	// userid := iamapi.UserId(uname)
 
 	var user iamapi.User
-	if obj := data.Data.NewReader(iamapi.ObjKeyUser(uname)).Query(); obj.OK() {
-		obj.Decode(&user)
+	if obj := data.Data.NewReader(iamapi.ObjKeyUser(uname)).Exec(); obj.OK() {
+		obj.Item().JsonDecode(&user)
 	}
 
 	if user.Name == uname {
@@ -138,8 +138,8 @@ func (c Reg) RetrievePutAction() {
 	// userid := iamapi.UserId(uname)
 
 	var user iamapi.User
-	if obj := data.Data.NewReader(iamapi.ObjKeyUser(uname)).Query(); obj.OK() {
-		obj.Decode(&user)
+	if obj := data.Data.NewReader(iamapi.ObjKeyUser(uname)).Exec(); obj.OK() {
+		obj.Item().JsonDecode(&user)
 	}
 
 	if user.Name != uname || user.Email != uemail {
@@ -154,9 +154,9 @@ func (c Reg) RetrievePutAction() {
 		Expired:  utilx.TimeNowAdd("atom", "+3600s"),
 	}
 
-	if obj := data.Data.NewWriter(iamapi.ObjKeyPasswordReset(reset.Id), reset).
-		ExpireSet(3600000).Commit(); !obj.OK() {
-		rsp.Error = &types.ErrorMeta{"500", obj.Message}
+	if obj := data.Data.NewWriter(iamapi.ObjKeyPasswordReset(reset.Id), nil).SetJsonValue(reset).
+		SetTTL(3600000).Exec(); !obj.OK() {
+		rsp.Error = &types.ErrorMeta{"500", obj.ErrorMessage()}
 		return
 	}
 
@@ -210,8 +210,8 @@ func (c Reg) PassResetAction() {
 	}
 
 	var reset iamapi.UserPasswordReset
-	if obj := data.Data.NewReader(iamapi.ObjKeyPasswordReset(c.Params.Value("id"))).Query(); obj.OK() {
-		obj.Decode(&reset)
+	if obj := data.Data.NewReader(iamapi.ObjKeyPasswordReset(c.Params.Value("id"))).Exec(); obj.OK() {
+		obj.Item().JsonDecode(&reset)
 	}
 
 	if reset.Id != c.Params.Value("id") {
@@ -247,9 +247,9 @@ func (c Reg) PassResetPutAction() {
 	}
 
 	var reset iamapi.UserPasswordReset
-	rsobj := data.Data.NewReader(iamapi.ObjKeyPasswordReset(c.Params.Value("id"))).Query()
+	rsobj := data.Data.NewReader(iamapi.ObjKeyPasswordReset(c.Params.Value("id"))).Exec()
 	if rsobj.OK() {
-		rsobj.Decode(&reset)
+		rsobj.Item().JsonDecode(&reset)
 	}
 
 	if reset.Id != c.Params.Value("id") {
@@ -264,9 +264,9 @@ func (c Reg) PassResetPutAction() {
 
 	var user iamapi.User
 	// userid := iamapi.UserId(reset.UserName)
-	uobj := data.Data.NewReader(iamapi.ObjKeyUser(reset.UserName)).Query()
+	uobj := data.Data.NewReader(iamapi.ObjKeyUser(reset.UserName)).Exec()
 	if uobj.OK() {
-		uobj.Decode(&user)
+		uobj.Item().JsonDecode(&user)
 	}
 
 	if user.Name != reset.UserName {
@@ -279,13 +279,13 @@ func (c Reg) PassResetPutAction() {
 	auth, _ := pass.HashDefault(c.Params.Value("passwd"))
 	user.Keys.Set(iamapi.UserKeyDefault, auth)
 
-	if obj := data.Data.NewWriter(iamapi.ObjKeyUser(reset.UserName), user).
-		IncrNamespaceSet("user").Commit(); !obj.OK() {
-		rsp.Error = &types.ErrorMeta{"500", obj.Message}
+	if obj := data.Data.NewWriter(iamapi.ObjKeyUser(reset.UserName), nil).SetJsonValue(user).
+		SetIncr(0, "user").Exec(); !obj.OK() {
+		rsp.Error = &types.ErrorMeta{"500", obj.ErrorMessage()}
 		return
 	}
 
-	data.Data.NewWriter(iamapi.ObjKeyPasswordReset(reset.Id), nil).ModeDeleteSet(true).Commit()
+	data.Data.NewDeleter(iamapi.ObjKeyPasswordReset(reset.Id)).Exec()
 
 	rsp.Kind = "UserAuth"
 }

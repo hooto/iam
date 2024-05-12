@@ -20,7 +20,6 @@ import (
 	"github.com/hooto/iam/data"
 	"github.com/hooto/iam/iamapi"
 	"github.com/lessos/lessgo/types"
-	kv2 "github.com/lynkdb/kvspec/v2/go/kvspec"
 )
 
 type AccountCharge struct {
@@ -52,8 +51,8 @@ func (c AccountCharge) PreValidAction() {
 
 	var ak hauth.AccessKey
 	if rs := data.Data.NewReader(
-		iamapi.NsAccessKey(av.User, av.Id)).Query(); rs.OK() {
-		rs.Decode(&ak)
+		iamapi.NsAccessKey(av.User, av.Id)).Exec(); rs.OK() {
+		rs.Item().JsonDecode(&ak)
 	}
 	if ak.Id == "" || ak.Id != av.Id {
 		set.Error = types.NewErrorMeta(iamapi.ErrCodeUnauthorized, "No Auth Found, AK "+av.Id)
@@ -67,11 +66,11 @@ func (c AccountCharge) PreValidAction() {
 	set.Prepay = iamapi.AccountFloat64Round(set.Prepay, 2)
 
 	var acc_user iamapi.AccountUser
-	if rs := data.Data.NewReader(iamapi.ObjKeyAccUser(set.User)).Query(); rs.OK() {
-		rs.Decode(&acc_user)
+	if rs := data.Data.NewReader(iamapi.ObjKeyAccUser(set.User)).Exec(); rs.OK() {
+		rs.Item().JsonDecode(&acc_user)
 		if acc_user.User == "" && acc_user.Balance > 0 {
 			acc_user.User = set.User // bugfix
-			data.Data.NewWriter(iamapi.ObjKeyAccUser(set.User), acc_user).Commit()
+			data.Data.NewWriter(iamapi.ObjKeyAccUser(set.User), nil).SetJsonValue(acc_user).Exec()
 		}
 	} else if !rs.NotFound() {
 		set.Error = types.NewErrorMeta(iamapi.ErrCodeInternalError, "Server Error")
@@ -85,10 +84,10 @@ func (c AccountCharge) PreValidAction() {
 
 	actives := []iamapi.AccountFund{}
 	ka := iamapi.ObjKeyAccFundUser(set.User, "")
-	if rs := data.Data.NewReader(nil).KeyRangeSet(ka, ka).LimitNumSet(1000).Query(); rs.OK() {
+	if rs := data.Data.NewRanger(ka, ka).SetLimit(1000).Exec(); rs.OK() {
 		for _, v := range rs.Items {
 			var v2 iamapi.AccountFund
-			if err := v.Decode(&v2); err == nil {
+			if err := v.JsonDecode(&v2); err == nil {
 				if (v2.Amount - v2.Payout - v2.Prepay) > 0 {
 					actives = append(actives, v2)
 				}
@@ -146,8 +145,8 @@ func (c AccountCharge) PrepayAction() {
 
 	var ak hauth.AccessKey
 	if rs := data.Data.NewReader(
-		iamapi.NsAccessKey(av.User, av.Id)).Query(); rs.OK() {
-		rs.Decode(&ak)
+		iamapi.NsAccessKey(av.User, av.Id)).Exec(); rs.OK() {
+		rs.Item().JsonDecode(&ak)
 	}
 	if ak.Id == "" || ak.Id != av.Id {
 		set.Error = types.NewErrorMeta(iamapi.ErrCodeUnauthorized, "No Auth Found, AK "+av.Id)
@@ -164,8 +163,8 @@ func (c AccountCharge) PrepayAction() {
 	)
 
 	if rs := data.Data.NewReader(
-		iamapi.ObjKeyAccChargeUser(set.User, charge_id)).Query(); rs.OK() {
-		if err := rs.Decode(&charge); err == nil {
+		iamapi.ObjKeyAccChargeUser(set.User, charge_id)).Exec(); rs.OK() {
+		if err := rs.Item().JsonDecode(&charge); err == nil {
 			if charge.Prepay == set.Prepay {
 				set.Kind = "AccountChargePrepay"
 				return
@@ -190,11 +189,11 @@ func (c AccountCharge) PrepayAction() {
 	charge.Comment = set.Comment
 
 	var acc_user iamapi.AccountUser
-	if rs := data.Data.NewReader(iamapi.ObjKeyAccUser(charge.User)).Query(); rs.OK() {
-		rs.Decode(&acc_user)
+	if rs := data.Data.NewReader(iamapi.ObjKeyAccUser(charge.User)).Exec(); rs.OK() {
+		rs.Item().JsonDecode(&acc_user)
 		if acc_user.User == "" && acc_user.Balance > 0 {
 			acc_user.User = set.User // bugfix
-			data.Data.NewWriter(iamapi.ObjKeyAccUser(set.User), acc_user).Commit()
+			data.Data.NewWriter(iamapi.ObjKeyAccUser(set.User), nil).SetJsonValue(acc_user).Exec()
 		}
 	} else if !rs.NotFound() {
 		set.Error = types.NewErrorMeta(iamapi.ErrCodeInternalError, "Server Error")
@@ -212,10 +211,10 @@ func (c AccountCharge) PrepayAction() {
 
 		actives := []iamapi.AccountFund{}
 		ka := iamapi.ObjKeyAccFundUser(charge.User, "")
-		if rs := data.Data.NewReader(nil).KeyRangeSet(ka, ka).LimitNumSet(1000).Query(); rs.OK() {
+		if rs := data.Data.NewRanger(ka, ka).SetLimit(1000).Exec(); rs.OK() {
 			for _, v := range rs.Items {
 				var v2 iamapi.AccountFund
-				if err := v.Decode(&v2); err == nil {
+				if err := v.JsonDecode(&v2); err == nil {
 					if (v2.Amount - v2.Payout - v2.Prepay) > 0 {
 						actives = append(actives, v2)
 					}
@@ -254,7 +253,7 @@ func (c AccountCharge) PrepayAction() {
 	acc_user.Balance -= charge.Prepay
 	acc_user.Prepay += charge.Prepay
 
-	sets := []kv2.ClientObjectItem{
+	sets := []keyValue{
 		{
 			Key:   iamapi.ObjKeyAccFundUser(charge.User, active.Id),
 			Value: active,
@@ -278,7 +277,7 @@ func (c AccountCharge) PrepayAction() {
 	}
 
 	for _, v := range sets {
-		if rs := data.Data.NewWriter(v.Key, v.Value).Commit(); !rs.OK() {
+		if rs := data.Data.NewWriter(v.Key, nil).SetJsonValue(v.Value).Exec(); !rs.OK() {
 			set.Error = types.NewErrorMeta(iamapi.ErrCodeInternalError, "IO Error")
 			return
 		}
@@ -311,8 +310,8 @@ func (c AccountCharge) PayoutAction() {
 
 	var ak hauth.AccessKey
 	if rs := data.Data.NewReader(
-		iamapi.NsAccessKey(av.User, av.Id)).Query(); rs.OK() {
-		rs.Decode(&ak)
+		iamapi.NsAccessKey(av.User, av.Id)).Exec(); rs.OK() {
+		rs.Item().JsonDecode(&ak)
 	}
 	if ak.Id == "" || ak.Id != av.Id {
 		set.Error = types.NewErrorMeta(iamapi.ErrCodeUnauthorized, "No Auth Found, AK "+av.Id)
@@ -326,11 +325,11 @@ func (c AccountCharge) PayoutAction() {
 	//
 	var acc_user iamapi.AccountUser
 	// hlog.Printf("info", "%s %s %d %d", set.User, userid, set.TimeStart, set.TimeClose)
-	if rs := data.Data.NewReader(iamapi.ObjKeyAccUser(set.User)).Query(); rs.OK() {
-		rs.Decode(&acc_user)
+	if rs := data.Data.NewReader(iamapi.ObjKeyAccUser(set.User)).Exec(); rs.OK() {
+		rs.Item().JsonDecode(&acc_user)
 		if acc_user.User == "" && acc_user.Balance > 0 {
 			acc_user.User = set.User // bugfix
-			data.Data.NewWriter(iamapi.ObjKeyAccUser(set.User), acc_user).Commit()
+			data.Data.NewWriter(iamapi.ObjKeyAccUser(set.User), nil).SetJsonValue(acc_user).Exec()
 		}
 	} else if !rs.NotFound() {
 		set.Error = types.NewErrorMeta(iamapi.ErrCodeInternalError, "Server Error")
@@ -347,8 +346,8 @@ func (c AccountCharge) PayoutAction() {
 	)
 	if rs := data.Data.NewReader(
 		iamapi.ObjKeyAccChargeUser(set.User, charge_id),
-	).Query(); rs.OK() {
-		rs.Decode(&charge)
+	).Exec(); rs.OK() {
+		rs.Item().JsonDecode(&charge)
 	}
 
 	set.Payout = iamapi.AccountFloat64Round(set.Payout, 2)
@@ -378,10 +377,10 @@ func (c AccountCharge) PayoutAction() {
 	)
 
 	ka := iamapi.ObjKeyAccFundUser(set.User, "")
-	if rs := data.Data.NewReader(nil).KeyRangeSet(ka, ka).LimitNumSet(1000).Query(); rs.OK() {
+	if rs := data.Data.NewRanger(ka, ka).SetLimit(1000).Exec(); rs.OK() {
 		for _, v := range rs.Items {
 			var v2 iamapi.AccountFund
-			if err := v.Decode(&v2); err == nil {
+			if err := v.JsonDecode(&v2); err == nil {
 				actives = append(actives, v2)
 			}
 		}
@@ -428,7 +427,7 @@ func (c AccountCharge) PayoutAction() {
 
 	acc_user.Updated = active.Updated
 
-	sets := []kv2.ClientObjectItem{
+	sets := []keyValue{
 		{
 			Key:   iamapi.ObjKeyAccFundUser(set.User, active.Id),
 			Value: active,
@@ -452,7 +451,7 @@ func (c AccountCharge) PayoutAction() {
 	}
 
 	for _, v := range sets {
-		if rs := data.Data.NewWriter(v.Key, v.Value).Commit(); !rs.OK() {
+		if rs := data.Data.NewWriter(v.Key, nil).SetJsonValue(v.Value).Exec(); !rs.OK() {
 			set.Error = types.NewErrorMeta(iamapi.ErrCodeInternalError, "IO Error")
 			return
 		}

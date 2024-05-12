@@ -28,14 +28,14 @@ import (
 	"github.com/lessos/lessgo/crypto/phash"
 	"github.com/lessos/lessgo/net/email"
 	"github.com/lessos/lessgo/types"
-	kv2 "github.com/lynkdb/kvspec/v2/go/kvspec"
+	"github.com/lynkdb/kvgo/v2/pkg/kvapi"
 
 	"github.com/hooto/iam/config"
 	"github.com/hooto/iam/iamapi"
 )
 
 var (
-	Data                    kv2.ClientTable
+	Data                    kvapi.Client
 	def_sysadmin            = "sysadmin"
 	DefaultSysadminPassword = "changeme"
 	app_inst_id_re          = regexp.MustCompile("^[0-9a-f]{16}$")
@@ -57,11 +57,11 @@ func Setup() error {
 		return fmt.Errorf("iam.data connect not ready #1")
 	}
 
-	if rs := Data.NewWriter([]byte("iam:test"), "test").
-		ExpireSet(1000).Commit(); !rs.OK() {
+	if rs := Data.NewWriter([]byte("iam:test"), []byte("test")).
+		SetTTL(1000).Exec(); !rs.OK() {
 		return fmt.Errorf("iam.data connect not ready #2 " + rs.String())
 
-	} else if rs = Data.NewReader([]byte("iam:test")).Query(); !rs.OK() || rs.DataValue().String() != "test" {
+	} else if rs = Data.NewReader([]byte("iam:test")).Exec(); !rs.OK() || rs.Item().StringValue() != "test" {
 		return fmt.Errorf("iam.data connect not ready #3")
 	} else {
 		hlog.Printf("info", "iam/data connect ok")
@@ -75,18 +75,17 @@ func Setup() error {
 	)
 	for {
 
-		rs := Data.NewReader().KeyRangeSet(ak0, akz).
-			LimitNumSet(1000).Query()
+		rs := Data.NewRanger(ak0, akz).SetLimit(1000).Exec()
 		if !rs.OK() {
 			break
 		}
 
 		for _, v := range rs.Items {
 
-			ak0 = v.Meta.Key
+			ak0 = v.Key
 
 			var ak hauth.AccessKey
-			if err := v.Decode(&ak); err == nil {
+			if err := v.JsonDecode(&ak); err == nil {
 				KeyMgr.KeySet(&ak)
 				hlog.Printf("debug", "iam/access_key load %s", ak.Id)
 				continue
@@ -152,11 +151,10 @@ func InitData() (err error) {
 		v.Created = tnm
 		v.Updated = tnm
 
-		rw := Data.NewWriter(iamapi.ObjKeyRole(v.Name), v).
-			IncrNamespaceSet("role").ModeCreateSet(true)
-		rw.Meta.IncrId = uint64(v.Id)
-		if rs := rw.Commit(); !rs.OK() {
-			return fmt.Errorf("db err %s", rs.Message)
+		rw := Data.NewWriter(iamapi.ObjKeyRole(v.Name), nil).SetJsonValue(v).
+			SetIncr(uint64(v.Id), "role").SetCreateOnly(true)
+		if rs := rw.Exec(); !rs.OK() {
+			return fmt.Errorf("db err init-role %s", rs.ErrorMessage())
 		}
 	}
 
@@ -189,9 +187,9 @@ func InitData() (err error) {
 		Privileges: ps,
 	}
 
-	if rs := Data.NewWriter(iamapi.ObjKeyAppInstance(inst.Meta.ID), inst).
-		ModeCreateSet(true).Commit(); !rs.OK() {
-		return fmt.Errorf("db err %s", rs.Message)
+	if rs := Data.NewWriter(iamapi.ObjKeyAppInstance(inst.Meta.ID), nil).SetJsonValue(inst).
+		SetCreateOnly(true).Exec(); !rs.OK() {
+		return fmt.Errorf("db err init-data %s", rs.ErrorMessage())
 	}
 
 	AppInstanceRegister(inst)
@@ -218,7 +216,7 @@ func InitData() (err error) {
 
 	// Init Super SysAdmin Account
 	// uid := idhash.HashToHexString([]byte(def_sysadmin), 8)
-	if rs := Data.NewReader(iamapi.ObjKeyUser(def_sysadmin)).Query(); rs.NotFound() {
+	if rs := Data.NewReader(iamapi.ObjKeyUser(def_sysadmin)).Exec(); rs.NotFound() {
 
 		sysadm := iamapi.User{
 			// Id:          uid,
@@ -238,11 +236,10 @@ func InitData() (err error) {
 
 		sysadm.Keys.Set(iamapi.UserKeyDefault, auth)
 
-		ow := Data.NewWriter(iamapi.ObjKeyUser(def_sysadmin), sysadm).
-			ModeCreateSet(true).IncrNamespaceSet("user")
-		ow.Meta.IncrId = 1
-		if rs := ow.Commit(); !rs.OK() {
-			return fmt.Errorf("db err %s", rs.Message)
+		ow := Data.NewWriter(iamapi.ObjKeyUser(def_sysadmin), nil).SetJsonValue(sysadm).
+			SetCreateOnly(true).SetIncr(1, "user")
+		if rs := ow.Exec(); !rs.OK() {
+			return fmt.Errorf("db err init-sysadmin %s", rs.ErrorMessage())
 		}
 
 		var (
@@ -269,7 +266,12 @@ func InitData() (err error) {
 			Updated: set.Updated,
 		}
 
-		sets := []kv2.ClientObjectItem{
+		type keyValue struct {
+			Key   []byte
+			Value interface{}
+		}
+
+		sets := []keyValue{
 			{
 				Key:   iamapi.ObjKeyAccFundMgr(set.Id),
 				Value: set,
@@ -285,7 +287,7 @@ func InitData() (err error) {
 		}
 
 		for _, v := range sets {
-			Data.NewWriter(v.Key, v.Value).Commit()
+			Data.NewWriter(v.Key, v.Value).Exec()
 		}
 	}
 
@@ -295,11 +297,11 @@ func InitData() (err error) {
 func SysConfigRefresh() {
 
 	//
-	if rs := Data.NewReader(iamapi.ObjKeySysConfig("mailer")).Query(); rs.OK() {
+	if rs := Data.NewReader(iamapi.ObjKeySysConfig("mailer")).Exec(); rs.OK() {
 
 		var mailer iamapi.SysConfigMailer
 
-		if err := rs.DataValue().Decode(&mailer, nil); err == nil && mailer.SmtpHost != "" {
+		if err := rs.Item().JsonDecode(&mailer); err == nil && mailer.SmtpHost != "" {
 
 			email.MailerRegister(
 				"def",
@@ -311,23 +313,23 @@ func SysConfigRefresh() {
 		}
 	}
 
-	if rs := Data.NewReader(iamapi.ObjKeySysConfig("service_name")).Query(); rs.OK() &&
-		rs.DataValue().String() != "" {
-		config.Config.ServiceName = rs.DataValue().String()
+	if rs := Data.NewReader(iamapi.ObjKeySysConfig("service_name")).Exec(); rs.OK() &&
+		rs.Item().StringValue() != "" {
+		config.Config.ServiceName = rs.Item().StringValue()
 	}
 
-	if rs := Data.NewReader(iamapi.ObjKeySysConfig("webui_banner_title")).Query(); rs.OK() &&
-		rs.DataValue().String() != "" {
-		config.Config.WebUiBannerTitle = rs.DataValue().String()
+	if rs := Data.NewReader(iamapi.ObjKeySysConfig("webui_banner_title")).Exec(); rs.OK() &&
+		rs.Item().StringValue() != "" {
+		config.Config.WebUiBannerTitle = rs.Item().StringValue()
 	}
 
-	if rs := Data.NewReader(iamapi.ObjKeySysConfig("service_login_form_alert_msg")).Query(); rs.OK() {
-		config.Config.ServiceLoginFormAlertMsg = rs.DataValue().String()
+	if rs := Data.NewReader(iamapi.ObjKeySysConfig("service_login_form_alert_msg")).Exec(); rs.OK() {
+		config.Config.ServiceLoginFormAlertMsg = rs.Item().StringValue()
 	}
 
-	if rs := Data.NewReader(iamapi.ObjKeySysConfig("user_reg_disable")).Query(); rs.OK() {
+	if rs := Data.NewReader(iamapi.ObjKeySysConfig("user_reg_disable")).Exec(); rs.OK() {
 
-		if rs.DataValue().String() == "1" {
+		if rs.Item().StringValue() == "1" {
 			config.UserRegistrationDisabled = true
 		} else {
 			config.UserRegistrationDisabled = false
@@ -343,14 +345,14 @@ func AccessKeyInitData(ak *hauth.AccessKey) error {
 
 	ak.Status = hauth.AccessKeyStatusActive
 
-	if rs := Data.NewReader(iamapi.NsAccessKey(ak.User, ak.Id)).Query(); rs.OK() {
+	if rs := Data.NewReader(iamapi.NsAccessKey(ak.User, ak.Id)).Exec(); rs.OK() {
 		var prev hauth.AccessKey
-		if err := rs.Decode(&prev); err != nil {
+		if err := rs.Item().JsonDecode(&prev); err != nil {
 			return err
 		}
 		if !ak.Equal(&prev) {
-			if rs := Data.NewWriter(iamapi.NsAccessKey(ak.User, ak.Id), ak).
-				Commit(); !rs.OK() {
+			if rs := Data.NewWriter(iamapi.NsAccessKey(ak.User, ak.Id), nil).SetJsonValue(ak).
+				Exec(); !rs.OK() {
 				return rs.Error()
 			}
 			hlog.Printf("warn", "IAM/AK ID %s, SEC %s, Refreshed", ak.Id, ak.Secret[:8])
@@ -358,8 +360,8 @@ func AccessKeyInitData(ak *hauth.AccessKey) error {
 		hlog.Printf("warn", "IAM/AK ID %s, SEC %s, Refreshed", ak.Id, ak.Secret[:8])
 	} else {
 
-		if rs := Data.NewWriter(iamapi.NsAccessKey(ak.User, ak.Id), ak).
-			ModeCreateSet(true).Commit(); !rs.OK() {
+		if rs := Data.NewWriter(iamapi.NsAccessKey(ak.User, ak.Id), nil).SetJsonValue(ak).
+			SetCreateOnly(true).Exec(); !rs.OK() {
 			return rs.Error()
 		}
 		hlog.Printf("warn", "IAM/AK ID %s, SEC %s, Refreshed", ak.Id, ak.Secret[:8])
@@ -378,8 +380,8 @@ func AccessKeyReset(ak *hauth.AccessKey) error {
 
 	ak.Status = hauth.AccessKeyStatusActive
 
-	if rs := Data.NewWriter(iamapi.NsAccessKey(ak.User, ak.Id), ak).
-		Commit(); !rs.OK() {
+	if rs := Data.NewWriter(iamapi.NsAccessKey(ak.User, ak.Id), nil).SetJsonValue(ak).
+		Exec(); !rs.OK() {
 		return rs.Error()
 	}
 
@@ -394,21 +396,21 @@ func AppInstanceRegister(inst iamapi.AppInstance) error {
 		return fmt.Errorf("Invalid meta.id (%s)", inst.Meta.ID)
 	}
 
-	if rs := Data.NewReader(iamapi.ObjKeyUser(inst.Meta.User)).Query(); rs.NotFound() {
+	if rs := Data.NewReader(iamapi.ObjKeyUser(inst.Meta.User)).Exec(); rs.NotFound() {
 		inst.Meta.User = def_sysadmin
 	}
 
 	var prev iamapi.AppInstance
-	if rs := Data.NewReader(iamapi.ObjKeyAppInstance(inst.Meta.ID)).Query(); rs.OK() {
-		rs.DataValue().Decode(&prev, nil)
+	if rs := Data.NewReader(iamapi.ObjKeyAppInstance(inst.Meta.ID)).Exec(); rs.OK() {
+		rs.Item().JsonDecode(&prev)
 	}
 
 	if prev.Meta.ID == "" {
 		inst.Meta.Created = types.MetaTimeNow()
 		inst.Meta.Updated = types.MetaTimeNow()
 
-		Data.NewWriter(iamapi.ObjKeyAppInstance(inst.Meta.ID), inst).
-			ModeCreateSet(true).Commit()
+		Data.NewWriter(iamapi.ObjKeyAppInstance(inst.Meta.ID), nil).SetJsonValue(inst).
+			SetCreateOnly(true).Exec()
 
 	} else {
 
@@ -434,8 +436,8 @@ func AppInstanceRegister(inst iamapi.AppInstance) error {
 			prev.SecretKey = inst.SecretKey
 		}
 
-		Data.NewWriter(iamapi.ObjKeyAppInstance(prev.Meta.ID), prev).
-			ModeCreateSet(true).Commit()
+		Data.NewWriter(iamapi.ObjKeyAppInstance(prev.Meta.ID), nil).SetJsonValue(prev).
+			SetCreateOnly(true).Exec()
 
 		// TODO remove unused privileges
 	}
@@ -457,9 +459,9 @@ func AppInstanceRegister(inst iamapi.AppInstance) error {
 	for rid, v := range rps {
 
 		if rs := Data.NewWriter(
-			iamapi.ObjKeyRolePrivilege(rid, inst.Meta.ID), strings.Join(v, ",")).
-			ModeCreateSet(true).Commit(); !rs.OK() {
-			return fmt.Errorf("db err %s", rs.Message)
+			iamapi.ObjKeyRolePrivilege(rid, inst.Meta.ID), []byte(strings.Join(v, ","))).
+			SetCreateOnly(true).Exec(); !rs.OK() {
+			return fmt.Errorf("db err %s", rs.ErrorMessage())
 		}
 	}
 

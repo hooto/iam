@@ -72,8 +72,8 @@ func (c SysMsg) PostAction() {
 	}
 
 	var ak hauth.AccessKey
-	if rs := data.Data.NewReader(iamapi.NsAccessKey(av.User, av.Id)).Query(); rs.OK() {
-		rs.Decode(&ak)
+	if rs := data.Data.NewReader(iamapi.NsAccessKey(av.User, av.Id)).Exec(); rs.OK() {
+		rs.Item().JsonDecode(&ak)
 	}
 	if ak.Id == "" || ak.Id != av.Id {
 		rsp.Error = types.NewErrorMeta(iamapi.ErrCodeUnauthorized, "No Auth Found, AK "+av.Id)
@@ -88,9 +88,9 @@ func (c SysMsg) PostAction() {
 		set.Created = uint32(time.Now().Unix())
 	}
 
-	if rs := data.Data.NewWriter(iamapi.ObjKeyMsgQueue(set.Id), set).
-		ModeCreateSet(true).Commit(); !rs.OK() {
-		rsp.Error = types.NewErrorMeta(iamapi.ErrCodeServerError, "server/db err "+rs.Message)
+	if rs := data.Data.NewWriter(iamapi.ObjKeyMsgQueue(set.Id), nil).SetJsonValue(set).
+		SetCreateOnly(true).Exec(); !rs.OK() {
+		rsp.Error = types.NewErrorMeta(iamapi.ErrCodeServerError, "server/db err "+rs.ErrorMessage())
 		return
 	}
 
@@ -109,22 +109,22 @@ func (c SysMsg) ListAction() {
 	defer c.RenderJson(&rsp)
 
 	var (
-		offset = iamapi.ObjKeyMsgSent("zzzzzzzz")
-		cutset = iamapi.ObjKeyMsgSent("")
+		offset = iamapi.ObjKeyMsgSent("")
+		cutset = iamapi.ObjKeyMsgSent("zzzzzzzz")
 		limit  = int64(100)
 	)
 
-	rs := data.Data.NewReader(nil).KeyRangeSet(offset, cutset).
-		ModeRevRangeSet(true).LimitNumSet(limit).Query()
+	rs := data.Data.NewRanger(offset, cutset).
+		SetRevert(true).SetLimit(limit).Exec()
 	if !rs.OK() {
 		rsp.Error = types.NewErrorMeta(iamapi.ErrCodeServerError,
-			"server/db err "+rs.Message)
+			"server/db err "+rs.ErrorMessage())
 		return
 	}
 
 	for _, v := range rs.Items {
 		var item hmsg.MsgItem
-		if err := v.DataValue().Decode(&item, nil); err == nil {
+		if err := v.JsonDecode(&item); err == nil {
 			item.Id = item.SentId()
 			rsp.Items = append(rsp.Items, &item)
 		}
@@ -150,13 +150,13 @@ func (c SysMsg) ItemAction() {
 		return
 	}
 
-	if rs := data.Data.NewReader(iamapi.ObjKeyMsgSent(id)).Query(); !rs.OK() {
+	if rs := data.Data.NewReader(iamapi.ObjKeyMsgSent(id)).Exec(); !rs.OK() {
 		rsp.Error = types.NewErrorMeta(iamapi.ErrCodeServerError,
-			"server/db err "+rs.Message)
+			"server/db err "+rs.ErrorMessage())
 		return
 	} else {
 		var item hmsg.MsgItem
-		if err := rs.DataValue().Decode(&item, nil); err == nil && item.Id != "" {
+		if err := rs.Item().JsonDecode(&item); err == nil && item.Id != "" {
 			rsp.Data = &item
 		}
 	}

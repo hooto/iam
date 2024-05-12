@@ -48,14 +48,21 @@ func (c SysConfig) GeneralAction() {
 		return
 	}
 
-	if rs := data.Data.NewReader(nil).KeyRangeSet(
-		iamapi.ObjKeySysConfig(""), iamapi.ObjKeySysConfig("")).LimitNumSet(1000).Query(); rs.OK() {
+	keyPrefix := iamapi.ObjKeySysConfig("")
+
+	if rs := data.Data.NewRanger(keyPrefix, iamapi.ObjKeySysConfig("zzzz")).SetLimit(1000).Exec(); rs.OK() {
 
 		for _, obj := range rs.Items {
 
-			switch string(obj.Meta.Key) {
+			if len(obj.Key) <= len(keyPrefix) {
+				continue
+			}
+
+			k := string(obj.Key[len(keyPrefix):])
+
+			switch k {
 			case "service_name", "webui_banner_title", "user_reg_disable", "service_login_form_alert_msg":
-				ls.Items.Set(string(obj.Meta.Key), obj.DataValue().String())
+				ls.Items.Set(k, obj.StringValue())
 			}
 		}
 	}
@@ -109,16 +116,15 @@ func (c SysConfig) GeneralSetAction() {
 		}
 
 		if v.Value == "" {
-			data.Data.NewWriter(iamapi.ObjKeySysConfig(v.Name), nil).
-				ModeDeleteSet(true).Commit()
+			data.Data.NewDeleter(iamapi.ObjKeySysConfig(v.Name)).Exec()
 			if v.Name == "service_login_form_alert_msg" {
 				config.Config.ServiceLoginFormAlertMsg = ""
 			}
 		} else {
 
-			if obj := data.Data.NewWriter(iamapi.ObjKeySysConfig(v.Name), v.Value).
-				Commit(); !obj.OK() {
-				sets.Error = types.NewErrorMeta("500", "DB ERROR #2 "+obj.Message)
+			if obj := data.Data.NewWriter(iamapi.ObjKeySysConfig(v.Name), nil).SetJsonValue(v.Value).
+				Exec(); !obj.OK() {
+				sets.Error = types.NewErrorMeta("500", "DB ERROR #2 "+obj.ErrorMessage())
 				return
 			}
 		}
@@ -140,8 +146,8 @@ func (c SysConfig) MailerAction() {
 		return
 	}
 
-	if obj := data.Data.NewReader(iamapi.ObjKeySysConfig("mailer")).Query(); obj.OK() {
-		ls.Items.Set("mailer", obj.DataValue().String())
+	if obj := data.Data.NewReader(iamapi.ObjKeySysConfig("mailer")).Exec(); obj.OK() {
+		ls.Items.Set("mailer", obj.Item().StringValue())
 	}
 
 	if val, ok := ls.Items.Get("mailer"); val.String() == "" || !ok {

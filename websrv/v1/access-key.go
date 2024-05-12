@@ -65,8 +65,8 @@ func (c AccessKey) EntryAction() {
 	}
 
 	var ak hauth.AccessKey
-	if rs := data.Data.NewReader(iamapi.NsAccessKey(c.us.UserName, id)).Query(); rs.OK() {
-		rs.Decode(&ak)
+	if rs := data.Data.NewReader(iamapi.NsAccessKey(c.us.UserName, id)).Exec(); rs.OK() {
+		rs.Item().JsonDecode(&ak)
 	}
 
 	if ak.Id != "" && ak.Id == id {
@@ -82,14 +82,14 @@ func (c AccessKey) ListAction() {
 	var ls types.WebServiceResult
 	defer c.RenderJson(&ls)
 
-	k1 := iamapi.NsAccessKey(c.us.UserName, "zzzzzzzz")
-	k2 := iamapi.NsAccessKey(c.us.UserName, "")
-	if rs := data.Data.NewReader(nil).KeyRangeSet(k1, k2).
-		ModeRevRangeSet(true).LimitNumSet(int64(ak_limit)).Query(); rs.OK() {
+	k1 := iamapi.NsAccessKey(c.us.UserName, "")
+	k2 := iamapi.NsAccessKey(c.us.UserName, "zzzzzzzz")
+	if rs := data.Data.NewRanger(k1, k2).
+		SetRevert(true).SetLimit(int64(ak_limit)).Exec(); rs.OK() {
 
 		for _, v := range rs.Items {
 			var ak hauth.AccessKey
-			if err := v.Decode(&ak); err == nil {
+			if err := v.JsonDecode(&ak); err == nil {
 				ls.Items = append(ls.Items, ak)
 			}
 		}
@@ -117,14 +117,14 @@ func (c AccessKey) SetAction() {
 	} else {
 
 		if rs := data.Data.NewReader(
-			iamapi.NsAccessKey(c.us.UserName, set.AccessKey.Id)).Query(); rs.OK() {
-			rs.Decode(&prev)
+			iamapi.NsAccessKey(c.us.UserName, set.AccessKey.Id)).Exec(); rs.OK() {
+			rs.Item().JsonDecode(&prev)
 		}
 	}
 
-	if rs := data.Data.NewReader(nil).KeyRangeSet(
+	if rs := data.Data.NewRanger(
 		iamapi.NsAccessKey(c.us.UserName, ""), iamapi.NsAccessKey(c.us.UserName, "")).
-		LimitNumSet(int64(ak_limit + 1)).Query(); rs.OK() {
+		SetLimit(int64(ak_limit + 1)).Exec(); rs.OK() {
 		if len(rs.Items) > ak_limit && prev.Id == "" {
 			set.Error = types.NewErrorMeta(iamapi.ErrCodeInvalidArgument, fmt.Sprintf("Num Out Range (%d)", ak_limit))
 			return
@@ -151,8 +151,8 @@ func (c AccessKey) SetAction() {
 		prev.User = c.us.UserName
 	}
 
-	if rs := data.Data.NewWriter(iamapi.NsAccessKey(c.us.UserName, prev.Id), prev).
-		Commit(); rs.OK() {
+	if rs := data.Data.NewWriter(iamapi.NsAccessKey(c.us.UserName, prev.Id), nil).SetJsonValue(prev).
+		Exec(); rs.OK() {
 		set.Kind = "AccessKey"
 	} else {
 		set.Error = types.NewErrorMeta(iamapi.ErrCodeInternalError, "IO Error")
@@ -170,8 +170,7 @@ func (c AccessKey) DelAction() {
 		return
 	}
 
-	if rs := data.Data.NewWriter(iamapi.NsAccessKey(c.us.UserName, id), nil).
-		ModeDeleteSet(true).Commit(); rs.OK() {
+	if rs := data.Data.NewDeleter(iamapi.NsAccessKey(c.us.UserName, id)).Exec(); rs.OK() {
 		set.Kind = "AccessKey"
 	} else {
 		set.Error = types.NewErrorMeta(iamapi.ErrCodeInternalError, "IO Error")
@@ -193,8 +192,8 @@ func (c AccessKey) BindAction() {
 	}
 
 	var ak hauth.AccessKey
-	if rs := data.Data.NewReader(iamapi.NsAccessKey(c.us.UserName, id)).Query(); rs.OK() {
-		rs.Decode(&ak)
+	if rs := data.Data.NewReader(iamapi.NsAccessKey(c.us.UserName, id)).Exec(); rs.OK() {
+		rs.Item().JsonDecode(&ak)
 	}
 
 	if id != ak.Id {
@@ -212,8 +211,8 @@ func (c AccessKey) BindAction() {
 		strings.TrimSpace(ar[0]),
 		strings.TrimSpace(ar[1])))
 
-	if rs := data.Data.NewWriter(iamapi.NsAccessKey(c.us.UserName, ak.Id), ak).
-		Commit(); rs.OK() {
+	if rs := data.Data.NewWriter(iamapi.NsAccessKey(c.us.UserName, ak.Id), nil).SetJsonValue(ak).
+		Exec(); rs.OK() {
 		set.Kind = "AccessKey"
 	} else {
 		set.Error = types.NewErrorMeta(iamapi.ErrCodeInternalError, "IO Error")
@@ -235,8 +234,8 @@ func (c AccessKey) UnbindAction() {
 	}
 
 	var ak hauth.AccessKey
-	if rs := data.Data.NewReader(iamapi.NsAccessKey(c.us.UserName, id)).Query(); rs.OK() {
-		rs.Decode(&ak)
+	if rs := data.Data.NewReader(iamapi.NsAccessKey(c.us.UserName, id)).Exec(); rs.OK() {
+		rs.Item().JsonDecode(&ak)
 	}
 
 	if id != ak.Id {
@@ -257,8 +256,8 @@ func (c AccessKey) UnbindAction() {
 	}
 	ak.ScopeDel(bname)
 
-	if rs := data.Data.NewWriter(iamapi.NsAccessKey(c.us.UserName, ak.Id), ak).
-		Commit(); rs.OK() {
+	if rs := data.Data.NewWriter(iamapi.NsAccessKey(c.us.UserName, ak.Id), nil).SetJsonValue(ak).
+		Exec(); rs.OK() {
 		set.Kind = "AccessKey"
 	} else {
 		set.Error = types.NewErrorMeta(iamapi.ErrCodeInternalError, "IO Error")

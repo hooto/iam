@@ -22,7 +22,6 @@ import (
 	"github.com/hooto/iam/data"
 	"github.com/hooto/iam/iamapi"
 	"github.com/lessos/lessgo/types"
-	kv2 "github.com/lynkdb/kvspec/v2/go/kvspec"
 )
 
 var (
@@ -52,17 +51,22 @@ func AccountChargeCloseRefresh() {
 	}()
 
 	var (
-		offset = iamapi.ObjKeyAccChargeMgr("zzzzzzzz")
-		cutset = iamapi.ObjKeyAccChargeMgr("")
+		offset = iamapi.ObjKeyAccChargeMgr("")
+		cutset = iamapi.ObjKeyAccChargeMgr("zzzzzzzz")
 		limit  = 100
 		num    = 10000 // TODO
 	)
 
+	type keyValue struct {
+		Key   []byte
+		Value interface{}
+	}
+
 	for {
 
-		rs := data.Data.NewReader(nil).KeyRangeSet(offset, cutset).
-			ModeRevRangeSet(true).
-			LimitNumSet(int64(limit)).Query()
+		rs := data.Data.NewRanger(offset, cutset).
+			SetRevert(true).
+			SetLimit(int64(limit)).Exec()
 		if !rs.OK() {
 			break
 		}
@@ -70,7 +74,7 @@ func AccountChargeCloseRefresh() {
 		for _, v := range rs.Items {
 
 			var set iamapi.AccountCharge
-			if err := v.Decode(&set); err != nil {
+			if err := v.JsonDecode(&set); err != nil {
 				continue
 			}
 
@@ -92,8 +96,8 @@ func AccountChargeCloseRefresh() {
 			)
 
 			//
-			if rs := data.Data.NewReader(iamapi.ObjKeyAccChargeUser(set.User, set.Id)).Query(); rs.OK() {
-				rs.Decode(&charge)
+			if rs := data.Data.NewReader(iamapi.ObjKeyAccChargeUser(set.User, set.Id)).Exec(); rs.OK() {
+				rs.Item().JsonDecode(&charge)
 			}
 			if charge.Id == "" || charge.Id != set.Id {
 				continue
@@ -102,8 +106,8 @@ func AccountChargeCloseRefresh() {
 				continue
 			}
 
-			if rs := data.Data.NewReader(iamapi.ObjKeyAccUser(set.User)).Query(); rs.OK() {
-				rs.Decode(&acc_user)
+			if rs := data.Data.NewReader(iamapi.ObjKeyAccUser(set.User)).Exec(); rs.OK() {
+				rs.Item().JsonDecode(&acc_user)
 			} else if !rs.NotFound() {
 				continue
 			}
@@ -111,14 +115,14 @@ func AccountChargeCloseRefresh() {
 				continue
 			}
 
-			sets := []kv2.ClientObjectItem{}
+			sets := []keyValue{}
 			updated := types.MetaTimeNow()
 
 			if charge.Fund != "" {
 				var fund iamapi.AccountFund
 				if rs := data.Data.NewReader(
-					iamapi.ObjKeyAccFundUser(set.User, charge.Fund)).Query(); rs.OK() {
-					rs.Decode(&fund)
+					iamapi.ObjKeyAccFundUser(set.User, charge.Fund)).Exec(); rs.OK() {
+					rs.Item().JsonDecode(&fund)
 				}
 				if fund.Id == "" || fund.Id != charge.Fund {
 					continue
@@ -130,12 +134,12 @@ func AccountChargeCloseRefresh() {
 				fund.ExpProductInpay.Del(charge.Product)
 				fund.Updated = updated
 
-				sets = append(sets, kv2.ClientObjectItem{
+				sets = append(sets, keyValue{
 					Key:   iamapi.ObjKeyAccFundUser(set.User, charge.Fund),
 					Value: fund,
 				})
 
-				sets = append(sets, kv2.ClientObjectItem{
+				sets = append(sets, keyValue{
 					Key:   iamapi.ObjKeyAccFundMgr(charge.Fund),
 					Value: fund,
 				})
@@ -152,15 +156,15 @@ func AccountChargeCloseRefresh() {
 			charge.Updated = updated
 
 			//
-			sets = append(sets, kv2.ClientObjectItem{
+			sets = append(sets, keyValue{
 				Key:   iamapi.ObjKeyAccChargeUser(set.User, set.Id),
 				Value: charge,
 			})
-			sets = append(sets, kv2.ClientObjectItem{
+			sets = append(sets, keyValue{
 				Key:   iamapi.ObjKeyAccUser(set.User),
 				Value: acc_user,
 			})
-			sets = append(sets, kv2.ClientObjectItem{
+			sets = append(sets, keyValue{
 				Key:   iamapi.ObjKeyAccChargeMgr(set.Id),
 				Value: charge,
 			})
@@ -169,7 +173,7 @@ func AccountChargeCloseRefresh() {
 				set.User, set.Id)
 
 			for _, v := range sets {
-				if rs := data.Data.NewWriter(v.Key, v.Value).Commit(); !rs.OK() {
+				if rs := data.Data.NewWriter(v.Key, v.Value).Exec(); !rs.OK() {
 					return
 				}
 			}
@@ -177,7 +181,7 @@ func AccountChargeCloseRefresh() {
 
 		num -= len(rs.Items)
 
-		if len(rs.Items) < 1 || num < 1 || !rs.Next {
+		if len(rs.Items) < 1 || num < 1 || !rs.NextResultSet {
 			break
 		}
 

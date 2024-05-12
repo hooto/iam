@@ -47,8 +47,8 @@ func (c AppAuth) InfoAction() {
 	}
 
 	var inst iamapi.AppInstance
-	if obj := data.Data.NewReader(iamapi.ObjKeyAppInstance(instid)).Query(); obj.OK() {
-		obj.Decode(&inst)
+	if obj := data.Data.NewReader(iamapi.ObjKeyAppInstance(instid)).Exec(); obj.OK() {
+		obj.Item().JsonDecode(&inst)
 	}
 
 	if inst.Meta.ID == instid {
@@ -118,8 +118,8 @@ func (c AppAuth) RegisterAction() {
 		prev iamapi.AppInstance
 	)
 
-	if obj := data.Data.NewReader(iamapi.ObjKeyAppInstance(set.Instance.Meta.ID)).Query(); obj.OK() {
-		obj.Decode(&prev)
+	if obj := data.Data.NewReader(iamapi.ObjKeyAppInstance(set.Instance.Meta.ID)).Exec(); obj.OK() {
+		obj.Item().JsonDecode(&prev)
 	}
 
 	if prev.Meta.ID == "" {
@@ -141,9 +141,9 @@ func (c AppAuth) RegisterAction() {
 		set.Instance.Status = prev.Status
 	}
 
-	if obj := data.Data.NewWriter(iamapi.ObjKeyAppInstance(set.Instance.Meta.ID), set.Instance).
-		Commit(); !obj.OK() {
-		set.Error = types.NewErrorMeta(iamapi.ErrCodeInternalError, obj.Message)
+	if obj := data.Data.NewWriter(iamapi.ObjKeyAppInstance(set.Instance.Meta.ID), nil).SetJsonValue(set.Instance).
+		Exec(); !obj.OK() {
+		set.Error = types.NewErrorMeta(iamapi.ErrCodeInternalError, obj.ErrorMessage())
 		return
 	}
 
@@ -152,7 +152,7 @@ func (c AppAuth) RegisterAction() {
 	// q.Where.And("instance", req.Data.InstanceId)
 	// rs, err = dcn.Base.Query(q)
 	// if err != nil {
-	// 	rsp.Message = "Internal Server Error"
+	// 	rsp.ErrorMessage() = "Internal Server Error"
 	// 	return
 	// }
 
@@ -197,7 +197,7 @@ func (c AppAuth) RegisterAction() {
 
 	// 		if _, err := dcn.Base.Insert("iam_privilege", item); err != nil {
 	// 			rsp.Status = 500
-	// 			rsp.Message = "Can not write to database" + err.Error()
+	// 			rsp.ErrorMessage() = "Can not write to database" + err.Error()
 	// 			return
 	// 		}
 	// 	}
@@ -212,13 +212,13 @@ func (c AppAuth) RoleListAction() {
 	defer c.RenderJson(&sets)
 
 	// TODO app<->role
-	if rs := data.Data.NewReader(nil).KeyRangeSet(
-		iamapi.ObjKeyRole(""), iamapi.ObjKeyRole("")).LimitNumSet(100).Query(); rs.OK() {
+	if rs := data.Data.NewRanger(
+		iamapi.ObjKeyRole(""), iamapi.ObjKeyRole("")).SetLimit(100).Exec(); rs.OK() {
 
 		for _, obj := range rs.Items {
 
 			var role iamapi.UserRole
-			if err := obj.DataValue().Decode(&role, nil); err == nil {
+			if err := obj.JsonDecode(&role); err == nil {
 
 				if role.Status == 0 || obj.Meta.IncrId == 1 {
 					continue
@@ -271,8 +271,8 @@ func (c AppAuth) UserAccessKeyAction() {
 	}
 
 	var app iamapi.AppInstance
-	if rs := data.Data.NewReader(iamapi.ObjKeyAppInstance(app_aka.Key)).Query(); rs.OK() {
-		rs.Decode(&app)
+	if rs := data.Data.NewReader(iamapi.ObjKeyAppInstance(app_aka.Key)).Exec(); rs.OK() {
+		rs.Item().JsonDecode(&app)
 	}
 
 	if app.Meta.ID != app_aka.Key {
@@ -286,8 +286,8 @@ func (c AppAuth) UserAccessKeyAction() {
 	}
 
 	var user_ak hauth.AccessKey
-	if rs := data.Data.NewReader(iamapi.NsAccessKey(username, access_key)).Query(); rs.OK() {
-		rs.Decode(&user_ak)
+	if rs := data.Data.NewReader(iamapi.NsAccessKey(username, access_key)).Exec(); rs.OK() {
+		rs.Item().JsonDecode(&user_ak)
 	}
 
 	if user_ak.Id != access_key ||
@@ -302,8 +302,8 @@ func (c AppAuth) UserAccessKeyAction() {
 	}
 
 	var user iamapi.User
-	if obj := data.Data.NewReader(iamapi.ObjKeyUser(username)).Query(); obj.OK() {
-		obj.Decode(&user)
+	if obj := data.Data.NewReader(iamapi.ObjKeyUser(username)).Exec(); obj.OK() {
+		obj.Item().JsonDecode(&user)
 	}
 
 	set.Kind = "AccessKeySession"

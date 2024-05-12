@@ -24,7 +24,6 @@ import (
 	"github.com/hooto/iam/iamclient"
 	"github.com/lessos/lessgo/crypto/idhash"
 	"github.com/lessos/lessgo/types"
-	kv2 "github.com/lynkdb/kvspec/v2/go/kvspec"
 )
 
 type AccountMgr struct {
@@ -60,11 +59,10 @@ func (c AccountMgr) ReBalanceAction() {
 
 	users := []string{}
 
-	if rs := data.Data.NewReader(nil).
-		KeyRangeSet(iamapi.ObjKeyUser(""), iamapi.ObjKeyUser("")).LimitNumSet(10000).Query(); rs.OK() {
+	if rs := data.Data.NewRanger(iamapi.ObjKeyUser(""), iamapi.ObjKeyUser("")).SetLimit(10000).Exec(); rs.OK() {
 		for _, v := range rs.Items {
 			var user iamapi.User
-			if v.Decode(&user) == nil {
+			if v.JsonDecode(&user) == nil {
 				users = append(users, user.Name)
 			}
 		}
@@ -72,10 +70,10 @@ func (c AccountMgr) ReBalanceAction() {
 
 	for _, uname := range users {
 
-		k1 := iamapi.ObjKeyAccFundUser(uname, "zzzzzzzz")
-		k2 := iamapi.ObjKeyAccFundUser(uname, "")
-		if rs := data.Data.NewReader(nil).KeyRangeSet(k1, k2).
-			ModeRevRangeSet(true).LimitNumSet(1000).Query(); rs.OK() {
+		k1 := iamapi.ObjKeyAccFundUser(uname, "")
+		k2 := iamapi.ObjKeyAccFundUser(uname, "zzzzzzzz")
+		if rs := data.Data.NewRanger(k1, k2).
+			SetRevert(true).SetLimit(1000).Exec(); rs.OK() {
 
 			var (
 				balance float64 = 0
@@ -85,7 +83,7 @@ func (c AccountMgr) ReBalanceAction() {
 			for _, v := range rs.Items {
 
 				var aa iamapi.AccountFund
-				if err := v.Decode(&aa); err == nil {
+				if err := v.JsonDecode(&aa); err == nil {
 					balance += (aa.Amount - aa.Payout - aa.Prepay)
 					prepay += aa.Prepay
 				}
@@ -95,8 +93,8 @@ func (c AccountMgr) ReBalanceAction() {
 			prepay = iamapi.AccountFloat64Round(prepay, 4)
 
 			var au iamapi.AccountUser
-			if rs := data.Data.NewReader(iamapi.ObjKeyAccUser(uname)).Query(); rs.OK() {
-				rs.Decode(&au)
+			if rs := data.Data.NewReader(iamapi.ObjKeyAccUser(uname)).Exec(); rs.OK() {
+				rs.Item().JsonDecode(&au)
 			}
 
 			if au.User == "" {
@@ -109,7 +107,7 @@ func (c AccountMgr) ReBalanceAction() {
 				au.Prepay = prepay
 				au.Updated = types.MetaTimeNow()
 
-				data.Data.NewWriter(iamapi.ObjKeyAccUser(uname), au).Commit()
+				data.Data.NewWriter(iamapi.ObjKeyAccUser(uname), nil).SetJsonValue(au).Exec()
 				rsp.Changed++
 			}
 
@@ -128,14 +126,14 @@ func (c AccountMgr) FundListAction() {
 		return
 	}
 
-	k1 := iamapi.ObjKeyAccFundMgr("zzzzzzzz")
-	k2 := iamapi.ObjKeyAccFundMgr("")
-	if rs := data.Data.NewReader(nil).KeyRangeSet(k1, k2).
-		ModeRevRangeSet(true).LimitNumSet(1000).Query(); rs.OK() {
+	k1 := iamapi.ObjKeyAccFundMgr("")
+	k2 := iamapi.ObjKeyAccFundMgr("zzzzzzzz")
+	if rs := data.Data.NewRanger(k1, k2).
+		SetRevert(true).SetLimit(1000).Exec(); rs.OK() {
 		for _, v := range rs.Items {
 
 			var set iamapi.AccountFund
-			if err := v.Decode(&set); err == nil {
+			if err := v.JsonDecode(&set); err == nil {
 				ls.Items = append(ls.Items, set)
 			}
 		}
@@ -163,8 +161,8 @@ func (c AccountMgr) FundEntryAction() {
 		return
 	}
 
-	if rs := data.Data.NewReader(iamapi.ObjKeyAccFundMgr(id)).Query(); rs.OK() {
-		rs.Decode(&set.AccountFund)
+	if rs := data.Data.NewReader(iamapi.ObjKeyAccFundMgr(id)).Exec(); rs.OK() {
+		rs.Item().JsonDecode(&set.AccountFund)
 	}
 
 	if set.AccountFund.Id == "" || set.AccountFund.Id != id {
@@ -222,8 +220,8 @@ func (c AccountMgr) FundNewAction() {
 	}
 
 	var acc_user iamapi.AccountUser
-	if rs := data.Data.NewReader(iamapi.ObjKeyAccUser(set.User)).Query(); rs.OK() {
-		rs.Decode(&acc_user)
+	if rs := data.Data.NewReader(iamapi.ObjKeyAccUser(set.User)).Exec(); rs.OK() {
+		rs.Item().JsonDecode(&acc_user)
 	} else if !rs.NotFound() {
 		set.Error = types.NewErrorMeta(iamapi.ErrCodeInternalError, "Server Error")
 		return
@@ -247,7 +245,7 @@ func (c AccountMgr) FundNewAction() {
 	acc_user.Balance = iamapi.AccountFloat64Round(acc_user.Balance+set.Amount, 4)
 	acc_user.Updated = set.Updated
 
-	sets := []kv2.ClientObjectItem{
+	sets := []keyValue{
 		{
 			Key:   iamapi.ObjKeyAccFundMgr(set.Id),
 			Value: set.AccountFund,
@@ -263,7 +261,7 @@ func (c AccountMgr) FundNewAction() {
 	}
 
 	for _, v := range sets {
-		if rs := data.Data.NewWriter(v.Key, v.Value).Commit(); !rs.OK() {
+		if rs := data.Data.NewWriter(v.Key, nil).SetJsonValue(v.Value).Exec(); !rs.OK() {
 			set.Error = types.NewErrorMeta(iamapi.ErrCodeInternalError, "IO Error")
 			return
 		}
@@ -308,8 +306,8 @@ func (c AccountMgr) FundSetAction() {
 
 	var set_prev iamapi.AccountFund
 
-	if rs := data.Data.NewReader(iamapi.ObjKeyAccFundMgr(set.Id)).Query(); rs.OK() {
-		rs.Decode(&set_prev)
+	if rs := data.Data.NewReader(iamapi.ObjKeyAccFundMgr(set.Id)).Exec(); rs.OK() {
+		rs.Item().JsonDecode(&set_prev)
 	}
 
 	if set_prev.Id == "" || set_prev.Id != set.Id {
@@ -323,7 +321,7 @@ func (c AccountMgr) FundSetAction() {
 	set_prev.ExpProductLimits = set.ExpProductLimits
 	set_prev.ExpProductMax = set.ExpProductMax
 
-	sets := []kv2.ClientObjectItem{
+	sets := []keyValue{
 		{
 			Key:   iamapi.ObjKeyAccFundMgr(set.Id),
 			Value: set_prev,
@@ -335,7 +333,7 @@ func (c AccountMgr) FundSetAction() {
 	}
 
 	for _, v := range sets {
-		if rs := data.Data.NewWriter(v.Key, v.Value).Commit(); !rs.OK() {
+		if rs := data.Data.NewWriter(v.Key, nil).SetJsonValue(v.Value).Exec(); !rs.OK() {
 			set.Error = types.NewErrorMeta(iamapi.ErrCodeInternalError, "IO Error")
 			return
 		}
@@ -354,14 +352,14 @@ func (c AccountMgr) ChargeListAction() {
 		return
 	}
 
-	k1 := iamapi.ObjKeyAccChargeMgr("zzzzzzzz")
-	k2 := iamapi.ObjKeyAccChargeMgr("")
-	if rs := data.Data.NewReader(nil).KeyRangeSet(k1, k2).
-		ModeRevRangeSet(true).LimitNumSet(1000).Query(); rs.OK() {
+	k1 := iamapi.ObjKeyAccChargeMgr("")
+	k2 := iamapi.ObjKeyAccChargeMgr("zzzzzzzz")
+	if rs := data.Data.NewRanger(k1, k2).
+		SetRevert(true).SetLimit(1000).Exec(); rs.OK() {
 		for _, v := range rs.Items {
 
 			var set iamapi.AccountCharge
-			if err := v.Decode(&set); err == nil {
+			if err := v.JsonDecode(&set); err == nil {
 				ls.Items = append(ls.Items, set)
 			}
 		}
@@ -399,8 +397,8 @@ func (c AccountMgr) ChargeEntryAction() {
 	}
 
 	//
-	if rs := data.Data.NewReader(iamapi.ObjKeyAccChargeUser(user, id)).Query(); rs.OK() {
-		rs.Decode(&set.AccountCharge)
+	if rs := data.Data.NewReader(iamapi.ObjKeyAccChargeUser(user, id)).Exec(); rs.OK() {
+		rs.Item().JsonDecode(&set.AccountCharge)
 	}
 	if set.Id == "" || set.Id != id {
 		set.Error = types.NewErrorMeta(iamapi.ErrCodeNotFound, "Object Not Found")
@@ -452,8 +450,8 @@ func (c AccountMgr) ChargeSetPayoutAction() {
 
 	//
 	if rs := data.Data.NewReader(
-		iamapi.ObjKeyAccChargeUser(set_charge.User, set_charge.Id)).Query(); rs.OK() {
-		rs.Decode(&charge)
+		iamapi.ObjKeyAccChargeUser(set_charge.User, set_charge.Id)).Exec(); rs.OK() {
+		rs.Item().JsonDecode(&charge)
 	}
 	if charge.Id == "" || charge.Id != set_charge.Id {
 		set.Error = types.NewErrorMeta(iamapi.ErrCodeNotFound, "Object Not Found")
@@ -465,8 +463,8 @@ func (c AccountMgr) ChargeSetPayoutAction() {
 	}
 
 	//
-	if rs := data.Data.NewReader(iamapi.ObjKeyAccUser(set_charge.User)).Query(); rs.OK() {
-		rs.Decode(&acc_user)
+	if rs := data.Data.NewReader(iamapi.ObjKeyAccUser(set_charge.User)).Exec(); rs.OK() {
+		rs.Item().JsonDecode(&acc_user)
 	} else if !rs.NotFound() {
 		set.Error = types.NewErrorMeta(iamapi.ErrCodeInternalError, "Server Error")
 		return
@@ -476,15 +474,15 @@ func (c AccountMgr) ChargeSetPayoutAction() {
 		return
 	}
 
-	sets := []kv2.ClientObjectItem{}
+	sets := []keyValue{}
 	updated := types.MetaTimeNow()
 
 	if charge.Fund != "" {
 		var fund iamapi.AccountFund
 		if rs := data.Data.NewReader(
 			iamapi.ObjKeyAccFundUser(set_charge.User, charge.Fund),
-		).Query(); rs.OK() {
-			rs.Decode(&fund)
+		).Exec(); rs.OK() {
+			rs.Item().JsonDecode(&fund)
 		}
 		if fund.Id == "" || fund.Id != charge.Fund {
 			set.Error = types.NewErrorMeta(iamapi.ErrCodeInvalidArgument, "Fund Not Found")
@@ -497,12 +495,12 @@ func (c AccountMgr) ChargeSetPayoutAction() {
 		fund.ExpProductInpay.Del(charge.Product)
 		fund.Updated = updated
 
-		sets = append(sets, kv2.ClientObjectItem{
+		sets = append(sets, keyValue{
 			Key:   iamapi.ObjKeyAccFundUser(set_charge.User, charge.Fund),
 			Value: fund,
 		})
 
-		sets = append(sets, kv2.ClientObjectItem{
+		sets = append(sets, keyValue{
 			Key:   iamapi.ObjKeyAccFundMgr(charge.Fund),
 			Value: fund,
 		})
@@ -519,21 +517,21 @@ func (c AccountMgr) ChargeSetPayoutAction() {
 	charge.Updated = updated
 
 	//
-	sets = append(sets, kv2.ClientObjectItem{
+	sets = append(sets, keyValue{
 		Key:   iamapi.ObjKeyAccChargeUser(set_charge.User, set_charge.Id),
 		Value: charge,
 	})
-	sets = append(sets, kv2.ClientObjectItem{
+	sets = append(sets, keyValue{
 		Key:   iamapi.ObjKeyAccUser(set_charge.User),
 		Value: acc_user,
 	})
-	sets = append(sets, kv2.ClientObjectItem{
+	sets = append(sets, keyValue{
 		Key:   iamapi.ObjKeyAccChargeMgr(set_charge.Id),
 		Value: charge,
 	})
 
 	for _, v := range sets {
-		if rs := data.Data.NewWriter(v.Key, v.Value).Commit(); !rs.OK() {
+		if rs := data.Data.NewWriter(v.Key, nil).SetJsonValue(v.Value).Exec(); !rs.OK() {
 			set.Error = types.NewErrorMeta(iamapi.ErrCodeInternalError, "IO Error")
 			return
 		}

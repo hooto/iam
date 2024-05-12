@@ -92,8 +92,8 @@ func (c Service) LoginAuthAction() {
 
 	err_num := 0
 	err_key := iamapi.ObjKeyUserAuthDeny(uname, addr)
-	if rs := data.Data.NewReader(err_key).Query(); rs.OK() {
-		err_num = rs.DataValue().Int()
+	if rs := data.Data.NewReader(err_key).Exec(); rs.OK() {
+		err_num = int(rs.Item().Int64Value())
 		if err_num >= 20 {
 			rsp.Error = types.NewErrorMeta("400",
 				fmt.Sprintf("more than %d times failed to verify this signin, please try again in 1 day later", err_num))
@@ -104,7 +104,7 @@ func (c Service) LoginAuthAction() {
 	if auth := user.Keys.Get(iamapi.UserKeyDefault); auth == nil ||
 		!pass.Check(c.Params.Value("passwd"), auth.String()) {
 		err_num++
-		data.Data.NewWriter(err_key, err_num).ExpireSet(86400000).Commit()
+		data.Data.NewWriter(err_key, []byte(fmt.Sprintf("%d", err_num))).SetTTL(86400000).Exec()
 		rsp.Error = types.NewErrorMeta("400", "incorrect username or password")
 		hlog.Printf("info", "service/login-auth fail user %s", uname)
 		return
@@ -121,9 +121,9 @@ func (c Service) LoginAuthAction() {
 		)
 	)
 
-	if rs := data.Data.NewWriter(iamapi.ObjKeyUserAuth(ap.Id, uint32(ap.Expired)), ap).
-		ExpireSet(ttl * 1000).Commit(); !rs.OK() {
-		rsp.Error = types.NewErrorMeta("500", rs.Message)
+	if rs := data.Data.NewWriter(iamapi.ObjKeyUserAuth(ap.Id, uint32(ap.Expired)), nil).SetJsonValue(ap).
+		SetTTL(ttl * 1000).Exec(); !rs.OK() {
+		rsp.Error = types.NewErrorMeta("500", rs.ErrorMessage())
 		return
 	}
 
@@ -254,8 +254,8 @@ func (c Service) PhotoAction() {
 
 		var profile iamapi.UserProfile
 
-		if obj := data.Data.NewReader(iamapi.ObjKeyUserProfile(uname)).Query(); obj.OK() {
-			if err := obj.Decode(&profile); err == nil && len(profile.Photo) > 50 {
+		if obj := data.Data.NewReader(iamapi.ObjKeyUserProfile(uname)).Exec(); obj.OK() {
+			if err := obj.Item().JsonDecode(&profile); err == nil && len(profile.Photo) > 50 {
 				photo = profile.Photo
 			}
 		}

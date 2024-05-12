@@ -78,13 +78,13 @@ func (c UserMgr) UserListAction() {
 	)
 
 	// TODO page
-	if rs := data.Data.NewReader(nil).KeyRangeSet(
-		iamapi.ObjKeyUser(""), iamapi.ObjKeyUser("")).LimitNumSet(1000).Query(); rs.OK() {
+	if rs := data.Data.NewRanger(
+		iamapi.ObjKeyUser(""), iamapi.ObjKeyUser("")).SetLimit(1000).Exec(); rs.OK() {
 
 		for _, obj := range rs.Items {
 
 			var user iamapi.User
-			if err := obj.Decode(&user); err != nil {
+			if err := obj.JsonDecode(&user); err != nil {
 				continue
 			}
 
@@ -132,8 +132,8 @@ func (c UserMgr) UserEntryAction() {
 
 	uname := c.Params.Value("username")
 
-	if obj := data.Data.NewReader(iamapi.ObjKeyUser(uname)).Query(); obj.OK() {
-		obj.Decode(&set.Login)
+	if obj := data.Data.NewReader(iamapi.ObjKeyUser(uname)).Exec(); obj.OK() {
+		obj.Item().JsonDecode(&set.Login)
 	}
 
 	// login
@@ -146,8 +146,8 @@ func (c UserMgr) UserEntryAction() {
 
 	//
 	var profile iamapi.UserProfile
-	if obj := data.Data.NewReader(iamapi.ObjKeyUserProfile(uname)).Query(); obj.OK() {
-		obj.Decode(&profile)
+	if obj := data.Data.NewReader(iamapi.ObjKeyUserProfile(uname)).Exec(); obj.OK() {
+		obj.Item().JsonDecode(&profile)
 
 		profile.About = html.EscapeString(profile.About)
 		profile.Photo = ""
@@ -209,8 +209,8 @@ func (c UserMgr) UserGroupSetAction() {
 
 		user.Updated = types.MetaTimeNow()
 
-		data.Data.NewWriter(iamapi.ObjKeyUser(user.Name), user).
-			IncrNamespaceSet("user").Commit()
+		data.Data.NewWriter(iamapi.ObjKeyUser(user.Name), nil).SetJsonValue(user).
+			SetIncr(0, "user").Exec()
 	}
 
 	set.Kind = "User"
@@ -258,8 +258,8 @@ func (c UserMgr) UserSetAction() {
 	var prev iamapi.UserEntry
 
 	//
-	if obj := data.Data.NewReader(iamapi.ObjKeyUser(set.Login.Name)).Query(); obj.OK() {
-		obj.Decode(&prev.Login)
+	if obj := data.Data.NewReader(iamapi.ObjKeyUser(set.Login.Name)).Exec(); obj.OK() {
+		obj.Item().JsonDecode(&prev.Login)
 	}
 
 	if prev.Login.Type == iamapi.UserTypeGroup {
@@ -296,9 +296,9 @@ func (c UserMgr) UserSetAction() {
 	set.Login.Updated = types.MetaTimeNow()
 	sort.Sort(set.Login.Roles)
 
-	if obj := data.Data.NewWriter(iamapi.ObjKeyUser(set.Login.Name), set.Login).
-		IncrNamespaceSet("user").Commit(); !obj.OK() {
-		set.Error = types.NewErrorMeta("500", obj.Message)
+	if obj := data.Data.NewWriter(iamapi.ObjKeyUser(set.Login.Name), nil).SetJsonValue(set.Login).
+		SetIncr(0, "user").Exec(); !obj.OK() {
+		set.Error = types.NewErrorMeta("500", obj.ErrorMessage())
 		return
 	}
 
@@ -306,9 +306,9 @@ func (c UserMgr) UserSetAction() {
 
 		var profile iamapi.UserProfile
 
-		if obj := data.Data.NewReader(iamapi.ObjKeyUserProfile(set.Login.Name)).Query(); obj.OK() {
+		if obj := data.Data.NewReader(iamapi.ObjKeyUserProfile(set.Login.Name)).Exec(); obj.OK() {
 
-			obj.Decode(&profile)
+			obj.Item().JsonDecode(&profile)
 
 			if _, err := time.Parse("2006-01-02", set.Profile.Birthday); err == nil {
 				profile.Birthday = set.Profile.Birthday
@@ -320,8 +320,8 @@ func (c UserMgr) UserSetAction() {
 		}
 
 		if obj := data.Data.NewWriter(
-			iamapi.ObjKeyUserProfile(set.Login.Name), profile).Commit(); !obj.OK() {
-			set.Error = types.NewErrorMeta("500", obj.Message)
+			iamapi.ObjKeyUserProfile(set.Login.Name), nil).SetJsonValue(profile).Exec(); !obj.OK() {
+			set.Error = types.NewErrorMeta("500", obj.ErrorMessage())
 			return
 		}
 	}

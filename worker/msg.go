@@ -64,17 +64,20 @@ func MsgQueueRefresh() {
 			break
 		}
 
-		rs := data.Data.NewReader(nil).KeyRangeSet(offset, cutset).
-			LimitNumSet(int64(limit)).Query()
+		rs := data.Data.NewRanger(offset, cutset).
+			SetLimit(int64(limit)).Exec()
+
 		if !rs.OK() {
-			hlog.Printf("info", "mailer scan err")
+			if !rs.NotFound() {
+				hlog.Printf("info", "mailer scan err")
+			}
 			break
 		}
 
 		for _, v := range rs.Items {
 
 			var item hmsg.MsgItem
-			if err := v.DataValue().Decode(&item, nil); err != nil {
+			if err := v.JsonDecode(&item); err != nil {
 				hlog.Printf("info", "mailer err %s", err.Error())
 				continue
 			}
@@ -105,9 +108,9 @@ func MsgQueueRefresh() {
 			}
 
 			/**
-			if rs := data.Data.NewReader(iamapi.ObjKeyUser(item.ToUser)).Query(); rs.OK() {
+			if rs := data.Data.NewReader(iamapi.ObjKeyUser(item.ToUser)).Exec(); rs.OK() {
 				var userLogin iamapi.User
-				rs.Decode(&userLogin)
+				rs.Item().JsonDecode(&userLogin)
 
 				if userLogin.Type == iamapi.UserTypeGroup {
 					//
@@ -131,7 +134,7 @@ func MsgQueueRefresh() {
 
 				if err := msgPost(mailer, item); err != nil {
 					item.Retry += 1
-					data.Data.NewWriter(v.Meta.Key, item).Commit()
+					data.Data.NewWriter(v.Key, item).Exec()
 					hlog.Printf("info", "mailer post %s, to %s, retry %d, err %s", item.Id, item.ToEmail, item.Retry, err.Error())
 					if item.Retry < 10 {
 						continue
@@ -150,19 +153,19 @@ func MsgQueueRefresh() {
 				if item.Posted < 1 {
 					item.Posted = item.Updated
 				}
-				if rs := data.Data.NewWriter(iamapi.ObjKeyMsgSent(item.SentId()), item).Commit(); rs.OK() {
-					data.Data.NewWriter(v.Meta.Key, nil).ModeDeleteSet(true).Commit()
+				if rs := data.Data.NewWriter(iamapi.ObjKeyMsgSent(item.SentId()), item).Exec(); rs.OK() {
+					data.Data.NewDeleter(v.Key).Exec()
 					hlog.Printf("info", "mailer post %s, to %s, retry %d, ok", item.Id, item.ToEmail, item.Retry)
 				} else {
-					hlog.Printf("info", "mailer post %s, to %s, retry %d, err %s", item.Id, item.ToEmail, item.Retry, rs.Message)
+					hlog.Printf("info", "mailer post %s, to %s, retry %d, err %s", item.Id, item.ToEmail, item.Retry, rs.ErrorMessage())
 				}
 			} else {
-				data.Data.NewWriter(v.Meta.Key, item).Commit()
+				data.Data.NewWriter(v.Key, item).Exec()
 				hlog.Printf("warn", "mailer post %s, retry %d", item.Id, item.ToEmail, item.Retry)
 			}
 		}
 
-		if !rs.Next {
+		if !rs.NextResultSet {
 			break
 		}
 	}

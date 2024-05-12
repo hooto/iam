@@ -62,8 +62,8 @@ func (c User) ProfileAction() {
 	defer c.RenderJson(&set)
 
 	// profile
-	if obj := data.Data.NewReader(iamapi.ObjKeyUserProfile(c.us.UserName)).Query(); obj.OK() {
-		obj.Decode(&set.UserProfile)
+	if obj := data.Data.NewReader(iamapi.ObjKeyUserProfile(c.us.UserName)).Exec(); obj.OK() {
+		obj.Item().JsonDecode(&set.UserProfile)
 	}
 
 	set.Login = nil
@@ -71,8 +71,8 @@ func (c User) ProfileAction() {
 
 		// login
 		var user iamapi.User
-		if obj := data.Data.NewReader(iamapi.ObjKeyUser(c.us.UserName)).Query(); obj.OK() {
-			obj.Decode(&user)
+		if obj := data.Data.NewReader(iamapi.ObjKeyUser(c.us.UserName)).Exec(); obj.OK() {
+			obj.Item().JsonDecode(&user)
 		}
 
 		if user.Name != c.us.UserName {
@@ -81,7 +81,7 @@ func (c User) ProfileAction() {
 		}
 
 		set.Login = &user
-		data.Data.NewWriter(iamapi.ObjKeyUserProfile(c.us.UserName), set).Commit()
+		data.Data.NewWriter(iamapi.ObjKeyUserProfile(c.us.UserName), nil).SetJsonValue(set).Exec()
 	}
 
 	set.Photo = ""
@@ -111,9 +111,9 @@ func (c User) ProfileSetAction() {
 
 	// login
 	var user iamapi.User
-	uobj := data.Data.NewReader(iamapi.ObjKeyUser(c.us.UserName)).Query()
+	uobj := data.Data.NewReader(iamapi.ObjKeyUser(c.us.UserName)).Exec()
 	if uobj.OK() {
-		uobj.Decode(&user)
+		uobj.Item().JsonDecode(&user)
 	}
 
 	if user.Name != c.us.UserName {
@@ -122,13 +122,13 @@ func (c User) ProfileSetAction() {
 	}
 	user.DisplayName = req.Login.DisplayName
 
-	data.Data.NewWriter(iamapi.ObjKeyUser(c.us.UserName), user).Commit()
+	data.Data.NewWriter(iamapi.ObjKeyUser(c.us.UserName), nil).SetJsonValue(user).Exec()
 
 	// profile
 	var profile iamapi.UserProfile
-	pobj := data.Data.NewReader(iamapi.ObjKeyUserProfile(c.us.UserName)).Query()
+	pobj := data.Data.NewReader(iamapi.ObjKeyUserProfile(c.us.UserName)).Exec()
 	if pobj.OK() {
-		pobj.Decode(&profile)
+		pobj.Item().JsonDecode(&profile)
 	}
 
 	profile.Birthday = req.Birthday
@@ -137,7 +137,7 @@ func (c User) ProfileSetAction() {
 	profile.Login = &user
 	profile.Login.Keys = nil
 
-	data.Data.NewWriter(iamapi.ObjKeyUserProfile(c.us.UserName), profile).Commit()
+	data.Data.NewWriter(iamapi.ObjKeyUserProfile(c.us.UserName), nil).SetJsonValue(profile).Exec()
 
 	set.Kind = "UserProfile"
 }
@@ -161,9 +161,9 @@ func (c User) PassSetAction() {
 	}
 
 	var user iamapi.User
-	uobj := data.Data.NewReader(iamapi.ObjKeyUser(c.us.UserName)).Query()
+	uobj := data.Data.NewReader(iamapi.ObjKeyUser(c.us.UserName)).Exec()
 	if uobj.OK() {
-		uobj.Decode(&user)
+		uobj.Item().JsonDecode(&user)
 	}
 
 	if user.Name != c.us.UserName {
@@ -181,7 +181,7 @@ func (c User) PassSetAction() {
 	auth_key, _ := pass.HashDefault(req.NewPassword)
 	user.Keys.Set(iamapi.UserKeyDefault, auth_key)
 
-	data.Data.NewWriter(iamapi.ObjKeyUser(c.us.UserName), user).Commit()
+	data.Data.NewWriter(iamapi.ObjKeyUser(c.us.UserName), nil).SetJsonValue(user).Exec()
 
 	set.Kind = "UserPassword"
 }
@@ -207,9 +207,9 @@ func (c User) EmailSetAction() {
 	}
 
 	var user iamapi.User
-	uobj := data.Data.NewReader(iamapi.ObjKeyUser(c.us.UserName)).Query()
+	uobj := data.Data.NewReader(iamapi.ObjKeyUser(c.us.UserName)).Exec()
 	if uobj.OK() {
-		uobj.Decode(&user)
+		uobj.Item().JsonDecode(&user)
 	}
 
 	if user.Name != c.us.UserName {
@@ -225,13 +225,13 @@ func (c User) EmailSetAction() {
 
 	user.Email = req.Email
 	user.Updated = types.MetaTimeNow()
-	data.Data.NewWriter(iamapi.ObjKeyUser(c.us.UserName), user).Commit()
+	data.Data.NewWriter(iamapi.ObjKeyUser(c.us.UserName), nil).SetJsonValue(user).Exec()
 
-	if rs := data.Data.NewReader(iamapi.ObjKeyUserProfile(c.us.UserName)).Query(); rs.OK() {
+	if rs := data.Data.NewReader(iamapi.ObjKeyUserProfile(c.us.UserName)).Exec(); rs.OK() {
 		var preprofile iamapi.UserProfile
-		if err := rs.Decode(&preprofile); err == nil {
+		if err := rs.Item().JsonDecode(&preprofile); err == nil {
 			preprofile.Login = &user
-			data.Data.NewWriter(iamapi.ObjKeyUserProfile(c.us.UserName), preprofile).Commit()
+			data.Data.NewWriter(iamapi.ObjKeyUserProfile(c.us.UserName), nil).SetJsonValue(preprofile).Exec()
 		}
 	}
 
@@ -260,9 +260,9 @@ func (c User) PhotoSetAction() {
 
 	// profile
 	var profile iamapi.UserProfile
-	pobj := data.Data.NewReader(iamapi.ObjKeyUserProfile(c.us.UserName)).Query()
+	pobj := data.Data.NewReader(iamapi.ObjKeyUserProfile(c.us.UserName)).Exec()
 	if pobj.OK() {
-		pobj.Decode(&profile)
+		pobj.Item().JsonDecode(&profile)
 	}
 
 	if profile.Login != nil && profile.Login.Name != "" && profile.Login.Name != c.us.UserName {
@@ -290,7 +290,7 @@ func (c User) PhotoSetAction() {
 	profile.Photo = "data:image/png;base64," + imgphoto
 	profile.PhotoSource = req.Data
 
-	data.Data.NewWriter(iamapi.ObjKeyUserProfile(c.us.UserName), profile).Commit()
+	data.Data.NewWriter(iamapi.ObjKeyUserProfile(c.us.UserName), nil).SetJsonValue(profile).Exec()
 
 	set.Kind = "UserPhoto"
 }
@@ -300,13 +300,13 @@ func (c User) RoleListAction() {
 	sets := iamapi.UserRoleList{}
 	defer c.RenderJson(&sets)
 
-	if rs := data.Data.NewReader(nil).KeyRangeSet(
-		iamapi.ObjKeyRole(""), iamapi.ObjKeyRole("")).LimitNumSet(1000).Query(); rs.OK() {
+	if rs := data.Data.NewRanger(
+		iamapi.ObjKeyRole(""), iamapi.ObjKeyRole("")).SetLimit(1000).Exec(); rs.OK() {
 
 		for _, obj := range rs.Items {
 
 			var role iamapi.UserRole
-			if err := obj.DataValue().Decode(&role, nil); err == nil {
+			if err := obj.JsonDecode(&role); err == nil {
 
 				if obj.Meta.IncrId == 1 {
 					continue

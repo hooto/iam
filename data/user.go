@@ -64,8 +64,8 @@ func UserSet(user *iamapi.User) bool {
 	p, ok := userCaches[user.Name]
 	if !ok || p.Updated >= user.Updated {
 
-		if rs := Data.NewWriter(iamapi.ObjKeyUser(user.Name), user).
-			IncrNamespaceSet("user").Commit(); !rs.OK() {
+		if rs := Data.NewWriter(iamapi.ObjKeyUser(user.Name), nil).SetJsonValue(user).
+			SetIncr(0, "user").Exec(); !rs.OK() {
 			return false
 		}
 
@@ -114,8 +114,7 @@ func userCacheRefresh() {
 
 	for {
 
-		rs := Data.NewReader().KeyRangeSet(offset, cutset).
-			LimitNumSet(1000).Query()
+		rs := Data.NewRanger(offset, cutset).SetLimit(1000).Exec()
 		if !rs.OK() {
 			break
 		}
@@ -123,7 +122,7 @@ func userCacheRefresh() {
 		for _, obj := range rs.Items {
 
 			var user iamapi.User
-			if err := obj.Decode(&user); err != nil {
+			if err := obj.JsonDecode(&user); err != nil {
 				continue
 			}
 
@@ -147,7 +146,7 @@ func userCacheRefresh() {
 			}
 		}
 
-		if !rs.Next {
+		if !rs.NextResultSet {
 			break
 		}
 	}

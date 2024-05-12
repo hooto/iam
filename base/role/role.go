@@ -57,11 +57,11 @@ func instPerms(instanceid string) *perm_map {
 		}
 	}
 
-	if rs := data.Data.NewReader(iamapi.ObjKeyAppInstance(instanceid)).Query(); rs.OK() {
+	if rs := data.Data.NewReader(iamapi.ObjKeyAppInstance(instanceid)).Exec(); rs.OK() {
 
 		var inst iamapi.AppInstance
 
-		if err := rs.Decode(&inst); err == nil {
+		if err := rs.Item().JsonDecode(&inst); err == nil {
 
 			for _, ip := range inst.Privileges {
 

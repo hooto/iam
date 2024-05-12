@@ -34,13 +34,13 @@ func (c UserMgr) RoleListAction() {
 	// 	return
 	// }
 
-	if rs := data.Data.NewReader(nil).KeyRangeSet(
-		iamapi.ObjKeyRole(""), iamapi.ObjKeyRole("")).LimitNumSet(1000).Query(); rs.OK() {
+	if rs := data.Data.NewRanger(
+		iamapi.ObjKeyRole(""), iamapi.ObjKeyRole("")).SetLimit(1000).Exec(); rs.OK() {
 
 		for _, obj := range rs.Items {
 
 			var role iamapi.UserRole
-			if err := obj.DataValue().Decode(&role, nil); err == nil {
+			if err := obj.JsonDecode(&role); err == nil {
 
 				if obj.Meta.IncrId == 1000 {
 					continue
@@ -70,8 +70,8 @@ func (c UserMgr) RoleEntryAction() {
 
 	// TODO roleid
 	name := c.Params.Value("role_name")
-	if rs := data.Data.NewReader(iamapi.ObjKeyRole(name)).Query(); rs.OK() {
-		rs.DataValue().Decode(&set.UserRole, nil)
+	if rs := data.Data.NewReader(iamapi.ObjKeyRole(name)).Exec(); rs.OK() {
+		rs.Item().JsonDecode(&set.UserRole)
 	}
 
 	if set.Name == "" {
@@ -107,7 +107,7 @@ func (c UserMgr) RoleSetAction() {
 		return
 	}
 
-	rsp := data.Data.NewReader(iamapi.ObjKeyRole(set.Name)).Query()
+	rsp := data.Data.NewReader(iamapi.ObjKeyRole(set.Name)).Exec()
 
 	if rsp.NotFound() {
 
@@ -117,7 +117,7 @@ func (c UserMgr) RoleSetAction() {
 	} else if rsp.OK() {
 
 		var prev iamapi.UserRole
-		rsp.DataValue().Decode(&prev, nil)
+		rsp.Item().JsonDecode(&prev)
 
 		if prev.Created > 0 {
 			prev.Desc = set.Desc
@@ -125,16 +125,16 @@ func (c UserMgr) RoleSetAction() {
 		}
 
 	} else {
-		set.Error = types.NewErrorMeta("500", rsp.Message)
+		set.Error = types.NewErrorMeta("500", rsp.ErrorMessage())
 		return
 	}
 
 	set.Updated = types.MetaTimeNow()
 	// roleset["privileges"] = strings.Join(c.Params.Values["privileges"], ",")
 
-	if rs := data.Data.NewWriter(iamapi.ObjKeyRole(set.Name), set.UserRole).
-		IncrNamespaceSet("role").Commit(); !rs.OK() {
-		set.Error = types.NewErrorMeta("500", rs.Message)
+	if rs := data.Data.NewWriter(iamapi.ObjKeyRole(set.Name), nil).SetJsonValue(set.UserRole).
+		SetIncr(0, "role").Exec(); !rs.OK() {
+		set.Error = types.NewErrorMeta("500", rs.ErrorMessage())
 		return
 	}
 

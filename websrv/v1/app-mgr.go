@@ -49,15 +49,15 @@ func (c AppMgr) InstListAction() {
 	)
 
 	// TODO page
-	offset := iamapi.ObjKeyAppInstance("zzzzzzzz")
-	cutset := iamapi.ObjKeyAppInstance("")
-	if rs := data.Data.NewReader(nil).KeyRangeSet(offset, cutset).
-		ModeRevRangeSet(true).LimitNumSet(1000).Query(); rs.OK() {
+	offset := iamapi.ObjKeyAppInstance("")
+	cutset := iamapi.ObjKeyAppInstance("zzzzzzzz")
+	if rs := data.Data.NewRanger(offset, cutset).
+		SetRevert(true).SetLimit(1000).Exec(); rs.OK() {
 
 		for _, obj := range rs.Items {
 
 			var inst iamapi.AppInstance
-			if err := obj.Decode(&inst); err == nil {
+			if err := obj.JsonDecode(&inst); err == nil {
 
 				if qt != "" && (!strings.Contains(inst.AppID, qt) &&
 					!strings.Contains(inst.AppTitle, qt)) {
@@ -87,8 +87,8 @@ func (c AppMgr) InstEntryAction() {
 		return
 	}
 
-	if obj := data.Data.NewReader(iamapi.ObjKeyAppInstance(c.Params.Value("instid"))).Query(); obj.OK() {
-		obj.Decode(&set.AppInstance)
+	if obj := data.Data.NewReader(iamapi.ObjKeyAppInstance(c.Params.Value("instid"))).Exec(); obj.OK() {
+		obj.Item().JsonDecode(&set.AppInstance)
 	}
 
 	if set.Meta.ID == "" {
@@ -118,8 +118,8 @@ func (c AppMgr) InstSetAction() {
 	}
 
 	var prev iamapi.AppInstance
-	if obj := data.Data.NewReader(iamapi.ObjKeyAppInstance(set.Meta.ID)).Query(); obj.OK() {
-		obj.Decode(&prev)
+	if obj := data.Data.NewReader(iamapi.ObjKeyAppInstance(set.Meta.ID)).Exec(); obj.OK() {
+		obj.Item().JsonDecode(&prev)
 	}
 
 	if prev.Meta.ID == "" {
@@ -133,9 +133,9 @@ func (c AppMgr) InstSetAction() {
 		prev.AppTitle = set.AppTitle
 		prev.Url = set.Url
 
-		if obj := data.Data.NewWriter(iamapi.ObjKeyAppInstance(set.Meta.ID), prev).
-			Commit(); !obj.OK() {
-			set.Error = types.NewErrorMeta(iamapi.ErrCodeInternalError, obj.Message)
+		if obj := data.Data.NewWriter(iamapi.ObjKeyAppInstance(set.Meta.ID), nil).SetJsonValue(prev).
+			Exec(); !obj.OK() {
+			set.Error = types.NewErrorMeta(iamapi.ErrCodeInternalError, obj.ErrorMessage())
 			return
 		}
 	}
@@ -156,8 +156,8 @@ func (c AppMgr) InstDelAction() {
 	}
 
 	var prev iamapi.AppInstance
-	if obj := data.Data.NewReader(iamapi.ObjKeyAppInstance(inst_id)).Query(); obj.OK() {
-		obj.Decode(&prev)
+	if obj := data.Data.NewReader(iamapi.ObjKeyAppInstance(inst_id)).Exec(); obj.OK() {
+		obj.Item().JsonDecode(&prev)
 	}
 
 	if prev.Meta.ID == "" {
@@ -165,9 +165,8 @@ func (c AppMgr) InstDelAction() {
 		return
 	}
 
-	if obj := data.Data.NewWriter(iamapi.ObjKeyAppInstance(inst_id), nil).
-		ModeDeleteSet(true).Commit(); !obj.OK() {
-		set.Error = types.NewErrorMeta(iamapi.ErrCodeInternalError, obj.Message)
+	if obj := data.Data.NewDeleter(iamapi.ObjKeyAppInstance(inst_id)).Exec(); !obj.OK() {
+		set.Error = types.NewErrorMeta(iamapi.ErrCodeInternalError, obj.ErrorMessage())
 		return
 	}
 
