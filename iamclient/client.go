@@ -15,6 +15,7 @@
 package iamclient
 
 import (
+	"context"
 	"errors"
 	"fmt"
 	"net/url"
@@ -183,6 +184,106 @@ func Instance(token string) (*iamapi.UserSession, error) {
 func tokenIsLogin(token string) bool {
 
 	if _, err := Instance(token); err != nil {
+		return false
+	}
+
+	return true
+}
+
+func IsLogin(ctx context.Context) error {
+
+	token := ctx.Value(AccessTokenKey)
+	if token == nil {
+		if token = ctx.Value("Authorization"); token == nil {
+			return errors.New("AccessToken/Authorization not found")
+		}
+	}
+
+	accessToken, ok := token.(string)
+	if !ok {
+		return errors.New("AccessToken/Authorization not found")
+	}
+
+	us, err := Instance(accessToken)
+	if err != nil {
+		return err
+	}
+
+	if !us.IsLogin() {
+		return errors.New("login required")
+	}
+
+	return nil
+}
+
+func UserSession(ctx context.Context) *iamapi.UserSession {
+
+	token := ctx.Value(AccessTokenKey)
+	if token == nil {
+		if token = ctx.Value("Authorization"); token == nil {
+			return nil
+		}
+	}
+
+	accessToken, ok := token.(string)
+	if !ok {
+		return nil
+	}
+
+	us, err := Instance(accessToken)
+	if err != nil {
+		return nil
+	}
+
+	return us
+}
+
+func UserAllow(ctx context.Context, user, privilege, instanceId string) bool {
+
+	token := ctx.Value(AccessTokenKey)
+	if token == nil {
+		if token = ctx.Value("Authorization"); token == nil {
+			return false
+		}
+	}
+
+	accessToken, ok := token.(string)
+	if !ok {
+		return false
+	}
+
+	us, err := Instance(accessToken)
+	if err != nil {
+		return false
+	}
+
+	if !us.IsLogin() {
+		return false
+	}
+
+	if !us.AccessAllow(user) {
+		return false
+	}
+
+	if privilege == "" || instanceId == "" {
+		return true
+	}
+
+	req := iamapi.UserAccessEntry{
+		AccessToken: accessToken,
+		InstanceID:  instanceId,
+		Privilege:   privilege,
+	}
+
+	js, _ := json.Encode(req, "")
+	hc := httpclient.Post(ServiceUrl + "/v1/service/access-allowed")
+	hc.Header("contentType", "application/json; charset=utf-8")
+	hc.SetTimeout(3000)
+	hc.Body(js)
+	defer hc.Close()
+
+	var ua iamapi.UserAccessEntry
+	if err := hc.ReplyJson(&ua); err != nil || ua.Kind != "UserAccessEntry" {
 		return false
 	}
 
