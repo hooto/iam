@@ -154,6 +154,7 @@ func (c AccessKey) SetAction() {
 	if rs := data.Data.NewWriter(iamapi.NsAccessKey(c.us.UserName, prev.Id), nil).SetJsonValue(prev).
 		Exec(); rs.OK() {
 		set.Kind = "AccessKey"
+		data.KeyMgr.KeySet(&prev)
 	} else {
 		set.Error = types.NewErrorMeta(iamapi.ErrCodeInternalError, "IO Error")
 	}
@@ -172,6 +173,7 @@ func (c AccessKey) DelAction() {
 
 	if rs := data.Data.NewDeleter(iamapi.NsAccessKey(c.us.UserName, id)).Exec(); rs.OK() {
 		set.Kind = "AccessKey"
+		data.KeyMgr.KeyDel(id)
 	} else {
 		set.Error = types.NewErrorMeta(iamapi.ErrCodeInternalError, "IO Error")
 	}

@@ -26,7 +26,8 @@ import (
 	"regexp"
 	"strings"
 
-	"github.com/golang/protobuf/proto"
+	"google.golang.org/protobuf/proto"
+
 	"github.com/lessos/lessgo/crypto/idhash"
 	"github.com/lessos/lessgo/encoding/json"
 	"github.com/lessos/lessgo/types"

@@ -9,15 +9,6 @@ BINDATA_ARGS_UI = -src webui/ -dst bindata/iam_ws_webui/ -inc js,css,png,svg,ico
 BINDATA_ARGS_VIEW = -src websrv/views/ -dst bindata/iam_ws_views/ -inc tpl
 BINDATA_ARGS_I18N = -src i18n/ -dst bindata/iam_i18n -inc json
 
-BUILDCOLOR="\033[34;1m"
-BINCOLOR="\033[37;1m"
-ENDCOLOR="\033[0m"
-
-ifndef V
-	QUIET_BUILD = @printf '%b %b\n' $(BUILDCOLOR)BUILD$(ENDCOLOR) $(BINCOLOR)$@$(ENDCOLOR) 1>&2;
-	QUIET_INSTALL = @printf '%b %b\n' $(BUILDCOLOR)INSTALL$(ENDCOLOR) $(BINCOLOR)$@$(ENDCOLOR) 1>&2;
-endif
-
 
 all: bindata_build
 	@echo ""
@@ -30,13 +21,13 @@ clean: bindata_clean
 	@echo ""
 
 proto_build:
-	$(QUIET_BUILD)$(PROTOC_CMD) $(PROTOC_ARGS) $(CCLINK)
-	$(QUIET_BUILD)$(HTOML_TAG_FIX_CMD) $(HTOML_TAG_FIX_ARGS) $(CCLINK)
+	$(PROTOC_CMD) $(PROTOC_ARGS)
+	$(HTOML_TAG_FIX_CMD) $(HTOML_TAG_FIX_ARGS)
 
 bindata_build:
-	$(QUIET_BUILD)$(BINDATA_CMD) $(BINDATA_ARGS_UI) $(CCLINK)
-	$(QUIET_BUILD)$(BINDATA_CMD) $(BINDATA_ARGS_VIEW) $(CCLINK)
-	$(QUIET_BUILD)$(BINDATA_CMD) $(BINDATA_ARGS_I18N) $(CCLINK)
+	$(BINDATA_CMD) $(BINDATA_ARGS_UI)
+	$(BINDATA_CMD) $(BINDATA_ARGS_VIEW)
+	$(BINDATA_CMD) $(BINDATA_ARGS_I18N)
 
 bindata_clean:
 	rm -f bindata/iam_ws_webui/statik.go

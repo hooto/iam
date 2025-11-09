@@ -72,7 +72,7 @@ type AccountFund struct {
 	Prepay           float64                   `json:"prepay" toml:"prepay"`
 	Payout           float64                   `json:"payout" toml:"payout"`
 	Priority         uint8                     `json:"priority" toml:"priority"`
-	Options          types.Labels              `json:"options,emitempty" toml:"options,emitempty"`
+	Options          types.Labels              `json:"options,omitempty" toml:"options,omitempty"`
 	Created          types.MetaTime            `json:"created" toml:"created"`
 	Updated          types.MetaTime            `json:"updated" toml:"updated"`
 	Comment          string                    `json:"comment,omitempty" toml:"comment,omitempty"`

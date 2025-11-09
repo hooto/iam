@@ -22,26 +22,26 @@ import (
 	"github.com/lessos/lessgo/types"
 )
 
-type AccessKeyDep struct {
-	User        string           `json:"user,omitempty" toml:"user,omitempty"`
-	AccessKey   string           `json:"access_key" toml:"access_key"`
-	SecretKey   string           `json:"secret_key,omitempty" toml:"secret_key,omitempty"`
-	Created     types.MetaTime   `json:"created,omitempty" toml:"created,omitempty"`
-	Action      uint16           `json:"action,omitempty" toml:"action,omitempty"`
-	Description string           `json:"desc,omitempty" toml:"desc,omitempty"`
-	Bounds      []AccessKeyBound `json:"bounds,omitempty" toml:"bounds,omitempty"`
-}
+// type AccessKeyDep struct {
+// 	User        string           `json:"user,omitempty" toml:"user,omitempty"`
+// 	AccessKey   string           `json:"access_key" toml:"access_key"`
+// 	SecretKey   string           `json:"secret_key,omitempty" toml:"secret_key,omitempty"`
+// 	Created     types.MetaTime   `json:"created,omitempty" toml:"created,omitempty"`
+// 	Action      uint16           `json:"action,omitempty" toml:"action,omitempty"`
+// 	Description string           `json:"desc,omitempty" toml:"desc,omitempty"`
+// 	Bounds      []AccessKeyBound `json:"bounds,omitempty" toml:"bounds,omitempty"`
+// }
 
-type AccessKeyBound struct {
-	Name    string         `json:"name" toml:"name"`
-	Created types.MetaTime `json:"created,omitempty" toml:"created,omitempty"`
-}
+// type AccessKeyBound struct {
+// 	Name    string         `json:"name" toml:"name"`
+// 	Created types.MetaTime `json:"created,omitempty" toml:"created,omitempty"`
+// }
 
-func (it AccessKeyBound) IterKey() string {
-	return it.Name
-}
+// func (it AccessKeyBound) IterKey() string {
+// 	return it.Name
+// }
 
-type AccessKeyBounds []AccessKeyBound
+// type AccessKeyBounds []AccessKeyBound
 
 type AccessKeyAuth struct {
 	Type  string `json:"t" toml:"t"`
