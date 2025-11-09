@@ -225,7 +225,7 @@ iamAccessKey.SetCommit = function() {
     var req = {
         id: form.find("input[name=id]").val(),
         status: parseInt(form.find("input[name=status]:checked").val()),
-        description: form.find("input[name=description]").val(),
+        description: form.find("input[name=desc]").val(),
         scopes: [],
     }
 
