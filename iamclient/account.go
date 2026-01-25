@@ -17,7 +17,7 @@ package iamclient
 import (
 	"fmt"
 
-	"github.com/hooto/hauth/go/hauth/v1"
+	"github.com/hooto/hauth/go"
 	"github.com/hooto/iam/iamapi"
 	"github.com/lessos/lessgo/encoding/json"
 	"github.com/lessos/lessgo/net/httpclient"

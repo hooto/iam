@@ -26,7 +26,7 @@ import (
 	"github.com/lessos/lessgo/net/httpclient"
 	"github.com/lessos/lessgo/types"
 
-	"github.com/hooto/hauth/go/hauth/v1"
+	"github.com/hooto/hauth/go"
 	"github.com/hooto/httpsrv"
 	"github.com/hooto/iam/iamapi"
 )

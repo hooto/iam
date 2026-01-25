@@ -28,7 +28,7 @@ import (
 	"github.com/lessos/lessgo/pass"
 	"github.com/lessos/lessgo/types"
 
-	"github.com/hooto/hauth/go/hauth/v1"
+	"github.com/hooto/hauth/go"
 	"github.com/hooto/iam/base/role"
 	"github.com/hooto/iam/data"
 	"github.com/hooto/iam/iamapi"

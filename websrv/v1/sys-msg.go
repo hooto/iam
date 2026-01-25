@@ -20,7 +20,7 @@ import (
 	"github.com/hooto/httpsrv"
 	"github.com/lessos/lessgo/types"
 
-	"github.com/hooto/hauth/go/hauth/v1"
+	"github.com/hooto/hauth/go"
 	"github.com/hooto/hmsg/go/hmsg/v1"
 	"github.com/hooto/iam/data"
 	"github.com/hooto/iam/iamapi"

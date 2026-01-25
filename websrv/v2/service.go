@@ -17,7 +17,7 @@ package v2
 import (
 	"time"
 
-	hauth2 "github.com/hooto/hauth/v2/hauth"
+	hauth2 "github.com/hooto/hauth/go/v2"
 	"github.com/hooto/httpsrv"
 	"github.com/hooto/iam/data"
 	"github.com/hooto/iam/iamapi"

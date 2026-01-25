@@ -24,7 +24,7 @@ import (
 	"github.com/lessos/lessgo/types"
 	iox_utils "github.com/lynkdb/iomix/utils"
 
-	"github.com/hooto/hauth/go/hauth/v1"
+	"github.com/hooto/hauth/go"
 	"github.com/hooto/iam/data"
 	"github.com/hooto/iam/iamapi"
 	"github.com/hooto/iam/iamclient"

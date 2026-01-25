@@ -18,7 +18,7 @@ import (
 	"errors"
 	"fmt"
 
-	"github.com/hooto/hauth/go/hauth/v1"
+	"github.com/hooto/hauth/go"
 	"github.com/hooto/hmsg/go/hmsg/v1"
 	"github.com/lessos/lessgo/crypto/idhash"
 	"github.com/lessos/lessgo/encoding/json"

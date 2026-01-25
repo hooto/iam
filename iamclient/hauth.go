@@ -19,7 +19,7 @@ import (
 	"errors"
 	"sync"
 
-	hauth2 "github.com/hooto/hauth/v2/hauth"
+	hauth2 "github.com/hooto/hauth/go/v2"
 
 	"github.com/lessos/lessgo/net/httpclient"
 )
