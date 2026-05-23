@@ -1,36 +1,57 @@
-PROTOC_CMD = protoc
-PROTOC_ARGS = --proto_path=./iamapi/ --go_opt=paths=source_relative --go_out=./iamapi/ --go-grpc_out=./iamapi/ ./iamapi/types.proto
+# Copyright 2014 Eryx <evorui at gmail dot com>, All rights reserved.
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
 
-HTOML_TAG_FIX_CMD = htoml-tag-fix
-HTOML_TAG_FIX_ARGS = iamapi/types.pb.go
+.PHONY: build_api build_frontend clean run-fe run-be install-deps
 
-BINDATA_CMD = httpsrv-bindata
-BINDATA_ARGS_UI = -src webui/ -dst bindata/iam_ws_webui/ -inc js,css,png,svg,ico,tpl,woff2
-BINDATA_ARGS_VIEW = -src websrv/views/ -dst bindata/iam_ws_views/ -inc tpl
-BINDATA_ARGS_I18N = -src i18n/ -dst bindata/iam_i18n -inc json
-
-
-all: bindata_build
+all: build_frontend build_backend
 	@echo ""
-	@echo "build complete"
+	@echo "Build complete!"
 	@echo ""
 
-clean: bindata_clean
-	@echo ""
-	@echo "clean complete"
-	@echo ""
+build_frontend:
+	@echo "Building frontend..."
+	cd frontend/server && npm run build
 
-proto_build:
-	$(PROTOC_CMD) $(PROTOC_ARGS)
-	$(HTOML_TAG_FIX_CMD) $(HTOML_TAG_FIX_ARGS)
+build_backend:
+	@echo "Building backend..."
+	go build -o bin/iam-server cmd/server/main.go
 
-bindata_build:
-	$(BINDATA_CMD) $(BINDATA_ARGS_UI)
-	$(BINDATA_CMD) $(BINDATA_ARGS_VIEW)
-	$(BINDATA_CMD) $(BINDATA_ARGS_I18N)
+run-fe:
+	cd frontend/server && npm run dev
 
-bindata_clean:
-	rm -f bindata/iam_ws_webui/statik.go
-	rm -f bindata/iam_ws_views/statik.go
-	rm -f bindata/iam_ws_i18n/statik.go
+run-be: build_frontend build_backend
+	./bin/iam-server
+
+run-demo-fe:
+	cd frontend/demoapp && npm run dev
+
+run-demo-be:
+	go build -o bin/demo-server cmd/demoapp/main.go
+	./bin/demo-server
+
+install-deps:
+	@echo "Installing frontend dependencies..."
+	cd frontend/server && npm install
+	@echo "Installing backend dependencies..."
+	go mod tidy
+	@echo "Dependencies installed!"
+
+clean:
+	@echo "Cleaning build artifacts..."
+	rm -fr frontend/server/dist
+	rm -fr cmd/server/dist
+	rm -fr frontend/demoapp/dist
+	rm -fr cmd/demoapp/dist
+	@echo "Clean complete!"
 

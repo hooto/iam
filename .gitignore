@@ -6,3 +6,17 @@ doc
 test.go
 # bindata
 go.sum
+app
+cmd/server/dist
+cmd/demoapp/dist
+package-lock.json
+history-v1
+batch-*.sh
+
+node_modules/
+**/node_modules/
+
+.vite/
+**/.vite/
+
+.DS_Store

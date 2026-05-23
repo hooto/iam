@@ -1,3 +1,0 @@
-[submodule "webui/lessui"]
-	path = webui/lessui
-	url = git@github.com:lessos/lessui.git

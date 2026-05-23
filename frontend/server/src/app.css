@@ -1,0 +1,5 @@
+/* IAM Frontend - 基于 Bootstrap CSS，仅保留 Bootstrap 无法覆盖的少量样式 */
+
+.bg-auth {
+  background: linear-gradient(135deg, #0d6efd 0%, #0a58ca 100%);
+}
