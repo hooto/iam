@@ -1,4 +1,4 @@
-// Copyright 2014 Eryx <evorui аt gmаil dοt cοm>, All rights reserved.
+// Copyright 2014 Eryx <evorui at gmail dot com>, All rights reserved.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -16,9 +16,8 @@ package iamapi
 
 import (
 	"encoding/base64"
+	"encoding/json"
 	"strings"
-
-	"github.com/lessos/lessgo/encoding/json"
 )
 
 func UserNameFilter(name string) string {
@@ -58,14 +57,14 @@ func (s *ServiceRedirectToken) Encode() string {
 		s.ClientId = s.ClientId[:40]
 	}
 
-	js, _ := json.Encode(s, "")
+	js, _ := json.Marshal(s)
 	return base64.StdEncoding.EncodeToString(js)
 }
 
 func ServiceRedirectTokenDecode(tokenstr string) ServiceRedirectToken {
 	var token ServiceRedirectToken
 	if jsb, err := base64.StdEncoding.DecodeString(tokenstr); err == nil {
-		json.Decode(jsb, &token)
+		json.Unmarshal(jsb, &token)
 	}
 	return token
 }

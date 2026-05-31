@@ -1,4 +1,4 @@
-// Copyright 2014 Eryx <evorui аt gmаil dοt cοm>, All rights reserved.
+// Copyright 2014 Eryx <evorui at gmail dot com>, All rights reserved.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -12,30 +12,26 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package apiserver
+package auth
 
 import (
 	"github.com/hooto/httpsrv"
-	"github.com/sysinner/incore/v2/pkg/inauth"
-
 	"github.com/hooto/iam/v2/internal/config"
+	"github.com/sysinner/incore/v2/pkg/inauth"
 )
 
-type Sys struct {
-	*httpsrv.Controller
-}
-
-type SysInfoResponse struct {
+type Sys_InfoResponse struct {
 	Status          inauth.ServiceStatus `json:"status"`
 	InstanceId      string               `json:"instance_id"`
 	AllowUserSignUp bool                 `json:"allow_user_sign_up"`
 }
 
-func (c Sys) InfoAction() {
-	rsp := SysInfoResponse{
+func Sys_Info(ctx *httpsrv.Context) error {
+	rsp := Sys_InfoResponse{
 		Status:          inauth.NewServiceStatus("200", "ok"),
 		InstanceId:      config.Config.InstanceID,
 		AllowUserSignUp: config.AllowUserSignUp,
 	}
-	defer c.RenderJson(&rsp)
+	defer ctx.RenderJson(&rsp)
+	return nil
 }

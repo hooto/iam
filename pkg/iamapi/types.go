@@ -1,4 +1,4 @@
-// Copyright 2014 Eryx <evorui аt gmаil dοt cοm>, All rights reserved.
+// Copyright 2014 Eryx <evorui at gmail dot com>, All rights reserved.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -83,4 +83,9 @@ type UserResetPassword struct {
 	Username string `json:"username"`
 	Email    string `json:"email"`
 	Expired  int64  `json:"expired"`
+}
+
+type SignInAuthCode struct {
+	AccessToken string `json:"access_token"`
+	Username    string `json:"username"`
 }

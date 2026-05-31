@@ -20,7 +20,7 @@ const session = $state({
 export async function fetchSession() {
   if (session.loaded) return;
   try {
-    const resp = await fetch(routePath + "/v2/service/user-session", {
+    const resp = await fetch(routePath + "/v2/auth/session", {
       credentials: "same-origin",
     });
     const data = await resp.json();
@@ -49,12 +49,12 @@ export function getSession() {
  */
 export async function signOut() {
   try {
-    await fetch(routePath + "/v2/service/user-sign-out", {
+    await fetch(routePath + "/v2/auth/sign-out", {
       method: "POST",
       credentials: "same-origin",
     });
   } catch {
     // ignore network errors, proceed to redirect
   }
-  window.location.href = routePath + "/service/sign-in";
+  window.location.href = routePath + "/auth/sign-in";
 }

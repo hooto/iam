@@ -4,7 +4,7 @@ go 1.26.0
 
 replace github.com/sysinner/incore/v2 v2.0.0-alpha.2 => /opt/workspace/src/github.com/sysinner/incore
 
-// replace github.com/hooto/httpsrv v0.12.7 => /opt/workspace/src/github.com/hooto/httpsrv
+replace github.com/hooto/httpsrv v0.12.7 => /opt/workspace/src/github.com/hooto/httpsrv
 
 require (
 	github.com/disintegration/imaging v1.6.2

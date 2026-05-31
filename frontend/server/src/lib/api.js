@@ -63,13 +63,13 @@ export async function uploadPhoto(dataUrl) {
 // Access Key Management API
 
 export async function fetchAccessKeys() {
-  const data = await request("/v2/access-key/list", {}, "Failed to fetch access keys");
+  const data = await request("/v2/user/keys/list", {}, "Failed to fetch access keys");
   return data.items || [];
 }
 
 export async function fetchAccessKey(id) {
   const data = await request(
-    "/v2/access-key/entry?access_key_id=" + encodeURIComponent(id),
+    "/v2/user/keys/entry?access_key_id=" + encodeURIComponent(id),
     {},
     "Failed to fetch access key",
   );
@@ -77,7 +77,7 @@ export async function fetchAccessKey(id) {
 }
 
 export async function setAccessKey(req) {
-  return request("/v2/access-key/set", {
+  return request("/v2/user/keys/set", {
     method: "PUT",
     body: JSON.stringify(req),
   }, "Failed to save access key");
@@ -85,7 +85,7 @@ export async function setAccessKey(req) {
 
 export async function deleteAccessKey(id) {
   return request(
-    "/v2/access-key/delete?access_key_id=" + encodeURIComponent(id),
+    "/v2/user/keys/delete?access_key_id=" + encodeURIComponent(id),
     {},
     "Failed to delete access key",
   );
@@ -97,9 +97,37 @@ function scopeParams(id, scopeContent) {
 }
 
 export async function bindAccessKeyScope(id, scopeContent) {
-  return request("/v2/access-key/bind?" + scopeParams(id, scopeContent), {}, "Failed to bind scope");
+  return request("/v2/user/keys/bind?" + scopeParams(id, scopeContent), {}, "Failed to bind scope");
 }
 
 export async function unbindAccessKeyScope(id, scopeContent) {
-  return request("/v2/access-key/unbind?" + scopeParams(id, scopeContent), {}, "Failed to unbind scope");
+  return request("/v2/user/keys/unbind?" + scopeParams(id, scopeContent), {}, "Failed to unbind scope");
+}
+
+// App Management API
+
+export async function fetchApps() {
+  const data = await request("/v2/user/apps/list", {}, "Failed to fetch apps");
+  return data.items || [];
+}
+
+export async function createApp(name, url) {
+  return request("/v2/user/apps/register", {
+    method: "POST",
+    body: JSON.stringify({ name, url }),
+  }, "Failed to create app");
+}
+
+export async function updateApp(id, name, url) {
+  return request("/v2/user/apps/update", {
+    method: "POST",
+    body: JSON.stringify({ id, name, url }),
+  }, "Failed to update app");
+}
+
+export async function deleteApp(id) {
+  return request("/v2/user/apps/delete", {
+    method: "POST",
+    body: JSON.stringify({ id }),
+  }, "Failed to delete app");
 }

@@ -1,4 +1,4 @@
-// Copyright 2014 Eryx <evorui аt gmаil dοt cοm>, All rights reserved.
+// Copyright 2014 Eryx <evorui at gmail dot com>, All rights reserved.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -29,7 +29,77 @@ var (
 	userGroupCaches = map[string]*iamapi.User{}
 	userGroupMaps   = map[string][]string{}
 	userRefreshed   = int64(0)
+
+	Users Userset = &userSet{
+		index:          map[string]*iamapi.User{},
+		groupItems:     map[string]*iamapi.User{},
+		userGroupIndex: map[string][]string{},
+	}
 )
+
+type Userset interface {
+	Len() int
+	Iter(func(item *iamapi.User) bool)
+	User(name string) (*iamapi.User, error)
+}
+
+type userSet struct {
+	mu    sync.RWMutex
+	items []*iamapi.User
+	index map[string]*iamapi.User
+
+	groupItems map[string]*iamapi.User
+	// user -> groups
+	userGroupIndex map[string][]string
+}
+
+func (it *userSet) Len() int {
+	it.mu.RLock()
+	defer it.mu.RUnlock()
+	return len(it.items)
+}
+
+func (it *userSet) Iter(fn func(item *iamapi.User) bool) {
+	it.mu.RLock()
+	defer it.mu.RUnlock()
+	for _, v := range it.items {
+		if !fn(v) {
+			break
+		}
+	}
+}
+
+func (it *userSet) User(username string) (*iamapi.User, error) {
+
+	it.mu.Lock()
+	defer it.mu.Unlock()
+
+	if item, ok := it.index[username]; ok {
+		return item, nil
+	}
+
+	var user iamapi.User
+	if rs := Data.NewReader(iamapi.NsUser(username)).Exec(); rs.NotFound() {
+		return nil, nil
+	} else if !rs.OK() {
+		return nil, rs.Error()
+	} else if err := rs.Item().JsonDecode(&user); err != nil {
+		return nil, err
+	}
+
+	it.index[username] = &user
+
+	if user.Type == iamapi.UserTypeGroup {
+		it.groupItems[username] = &user
+		for _, kv := range append(user.Members, user.Owners...) {
+			if !slices.Contains(it.userGroupIndex[kv], user.Name) {
+				it.userGroupIndex[kv] = append(it.userGroupIndex[kv], user.Name)
+			}
+		}
+	}
+
+	return &user, nil
+}
 
 func UserList() map[string]*iamapi.User {
 

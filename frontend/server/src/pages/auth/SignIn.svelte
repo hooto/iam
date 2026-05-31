@@ -1,5 +1,5 @@
 <script>
-  import { routePath } from "../lib/config.js";
+  import { routePath } from "../../lib/config.js";
 
   let username = $state("");
   let password = $state("");
@@ -29,14 +29,19 @@
       // pass redirect_token from URL query if present
       const urlParams = new URLSearchParams(window.location.search);
       const redirectToken = urlParams.get("redirect_token");
+      const appId = urlParams.get("app_id");
+      if (appId) {
+        localStorage.setItem("iam_app_id", appId);
+      }
 
       const body = {
         username: username,
         password: password,
         ...(redirectToken && { redirect_token: redirectToken }),
+        ...(appId && { app_id: appId }),
       };
 
-      const resp = await fetch(routePath + "/v2/service/user-sign-in", {
+      const resp = await fetch(routePath + "/v2/auth/sign-in", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(body),
@@ -126,11 +131,11 @@
 
       <div class="mb-3 d-flex justify-content-end align-items-center">
         <a
-          href="{routePath}/service/forgot-password"
+          href="{routePath}/auth/password/forgot"
           class="link-primary"
           onclick={(e) => {
             e.preventDefault();
-            window.__navigate(routePath + "/service/forgot-password");
+            window.__navigate(routePath + "/auth/password/forgot");
           }}>Forgot password?</a
         >
       </div>
@@ -154,10 +159,10 @@
       <p class="mb-0">
         <span class="text-muted">Don't have an account? </span>
         <a
-          href="{routePath}/service/sign-up"
+          href="{routePath}/auth/sign-up"
           onclick={(e) => {
             e.preventDefault();
-            window.__navigate(routePath + "/service/sign-up");
+            window.__navigate(routePath + "/auth/sign-up");
           }}>Create account</a
         >
       </p>
@@ -168,7 +173,7 @@
     <a
       href="https://github.com/hooto/iam"
       target="_blank"
-      class="text-white text-decoration-none">hooto IAM</a
+      class="text-white text-decoration-none">Powered by hooto IAM</a
     >
   </p>
 </div>

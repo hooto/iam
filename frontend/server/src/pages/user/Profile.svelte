@@ -1,13 +1,13 @@
 <script>
-  import { fetchSession, getSession } from "../lib/session.svelte.js";
-  import UserLayout from "../layouts/UserLayout.svelte";
+  import { fetchSession, getSession } from "../../lib/session.svelte.js";
+  import UserLayout from "./Layout.svelte";
   import {
     fetchProfile,
     updateProfile,
     changePassword,
     changeEmail,
     uploadPhoto,
-  } from "../lib/api.js";
+  } from "../../lib/api.js";
 
   const session = getSession();
   fetchSession();

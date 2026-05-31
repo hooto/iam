@@ -1,4 +1,4 @@
-// Copyright 2014 Eryx <evorui аt gmаil dοt cοm>, All rights reserved.
+// Copyright 2014 Eryx <evorui at gmail dot com>, All rights reserved.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -12,51 +12,43 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package apiserver
+package admin
 
 import (
 	"github.com/hooto/httpsrv"
 	"github.com/sysinner/incore/v2/pkg/inauth"
-
-	"github.com/hooto/iam/v2/internal/data"
-	"github.com/hooto/iam/v2/pkg/iamapi"
 )
 
-type AdminAccessKey struct {
-	*httpsrv.Controller
-}
+const accessKeyLimit = 20
 
-type AdminAccessKeyListRequest struct {
+type AccessKey_ListRequest struct {
 	AccessToken string `json:"access_token,omitempty"`
 }
 
-type AdminAccessKeyListResponse struct {
+type AccessKey_ListResponse struct {
 	Status inauth.ServiceStatus `json:"status"`
 	Items  []*inauth.AccessKey  `json:"items,omitempty"`
 }
 
-func (c AdminAccessKey) ListAction() {
+func AccessKey_List(c *httpsrv.Context) error {
 
-	// user := userAuth(c.Controller)
-	// if user == nil {
-	// 	return
-	// }
-
-	var rsp AdminAccessKeyListResponse
+	var rsp AccessKey_ListResponse
 	defer c.RenderJson(&rsp)
 
-	k1 := iamapi.NsAccessKey("", "")
-	k2 := iamapi.NsAccessKey("", "")
-	if rs := data.Data.NewRanger(k1, k2).
-		SetLimit(int64(accessKeyLimit)).Exec(); rs.OK() {
-		for _, v := range rs.Items {
-			var ak inauth.AccessKey
-			if err := v.JsonDecode(&ak); err == nil &&
-				ak.State != inauth.AccessKey_State_Disable {
-				rsp.Items = append(rsp.Items, &ak)
-			}
-		}
-	}
+	// k1 := iamapi.NsAccessKey("", "")
+	// k2 := iamapi.NsAccessKey("", "")
+	// if rs := data.Data.NewRanger(k1, k2).
+	// 	SetLimit(int64(accessKeyLimit)).Exec(); rs.OK() {
+	// 	for _, v := range rs.Items {
+	// 		var ak inauth.AccessKey
+	// 		if err := v.JsonDecode(&ak); err == nil &&
+	// 			ak.State != inauth.AccessKey_State_Disable {
+	// 			rsp.Items = append(rsp.Items, &ak)
+	// 		}
+	// 	}
+	// }
 
 	rsp.Status = inauth.NewServiceStatus("200", "ok")
+
+	return nil
 }

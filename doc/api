@@ -1,8 +1,0 @@
-
-/iam/service/login
-    text/html
-    
-/iam/service/auth
-    text/json
-
-

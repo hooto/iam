@@ -1,4 +1,4 @@
-// Copyright 2014 Eryx <evorui аt gmаil dοt cοm>, All rights reserved.
+// Copyright 2014 Eryx <evorui at gmail dot com>, All rights reserved.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -12,7 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package apiserver
+package user
 
 import (
 	"fmt"
@@ -25,51 +25,45 @@ import (
 	"github.com/hooto/iam/v2/pkg/iamapi"
 )
 
-const (
-	accessKeyLimit = 20
-)
-
-type AccessKey struct {
-	*httpsrv.Controller
-}
+const accessKeyLimit = 20
 
 type AccessKeyEntryResponse struct {
 	Status inauth.ServiceStatus `json:"status"`
 	Item   *inauth.AccessKey    `json:"item,omitempty"`
 }
 
-func (c AccessKey) EntryAction() {
+// AccessKeyEntry returns a single access key by ID.
+func AccessKeyEntry(ctx *httpsrv.Context) error {
 
-	user := userAuth(c.Controller)
-	if user == nil {
-		return
+	u := authCtx(ctx)
+	if u == nil {
+		return nil
 	}
 
 	var rsp AccessKeyEntryResponse
-	defer c.RenderJson(&rsp)
+	defer ctx.RenderJson(&rsp)
 
-	id := c.Params.Value("access_key_id")
+	id := ctx.Params().Value("access_key_id")
 	if id == "" {
 		rsp.Status = inauth.NewServiceStatus("404", "Access Key Not Found")
-		return
+		return nil
 	}
 
 	var ak inauth.AccessKey
-	if rs := data.Data.NewReader(iamapi.NsAccessKey(user.Name, id)).Exec(); rs.OK() {
+	if rs := data.Data.NewReader(iamapi.NsAccessKey(u.Name, id)).Exec(); rs.OK() {
 		rs.Item().JsonDecode(&ak)
 	}
 
 	if ak.GetId() != id {
 		rsp.Status = inauth.NewServiceStatus("404", "Access Key Not Found")
-		return
+		return nil
 	}
+
+	ak.Secret = "" // do not return secret in frontend
 
 	rsp.Status = inauth.NewServiceStatus("200", "ok")
 	rsp.Item = &ak
-}
-
-type AccessKeyListRequest struct {
-	AccessToken string `json:"access_token,omitempty"`
+	return nil
 }
 
 type AccessKeyListResponse struct {
@@ -77,30 +71,33 @@ type AccessKeyListResponse struct {
 	Items  []*inauth.AccessKey  `json:"items,omitempty"`
 }
 
-func (c AccessKey) ListAction() {
+// AccessKeyList returns all access keys for the current user.
+func AccessKeyList(ctx *httpsrv.Context) error {
 
-	user := userAuth(c.Controller)
-	if user == nil {
-		return
+	u := authCtx(ctx)
+	if u == nil {
+		return nil
 	}
 
 	var rsp AccessKeyListResponse
-	defer c.RenderJson(&rsp)
+	defer ctx.RenderJson(&rsp)
 
-	k1 := iamapi.NsAccessKey(user.Name, "")
-	k2 := iamapi.NsAccessKey(user.Name, "zzzzzzzz")
+	k1 := iamapi.NsAccessKey(u.Name, "")
+	k2 := iamapi.NsAccessKey(u.Name, "zzzzzzzz")
 	if rs := data.Data.NewRanger(k1, k2).
 		SetLimit(int64(accessKeyLimit)).Exec(); rs.OK() {
 		for _, v := range rs.Items {
 			var ak inauth.AccessKey
 			if err := v.JsonDecode(&ak); err == nil &&
 				ak.State != inauth.AccessKey_State_Disable {
+				ak.Secret = "" // do not return secret in list
 				rsp.Items = append(rsp.Items, &ak)
 			}
 		}
 	}
 
 	rsp.Status = inauth.NewServiceStatus("200", "ok")
+	return nil
 }
 
 type AccessKeySetRequest struct {
@@ -115,29 +112,30 @@ type AccessKeySetResponse struct {
 	Item   *inauth.AccessKey    `json:"item,omitempty"`
 }
 
-func (c AccessKey) SetAction() {
+// AccessKeySet creates or updates an access key.
+func AccessKeySet(ctx *httpsrv.Context) error {
 
-	user := userAuth(c.Controller)
-	if user == nil {
-		return
+	u := authCtx(ctx)
+	if u == nil {
+		return nil
 	}
 
 	var (
 		req AccessKeySetRequest
 		rsp AccessKeySetResponse
 	)
-	defer c.RenderJson(&rsp)
+	defer ctx.RenderJson(&rsp)
 
-	if err := c.Request.JsonDecode(&req); err != nil {
+	if err := ctx.Request().JsonDecode(&req); err != nil {
 		rsp.Status = inauth.NewServiceStatus("400", "Bad Request")
-		return
+		return nil
 	}
 
 	var prev inauth.AccessKey
 	if req.Id == "" {
 		// create new access key using inauth factory
 		newAk := inauth.NewUserAccessKey()
-		newAk.User = user.Name
+		newAk.User = u.Name
 		newAk.State = inauth.AccessKey_State_Active
 		newAk.Description = req.Description
 		newAk.Scopes = req.Scopes
@@ -145,24 +143,24 @@ func (c AccessKey) SetAction() {
 	} else {
 		// update existing access key
 		if rs := data.Data.NewReader(
-			iamapi.NsAccessKey(user.Name, req.Id)).Exec(); rs.OK() {
+			iamapi.NsAccessKey(u.Name, req.Id)).Exec(); rs.OK() {
 			rs.Item().JsonDecode(&prev)
 		}
 		if prev.GetId() != req.Id {
 			rsp.Status = inauth.NewServiceStatus("404", "Access Key Not Found")
-			return
+			return nil
 		}
 	}
 
 	// enforce access key count limit on create
 	if req.Id == "" {
 		if rs := data.Data.NewRanger(
-			iamapi.NsAccessKey(user.Name, ""), iamapi.NsAccessKey(user.Name, "")).
+			iamapi.NsAccessKey(u.Name, ""), iamapi.NsAccessKey(u.Name, "")).
 			SetLimit(int64(accessKeyLimit + 1)).Exec(); rs.OK() {
 			if len(rs.Items) > accessKeyLimit {
 				rsp.Status = inauth.NewServiceStatus("400",
 					fmt.Sprintf("Num Out Range (%d)", accessKeyLimit))
-				return
+				return nil
 			}
 		}
 	}
@@ -180,7 +178,7 @@ func (c AccessKey) SetAction() {
 		}
 	}
 
-	if rs := data.Data.NewWriter(iamapi.NsAccessKey(user.Name, prev.Id), nil).SetJsonValue(prev).
+	if rs := data.Data.NewWriter(iamapi.NsAccessKey(u.Name, prev.Id), nil).SetJsonValue(prev).
 		Exec(); rs.OK() {
 		rsp.Status = inauth.NewServiceStatus("200", "ok")
 		rsp.Item = &prev
@@ -188,136 +186,143 @@ func (c AccessKey) SetAction() {
 	} else {
 		rsp.Status = inauth.NewServiceStatus("500", "IO Error "+rs.ErrorMessage())
 	}
+	return nil
 }
 
 type AccessKeyDeleteResponse struct {
 	Status inauth.ServiceStatus `json:"status"`
 }
 
-func (c AccessKey) DeleteAction() {
+// AccessKeyDelete removes an access key by ID.
+func AccessKeyDelete(ctx *httpsrv.Context) error {
 
-	user := userAuth(c.Controller)
-	if user == nil {
-		return
+	u := authCtx(ctx)
+	if u == nil {
+		return nil
 	}
 
 	var rsp AccessKeyDeleteResponse
-	defer c.RenderJson(&rsp)
+	defer ctx.RenderJson(&rsp)
 
-	id := c.Params.Value("access_key_id")
+	id := ctx.Params().Value("access_key_id")
 	if id == "" {
 		rsp.Status = inauth.NewServiceStatus("404", "Access Key Not Found")
-		return
+		return nil
 	}
 
-	if rs := data.Data.NewDeleter(iamapi.NsAccessKey(user.Name, id)).Exec(); rs.OK() {
+	if rs := data.Data.NewDeleter(iamapi.NsAccessKey(u.Name, id)).Exec(); rs.OK() {
 		rsp.Status = inauth.NewServiceStatus("200", "ok")
 		data.KeyMgr.Del(id)
 	} else {
 		rsp.Status = inauth.NewServiceStatus("500", "IO Error")
 	}
+	return nil
 }
 
 type AccessKeyBindResponse struct {
 	Status inauth.ServiceStatus `json:"status"`
 }
 
-func (c AccessKey) BindAction() {
+// AccessKeyBind adds a scope binding to an access key.
+func AccessKeyBind(ctx *httpsrv.Context) error {
 
-	user := userAuth(c.Controller)
-	if user == nil {
-		return
+	u := authCtx(ctx)
+	if u == nil {
+		return nil
 	}
 
 	var rsp AccessKeyBindResponse
-	defer c.RenderJson(&rsp)
+	defer ctx.RenderJson(&rsp)
 
 	var (
-		id    = c.Params.Value("access_key_id")
-		bname = c.Params.Value("scope_content")
+		id    = ctx.Params().Value("access_key_id")
+		bname = ctx.Params().Value("scope_content")
 	)
 	if id == "" || bname == "" {
 		rsp.Status = inauth.NewServiceStatus("404", "Access Key Not Found")
-		return
+		return nil
 	}
 
 	var ak inauth.AccessKey
-	if rs := data.Data.NewReader(iamapi.NsAccessKey(user.Name, id)).Exec(); rs.OK() {
+	if rs := data.Data.NewReader(iamapi.NsAccessKey(u.Name, id)).Exec(); rs.OK() {
 		rs.Item().JsonDecode(&ak)
 	}
 
 	if id != ak.GetId() {
 		rsp.Status = inauth.NewServiceStatus("404", "Access Key Not Found")
-		return
+		return nil
 	}
 
 	ar := strings.Split(bname, "=")
 	if len(ar) != 2 {
 		rsp.Status = inauth.NewServiceStatus("400", "Invalid Bound Value")
-		return
+		return nil
 	}
 
 	scope := strings.TrimSpace(ar[0]) + "=" + strings.TrimSpace(ar[1])
 	scopeSet(&ak.Scopes, scope)
 
-	if rs := data.Data.NewWriter(iamapi.NsAccessKey(user.Name, ak.Id), nil).SetJsonValue(ak).
+	if rs := data.Data.NewWriter(iamapi.NsAccessKey(u.Name, ak.Id), nil).SetJsonValue(ak).
 		Exec(); rs.OK() {
 		rsp.Status = inauth.NewServiceStatus("200", "ok")
 		data.KeyMgr.Set(&ak)
 	} else {
 		rsp.Status = inauth.NewServiceStatus("500", "IO Error")
 	}
+	return nil
 }
 
-func (c AccessKey) UnbindAction() {
+// AccessKeyUnbind removes a scope binding from an access key.
+func AccessKeyUnbind(ctx *httpsrv.Context) error {
 
-	user := userAuth(c.Controller)
-	if user == nil {
-		return
+	u := authCtx(ctx)
+	if u == nil {
+		return nil
 	}
 
 	var rsp AccessKeyBindResponse
-	defer c.RenderJson(&rsp)
+	defer ctx.RenderJson(&rsp)
 
 	var (
-		id    = c.Params.Value("access_key_id")
-		bname = c.Params.Value("scope_content")
+		id    = ctx.Params().Value("access_key_id")
+		bname = ctx.Params().Value("scope_content")
 	)
 	if id == "" || bname == "" {
 		rsp.Status = inauth.NewServiceStatus("404", "Access Key Not Found")
-		return
+		return nil
 	}
 
 	var ak inauth.AccessKey
-	if rs := data.Data.NewReader(iamapi.NsAccessKey(user.Name, id)).Exec(); rs.OK() {
+	if rs := data.Data.NewReader(iamapi.NsAccessKey(u.Name, id)).Exec(); rs.OK() {
 		rs.Item().JsonDecode(&ak)
 	}
 
 	if id != ak.GetId() {
 		rsp.Status = inauth.NewServiceStatus("404", "Access Key Not Found")
-		return
+		return nil
 	}
 
 	ar := strings.Split(bname, "=")
 	if len(ar) > 2 {
 		rsp.Status = inauth.NewServiceStatus("400", "Invalid Bound Value")
-		return
+		return nil
 	}
 
 	name := strings.TrimSpace(ar[0])
 	if name == "" {
 		rsp.Status = inauth.NewServiceStatus("400", "Invalid Bound Value")
-		return
+		return nil
 	}
 	scopeDel(&ak.Scopes, name)
 
-	if rs := data.Data.NewWriter(iamapi.NsAccessKey(user.Name, ak.Id), nil).SetJsonValue(ak).
+	if rs := data.Data.NewWriter(iamapi.NsAccessKey(u.Name, ak.Id), nil).SetJsonValue(ak).
 		Exec(); rs.OK() {
 		rsp.Status = inauth.NewServiceStatus("200", "ok")
 		data.KeyMgr.Set(&ak)
 	} else {
 		rsp.Status = inauth.NewServiceStatus("500", "IO Error")
 	}
+	return nil
 }
 
 // scopeSet adds a scope to the list if not already present.

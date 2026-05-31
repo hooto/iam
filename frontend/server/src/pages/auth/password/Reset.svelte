@@ -1,24 +1,46 @@
 <script>
-  import { routePath } from "../lib/config.js";
+  import { routePath } from "../../../lib/config.js";
 
-  let username = $state("");
-  let email = $state("");
+  let token = $state("");
+  let password = $state("");
+  let confirmPassword = $state("");
   let alertMsg = $state("");
   let alertType = $state("info");
   let loading = $state(false);
-  let submitted = $state(false);
+  let success = $state(false);
 
+  // check for token in URL query params on mount
+  $effect(() => {
+    const urlParams = new URLSearchParams(window.location.search);
+    const t = urlParams.get("token");
+    if (t) {
+      token = t;
+    }
+  });
+
+  /** @param {SubmitEvent} e */
   async function onSubmit(e) {
     e.preventDefault();
     alertMsg = "";
 
-    if (!username.trim()) {
-      alertMsg = "Please enter your username";
+    if (!token.trim()) {
+      alertMsg = "Please enter the verification code";
       alertType = "warning";
       return;
     }
-    if (!email.trim()) {
-      alertMsg = "Please enter your email";
+
+    if (!password.trim()) {
+      alertMsg = "Please enter a new password";
+      alertType = "warning";
+      return;
+    }
+    if (password.length < 8) {
+      alertMsg = "Password must be at least 8 characters";
+      alertType = "warning";
+      return;
+    }
+    if (password !== confirmPassword) {
+      alertMsg = "Passwords do not match";
       alertType = "warning";
       return;
     }
@@ -27,13 +49,13 @@
 
     try {
       const resp = await fetch(
-        routePath + "/v2/service/reset-password-ticket",
+        routePath + "/v2/auth/password/reset-confirm",
         {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({
-            username: username,
-            email: email,
+            token: token,
+            password: password,
           }),
         },
       );
@@ -41,15 +63,19 @@
       const data = await resp.json();
 
       if (data.status?.code !== "200") {
-        alertMsg = data.status?.message || "Request failed";
+        alertMsg = data.status?.message || "Reset failed";
         alertType = "danger";
         return;
       }
 
-      submitted = true;
+      success = true;
       alertMsg =
-        "If an account with that username and email exists, a verification code has been sent to your email.";
+        "Your password has been reset successfully! Redirecting to sign in...";
       alertType = "success";
+
+      setTimeout(() => {
+        window.location.href = routePath + "/auth/sign-in";
+      }, 2000);
     } catch (err) {
       alertMsg = "Network error, please try again";
       alertType = "danger";
@@ -58,9 +84,10 @@
     }
   }
 
+  /** @param {MouseEvent} e */
   function goToSignIn(e) {
     e.preventDefault();
-    window.__navigate(routePath + "/service/sign-in");
+    window.__navigate(routePath + "/auth/sign-in");
   }
 </script>
 
@@ -83,24 +110,14 @@
           />
         </svg>
       </div>
-      <p class="text-secondary mb-0">Reset your password</p>
+      <p class="text-secondary mb-0">Set new password</p>
     </div>
 
-    {#if submitted}
+    {#if success}
       <div class="mb-4">
         <div class="alert alert-success" role="alert">
           {alertMsg}
         </div>
-        <p class="text-muted small">
-          Please check your email for the verification code, then use it to set
-          a new password.
-        </p>
-        <button
-          class="btn btn-outline-primary w-100 py-2"
-          onclick={() => {
-            window.__navigate(routePath + "/service/reset-password");
-          }}>Enter verification code</button
-        >
       </div>
     {:else}
       <form class="mb-4" onsubmit={onSubmit}>
@@ -119,30 +136,44 @@
           </div>
         {/if}
 
-        <p class="text-muted small mb-3">
-          Enter your username and the email address associated with your
-          account. We will send you a verification code to reset your password.
-        </p>
-
         <div class="mb-3">
+          <label for="token" class="form-label text-muted small"
+            >Verification code</label
+          >
           <input
             type="text"
             class="form-control"
-            id="username"
-            bind:value={username}
-            placeholder="Username"
-            autocomplete="username"
+            id="token"
+            bind:value={token}
+            placeholder="Enter the code from your email"
           />
         </div>
 
         <div class="mb-3">
+          <label for="password" class="form-label text-muted small"
+            >New password</label
+          >
           <input
-            type="email"
+            type="password"
             class="form-control"
-            id="email"
-            bind:value={email}
-            placeholder="Email address"
-            autocomplete="email"
+            id="password"
+            bind:value={password}
+            placeholder="Password (8-30 characters)"
+            autocomplete="new-password"
+          />
+        </div>
+
+        <div class="mb-3">
+          <label for="confirmPassword" class="form-label text-muted small"
+            >Confirm password</label
+          >
+          <input
+            type="password"
+            class="form-control"
+            id="confirmPassword"
+            bind:value={confirmPassword}
+            placeholder="Confirm new password"
+            autocomplete="new-password"
           />
         </div>
 
@@ -154,9 +185,9 @@
           {#if loading}
             <span class="spinner-border spinner-border-sm me-2" role="status"
             ></span>
-            Sending...
+            Resetting...
           {:else}
-            Send verification code
+            Reset password
           {/if}
         </button>
       </form>
@@ -164,7 +195,7 @@
 
     <div class="text-center border-top pt-3">
       <p class="mb-0">
-        <a href="{routePath}/service/sign-in" onclick={goToSignIn}
+        <a href="{routePath}/auth/sign-in" onclick={goToSignIn}
           >Back to Sign In</a
         >
       </p>
@@ -175,7 +206,7 @@
     <a
       href="https://github.com/hooto/iam"
       target="_blank"
-      class="text-white text-decoration-none">hooto IAM</a
+      class="text-white text-decoration-none">Powered by hooto IAM</a
     >
   </p>
 </div>

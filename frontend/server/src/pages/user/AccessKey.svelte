@@ -1,6 +1,6 @@
 <script>
-  import { fetchSession } from "../lib/session.svelte.js";
-  import UserLayout from "../layouts/UserLayout.svelte";
+  import { fetchSession } from "../../lib/session.svelte.js";
+  import UserLayout from "./Layout.svelte";
   import {
     fetchAccessKeys,
     fetchAccessKey,
@@ -8,7 +8,7 @@
     deleteAccessKey,
     bindAccessKeyScope,
     unbindAccessKeyScope,
-  } from "../lib/api.js";
+  } from "../../lib/api.js";
 
   fetchSession();
 
@@ -46,6 +46,11 @@
   let unbindScopeName = $state("");
   let unbindSaving = $state(false);
   let unbindAlert = $state("");
+
+  // Secret display modal
+  let showSecretModal = $state(false);
+  let newSecret = $state("");
+  let secretCopied = $state(false);
 
   /** @param {unknown} err @returns {string} */
   function toErrMsg(err) {
@@ -117,9 +122,11 @@
       });
       showSetModal = false;
 
-      // Show the secret only on creation (first time), otherwise generic success
+      // Show the secret only on creation (first time) in a dedicated modal
       if (result.item?.secret) {
-        showAlert("success", `Access key created. Secret: ${result.item.secret}`);
+        newSecret = result.item.secret;
+        secretCopied = false;
+        showSecretModal = true;
       } else {
         showAlert("success", setFormId ? "Access key updated" : "Access key created");
       }
@@ -128,6 +135,26 @@
       setAlert = toErrMsg(err);
     } finally {
       setSaving = false;
+    }
+  }
+
+  async function copySecret() {
+    try {
+      await navigator.clipboard.writeText(newSecret);
+      secretCopied = true;
+      setTimeout(() => (secretCopied = false), 2000);
+    } catch {
+      // fallback for non-secure contexts
+      const ta = document.createElement("textarea");
+      ta.value = newSecret;
+      ta.style.position = "fixed";
+      ta.style.opacity = "0";
+      document.body.appendChild(ta);
+      ta.select();
+      document.execCommand("copy");
+      document.body.removeChild(ta);
+      secretCopied = true;
+      setTimeout(() => (secretCopied = false), 2000);
     }
   }
 
@@ -210,7 +237,8 @@
   /** @param {KeyboardEvent} e */
   function onGlobalKeydown(e) {
     if (e.key !== "Escape") return;
-    if (showSetModal) showSetModal = false;
+    if (showSecretModal) showSecretModal = false;
+    else if (showSetModal) showSetModal = false;
     else if (showDeleteModal) showDeleteModal = false;
     else if (showBindModal) showBindModal = false;
     else if (showUnbindModal) showUnbindModal = false;
@@ -506,6 +534,58 @@
               Save
             {/if}
           </button>
+        </div>
+      </div>
+    </div>
+  </div>
+{/if}
+
+<!-- Secret Display Modal -->
+{#if showSecretModal}
+  <div class="modal d-block" tabindex="-1" style="background:rgba(0,0,0,0.5)" role="dialog">
+    <div class="modal-dialog modal-dialog-centered">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h5 class="modal-title">Access Key Created</h5>
+          <button
+            type="button"
+            class="btn-close"
+            aria-label="Close"
+            onclick={() => (showSecretModal = false)}
+          ></button>
+        </div>
+        <div class="modal-body">
+          <div class="alert alert-warning py-2 small">
+            Please save your Secret Key now. This is the only time it will be shown. You will not be able to view it again after closing this dialog.
+          </div>
+          <div class="mb-2">
+            <label class="form-label fw-semibold">Secret Key</label>
+            <div class="input-group">
+              <input
+                type="text"
+                class="form-control font-monospace user-select-all"
+                readonly
+                value={newSecret}
+              />
+              <button
+                class="btn btn-outline-secondary"
+                type="button"
+                onclick={copySecret}
+              >
+                {#if secretCopied}
+                  Copied!
+                {:else}
+                  Copy
+                {/if}
+              </button>
+            </div>
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button
+            class="btn btn-primary btn-sm"
+            onclick={() => (showSecretModal = false)}
+          >Close</button>
         </div>
       </div>
     </div>

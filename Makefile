@@ -12,7 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-.PHONY: build_api build_frontend clean run-fe run-be install-deps
+.PHONY: build_api build_frontend clean run-fe run-be run-iam install-deps
 
 all: build_frontend build_backend
 	@echo ""
@@ -22,10 +22,12 @@ all: build_frontend build_backend
 build_frontend:
 	@echo "Building frontend..."
 	cd frontend/server && npm run build
+	cd frontend/demoapp && npm run build
 
 build_backend:
 	@echo "Building backend..."
 	go build -o bin/iam-server cmd/server/main.go
+	go build -o bin/demo-server cmd/demoapp/main.go
 
 run-fe:
 	cd frontend/server && npm run dev
@@ -33,12 +35,17 @@ run-fe:
 run-be: build_frontend build_backend
 	./bin/iam-server
 
+run-iam: build_frontend build_backend
+	(trap 'kill 0' SIGINT; ./bin/iam-server & cd frontend/server && npm run dev)
+
 run-demo-fe:
 	cd frontend/demoapp && npm run dev
 
-run-demo-be:
-	go build -o bin/demo-server cmd/demoapp/main.go
+run-demo-be: build_frontend build_backend
 	./bin/demo-server
+
+run-demoapp: build_frontend build_backend
+	(trap 'kill 0' SIGINT; ./bin/demo-server & cd frontend/demoapp && npm run dev)
 
 install-deps:
 	@echo "Installing frontend dependencies..."

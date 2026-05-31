@@ -1,6 +1,6 @@
 <script>
-  import { routePath } from "../lib/config.js";
-  import { getSession, signOut } from "../lib/session.svelte.js";
+  import { routePath } from "../../lib/config.js";
+  import { getSession, signOut } from "../../lib/session.svelte.js";
 
   let {
     contentClass = "",
@@ -65,19 +65,28 @@
         <li class="nav-item">
           <a
             class="nav-link nav-dot"
-            class:active={currentPath === "/service/profile" ||
+            class:active={currentPath === "/user/profile" ||
               currentPath === "/"}
-            href="{routePath}/service/profile"
-            onclick={(e) => onNavClick(e, "/service/profile")}>Profile</a
+            href="{routePath}/user/profile"
+            onclick={(e) => onNavClick(e, "/user/profile")}>Profile</a
           >
         </li>
         <li class="nav-item">
           <a
             class="nav-link nav-dot"
-            class:active={currentPath === "/service/access-keys"}
-            href="{routePath}/service/access-keys"
-            onclick={(e) => onNavClick(e, "/service/access-keys")}
+            class:active={currentPath === "/user/keys"}
+            href="{routePath}/user/keys"
+            onclick={(e) => onNavClick(e, "/user/keys")}
             >Keys</a
+          >
+        </li>
+        <li class="nav-item">
+          <a
+            class="nav-link nav-dot"
+            class:active={currentPath === "/user/apps"}
+            href="{routePath}/user/apps"
+            onclick={(e) => onNavClick(e, "/user/apps")}
+            >Apps</a
           >
         </li>
       </ul>
@@ -119,11 +128,10 @@
   <!-- Footer -->
   <footer class="text-center py-3 mt-auto">
     <p class="mb-0 text-muted small">
-      &copy; {new Date().getFullYear()}
       <a
         href="https://github.com/hooto/iam"
         target="_blank"
-        class="text-decoration-none">hooto IAM</a
+        class="text-decoration-none">Powered by hooto IAM</a
       >
     </p>
   </footer>

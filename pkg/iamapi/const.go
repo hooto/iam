@@ -1,4 +1,4 @@
-// Copyright 2014 Eryx <evorui аt gmаil dοt cοm>, All rights reserved.
+// Copyright 2014 Eryx <evorui at gmail dot com>, All rights reserved.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -83,4 +83,8 @@ func NsUserProfile(uname string) []byte {
 
 func NsSysConfig(name string) []byte {
 	return []byte(fmt.Sprintf("iam/sysconfig/%s", name))
+}
+
+func NsAuthCode(code string) []byte {
+	return []byte(fmt.Sprintf("iam/ac/%s", code))
 }

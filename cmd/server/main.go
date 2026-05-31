@@ -29,7 +29,10 @@ import (
 	"github.com/sysinner/incore/v2/pkg/inlog"
 	"github.com/sysinner/incore/v2/pkg/signals"
 
-	"github.com/hooto/iam/v2/internal/apiserver"
+	"github.com/hooto/iam/v2/internal/apiserver/admin"
+	"github.com/hooto/iam/v2/internal/apiserver/auth"
+	"github.com/hooto/iam/v2/internal/apiserver/open"
+	"github.com/hooto/iam/v2/internal/apiserver/user"
 	"github.com/hooto/iam/v2/internal/config"
 	"github.com/hooto/iam/v2/internal/data"
 )
@@ -58,7 +61,10 @@ func main() {
 
 	httpsrv.DefaultService.Config.HttpPort = config.Config.HttpPort
 
-	httpsrv.DefaultService.HandleModule("/iam/v2", apiserver.NewModule())
+	httpsrv.DefaultService.HandleModule("/iam/v2/auth", auth.NewModule())
+	httpsrv.DefaultService.HandleModule("/iam/v2/user", user.NewModule())
+	httpsrv.DefaultService.HandleModule("/iam/v2/open", open.NewModule())
+	httpsrv.DefaultService.HandleModule("/iam/v2/admin", admin.NewModule())
 
 	httpsrv.DefaultService.HandleModule("/iam", newUIModule())
 

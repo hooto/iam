@@ -1,5 +1,5 @@
 <script>
-  import { routePath } from "../lib/config.js";
+  import { routePath } from "../../lib/config.js";
 
   let username = $state("");
   let email = $state("");
@@ -16,7 +16,7 @@
 
   async function checkSignUpAllowed() {
     try {
-      const resp = await fetch(routePath + "/v2/sys/info");
+      const resp = await fetch(routePath + "/v2/auth/sys/info");
       const data = await resp.json();
       if (data.status?.code === "200" && data.allow_user_sign_up !== true) {
         signUpDisabled = true;
@@ -28,6 +28,7 @@
     }
   }
 
+  /** @param {SubmitEvent} e */
   async function onSubmit(e) {
     e.preventDefault();
     if (signUpDisabled) return;
@@ -67,7 +68,7 @@
     loading = true;
 
     try {
-      const resp = await fetch(routePath + "/v2/service/sign-up", {
+      const resp = await fetch(routePath + "/v2/auth/sign-up", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
@@ -89,7 +90,7 @@
       alertType = "success";
 
       setTimeout(() => {
-        window.location.href = routePath + "/service/sign-in";
+        window.location.href = routePath + "/auth/sign-in";
       }, 1500);
     } catch (err) {
       alertMsg = "Network error, please try again";
@@ -99,9 +100,10 @@
     }
   }
 
+  /** @param {MouseEvent} e */
   function goToSignIn(e) {
     e.preventDefault();
-    window.__navigate(routePath + "/service/sign-in");
+    window.__navigate(routePath + "/auth/sign-in");
   }
 </script>
 
@@ -211,7 +213,7 @@
     <div class="text-center border-top pt-3">
       <p class="mb-0">
         <span class="text-muted">Already have an account? </span>
-        <a href="{routePath}/service/sign-in" onclick={goToSignIn}>Sign in</a>
+        <a href="{routePath}/auth/sign-in" onclick={goToSignIn}>Sign in</a>
       </p>
     </div>
   </div>
@@ -220,7 +222,7 @@
     <a
       href="https://github.com/hooto/iam"
       target="_blank"
-      class="text-white text-decoration-none">hooto IAM</a
+      class="text-white text-decoration-none">Powered by hooto IAM</a
     >
   </p>
 </div>
