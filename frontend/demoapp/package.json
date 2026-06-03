@@ -11,7 +11,8 @@
   "devDependencies": {
     "@sveltejs/vite-plugin-svelte": "^6.2.1",
     "svelte": "^5.43.8",
-    "vite": "^7.2.4"
+    "vite": "^7.2.4",
+    "vite-plugin-purgecss": "^0.2.13"
   },
   "dependencies": {
     "@popperjs/core": "^2.11.8",

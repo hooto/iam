@@ -92,7 +92,7 @@
         credentials: "same-origin",
       });
       const data = await resp.json();
-      isLoggedIn = data.status?.code === "200" && !!data.access_token;
+      isLoggedIn = data.status?.code === "200" && !!data.auth_claims;
     } catch {
       isLoggedIn = false;
     }

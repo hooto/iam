@@ -15,11 +15,16 @@
 package open
 
 import (
-	"encoding/json"
 	"log/slog"
+	"slices"
+	"sort"
+	"strings"
+	"time"
 
 	"github.com/hooto/httpsrv"
+	"github.com/sysinner/incore/v2/pkg/inapi"
 	"github.com/sysinner/incore/v2/pkg/inauth"
+	"golang.org/x/mod/semver"
 
 	"github.com/hooto/iam/v2/internal/data"
 	"github.com/hooto/iam/v2/pkg/iamapi"
@@ -36,9 +41,19 @@ func appAuth(ctx *httpsrv.Context) *inauth.AccessKey {
 	}
 
 	if tokenStr == "" {
+		authHeader := ctx.Request().Header.Get("Authorization")
+		if authHeader != "" {
+			parts := strings.SplitN(authHeader, " ", 2)
+			if len(parts) == 2 && parts[0] == "Bearer" {
+				tokenStr = parts[1]
+			}
+		}
+	}
+
+	if tokenStr == "" {
 		ctx.RenderJson(struct {
 			Status inauth.ServiceStatus `json:"status"`
-		}{Status: inauth.NewServiceStatus("401", "Unauthorized")})
+		}{Status: inauth.NewServiceStatus("401", "Unauthorized #1")})
 		return nil
 	}
 
@@ -46,7 +61,7 @@ func appAuth(ctx *httpsrv.Context) *inauth.AccessKey {
 	if err != nil || token.Header.Kid == "" {
 		ctx.RenderJson(struct {
 			Status inauth.ServiceStatus `json:"status"`
-		}{Status: inauth.NewServiceStatus("401", "Unauthorized")})
+		}{Status: inauth.NewServiceStatus("401", "Unauthorized #2")})
 		return nil
 	}
 
@@ -54,7 +69,7 @@ func appAuth(ctx *httpsrv.Context) *inauth.AccessKey {
 	if err != nil {
 		ctx.RenderJson(struct {
 			Status inauth.ServiceStatus `json:"status"`
-		}{Status: inauth.NewServiceStatus("401", "Unauthorized")})
+		}{Status: inauth.NewServiceStatus("401", "Unauthorized #3")})
 		return nil
 	}
 
@@ -105,6 +120,8 @@ func AppAuth_Verify(ctx *httpsrv.Context) error {
 
 	rsp.App = &app
 	rsp.Status = inauth.NewServiceStatus("200", "ok")
+
+	slog.Info("open/app-auth-verify response", "body", rsp)
 
 	return nil
 }
@@ -183,8 +200,185 @@ func AppAuth_TokenExchange(ctx *httpsrv.Context) error {
 		rsp.IdentityToken = st.IdentityToken
 	}
 
-	js, _ := json.Marshal(rsp)
-	slog.Info("service/auth-token-exchange response", "body", string(js))
+	slog.Info("open/app-auth/token-exchange response", "body", rsp)
+
+	return nil
+}
+
+type AppAuth_UpdateRequest struct {
+	AppId       string                  `json:"app_id,omitempty" toml:"app_id,omitempty"`
+	Name        string                  `json:"name" toml:"name"`
+	Version     string                  `json:"version,omitempty" toml:"version,omitempty"`
+	Permissions []*iamapi.AppPermission `json:"permissions" toml:"permissions,omitempty"`
+}
+
+type AppAuth_UpdateResponse struct {
+	Status inauth.ServiceStatus `json:"status"`
+}
+
+func AppAuth_Update(ctx *httpsrv.Context) error {
+
+	ak := appAuth(ctx)
+	if ak == nil {
+		return nil
+	}
+
+	var (
+		req AppAuth_UpdateRequest
+		rsp AppAuth_UpdateResponse
+	)
+	defer ctx.RenderJson(&rsp)
+
+	if err := ctx.Request().JsonDecode(&req); err != nil {
+		rsp.Status = inauth.NewServiceStatus("400", "Invalid request format")
+		return nil
+	}
+
+	if req.AppId == "" || req.AppId != ak.Id {
+		rsp.Status = inauth.NewServiceStatus("400", "app_id required")
+		return nil
+	}
+
+	if req.Name != "" {
+		if err := iamapi.DNSLabelValid(req.Name); err != nil {
+			rsp.Status = inauth.NewServiceStatus("400", "invalid name : "+err.Error())
+			return nil
+		}
+	}
+
+	if err := inapi.SemverValid(req.Version); err != nil {
+		rsp.Status = inauth.NewServiceStatus("400", "invalid version : "+err.Error())
+		return nil
+	}
+
+	var app iamapi.AppInstance
+	if rs := data.Data.NewReader(iamapi.NsAppInstance(req.AppId)).Exec(); rs.OK() {
+		rs.Item().JsonDecode(&app)
+	}
+
+	if app.ID != req.AppId {
+		rsp.Status = inauth.NewServiceStatus("404", "App not found")
+		return nil
+	}
+
+	if req.Name != "" && req.Name != app.Name {
+		app.Name = req.Name
+	}
+
+	// version can only be updated to a higher version
+	if app.Version != "" && semver.Compare(req.Version, app.Version) < 0 {
+		rsp.Status = inauth.NewServiceStatus("400", "version must be greater than current version")
+		return nil
+	}
+
+	if app.Version == "" ||
+		semver.Compare(req.Version, app.Version) < 0 {
+		app.Version = req.Version
+	}
+
+	if len(req.Permissions) > 0 {
+		perms := []*iamapi.AppPermission{}
+		for _, v := range req.Permissions {
+			v.Permission = strings.ToLower(v.Permission)
+			if err := iamapi.DNSLabelValid(v.Permission); err == nil {
+				if !slices.ContainsFunc(perms, func(item *iamapi.AppPermission) bool {
+					return item.Permission == v.Permission
+				}) {
+					perms = append(perms, v)
+				}
+			}
+		}
+		sort.Slice(perms, func(i, j int) bool {
+			return perms[i].Permission < perms[j].Permission
+		})
+		app.Permissions = perms
+	}
+
+	app.Updated = time.Now().Unix()
+
+	if rs := data.Data.NewWriter(iamapi.NsAppInstance(app.ID), app).Exec(); !rs.OK() {
+		rsp.Status = inauth.NewServiceStatus("500", "Failed to update app")
+		return nil
+	}
+
+	rsp.Status = inauth.NewServiceStatus("200", "ok")
+	slog.Info("open/app-auth/update response", "body", rsp)
+
+	return nil
+}
+
+type AppAuth_SessionRequest struct {
+	AppId       string `json:"app_id,omitempty" toml:"app_id,omitempty"`
+	AccessToken string `json:"access_token,omitempty" toml:"access_token,omitempty"`
+}
+
+type AppAuth_SessionResponse struct {
+	Status        inauth.ServiceStatus  `json:"status"`
+	IdentityToken *inauth.IdentityToken `json:"identity_token,omitempty"`
+}
+
+func AppAuth_Session(ctx *httpsrv.Context) error {
+
+	ak := appAuth(ctx)
+	if ak == nil {
+		return nil
+	}
+
+	var (
+		req AppAuth_SessionRequest
+		rsp AppAuth_SessionResponse
+	)
+	defer ctx.RenderJson(&rsp)
+
+	if err := ctx.Request().JsonDecode(&req); err != nil {
+		rsp.Status = inauth.NewServiceStatus("400", "Invalid request format")
+		return nil
+	}
+
+	if req.AppId == "" || req.AppId != ak.Id {
+		rsp.Status = inauth.NewServiceStatus("400", "app_id required")
+		return nil
+	}
+
+	// var app iamapi.AppInstance
+	// if rs := data.Data.NewReader(iamapi.NsAppInstance(req.AppId)).Exec(); rs.OK() {
+	// 	rs.Item().JsonDecode(&app)
+	// }
+
+	// if app.ID != req.AppId {
+	// 	rsp.Status = inauth.NewServiceStatus("404", "App not found")
+	// 	return nil
+	// }
+
+	utoken, err := inauth.ParseAccessToken(req.AccessToken)
+	if err != nil {
+		rsp.Status = inauth.NewServiceStatus("401", "Invalid access token")
+		return nil
+	}
+
+	_, err = utoken.Verify(data.KeyMgr)
+	if err != nil {
+		rsp.Status = inauth.NewServiceStatus("401", "Invalid access token")
+		return nil
+	}
+
+	// lookup session from DB
+	var (
+		key = iamapi.NsUserSession(utoken.Claims.Jti, uint32(utoken.Claims.Exp))
+		st  inauth.SessionToken
+	)
+	if rs := data.Data.NewReader(key).Exec(); !rs.OK() {
+		rsp.Status = inauth.NewServiceStatus("401", "session not found")
+	} else {
+		if err := rs.Item().JsonDecode(&st); err != nil {
+			rsp.Status = inauth.NewServiceStatus("500", "failed to decode session")
+		} else {
+			rsp.Status = inauth.NewServiceStatus("200", "ok")
+			rsp.IdentityToken = st.IdentityToken
+		}
+	}
+
+	slog.Info("open/app-auth/session response", "body", rsp)
 
 	return nil
 }

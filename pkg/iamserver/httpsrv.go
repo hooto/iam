@@ -15,7 +15,6 @@
 package iamserver
 
 import (
-	"encoding/json"
 	"log/slog"
 	"net/http"
 	"time"
@@ -28,24 +27,25 @@ type UserAuth struct {
 	*httpsrv.Controller
 }
 
-type UserAuthInfoRequest struct {
+type UserAuthSessionRequest struct {
 	CurrentUrl string `json:"current_url"`
 }
 
-type UserAuthInfoResponse struct {
+type UserAuthSessionResponse struct {
 	Status inauth.ServiceStatus `json:"status"`
 
-	AppId        string             `json:"app_id,omitempty"`
-	AuthEndpoint string             `json:"auth_endpoint,omitempty"`
-	AuthClaims   *inauth.AuthClaims `json:"auth_claims,omitempty"`
-	// IdentityToken *inauth.IdentityToken `json:"identity_token,omitempty"`
+	AppId        string `json:"app_id,omitempty"`
+	AuthEndpoint string `json:"auth_endpoint,omitempty"`
+
+	AuthClaims    *inauth.AuthClaims    `json:"auth_claims,omitempty"`
+	IdentityToken *inauth.IdentityToken `json:"identity_token,omitempty"`
 }
 
-// InfoAction returns the current app configuration.
-func (c UserAuth) InfoAction() {
+// SessionAction returns the current app configuration.
+func (c UserAuth) SessionAction() {
 	var (
-		req UserAuthInfoRequest
-		rsp UserAuthInfoResponse
+		req UserAuthSessionRequest
+		rsp UserAuthSessionResponse
 	)
 	defer c.RenderJson(&rsp)
 
@@ -54,31 +54,23 @@ func (c UserAuth) InfoAction() {
 		// return
 	}
 
-	if err := AppConfig.Verify(); err != nil {
-		rsp.Status = inauth.NewServiceStatus("401", err.Error())
-		slog.Info("iam config not initialized")
+	if err := AppVerifier.Ping(); err != nil {
+		rsp.Status = inauth.NewServiceStatus("500", err.Error())
+		slog.Warn(err.Error())
 		return
 	}
 
-	rsp.AppId = AppConfig.AppId
-	rsp.AuthEndpoint = urlJoinPath(AppConfig.Endpoint,
-		"/auth/sign-in") + "?app_id=" + AppConfig.AppId
+	cfg := AppVerifier.Config()
 
-	// fallback to http-only cookie
-	cookie, err := c.Request.Cookie(inauth.AppHttpHeaderKey)
-	if err != nil || cookie.Value == "" {
-		rsp.Status = inauth.NewServiceStatus("401", "access token not found")
-		return
+	rsp.AppId = cfg.AppId
+	rsp.AuthEndpoint = urlJoinPath(cfg.Endpoint,
+		"/auth/sign-in") + "?app_id=" + cfg.AppId
+
+	token, err := AppVerifier.Auth(c.Request.Request)
+	if err == nil {
+		rsp.AuthClaims = &token.AccessToken.Claims
+		rsp.IdentityToken = token.IdentityToken
 	}
-
-	token, err := inauth.ParseAccessToken(cookie.Value)
-	if err != nil {
-		slog.Info("service/session-token fail", "error", err.Error(), "access_token", token)
-		rsp.Status = inauth.NewServiceStatus("401", "invalid access token : "+err.Error())
-		return
-	}
-
-	rsp.AuthClaims = &token.Claims
 
 	if req.CurrentUrl != "" {
 		http.SetCookie(c.Response.Out, &http.Cookie{
@@ -108,12 +100,12 @@ func (c UserAuth) CallbackAction() {
 		return
 	}
 
-	if err := AppConfig.Verify(); err != nil {
+	if err := AppVerifier.Config().Valid(); err != nil {
 		http.Error(c.Response.Out, "App not configured : "+err.Error(), http.StatusBadRequest)
 		return
 	}
 
-	rs, err := exchangeAuthCode(AppConfig, code)
+	rs, err := exchangeAuthCode(AppVerifier.Config(), code)
 	if err != nil {
 		slog.Error("user-auth/callback: code exchange failed", "error", err)
 		http.Error(c.Response.Out, "code exchange failed", http.StatusInternalServerError)
@@ -131,6 +123,7 @@ func (c UserAuth) CallbackAction() {
 	if urlCookie, err := c.Request.Cookie(
 		inauth.AppHttpHeaderKey + "-current-url"); err == nil && urlCookie.Value != "" {
 		http.Redirect(c.Response.Out, c.Request.Request, urlCookie.Value, http.StatusFound)
+		deleteCookie(c.Response.Out, inauth.AppHttpHeaderKey+"-current-url")
 		return
 	}
 
@@ -155,7 +148,7 @@ func exchangeAuthCode(aac *AppAuthConfig, code string) (*AuthCodeResult, error) 
 	// 	urlJoinPath(AppConfig.Endpoint, "/v2/app-auth/auth-token-exchange?code="+code))
 
 	if err := iamPost(
-		AppConfig.Endpoint, "/v2/open/app-auth/token-exchange",
+		aac.Endpoint, "/v2/open/app-auth/token-exchange",
 		at,
 		map[string]string{
 			"code": code,
@@ -165,8 +158,7 @@ func exchangeAuthCode(aac *AppAuthConfig, code string) (*AuthCodeResult, error) 
 		slog.Error("exchangeAuthCode: request failed", "error", err)
 		return nil, err
 	}
-	js, _ := json.Marshal(rsp)
-	slog.Info("exchangeAuthCode: response", "body", string(js))
+	slog.Info("exchangeAuthCode: response", "body", rsp)
 	return &AuthCodeResult{
 		AccessToken:   rsp.AccessToken,
 		IdentityToken: rsp.IdentityToken,
@@ -180,13 +172,17 @@ func (c UserAuth) SignOutAction() {
 	}
 	defer c.RenderJson(&rsp)
 
-	http.SetCookie(c.Response.Out, &http.Cookie{
-		Name:     inauth.AppHttpHeaderKey,
+	deleteCookie(c.Response.Out, inauth.AppHttpHeaderKey)
+
+	rsp.Status = inauth.NewServiceStatus("200", "ok")
+}
+
+func deleteCookie(w http.ResponseWriter, name string) {
+	http.SetCookie(w, &http.Cookie{
+		Name:     name,
 		Value:    "",
 		Path:     "/",
 		HttpOnly: true,
 		MaxAge:   -1,
 	})
-
-	rsp.Status = inauth.NewServiceStatus("200", "ok")
 }

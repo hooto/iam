@@ -18,6 +18,7 @@ import (
 	"log/slog"
 	"net/http"
 	"net/url"
+	"slices"
 	"strings"
 	"time"
 
@@ -77,8 +78,9 @@ func SignIn(ctx *httpsrv.Context) error {
 		return nil
 	}
 
+	var app iamapi.AppInstance
 	if req.AppId != "" {
-		var app iamapi.AppInstance
+
 		if rs := data.Data.NewReader(iamapi.NsAppInstance(req.AppId)).Exec(); !rs.OK() {
 			rsp.Status = inauth.NewServiceStatus("404", "App not found")
 			return nil
@@ -137,7 +139,7 @@ func SignIn(ctx *httpsrv.Context) error {
 	var (
 		sid = uuid.NewString()
 
-		ttl = int64(864000)
+		ttl = int64(86400 * 7)
 
 		at = inauth.NewAccessToken()
 
@@ -163,12 +165,28 @@ func SignIn(ctx *httpsrv.Context) error {
 		return nil
 	}
 
+	if app.ID != "" {
+		for _, perm := range app.Permissions {
+			if slices.Contains(st.IdentityToken.Permissions, perm.Permission) {
+				continue
+			}
+			if app.User != user.Name &&
+				!contains(st.IdentityToken.Roles, perm.Roles) {
+				continue
+			}
+			st.IdentityToken.Permissions = append(
+				st.IdentityToken.Permissions, perm.Permission)
+		}
+	}
+
 	if rs := data.Data.NewWriter(
 		iamapi.NsUserSession(at.Claims.Jti, uint32(at.Claims.Exp)), nil).SetJsonValue(st).
 		SetTTL(ttl * 1000).Exec(); !rs.OK() {
 		rsp.Status = inauth.NewServiceStatus("500", rs.ErrorMessage())
 		return nil
 	}
+
+	slog.Info("auth/sign-in session", "body", st)
 
 	if req.AppId != "" {
 
@@ -245,9 +263,7 @@ func SignIn(ctx *httpsrv.Context) error {
 
 	rsp.Status = inauth.NewServiceStatus("200", "ok")
 
-	slog.Info("user-sign-in", "rsp", rsp)
-
-	slog.Info("service/signin-auth ok", "user", user.Name)
+	slog.Info("auth/sign-in response", "body", rsp)
 
 	return nil
 }

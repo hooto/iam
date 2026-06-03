@@ -559,9 +559,10 @@
             Please save your Secret Key now. This is the only time it will be shown. You will not be able to view it again after closing this dialog.
           </div>
           <div class="mb-2">
-            <label class="form-label fw-semibold">Secret Key</label>
+            <label class="form-label fw-semibold" for="newSecretInput">Secret Key</label>
             <div class="input-group">
               <input
+                id="newSecretInput"
                 type="text"
                 class="form-control font-monospace user-select-all"
                 readonly

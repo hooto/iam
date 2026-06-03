@@ -26,7 +26,9 @@ import (
 
 	"github.com/hooto/htoml4g/htoml"
 	"github.com/hooto/httpsrv"
+	"github.com/sysinner/incore/v2/pkg/inlog"
 
+	"github.com/hooto/iam/v2/pkg/iamapi"
 	"github.com/hooto/iam/v2/pkg/iamserver"
 )
 
@@ -37,7 +39,32 @@ var (
 	configPath string
 
 	cfg demoConfig
+
+	version = "1.0.0"
 )
+
+var permissions = []*iamapi.AppPermission{
+	{
+		Permission: "list",
+		Roles:      []string{iamapi.Role_User, iamapi.Role_Guest},
+		Summary:    "List access",
+	},
+	{
+		Permission: "read",
+		Roles:      []string{iamapi.Role_User, iamapi.Role_Guest},
+		Summary:    "Read access",
+	},
+	{
+		Permission: "write",
+		Roles:      []string{iamapi.Role_User},
+		Summary:    "Write access",
+	},
+	{
+		Permission: "delete",
+		Roles:      []string{iamapi.Role_User},
+		Summary:    "Delete access",
+	},
+}
 
 type demoConfig struct {
 	HttpPort uint16                   `json:"http_port" toml:"http_port"`
@@ -45,6 +72,9 @@ type demoConfig struct {
 }
 
 func main() {
+
+	inlog.Setup()
+
 	prefix := flag.String("prefix", "", "path prefix for config and data")
 	flag.Parse()
 
@@ -52,7 +82,16 @@ func main() {
 		slog.Error("config load failed", "error", err)
 	}
 
-	iamserver.AppConfig = cfg.IAM
+	if err := iamserver.AppVerifier.Setup(cfg.IAM); err != nil {
+		slog.Error("app auth verifier setup failed", "error", err)
+	} else if err = iamserver.AppVerifier.Update(&iamapi.AppInstance{
+		ID:          cfg.IAM.AppId,
+		Version:     version,
+		Status:      1,
+		Permissions: permissions,
+	}); err != nil {
+		slog.Error("app auth update failed", "error", err)
+	}
 
 	httpsrv.DefaultService.HandleModule("/demoapp", newUIModule())
 	httpsrv.DefaultService.HandleModule("/demoapp/api", newAPIModule())
@@ -70,6 +109,8 @@ func loadConfig(prefix string) error {
 	if err := htoml.DecodeFromFile(configPath, &cfg); err != nil {
 		if !os.IsNotExist(err) {
 			slog.Warn("config decode warning", "error", err)
+		} else {
+			return err
 		}
 	}
 
@@ -77,17 +118,19 @@ func loadConfig(prefix string) error {
 		cfg.HttpPort = 3001
 	}
 
-	if cfg.IAM == nil {
-		cfg.IAM = &iamserver.AppAuthConfig{}
-	}
+	{
+		if cfg.IAM == nil {
+			cfg.IAM = &iamserver.AppAuthConfig{}
+		}
 
-	cfg.IAM.SaveFunc = func() error {
-		return htoml.EncodeToFile(cfg, configPath, nil)
+		cfg.IAM.Flush = func() error {
+			return htoml.EncodeToFile(cfg, configPath, nil)
+		}
 	}
 
 	httpsrv.DefaultService.Config.HttpPort = cfg.HttpPort
 
-	return cfg.IAM.SaveFunc()
+	return nil
 }
 
 func newUIModule() *httpsrv.Module {

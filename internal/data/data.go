@@ -113,11 +113,58 @@ func Setup() error {
 
 	slog.Info("iam/access_key load from config", "count", len(config.Config.AccessKeys))
 
+	if err := loadAppKeys(); err != nil {
+		return err
+	}
+
 	if err := initData(); err != nil {
 		return err
 	}
 
 	inited = true
+
+	return nil
+}
+
+func loadAppKeys() error {
+	var (
+		offset = iamapi.NsAppInstance("")
+		cutset = append(offset, []byte{0xff}...)
+		num    = 0
+	)
+	for {
+
+		rs := Data.NewRanger(offset, cutset).SetLimit(1000).Exec()
+		if !rs.OK() {
+			break
+		}
+
+		for _, v := range rs.Items {
+
+			var app iamapi.AppInstance
+			if err := v.JsonDecode(&app); err != nil {
+				slog.Debug("iam/app_instance load", "id", app.ID)
+				continue
+			}
+
+			ak := &inauth.AccessKey{
+				Id:     app.ID,
+				User:   app.User,
+				Secret: app.SecretKey,
+				Type:   "App",
+				State:  inauth.AccessKey_State_Active,
+			}
+
+			KeyMgr.Set(ak)
+		}
+
+		num += len(rs.Items)
+
+		if len(rs.Items) < 1000 {
+			break
+		}
+	}
+	slog.Info("iam/app_instance load from database", "count", num)
 
 	return nil
 }
@@ -162,16 +209,16 @@ func initData() (err error) {
 	}
 
 	//
-	ps := []iamapi.AppPrivilege{
+	ps := []*iamapi.AppPermission{
 		{
-			Privilege: "sys.admin",
-			Roles:     []string{iamapi.Role_Sysadmin},
-			Desc:      "System Management",
+			Permission: "sys.admin",
+			Roles:      []string{iamapi.Role_Sysadmin},
+			Summary:    "System Management",
 		},
 		{
-			Privilege: "user.admin",
-			Roles:     []string{iamapi.Role_Sysadmin},
-			Desc:      "User Management",
+			Permission: "user.admin",
+			Roles:      []string{iamapi.Role_Sysadmin},
+			Summary:    "User Management",
 		},
 	}
 
@@ -183,9 +230,9 @@ func initData() (err error) {
 		Version: config.Version,
 		// AppID:      "iam",
 		// AppTitle:   "hooto IAM Service",
-		Status:     1,
-		Url:        "",
-		Privileges: ps,
+		Status:      1,
+		Url:         "",
+		Permissions: ps,
 	}
 
 	if rs := Data.NewWriter(iamapi.NsAppInstance(inst.ID), nil).SetJsonValue(inst).
@@ -378,7 +425,7 @@ func AppInstanceRegister(inst iamapi.AppInstance) error {
 
 	// privilege
 	rps := map[string][]string{}
-	for _, v := range inst.Privileges {
+	for _, v := range inst.Permissions {
 
 		for _, rid := range v.Roles {
 
@@ -386,7 +433,7 @@ func AppInstanceRegister(inst iamapi.AppInstance) error {
 				rps[rid] = []string{}
 			}
 
-			rps[rid] = append(rps[rid], v.Privilege)
+			rps[rid] = append(rps[rid], v.Permission)
 		}
 	}
 

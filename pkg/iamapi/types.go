@@ -43,32 +43,32 @@ type UserProfile struct {
 }
 
 type UserRole struct {
-	Name       string   `json:"name" toml:"name"`
-	User       string   `json:"user,omitempty" toml:"user,omitempty"`
-	Status     uint8    `json:"status,omitempty" toml:"status,omitempty"`
-	Desc       string   `json:"desc,omitempty" toml:"desc,omitempty"`
-	Privileges []string `json:"privileges,omitempty" toml:"privileges,omitempty"`
-	Created    int64    `json:"created,omitempty" toml:"created,omitempty"`
-	Updated    int64    `json:"updated,omitempty" toml:"updated,omitempty"`
+	Name        string   `json:"name" toml:"name"`
+	User        string   `json:"user,omitempty" toml:"user,omitempty"`
+	Status      uint8    `json:"status,omitempty" toml:"status,omitempty"`
+	Desc        string   `json:"desc,omitempty" toml:"desc,omitempty"`
+	Permissions []string `json:"permissions,omitempty" toml:"permissions,omitempty"`
+	Created     int64    `json:"created,omitempty" toml:"created,omitempty"`
+	Updated     int64    `json:"updated,omitempty" toml:"updated,omitempty"`
 }
 
 type AppInstance struct {
-	ID         string         `json:"id,omitempty" toml:"id,omitempty"`
-	Name       string         `json:"name" toml:"name"`
-	User       string         `json:"user,omitempty" toml:"user,omitempty"`
-	Version    string         `json:"version,omitempty" toml:"version,omitempty"`
-	Status     uint8          `json:"status,omitempty" toml:"status,omitempty"`
-	Url        string         `json:"url,omitempty" toml:"url,omitempty"`
-	Privileges []AppPrivilege `json:"privileges,omitempty" toml:"privileges,omitempty"`
-	SecretKey  string         `json:"secret_key,omitempty" toml:"secret_key,omitempty"`
-	Created    int64          `json:"created,omitempty" toml:"created,omitempty"`
-	Updated    int64          `json:"updated,omitempty" toml:"updated,omitempty"`
+	ID          string           `json:"id,omitempty" toml:"id,omitempty"`
+	Name        string           `json:"name" toml:"name"`
+	User        string           `json:"user,omitempty" toml:"user,omitempty"`
+	Version     string           `json:"version,omitempty" toml:"version,omitempty"`
+	Status      uint8            `json:"status,omitempty" toml:"status,omitempty"`
+	Url         string           `json:"url,omitempty" toml:"url,omitempty"`
+	Permissions []*AppPermission `json:"permissions,omitempty" toml:"permissions,omitempty"`
+	SecretKey   string           `json:"secret_key,omitempty" toml:"secret_key,omitempty"`
+	Created     int64            `json:"created,omitempty" toml:"created,omitempty"`
+	Updated     int64            `json:"updated,omitempty" toml:"updated,omitempty"`
 }
 
-type AppPrivilege struct {
-	Privilege string   `json:"privilege" toml:"privilege"`
-	Desc      string   `json:"desc,omitempty" toml:"desc,omitempty"`
-	Roles     []string `json:"roles,omitempty" toml:"roles,omitempty"`
+type AppPermission struct {
+	Permission string   `json:"permission" toml:"permission"`
+	Roles      []string `json:"roles,omitempty" toml:"roles,omitempty"`
+	Summary    string   `json:"summary,omitempty" toml:"summary,omitempty"`
 }
 
 type SysConfigMailer struct {

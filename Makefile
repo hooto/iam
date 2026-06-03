@@ -50,6 +50,7 @@ run-demoapp: build_frontend build_backend
 install-deps:
 	@echo "Installing frontend dependencies..."
 	cd frontend/server && npm install
+	cd frontend/demoapp && npm install
 	@echo "Installing backend dependencies..."
 	go mod tidy
 	@echo "Dependencies installed!"

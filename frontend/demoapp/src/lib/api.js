@@ -58,10 +58,10 @@ async function request(path, options = {}) {
   }
 }
 
-// Fetch user auth info without throwing on auth errors (401).
+// Fetch user auth session without throwing on auth errors (401).
 // Uses raw mode so the caller can inspect auth_claims and auth_endpoint.
-export async function userAuthInfo() {
-  return request("/api/user-auth/info", {
+export async function userAuthSession() {
+  return request("/api/user-auth/session", {
     method: "POST",
     body: JSON.stringify({ current_url: window.location.pathname }),
     raw: true,

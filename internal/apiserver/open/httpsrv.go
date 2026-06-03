@@ -21,5 +21,7 @@ func NewModule() *httpsrv.Module {
 	mod := httpsrv.NewModule()
 	mod.RegisterAction("/app-auth/verify", AppAuth_Verify)
 	mod.RegisterAction("/app-auth/token-exchange", AppAuth_TokenExchange)
+	mod.RegisterAction("/app-auth/session", AppAuth_Session)
+	mod.RegisterAction("/app-auth/update", AppAuth_Update)
 	return mod
 }

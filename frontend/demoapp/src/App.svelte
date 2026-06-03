@@ -1,6 +1,6 @@
 <script>
   import { onMount } from "svelte";
-  import { userAuthInfo, signOut } from "./lib/api.js";
+  import { userAuthSession, signOut } from "./lib/api.js";
   import Dashboard from "./pages/Dashboard.svelte";
 
   const REDIRECT_URI_KEY = "user_auth_sign_in_redirect_uri";
@@ -15,7 +15,7 @@
 
   async function loadApp() {
     try {
-      const data = await userAuthInfo();
+      const data = await userAuthSession();
 
       // logged in: AuthClaims is present
       if (data.auth_claims) {

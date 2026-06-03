@@ -19,6 +19,7 @@ require (
 	github.com/lessos/lessgo v1.0.1
 	github.com/lynkdb/kvgo/v2 v2.0.15
 	github.com/sysinner/incore/v2 v2.0.0-alpha.2
+	golang.org/x/mod v0.35.0
 )
 
 require (

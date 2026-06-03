@@ -30,7 +30,7 @@ type SessionRequest struct {
 
 type SessionResponse struct {
 	Status        inauth.ServiceStatus  `json:"status"`
-	AccessToken   string                `json:"access_token,omitempty"`
+	AuthClaims    *inauth.AuthClaims    `json:"auth_claims,omitempty"`
 	IdentityToken *inauth.IdentityToken `json:"identity_token,omitempty"`
 }
 
@@ -80,7 +80,7 @@ func Session(ctx *httpsrv.Context) error {
 			rsp.Status = inauth.NewServiceStatus("500", "failed to decode session")
 		} else {
 			rsp.Status = inauth.NewServiceStatus("200", "ok")
-			rsp.AccessToken = req.AccessToken
+			rsp.AuthClaims = &st.AccessToken.Claims
 			rsp.IdentityToken = st.IdentityToken
 		}
 	}

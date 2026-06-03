@@ -28,8 +28,11 @@ import (
 // iamPost sends a JSON POST to an IAM endpoint and decodes the response.
 func iamPost(baseUrl string, endpoint string, auth string, reqBody interface{}, rspBody interface{}) error {
 
-	iamURL := urlJoinPath(baseUrl, endpoint)
-	body, _ := json.Marshal(reqBody)
+	var (
+		iamURL  = urlJoinPath(baseUrl, endpoint)
+		body, _ = json.Marshal(reqBody)
+	)
+
 	req, err := http.NewRequest("POST", iamURL, bytes.NewReader(body))
 	if err != nil {
 		return err

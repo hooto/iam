@@ -157,9 +157,6 @@ func AppAuth_List(ctx *httpsrv.Context) error {
 		}
 	}
 
-	if rsp.Items == nil {
-		rsp.Items = []iamapi.AppInstance{}
-	}
 	rsp.Status = inauth.NewServiceStatus("200", "ok")
 	return nil
 }
