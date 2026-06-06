@@ -34,6 +34,16 @@ const (
 	UserTypeGroup = "group"
 )
 
+var (
+	ErrCodeAccessDenied    = "AccessDenied"
+	ErrCodeUnauthorized    = "Unauthorized" // Need to login and fetch a new access-token
+	ErrCodeInvalidArgument = "InvalidArgument"
+	ErrCodeUnavailable     = "Unavailable"
+	ErrCodeServerError     = "ServerError"
+	ErrCodeInternalError   = "InternalError"
+	ErrCodeNotFound        = "NotFound"
+)
+
 func NsUser(uname string) []byte {
 	return []byte(fmt.Sprintf("iam/u/%s", uname))
 }

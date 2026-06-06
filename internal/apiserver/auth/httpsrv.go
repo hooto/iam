@@ -26,5 +26,6 @@ func NewModule() *httpsrv.Module {
 	mod.RegisterAction("/session", Session)
 	mod.RegisterAction("/password/reset-ticket", Password_ResetTicket)
 	mod.RegisterAction("/password/reset-confirm", Password_ResetConfirm)
+	mod.RegisterAction("/photo/:username", Photo)
 	return mod
 }

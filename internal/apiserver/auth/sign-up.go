@@ -42,7 +42,7 @@ type SignUpResponse struct {
 }
 
 // SignUp registers a new user account.
-func SignUp(ctx *httpsrv.Context) error {
+func SignUp(ctx httpsrv.Ctx) error {
 
 	var (
 		req SignUpRequest
@@ -50,7 +50,7 @@ func SignUp(ctx *httpsrv.Context) error {
 			Continue: "/iam/auth/sign-in",
 		}
 	)
-	defer ctx.RenderJson(&rsp)
+	defer ctx.JSON(&rsp)
 
 	if err := ctx.Request().JsonDecode(&req); err != nil {
 		rsp.Status = inauth.NewServiceStatus("400", "Invalid request format")

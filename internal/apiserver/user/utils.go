@@ -25,7 +25,7 @@ import (
 
 // authCtx extracts and validates the access token from cookie or Authorization
 // header using httpsrv.Context. Returns the authenticated user or renders 401.
-func authCtx(ctx *httpsrv.Context) *iamapi.User {
+func authCtx(ctx httpsrv.Ctx) *iamapi.User {
 
 	tokenStr := ""
 
@@ -39,25 +39,25 @@ func authCtx(ctx *httpsrv.Context) *iamapi.User {
 		tokenStr = strings.TrimPrefix(tokenStr, "Bearer ")
 
 		if tokenStr == "" {
-			ctx.RenderJson(NewStatusResponse("401", "Unauthorized"))
+			ctx.JSON(NewStatusResponse("401", "Unauthorized"))
 			return nil
 		}
 	}
 
 	token, err := inauth.ParseAccessToken(tokenStr)
 	if err != nil || token.Claims.Sub == "" {
-		ctx.RenderJson(NewStatusResponse("401", "Unauthorized"))
+		ctx.JSON(NewStatusResponse("401", "Unauthorized"))
 		return nil
 	}
 
 	if _, err := token.Verify(data.KeyMgr); err != nil {
-		ctx.RenderJson(NewStatusResponse("401", "Unauthorized"))
+		ctx.JSON(NewStatusResponse("401", "Unauthorized"))
 		return nil
 	}
 
 	user := data.UserGet(token.Claims.Sub)
 	if user == nil {
-		ctx.RenderJson(NewStatusResponse("401", "Unauthorized"))
+		ctx.JSON(NewStatusResponse("401", "Unauthorized"))
 		return nil
 	}
 

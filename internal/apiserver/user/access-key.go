@@ -33,7 +33,7 @@ type AccessKeyEntryResponse struct {
 }
 
 // AccessKeyEntry returns a single access key by ID.
-func AccessKeyEntry(ctx *httpsrv.Context) error {
+func AccessKeyEntry(ctx httpsrv.Ctx) error {
 
 	u := authCtx(ctx)
 	if u == nil {
@@ -41,7 +41,7 @@ func AccessKeyEntry(ctx *httpsrv.Context) error {
 	}
 
 	var rsp AccessKeyEntryResponse
-	defer ctx.RenderJson(&rsp)
+	defer ctx.JSON(&rsp)
 
 	id := ctx.Params().Value("access_key_id")
 	if id == "" {
@@ -72,7 +72,7 @@ type AccessKeyListResponse struct {
 }
 
 // AccessKeyList returns all access keys for the current user.
-func AccessKeyList(ctx *httpsrv.Context) error {
+func AccessKeyList(ctx httpsrv.Ctx) error {
 
 	u := authCtx(ctx)
 	if u == nil {
@@ -80,7 +80,7 @@ func AccessKeyList(ctx *httpsrv.Context) error {
 	}
 
 	var rsp AccessKeyListResponse
-	defer ctx.RenderJson(&rsp)
+	defer ctx.JSON(&rsp)
 
 	k1 := iamapi.NsAccessKey(u.Name, "")
 	k2 := iamapi.NsAccessKey(u.Name, "zzzzzzzz")
@@ -113,7 +113,7 @@ type AccessKeySetResponse struct {
 }
 
 // AccessKeySet creates or updates an access key.
-func AccessKeySet(ctx *httpsrv.Context) error {
+func AccessKeySet(ctx httpsrv.Ctx) error {
 
 	u := authCtx(ctx)
 	if u == nil {
@@ -124,7 +124,7 @@ func AccessKeySet(ctx *httpsrv.Context) error {
 		req AccessKeySetRequest
 		rsp AccessKeySetResponse
 	)
-	defer ctx.RenderJson(&rsp)
+	defer ctx.JSON(&rsp)
 
 	if err := ctx.Request().JsonDecode(&req); err != nil {
 		rsp.Status = inauth.NewServiceStatus("400", "Bad Request")
@@ -194,7 +194,7 @@ type AccessKeyDeleteResponse struct {
 }
 
 // AccessKeyDelete removes an access key by ID.
-func AccessKeyDelete(ctx *httpsrv.Context) error {
+func AccessKeyDelete(ctx httpsrv.Ctx) error {
 
 	u := authCtx(ctx)
 	if u == nil {
@@ -202,7 +202,7 @@ func AccessKeyDelete(ctx *httpsrv.Context) error {
 	}
 
 	var rsp AccessKeyDeleteResponse
-	defer ctx.RenderJson(&rsp)
+	defer ctx.JSON(&rsp)
 
 	id := ctx.Params().Value("access_key_id")
 	if id == "" {
@@ -224,7 +224,7 @@ type AccessKeyBindResponse struct {
 }
 
 // AccessKeyBind adds a scope binding to an access key.
-func AccessKeyBind(ctx *httpsrv.Context) error {
+func AccessKeyBind(ctx httpsrv.Ctx) error {
 
 	u := authCtx(ctx)
 	if u == nil {
@@ -232,7 +232,7 @@ func AccessKeyBind(ctx *httpsrv.Context) error {
 	}
 
 	var rsp AccessKeyBindResponse
-	defer ctx.RenderJson(&rsp)
+	defer ctx.JSON(&rsp)
 
 	var (
 		id    = ctx.Params().Value("access_key_id")
@@ -273,7 +273,7 @@ func AccessKeyBind(ctx *httpsrv.Context) error {
 }
 
 // AccessKeyUnbind removes a scope binding from an access key.
-func AccessKeyUnbind(ctx *httpsrv.Context) error {
+func AccessKeyUnbind(ctx httpsrv.Ctx) error {
 
 	u := authCtx(ctx)
 	if u == nil {
@@ -281,7 +281,7 @@ func AccessKeyUnbind(ctx *httpsrv.Context) error {
 	}
 
 	var rsp AccessKeyBindResponse
-	defer ctx.RenderJson(&rsp)
+	defer ctx.JSON(&rsp)
 
 	var (
 		id    = ctx.Params().Value("access_key_id")

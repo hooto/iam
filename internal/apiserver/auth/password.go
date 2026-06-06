@@ -39,13 +39,13 @@ type Password_ResetTicketRequest struct {
 
 // Password_ResetTicket handles forgot-password requests.
 // It validates username + email, generates a reset token, and sends a reset email.
-func Password_ResetTicket(ctx *httpsrv.Context) error {
+func Password_ResetTicket(ctx httpsrv.Ctx) error {
 
 	var (
 		req Password_ResetTicketRequest
 		rsp ServiceStatusResponse
 	)
-	defer ctx.RenderJson(&rsp)
+	defer ctx.JSON(&rsp)
 
 	if err := ctx.Request().JsonDecode(&req); err != nil {
 		rsp.Status = inauth.NewServiceStatus("400", "Invalid request format")
@@ -130,13 +130,13 @@ type Password_ResetConfirmRequest struct {
 }
 
 // Password_ResetConfirm sets a new password using a valid reset token.
-func Password_ResetConfirm(ctx *httpsrv.Context) error {
+func Password_ResetConfirm(ctx httpsrv.Ctx) error {
 
 	var (
 		req Password_ResetConfirmRequest
 		rsp ServiceStatusResponse
 	)
-	defer ctx.RenderJson(&rsp)
+	defer ctx.JSON(&rsp)
 
 	if err := ctx.Request().JsonDecode(&req); err != nil {
 		rsp.Status = inauth.NewServiceStatus("400", "Invalid request format")

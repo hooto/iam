@@ -29,6 +29,7 @@ import (
 
 	"github.com/hooto/iam/v2/internal/apiserver"
 	"github.com/hooto/iam/v2/internal/data"
+	"github.com/hooto/iam/v2/internal/util"
 	"github.com/hooto/iam/v2/pkg/iamapi"
 )
 
@@ -63,7 +64,7 @@ type SignInResponse struct {
 
 // SignIn handles user authentication via username/password,
 // creates a session, and returns an access token or auth code.
-func SignIn(ctx *httpsrv.Context) error {
+func SignIn(ctx httpsrv.Ctx) error {
 
 	var (
 		req SignInRequest
@@ -71,7 +72,7 @@ func SignIn(ctx *httpsrv.Context) error {
 			RedirectUri: "/iam",
 		}
 	)
-	defer ctx.RenderJson(&rsp)
+	defer ctx.JSON(&rsp)
 
 	if err := ctx.Request().JsonDecode(&req); err != nil {
 		rsp.Status = inauth.NewServiceStatus("400", "Invalid request format")
@@ -171,7 +172,7 @@ func SignIn(ctx *httpsrv.Context) error {
 				continue
 			}
 			if app.User != user.Name &&
-				!contains(st.IdentityToken.Roles, perm.Roles) {
+				!util.Contains(st.IdentityToken.Roles, perm.Roles) {
 				continue
 			}
 			st.IdentityToken.Permissions = append(

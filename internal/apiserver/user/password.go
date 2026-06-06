@@ -36,7 +36,7 @@ type UserPassSetResponse struct {
 }
 
 // PassSet changes the current user password.
-func PassSet(ctx *httpsrv.Context) error {
+func PassSet(ctx httpsrv.Ctx) error {
 
 	u := authCtx(ctx)
 	if u == nil {
@@ -47,7 +47,7 @@ func PassSet(ctx *httpsrv.Context) error {
 		req UserPassSetRequest
 		rsp UserPassSetResponse
 	)
-	defer ctx.RenderJson(&rsp)
+	defer ctx.JSON(&rsp)
 
 	if err := ctx.Request().JsonDecode(&req); err != nil {
 		rsp.Status = inauth.NewServiceStatus("400", "Bad Request")
@@ -86,7 +86,7 @@ type UserEmailSetResponse struct {
 }
 
 // EmailSet changes the current user email.
-func EmailSet(ctx *httpsrv.Context) error {
+func EmailSet(ctx httpsrv.Ctx) error {
 
 	u := authCtx(ctx)
 	if u == nil {
@@ -97,7 +97,7 @@ func EmailSet(ctx *httpsrv.Context) error {
 		req UserEmailSetRequest
 		rsp UserEmailSetResponse
 	)
-	defer ctx.RenderJson(&rsp)
+	defer ctx.JSON(&rsp)
 
 	if err := ctx.Request().JsonDecode(&req); err != nil {
 		rsp.Status = inauth.NewServiceStatus("400", "Bad Request")

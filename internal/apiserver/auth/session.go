@@ -35,13 +35,13 @@ type SessionResponse struct {
 }
 
 // Session retrieves the current user session info including identity token.
-func Session(ctx *httpsrv.Context) error {
+func Session(ctx httpsrv.Ctx) error {
 
 	var (
 		req SessionRequest
 		rsp = SessionResponse{}
 	)
-	defer ctx.RenderJson(&rsp)
+	defer ctx.JSON(&rsp)
 
 	ctx.Request().JsonDecode(&req)
 

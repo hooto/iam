@@ -32,7 +32,7 @@ import (
 
 // appAuth verifies the access token from cookie and returns the
 // parsed AccessKey. It writes a 401 JSON response and returns nil on failure.
-func appAuth(ctx *httpsrv.Context) *inauth.AccessKey {
+func appAuth(ctx httpsrv.Ctx) *inauth.AccessKey {
 
 	tokenStr := ""
 	cookie, err := ctx.Request().Cookie(inauth.AppHttpHeaderKey)
@@ -51,7 +51,7 @@ func appAuth(ctx *httpsrv.Context) *inauth.AccessKey {
 	}
 
 	if tokenStr == "" {
-		ctx.RenderJson(struct {
+		ctx.JSON(struct {
 			Status inauth.ServiceStatus `json:"status"`
 		}{Status: inauth.NewServiceStatus("401", "Unauthorized #1")})
 		return nil
@@ -59,7 +59,7 @@ func appAuth(ctx *httpsrv.Context) *inauth.AccessKey {
 
 	token, err := inauth.ParseAccessToken(tokenStr)
 	if err != nil || token.Header.Kid == "" {
-		ctx.RenderJson(struct {
+		ctx.JSON(struct {
 			Status inauth.ServiceStatus `json:"status"`
 		}{Status: inauth.NewServiceStatus("401", "Unauthorized #2")})
 		return nil
@@ -67,7 +67,7 @@ func appAuth(ctx *httpsrv.Context) *inauth.AccessKey {
 
 	ak, err := token.Verify(data.KeyMgr)
 	if err != nil {
-		ctx.RenderJson(struct {
+		ctx.JSON(struct {
 			Status inauth.ServiceStatus `json:"status"`
 		}{Status: inauth.NewServiceStatus("401", "Unauthorized #3")})
 		return nil
@@ -78,7 +78,7 @@ func appAuth(ctx *httpsrv.Context) *inauth.AccessKey {
 
 // AppAuth_Verify verifies app credentials (app_id + secret_key).
 // Used by third-party apps during setup to validate their IAM configuration.
-func AppAuth_Verify(ctx *httpsrv.Context) error {
+func AppAuth_Verify(ctx httpsrv.Ctx) error {
 
 	ak := appAuth(ctx)
 	if ak == nil {
@@ -94,7 +94,7 @@ func AppAuth_Verify(ctx *httpsrv.Context) error {
 			App    *iamapi.AppInstance  `json:"app,omitempty"`
 		}
 	)
-	defer ctx.RenderJson(&rsp)
+	defer ctx.JSON(&rsp)
 
 	if err := ctx.Request().JsonDecode(&req); err != nil {
 		rsp.Status = inauth.NewServiceStatus("400", "Bad Argument")
@@ -138,13 +138,13 @@ type AppAuth_TokenExchangeResponse struct {
 
 // AppAuth_TokenExchange exchanges a one-time auth code for access_token + identity_token.
 // Called by third-party app backend using app credentials.
-func AppAuth_TokenExchange(ctx *httpsrv.Context) error {
+func AppAuth_TokenExchange(ctx httpsrv.Ctx) error {
 
 	var (
 		req AppAuth_TokenExchangeRequest
 		rsp AppAuth_TokenExchangeResponse
 	)
-	defer ctx.RenderJson(&rsp)
+	defer ctx.JSON(&rsp)
 
 	if err := ctx.Request().JsonDecode(&req); err != nil {
 		// rsp.Status = inauth.NewServiceStatus("400", "Invalid request format")
@@ -216,7 +216,7 @@ type AppAuth_UpdateResponse struct {
 	Status inauth.ServiceStatus `json:"status"`
 }
 
-func AppAuth_Update(ctx *httpsrv.Context) error {
+func AppAuth_Update(ctx httpsrv.Ctx) error {
 
 	ak := appAuth(ctx)
 	if ak == nil {
@@ -227,7 +227,7 @@ func AppAuth_Update(ctx *httpsrv.Context) error {
 		req AppAuth_UpdateRequest
 		rsp AppAuth_UpdateResponse
 	)
-	defer ctx.RenderJson(&rsp)
+	defer ctx.JSON(&rsp)
 
 	if err := ctx.Request().JsonDecode(&req); err != nil {
 		rsp.Status = inauth.NewServiceStatus("400", "Invalid request format")
@@ -317,7 +317,7 @@ type AppAuth_SessionResponse struct {
 	IdentityToken *inauth.IdentityToken `json:"identity_token,omitempty"`
 }
 
-func AppAuth_Session(ctx *httpsrv.Context) error {
+func AppAuth_Session(ctx httpsrv.Ctx) error {
 
 	ak := appAuth(ctx)
 	if ak == nil {
@@ -328,7 +328,7 @@ func AppAuth_Session(ctx *httpsrv.Context) error {
 		req AppAuth_SessionRequest
 		rsp AppAuth_SessionResponse
 	)
-	defer ctx.RenderJson(&rsp)
+	defer ctx.JSON(&rsp)
 
 	if err := ctx.Request().JsonDecode(&req); err != nil {
 		rsp.Status = inauth.NewServiceStatus("400", "Invalid request format")

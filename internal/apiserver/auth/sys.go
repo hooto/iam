@@ -26,12 +26,11 @@ type Sys_InfoResponse struct {
 	AllowUserSignUp bool                 `json:"allow_user_sign_up"`
 }
 
-func Sys_Info(ctx *httpsrv.Context) error {
+func Sys_Info(ctx httpsrv.Ctx) error {
 	rsp := Sys_InfoResponse{
 		Status:          inauth.NewServiceStatus("200", "ok"),
 		InstanceId:      config.Config.InstanceID,
 		AllowUserSignUp: config.AllowUserSignUp,
 	}
-	defer ctx.RenderJson(&rsp)
-	return nil
+	return ctx.JSON(&rsp)
 }

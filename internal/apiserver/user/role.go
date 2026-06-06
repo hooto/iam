@@ -28,7 +28,7 @@ type UserRoleListResponse struct {
 }
 
 // RoleList returns roles visible to the current user.
-func RoleList(ctx *httpsrv.Context) error {
+func RoleList(ctx httpsrv.Ctx) error {
 
 	u := authCtx(ctx)
 	if u == nil {
@@ -36,7 +36,7 @@ func RoleList(ctx *httpsrv.Context) error {
 	}
 
 	var rsp UserRoleListResponse
-	defer ctx.RenderJson(&rsp)
+	defer ctx.JSON(&rsp)
 
 	if rs := data.Data.NewRanger(
 		iamapi.NsRole(""), iamapi.NsRole("")).SetLimit(1000).Exec(); rs.OK() {

@@ -30,6 +30,8 @@ type Verifier interface {
 	Ping() error
 	Update(app *iamapi.AppInstance) error
 	Auth(accessToken any) (*inauth.SessionToken, error)
+
+	Session(accessToken any) UserSession
 }
 
 var AppVerifier Verifier = &verifier{
@@ -224,4 +226,87 @@ func (v *verifier) Update(app *iamapi.AppInstance) error {
 	}
 
 	return nil
+}
+
+func (v *verifier) Session(at any) UserSession {
+
+	sess := &userSession{
+		cfg: v.cfg,
+	}
+
+	if err := v.cfg.Valid(); err != nil {
+		return sess
+	}
+
+	accessToken := ""
+	switch ats := at.(type) {
+	case string:
+		accessToken = ats
+	case *http.Request:
+		cookie, err := ats.Cookie(inauth.AppHttpHeaderKey)
+		if err != nil {
+			sess.authError = err
+			return sess
+		}
+		accessToken = cookie.Value
+	default:
+		return sess
+	}
+
+	token, err := inauth.ParseAccessToken(accessToken)
+	if err != nil {
+		sess.authError = err
+		return sess
+	}
+	if token == nil {
+		sess.authError = errors.New("invalid access token")
+		return sess
+	}
+
+	v.mu.RLock()
+	session, ok := v.sessions[token.Claims.Jti]
+	v.mu.RUnlock()
+	if ok {
+		sess.AuthClaims = &session.AccessToken.Claims
+		sess.IdentityToken = session.IdentityToken
+		return sess
+	}
+
+	ac, err := v.cfg.NewAppCredential()
+	if err != nil {
+		sess.authError = err
+		return sess
+	}
+	aat := ac.AuthToken()
+
+	var rsp struct {
+		Status        inauth.ServiceStatus  `json:"status"`
+		IdentityToken *inauth.IdentityToken `json:"identity_token,omitempty"`
+	}
+
+	err = iamPost(
+		v.cfg.Endpoint, "/v2/open/app-auth/session",
+		aat,
+		map[string]string{
+			"app_id":       v.cfg.AppId,
+			"access_token": accessToken,
+		},
+		&rsp,
+	)
+	if err != nil {
+		sess.authError = err
+		return sess
+	}
+
+	session = &inauth.SessionToken{
+		AccessToken:   token,
+		IdentityToken: rsp.IdentityToken,
+	}
+	v.mu.Lock()
+	v.sessions[token.Claims.Jti] = session
+	v.mu.Unlock()
+
+	sess.AuthClaims = &session.AccessToken.Claims
+	sess.IdentityToken = session.IdentityToken
+	return sess
 }

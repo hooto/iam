@@ -25,7 +25,7 @@ import (
 	"github.com/hooto/iam/v2/pkg/iamapi"
 )
 
-func accessTokenFromRequest(ctx *httpsrv.Context, bodyToken string) string {
+func accessTokenFromRequest(ctx httpsrv.Ctx, bodyToken string) string {
 	if bodyToken != "" {
 		return bodyToken
 	}
@@ -48,7 +48,7 @@ func verifyAccessToken(accessToken string) (*inauth.AccessToken, error) {
 }
 
 // AppAuth_Register creates a new AppInstance with auto-generated ID and SecretKey.
-func AppAuth_Register(ctx *httpsrv.Context) error {
+func AppAuth_Register(ctx httpsrv.Ctx) error {
 	u := authCtx(ctx)
 	if u == nil {
 		return nil
@@ -64,7 +64,7 @@ func AppAuth_Register(ctx *httpsrv.Context) error {
 			App    *iamapi.AppInstance  `json:"app,omitempty"`
 		}
 	)
-	defer ctx.RenderJson(&rsp)
+	defer ctx.JSON(&rsp)
 
 	if err := ctx.Request().JsonDecode(&req); err != nil {
 		rsp.Status = inauth.NewServiceStatus("400", "Bad Argument")
@@ -113,7 +113,7 @@ func AppAuth_Register(ctx *httpsrv.Context) error {
 }
 
 // AppAuth_List returns all apps belonging to the authenticated user.
-func AppAuth_List(ctx *httpsrv.Context) error {
+func AppAuth_List(ctx httpsrv.Ctx) error {
 	u := authCtx(ctx)
 	if u == nil {
 		return nil
@@ -127,7 +127,7 @@ func AppAuth_List(ctx *httpsrv.Context) error {
 			Items  []iamapi.AppInstance `json:"items,omitempty"`
 		}
 	)
-	defer ctx.RenderJson(&rsp)
+	defer ctx.JSON(&rsp)
 
 	ctx.Request().JsonDecode(&req)
 
@@ -162,7 +162,7 @@ func AppAuth_List(ctx *httpsrv.Context) error {
 }
 
 // AppAuth_Update updates an existing AppInstance's name and callback URL.
-func AppAuth_Update(ctx *httpsrv.Context) error {
+func AppAuth_Update(ctx httpsrv.Ctx) error {
 	u := authCtx(ctx)
 	if u == nil {
 		return nil
@@ -179,7 +179,7 @@ func AppAuth_Update(ctx *httpsrv.Context) error {
 			App    *iamapi.AppInstance  `json:"app,omitempty"`
 		}
 	)
-	defer ctx.RenderJson(&rsp)
+	defer ctx.JSON(&rsp)
 
 	if err := ctx.Request().JsonDecode(&req); err != nil {
 		rsp.Status = inauth.NewServiceStatus("400", "Bad Argument")
@@ -229,7 +229,7 @@ func AppAuth_Update(ctx *httpsrv.Context) error {
 }
 
 // AppAuth_Delete removes an AppInstance.
-func AppAuth_Delete(ctx *httpsrv.Context) error {
+func AppAuth_Delete(ctx httpsrv.Ctx) error {
 	var (
 		req struct {
 			AccessToken string `json:"access_token,omitempty"`
@@ -239,7 +239,7 @@ func AppAuth_Delete(ctx *httpsrv.Context) error {
 			Status inauth.ServiceStatus `json:"status"`
 		}
 	)
-	defer ctx.RenderJson(&rsp)
+	defer ctx.JSON(&rsp)
 
 	if err := ctx.Request().JsonDecode(&req); err != nil {
 		rsp.Status = inauth.NewServiceStatus("400", "Bad Argument")

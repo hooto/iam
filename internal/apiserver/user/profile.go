@@ -36,7 +36,7 @@ type UserProfileResponse struct {
 }
 
 // ProfileEntry returns the current user profile.
-func ProfileEntry(ctx *httpsrv.Context) error {
+func ProfileEntry(ctx httpsrv.Ctx) error {
 
 	u := authCtx(ctx)
 	if u == nil {
@@ -44,7 +44,7 @@ func ProfileEntry(ctx *httpsrv.Context) error {
 	}
 
 	var rsp UserProfileResponse
-	defer ctx.RenderJson(&rsp)
+	defer ctx.JSON(&rsp)
 
 	entry := iamapi.UserProfile{
 		DisplayName: u.DisplayName,
@@ -78,7 +78,7 @@ type UserProfileSetResponse struct {
 }
 
 // ProfileSet updates the current user profile (display name, birthday, about).
-func ProfileSet(ctx *httpsrv.Context) error {
+func ProfileSet(ctx httpsrv.Ctx) error {
 
 	u := authCtx(ctx)
 	if u == nil {
@@ -89,7 +89,7 @@ func ProfileSet(ctx *httpsrv.Context) error {
 		req UserProfileSetRequest
 		rsp UserProfileSetResponse
 	)
-	defer ctx.RenderJson(&rsp)
+	defer ctx.JSON(&rsp)
 
 	if err := ctx.Request().JsonDecode(&req); err != nil {
 		rsp.Status = inauth.NewServiceStatus("400", "Bad Request")
@@ -143,7 +143,7 @@ type UserPhotoSetResponse struct {
 }
 
 // ProfilePhotoSet uploads and sets the user avatar image.
-func ProfilePhotoSet(ctx *httpsrv.Context) error {
+func ProfilePhotoSet(ctx httpsrv.Ctx) error {
 
 	u := authCtx(ctx)
 	if u == nil {
@@ -154,7 +154,7 @@ func ProfilePhotoSet(ctx *httpsrv.Context) error {
 		req UserPhotoSetRequest
 		rsp UserPhotoSetResponse
 	)
-	defer ctx.RenderJson(&rsp)
+	defer ctx.JSON(&rsp)
 
 	if err := ctx.Request().JsonDecode(&req); err != nil {
 		rsp.Status = inauth.NewServiceStatus("400", "Bad Request")

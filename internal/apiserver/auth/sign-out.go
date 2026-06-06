@@ -33,13 +33,13 @@ type ServiceStatusResponse struct {
 }
 
 // SignOut invalidates the user session and clears the auth cookie.
-func SignOut(ctx *httpsrv.Context) error {
+func SignOut(ctx httpsrv.Ctx) error {
 
 	var (
 		req SignOutRequest
 		rsp ServiceStatusResponse
 	)
-	defer ctx.RenderJson(&rsp)
+	defer ctx.JSON(&rsp)
 
 	ctx.Request().JsonDecode(&req)
 

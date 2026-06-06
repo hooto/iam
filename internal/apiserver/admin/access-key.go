@@ -30,10 +30,10 @@ type AccessKey_ListResponse struct {
 	Items  []*inauth.AccessKey  `json:"items,omitempty"`
 }
 
-func AccessKey_List(c *httpsrv.Context) error {
+func AccessKey_List(c httpsrv.Ctx) error {
 
 	var rsp AccessKey_ListResponse
-	defer c.RenderJson(&rsp)
+	defer c.JSON(&rsp)
 
 	// k1 := iamapi.NsAccessKey("", "")
 	// k2 := iamapi.NsAccessKey("", "")
