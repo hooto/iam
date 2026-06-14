@@ -34,15 +34,15 @@
         return;
       }
 
-      // not logged in but IAM endpoint is available: redirect to sign-in
-      if (data.auth_endpoint) {
+      // not logged in but IAM sign-in URL is available: redirect to sign-in
+      if (data.auth_sign_in_url) {
         // save current path for post-login redirect
         sessionStorage.setItem(REDIRECT_URI_KEY, window.location.pathname);
-        window.location.href = data.auth_endpoint;
+        window.location.href = data.auth_sign_in_url;
         return;
       }
 
-      // no IAM endpoint configured
+      // no IAM sign-in URL configured
       alertMsg = "IAM service is not configured. Please check the app settings.";
       page = "error";
     } catch (err) {

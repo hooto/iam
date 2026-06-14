@@ -1,0 +1,25 @@
+[Unit]
+Description=Hooto IAM Service
+After=network.target
+
+[Service]
+Type=simple
+LimitNOFILE=8192
+ExecStart=/opt/innerstack/bin/iam-server
+ExecReload=/bin/kill -HUP $MAINPID
+
+TimeoutStartSec=0
+
+KillMode=process
+
+Restart=always
+RestartSec=10
+
+StartLimitBurst=3
+StartLimitInterval=60s
+
+StandardOutput=append:/opt/innerstack/var/log/iam.log
+StandardError=append:/opt/innerstack/var/log/iam-error.log
+
+[Install]
+WantedBy=multi-user.target

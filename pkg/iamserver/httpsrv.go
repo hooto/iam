@@ -17,6 +17,7 @@ package iamserver
 import (
 	"log/slog"
 	"net/http"
+	"net/url"
 	"time"
 
 	"github.com/hooto/httpsrv"
@@ -34,8 +35,10 @@ type UserAuthSessionRequest struct {
 type UserAuthSessionResponse struct {
 	Status inauth.ServiceStatus `json:"status"`
 
-	AppId        string `json:"app_id,omitempty"`
-	AuthEndpoint string `json:"auth_endpoint,omitempty"`
+	AppId       string `json:"app_id,omitempty"`
+	AuthBaseURL string `json:"auth_base_url,omitempty"`
+
+	AuthSignInURL string `json:"auth_sign_in_url,omitempty"`
 
 	AuthClaims    *inauth.AuthClaims    `json:"auth_claims,omitempty"`
 	IdentityToken *inauth.IdentityToken `json:"identity_token,omitempty"`
@@ -63,13 +66,24 @@ func (c UserAuth) SessionAction() {
 	cfg := AppVerifier.Config()
 
 	rsp.AppId = cfg.AppId
-	rsp.AuthEndpoint = urlJoinPath(cfg.Endpoint,
+	rsp.AuthBaseURL = urlJoinPath(cfg.BaseURL, "/")
+	rsp.AuthSignInURL = urlJoinPath(cfg.BaseURL,
 		"/auth/sign-in") + "?app_id=" + cfg.AppId
 
 	token, err := AppVerifier.Auth(c.Request.Request)
 	if err == nil {
 		rsp.AuthClaims = &token.AccessToken.Claims
 		rsp.IdentityToken = token.IdentityToken
+	} else {
+		slog.Warn("user-auth/session: Auth failed", "error", err)
+
+		// Fallback: parse the access token locally to get basic user info
+		// even if the IAM session lookup fails
+		if cookie, cerr := c.Request.Cookie(inauth.AppHttpHeaderKey); cerr == nil {
+			if at, perr := inauth.ParseAccessToken(cookie.Value); perr == nil {
+				rsp.AuthClaims = &at.Claims
+			}
+		}
 	}
 
 	if req.CurrentUrl != "" {
@@ -83,6 +97,49 @@ func (c UserAuth) SessionAction() {
 	}
 
 	rsp.Status = inauth.NewServiceStatus("200", "ok")
+}
+
+// SignInAction redirects the user to the IAM sign-in page.
+func (c UserAuth) SignInAction() {
+	c.AutoRender = false
+
+	if err := AppVerifier.Config().Valid(); err != nil {
+		http.Error(c.Response.Out, "App not configured : "+err.Error(), http.StatusBadRequest)
+		return
+	}
+
+	cfg := AppVerifier.Config()
+
+	signInUrl := urlJoinPath(cfg.BaseURL, "/auth/sign-in") + "?app_id=" + cfg.AppId
+
+	cu := c.Request.URL.Query().Get("current_url")
+
+	if cu == "" {
+		if ck, err := c.Request.Cookie(inauth.AppHttpHeaderKey + "-current-url"); err == nil {
+			cu = ck.Value
+		}
+	}
+
+	if cu == "" {
+		if ref := c.Request.Referer(); ref != "" {
+			if u, err := url.Parse(ref); err == nil && isSameSite(u, c.Request.Request) {
+				cu = ref
+			}
+		}
+	}
+
+	if cu != "" {
+		slog.Info("callback-url : " + cu)
+		http.SetCookie(c.Response.Out, &http.Cookie{
+			Name:     inauth.AppHttpHeaderKey + "-current-url",
+			Value:    cu,
+			Path:     "/",
+			HttpOnly: true,
+			Expires:  time.Now().Add(1 * time.Hour),
+		})
+	}
+
+	http.Redirect(c.Response.Out, c.Request.Request, signInUrl, http.StatusFound)
 }
 
 // ExchangeAuthCode calls IAM to exchange an auth code for access_token.
@@ -144,11 +201,8 @@ func exchangeAuthCode(aac *AppAuthConfig, code string) (*AuthCodeResult, error) 
 	}
 	at := ac.AuthToken()
 
-	// slog.Info("exchangeAuthCode: request", "endpoint",
-	// 	urlJoinPath(AppConfig.Endpoint, "/v2/app-auth/auth-token-exchange?code="+code))
-
 	if err := iamPost(
-		aac.Endpoint, "/v2/open/app-auth/token-exchange",
+		aac.BaseURL, "/v2/open/app-auth/token-exchange",
 		at,
 		map[string]string{
 			"code": code,
@@ -166,13 +220,30 @@ func exchangeAuthCode(aac *AppAuthConfig, code string) (*AuthCodeResult, error) 
 }
 
 // SignOutAction clears the session cookie and notifies IAM.
+//
+// For browser navigation requests (Sec-Fetch-Mode: navigate), it redirects
+// back to the Referer so the user lands on the page they signed out from.
+// Otherwise it returns a JSON status payload (e.g. for XHR/fetch callers).
 func (c UserAuth) SignOutAction() {
+
+	deleteCookie(c.Response.Out, inauth.AppHttpHeaderKey)
+
+	if c.Request.Header.Get("Sec-Fetch-Mode") == "navigate" {
+		c.AutoRender = false
+		target := "/"
+		if ref := c.Request.Referer(); ref != "" {
+			if u, err := url.Parse(ref); err == nil && isSameSite(u, c.Request.Request) {
+				target = ref
+			}
+		}
+		http.Redirect(c.Response.Out, c.Request.Request, target, http.StatusFound)
+		return
+	}
+
 	var rsp struct {
 		Status inauth.ServiceStatus `json:"status"`
 	}
 	defer c.RenderJson(&rsp)
-
-	deleteCookie(c.Response.Out, inauth.AppHttpHeaderKey)
 
 	rsp.Status = inauth.NewServiceStatus("200", "ok")
 }

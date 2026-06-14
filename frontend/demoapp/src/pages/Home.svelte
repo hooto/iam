@@ -2,17 +2,13 @@
   let { config } = $props();
 
   async function onLogin() {
-    if (!config?.auth_endpoint) {
+    if (!config?.auth_sign_in_url) {
       return;
     }
     // save current path for post-login redirect
     sessionStorage.setItem("user_auth_sign_in_redirect_uri", window.location.pathname);
 
-    const signInUrl =
-      config.auth_endpoint +
-      "/auth/sign-in?app_id=" +
-      encodeURIComponent(config.app_id || "");
-    window.location.href = signInUrl;
+    window.location.href = config.auth_sign_in_url;
   }
 </script>
 
@@ -30,7 +26,7 @@
         Click below to sign in through the IAM service
       </p>
       <div class="small text-muted mb-3">
-        <p>IAM: {config?.auth_endpoint || "N/A"}</p>
+        <p>IAM: {config?.auth_base_url || "N/A"}</p>
         <p>App: {config?.app_id || "N/A"}</p>
       </div>
     </div>
@@ -38,7 +34,7 @@
     <button
       class="btn btn-primary w-100 py-2"
       onclick={onLogin}
-      disabled={!config?.auth_endpoint}
+      disabled={!config?.auth_sign_in_url}
     >
       Sign in with IAM
     </button>

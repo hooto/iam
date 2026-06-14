@@ -59,7 +59,7 @@ async function request(path, options = {}) {
 }
 
 // Fetch user auth session without throwing on auth errors (401).
-// Uses raw mode so the caller can inspect auth_claims and auth_endpoint.
+// Uses raw mode so the caller can inspect auth_claims and auth_sign_in_url.
 export async function userAuthSession() {
   return request("/api/user-auth/session", {
     method: "POST",

@@ -102,7 +102,7 @@ func (v *verifier) ping() error {
 		Status inauth.ServiceStatus `json:"status"`
 	}
 	if err := iamPost(
-		v.cfg.Endpoint, "/v2/open/app-auth/verify",
+		v.cfg.BaseURL, "/v2/open/app-auth/verify",
 		at,
 		map[string]string{
 			"app_id": v.cfg.AppId,
@@ -166,7 +166,7 @@ func (v *verifier) Auth(at any) (*inauth.SessionToken, error) {
 	}
 
 	err = iamPost(
-		v.cfg.Endpoint, "/v2/open/app-auth/session",
+		v.cfg.BaseURL, "/v2/open/app-auth/session",
 		aat,
 		map[string]string{
 			"app_id":       v.cfg.AppId,
@@ -213,7 +213,7 @@ func (v *verifier) Update(app *iamapi.AppInstance) error {
 	}
 
 	if err = iamPost(
-		v.cfg.Endpoint, "/v2/open/app-auth/update",
+		v.cfg.BaseURL, "/v2/open/app-auth/update",
 		aat,
 		map[string]any{
 			"app_id":      v.cfg.AppId,
@@ -285,7 +285,7 @@ func (v *verifier) Session(at any) UserSession {
 	}
 
 	err = iamPost(
-		v.cfg.Endpoint, "/v2/open/app-auth/session",
+		v.cfg.BaseURL, "/v2/open/app-auth/session",
 		aat,
 		map[string]string{
 			"app_id":       v.cfg.AppId,

@@ -252,15 +252,13 @@ func SignIn(ctx httpsrv.Ctx) error {
 		rsp.AccessToken = accessToken
 	}
 
-	if req.AppId == "" {
-		http.SetCookie(ctx.Response().Out, &http.Cookie{
-			Name:     inauth.AppHttpHeaderKey,
-			Value:    rsp.AccessToken,
-			Path:     "/",
-			HttpOnly: true,
-			Expires:  time.Unix(at.Claims.Exp, 0),
-		})
-	}
+	http.SetCookie(ctx.Response().Out, &http.Cookie{
+		Name:     inauth.AppHttpHeaderKey,
+		Value:    accessToken,
+		Path:     "/",
+		HttpOnly: true,
+		Expires:  time.Unix(at.Claims.Exp, 0),
+	})
 
 	rsp.Status = inauth.NewServiceStatus("200", "ok")
 

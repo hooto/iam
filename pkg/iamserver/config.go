@@ -23,13 +23,13 @@ import (
 type AppAuthConfig struct {
 	AppId     string `json:"app_id" yaml:"app_id" toml:"app_id"`
 	SecretKey string `json:"secret_key" yaml:"secret_key" toml:"secret_key"`
-	Endpoint  string `json:"endpoint" yaml:"endpoint" toml:"endpoint"`
+	BaseURL   string `json:"base_url" yaml:"base_url" toml:"base_url"`
 
 	Flush func() error `json:"-" yaml:"-" toml:"-"`
 }
 
 func (it *AppAuthConfig) Valid() error {
-	if it == nil || it.AppId == "" || it.Endpoint == "" || it.SecretKey == "" {
+	if it == nil || it.AppId == "" || it.BaseURL == "" || it.SecretKey == "" {
 		return errors.New("iam app-auth-config not initialized")
 	}
 	return nil

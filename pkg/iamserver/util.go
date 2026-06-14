@@ -21,6 +21,7 @@ import (
 	"io"
 	"net/http"
 	"net/url"
+	"strings"
 
 	"github.com/sysinner/incore/v2/pkg/inauth"
 )
@@ -73,4 +74,18 @@ func iamPost(baseUrl string, endpoint string, auth string, reqBody interface{}, 
 func urlJoinPath(basePath, addon string) string {
 	s, _ := url.JoinPath(basePath, addon)
 	return s
+}
+
+// isSameSite reports whether the given URL belongs to the same host as the
+// incoming HTTP request. It validates Referer-based redirects to mitigate
+// open-redirect attacks. Relative URLs with an empty host are treated as
+// same-origin and considered safe.
+func isSameSite(u *url.URL, r *http.Request) bool {
+	if u == nil || r == nil {
+		return false
+	}
+	if u.Host == "" {
+		return true
+	}
+	return strings.EqualFold(u.Host, r.Host)
 }
