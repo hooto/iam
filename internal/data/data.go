@@ -52,12 +52,24 @@ func Setup() error {
 	}
 
 	if Data == nil {
-		if c, err := kvrep.NewReplica(&storage.Options{
-			DataDirectory: config.Prefix + "/var/iam_db",
-		}); err != nil {
-			return err
-		} else {
+		if config.Config.Database != nil &&
+			config.Config.Database.Database != "" {
+			c, err := config.Config.Database.NewClient()
+			if err != nil {
+				return err
+			}
 			Data = c
+			slog.Info("database connected", "type", "remote")
+		} else {
+
+			if c, err := kvrep.NewReplica(&storage.Options{
+				DataDirectory: config.Prefix + "/var/iam_db",
+			}); err != nil {
+				return err
+			} else {
+				Data = c
+				slog.Info("database connected", "type", "local-replica")
+			}
 		}
 	}
 
@@ -222,17 +234,19 @@ func initData() (err error) {
 		},
 	}
 
+	secretKey, _ := inauth.GenerateSecretKeyBase62(40)
+
 	inst := iamapi.AppInstance{
-		ID:      config.Config.InstanceID,
-		User:    iamapi.UserSysadmin,
-		Created: tn,
-		Updated: tn,
-		Version: config.Version,
-		// AppID:      "iam",
-		// AppTitle:   "hooto IAM Service",
+		ID:          config.Config.InstanceID,
+		Name:        "IAM Service",
+		User:        iamapi.UserSysadmin,
+		Created:     tn,
+		Updated:     tn,
+		Version:     config.Version,
 		Status:      1,
 		Url:         "",
 		Permissions: ps,
+		SecretKey:   secretKey,
 	}
 
 	if rs := Data.NewWriter(iamapi.NsAppInstance(inst.ID), nil).SetJsonValue(inst).

@@ -108,6 +108,8 @@ var assetExts = map[string]bool{
 
 func (sfs *spaFileSystem) Open(name string) (http.File, error) {
 
+	// slog.Info("fs open : " + name)
+
 	name = strings.TrimPrefix(filepath.Clean(name), "/")
 
 	// 根路径返回 index.html

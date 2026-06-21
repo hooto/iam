@@ -19,6 +19,7 @@ import (
 	"path/filepath"
 
 	"github.com/hooto/htoml4g/htoml"
+	kvclient "github.com/lynkdb/kvgo/v2/pkg/client"
 	"github.com/sysinner/incore/v2/pkg/inauth"
 )
 
@@ -42,6 +43,8 @@ type ConfigCommon struct {
 	HttpPort    uint16              `json:"http_port,omitempty" toml:"http_port,omitempty"`
 	ServiceName string              `json:"service_name" toml:"service_name"`
 	AccessKeys  []*inauth.AccessKey `json:"access_keys" toml:"access_keys"`
+
+	Database *kvclient.Config `json:"database,omitempty" toml:"database,omitempty"`
 
 	WebUiBannerTitle         string `json:"-" toml:"-"`
 	ServiceLoginFormAlertMsg string `json:"-" toml:"-"`

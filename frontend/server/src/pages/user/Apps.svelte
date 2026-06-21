@@ -7,6 +7,7 @@
     updateApp,
     deleteApp,
   } from "../../lib/api.js";
+  import { copyToClipboard } from "../../lib/clipboard.js";
 
   fetchSession();
 
@@ -38,8 +39,12 @@
   let deleteSaving = $state(false);
   let deleteAlert = $state("");
 
-  // Secret reveal
-  let revealSecret = $state("");
+  // Secret display modal (after creation)
+  let showSecretModal = $state(false);
+  let newAppId = $state("");
+  let newSecret = $state("");
+  let appIdCopied = $state(false);
+  let secretCopied = $state(false);
 
   /** @param {unknown} err @returns {string} */
   function toErrMsg(err) {
@@ -68,11 +73,13 @@
   }
 
   /** @param {string} text */
-  function copyText(text) {
-    navigator.clipboard.writeText(text).then(
-      () => showAlert("success", "Copied to clipboard"),
-      () => {},
-    );
+  async function copyText(text) {
+    const ok = await copyToClipboard(text);
+    if (ok) {
+      showAlert("success", "Copied to clipboard");
+    } else {
+      showAlert("danger", "Copy failed, please copy manually");
+    }
   }
 
   // -- Create --
@@ -90,11 +97,11 @@
       const result = await createApp(createName, createUrl);
       showCreateModal = false;
       if (result.app?.secret_key) {
-        revealSecret = result.app.secret_key;
-        showAlert(
-          "success",
-          `App created! App ID: ${result.app.id}`,
-        );
+        newAppId = result.app.id || "";
+        newSecret = result.app.secret_key;
+        appIdCopied = false;
+        secretCopied = false;
+        showSecretModal = true;
       } else {
         showAlert("success", "App created");
       }
@@ -104,6 +111,18 @@
     } finally {
       createSaving = false;
     }
+  }
+
+  async function copyAppId() {
+    await copyToClipboard(newAppId);
+    appIdCopied = true;
+    setTimeout(() => (appIdCopied = false), 2000);
+  }
+
+  async function copySecret() {
+    await copyToClipboard(newSecret);
+    secretCopied = true;
+    setTimeout(() => (secretCopied = false), 2000);
   }
 
   // -- Edit --
@@ -158,35 +177,16 @@
   /** @param {KeyboardEvent} e */
   function onGlobalKeydown(e) {
     if (e.key !== "Escape") return;
-    if (showCreateModal) showCreateModal = false;
+    if (showSecretModal) showSecretModal = false;
+    else if (showCreateModal) showCreateModal = false;
     else if (showEditModal) showEditModal = false;
     else if (showDeleteModal) showDeleteModal = false;
-    else revealSecret = "";
   }
 </script>
 
 <svelte:window onkeydown={onGlobalKeydown} />
 
 <UserLayout bind:alertMsg {alertType}>
-  {#if revealSecret}
-    <div class="alert alert-warning alert-dismissible fade show">
-      <strong>Save your App Secret now!</strong> It will not be shown again.
-      <div class="mt-2 p-2 bg-white rounded">
-        <code class="user-select-all" style="word-break:break-all">{revealSecret}</code>
-        <button
-          class="btn btn-sm btn-outline-secondary ms-2"
-          onclick={() => copyText(revealSecret)}>Copy</button
-        >
-      </div>
-      <button
-        type="button"
-        class="btn-close"
-        aria-label="Close"
-        onclick={() => (revealSecret = "")}
-      ></button>
-    </div>
-  {/if}
-
   {#if loading}
     <div class="text-center py-5">
       <div
@@ -214,7 +214,7 @@
           </div>
         {:else}
           <div class="table-responsive">
-            <table class="table">
+            <table class="table table-last-row-borderless">
               <thead>
                 <tr>
                   <th>App ID</th>
@@ -275,7 +275,7 @@
 <!-- Create Modal -->
 {#if showCreateModal}
   <div class="modal d-block" tabindex="-1" style="background:rgba(0,0,0,0.5)" role="dialog">
-    <div class="modal-dialog modal-dialog-centered">
+    <div class="modal-dialog modal-dialog-centered modal-dialog-600">
       <div class="modal-content">
         <div class="modal-header">
           <h5 class="modal-title">New Application</h5>
@@ -339,7 +339,7 @@
 <!-- Edit Modal -->
 {#if showEditModal}
   <div class="modal d-block" tabindex="-1" style="background:rgba(0,0,0,0.5)" role="dialog">
-    <div class="modal-dialog modal-dialog-centered">
+    <div class="modal-dialog modal-dialog-centered modal-dialog-600">
       <div class="modal-content">
         <div class="modal-header">
           <h5 class="modal-title">Edit Application</h5>
@@ -401,7 +401,7 @@
 <!-- Delete Modal -->
 {#if showDeleteModal}
   <div class="modal d-block" tabindex="-1" style="background:rgba(0,0,0,0.5)" role="dialog">
-    <div class="modal-dialog modal-dialog-centered modal-sm">
+    <div class="modal-dialog modal-dialog-centered modal-dialog-600">
       <div class="modal-content">
         <div class="modal-header">
           <h5 class="modal-title">Delete Application</h5>
@@ -442,8 +442,80 @@
   </div>
 {/if}
 
-<style>
-  tbody tr:last-child td {
-    border-bottom: none;
-  }
-</style>
+<!-- Secret Display Modal (after creation) -->
+{#if showSecretModal}
+  <div class="modal d-block" tabindex="-1" style="background:rgba(0,0,0,0.5)" role="dialog">
+    <div class="modal-dialog modal-dialog-centered modal-dialog-600">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h5 class="modal-title">Application Created</h5>
+          <button
+            type="button"
+            class="btn-close"
+            aria-label="Close"
+            onclick={() => (showSecretModal = false)}
+          ></button>
+        </div>
+        <div class="modal-body">
+          <div class="alert alert-warning py-2 small">
+            Please save your App ID and Secret Key now. The Secret Key will not be shown again after closing this dialog.
+          </div>
+          <div class="mb-3">
+            <label class="form-label fw-semibold" for="newAppIdInput">App ID</label>
+            <div class="input-group">
+              <input
+                id="newAppIdInput"
+                type="text"
+                class="form-control font-monospace user-select-all"
+                readonly
+                value={newAppId}
+              />
+              <button
+                class="btn btn-outline-secondary"
+                type="button"
+                onclick={copyAppId}
+              >
+                {#if appIdCopied}
+                  Copied!
+                {:else}
+                  Copy
+                {/if}
+              </button>
+            </div>
+          </div>
+          <div class="mb-2">
+            <label class="form-label fw-semibold" for="newSecretInput">Secret Key</label>
+            <div class="input-group">
+              <input
+                id="newSecretInput"
+                type="text"
+                class="form-control font-monospace user-select-all"
+                readonly
+                value={newSecret}
+              />
+              <button
+                class="btn btn-outline-secondary"
+                type="button"
+                onclick={copySecret}
+              >
+                {#if secretCopied}
+                  Copied!
+                {:else}
+                  Copy
+                {/if}
+              </button>
+            </div>
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button
+            class="btn btn-primary btn-sm"
+            onclick={() => (showSecretModal = false)}
+          >Close</button>
+        </div>
+      </div>
+    </div>
+  </div>
+{/if}
+
+<style></style>

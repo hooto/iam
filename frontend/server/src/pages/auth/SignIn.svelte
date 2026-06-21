@@ -26,13 +26,10 @@
     loading = true;
 
     try {
-      // pass redirect_token from URL query if present
+      // pass redirect_token/app_id from URL query if present
       const urlParams = new URLSearchParams(window.location.search);
       const redirectToken = urlParams.get("redirect_token");
       const appId = urlParams.get("app_id");
-      if (appId) {
-        localStorage.setItem("iam_app_id", appId);
-      }
 
       const body = {
         username: username,
@@ -52,6 +49,14 @@
       if (!data.status || data.status.code !== "200") {
         alertMsg = (data.status && data.status.message) || "Sign in failed";
         alertType = "danger";
+        return;
+      }
+
+      // For a third-party app flow (app_id present), the backend returns a
+      // cross-host callback-url with an auth code. Always navigate to it via
+      // a full page load so the browser leaves the IAM SPA.
+      if (appId && data.redirect_uri) {
+        window.location.href = data.redirect_uri;
         return;
       }
 

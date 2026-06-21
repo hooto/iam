@@ -89,3 +89,34 @@ func isSameSite(u *url.URL, r *http.Request) bool {
 	}
 	return strings.EqualFold(u.Host, r.Host)
 }
+
+// isBrowserNavigation reports whether the request looks like a full-page
+// browser navigation rather than an AJAX/XHR call.
+//
+// It prefers the modern Sec-Fetch-Mode hint, but falls back to classic
+// browser signals (Upgrade-Insecure-Requests + Accept: text/html) because
+// Sec-Fetch-* headers may be stripped by proxies or missing in some clients.
+// An explicit X-Requested-With: XMLHttpRequest always means an AJAX call.
+func isBrowserNavigation(r *http.Request) bool {
+	if r == nil {
+		return false
+	}
+
+	// explicit AJAX indicator (jQuery/axios etc.)
+	if strings.EqualFold(r.Header.Get("X-Requested-With"), "XMLHttpRequest") {
+		return false
+	}
+
+	// modern standard, preferred when present
+	if r.Header.Get("Sec-Fetch-Mode") == "navigate" {
+		return true
+	}
+
+	// classic browser navigation hints
+	if r.Header.Get("Upgrade-Insecure-Requests") == "1" &&
+		strings.Contains(strings.ToLower(r.Header.Get("Accept")), "text/html") {
+		return true
+	}
+
+	return false
+}

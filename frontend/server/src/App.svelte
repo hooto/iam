@@ -1,4 +1,5 @@
 <script>
+  // @ts-nocheck
   import Auth_SignIn from "./pages/auth/SignIn.svelte";
   import Auth_SignUp from "./pages/auth/SignUp.svelte";
   import Auth_Password_Forgot from "./pages/auth/password/Forgot.svelte";
@@ -38,8 +39,6 @@
 
   /** @type {Record<string, typeof User_Profile>} */
   const userRoutes = {
-    "": User_Profile,
-    "/": User_Profile,
     "/user/profile": User_Profile,
     "/user/keys": User_Keys,
     "/user/apps": User_Apps,
@@ -56,24 +55,29 @@
     return rel || "/";
   }
 
-  function getComponent() {
+  // Pure function: resolve which component to render, no side effects.
+  // Redirects are handled separately in the $effect below to avoid
+  // mutating reactive state during render (state_unsafe_mutation).
+  function resolveComponent() {
     const relPath = getRelPath();
 
+    // root path
+    if (relPath === "" || relPath === "/") {
+      return isLoggedIn ? User_Profile : Auth_SignIn;
+    }
+
+    // third-party app sign-in flow: always render the sign-in form,
+    // regardless of the local login state.
+    if (relPath === signInPath && hasAppIdParam()) {
+      return Auth_SignIn;
+    }
+
     if (authRoutes[relPath]) {
-      if (isLoggedIn) {
-        // logged-in user on a public route, redirect to profile
-        window.__navigate(routePath + "/");
-      }
-      return authRoutes[relPath];
+      return isLoggedIn ? User_Profile : authRoutes[relPath];
     }
 
     if (userRoutes[relPath]) {
-      if (!isLoggedIn) {
-        // not logged in, redirect to sign-in
-        window.location.href = routePath + signInPath;
-        return Auth_SignIn;
-      }
-      return userRoutes[relPath];
+      return isLoggedIn ? userRoutes[relPath] : Auth_SignIn;
     }
 
     // default: show sign-in or profile based on auth state
@@ -84,6 +88,72 @@
     window.history.pushState({}, "", path);
     currentRoute = path;
   };
+
+  // Detect if the current request is a third-party app sign-in flow.
+  // When app_id is present, the sign-in form MUST be shown regardless of the
+  // local login state, so that the user re-authenticates and is redirected
+  // back to the third-party callback-url.
+  function hasAppIdParam() {
+    const params = new URLSearchParams(window.location.search);
+    return !!params.get("app_id");
+  }
+
+  // Redirect to the appropriate route based on auth state.
+  // Uses replaceState so the initial redirect does not pollute history.
+  // replace: true to replace history entry (initial load),
+  //          false to push a new entry (runtime navigation).
+  function applyRedirect(replace) {
+    const relPath = getRelPath();
+    const profilePath = routePath + "/user/profile";
+    const signInUrl = routePath + signInPath;
+
+    // third-party app sign-in flow: always force the sign-in form,
+    // even when the user is already logged in locally.
+    if (relPath === signInPath && hasAppIdParam()) {
+      return false;
+    }
+
+    // root path: redirect based on auth state
+    if (relPath === "" || relPath === "/") {
+      if (isLoggedIn) {
+        if (replace) {
+          window.history.replaceState({}, "", profilePath);
+          currentRoute = profilePath;
+        } else {
+          window.__navigate(profilePath);
+        }
+      } else {
+        window.location.href = signInUrl;
+      }
+      return true;
+    }
+
+    // logged-in user on a public/auth route -> redirect to profile
+    if (authRoutes[relPath] && isLoggedIn) {
+      if (replace) {
+        window.history.replaceState({}, "", profilePath);
+        currentRoute = profilePath;
+      } else {
+        window.__navigate(profilePath);
+      }
+      return true;
+    }
+
+    // not logged in on a user route -> redirect to sign-in
+    if (userRoutes[relPath] && !isLoggedIn) {
+      window.location.href = signInUrl;
+      return true;
+    }
+
+    return false;
+  }
+
+  // Handle runtime redirects (after popstate / nav clicks) in an effect so
+  // that reactive state mutations never occur during the render phase.
+  $effect(() => {
+    if (!authChecked) return;
+    applyRedirect(false);
+  });
 
   // check sign-in status via /iam/v2/auth/session
   (async () => {
@@ -97,12 +167,9 @@
       isLoggedIn = false;
     }
 
-    const relPath = getRelPath();
-    if (isLoggedIn && authRoutes[relPath]) {
-      window.location.href = routePath + "/";
-    } else if (!isLoggedIn && userRoutes[relPath]) {
-      window.location.href = routePath + signInPath;
-    }
+    // Pre-correct the URL before the first render so the target page
+    // component mounts only once (avoids duplicate data fetches).
+    applyRedirect(true);
 
     authChecked = true;
   })();
@@ -123,7 +190,7 @@
   </div>
 {:else}
   {#key currentRoute}
-    {@const Component = getComponent()}
+    {@const Component = resolveComponent()}
     <Component />
   {/key}
 {/if}

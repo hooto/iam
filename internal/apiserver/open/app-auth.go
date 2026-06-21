@@ -280,12 +280,15 @@ func AppAuth_Update(ctx httpsrv.Ctx) error {
 		perms := []*iamapi.AppPermission{}
 		for _, v := range req.Permissions {
 			v.Permission = strings.ToLower(v.Permission)
-			if err := iamapi.DNSLabelValid(v.Permission); err == nil {
+			if err := iamapi.PermissionNameValid(v.Permission); err == nil {
 				if !slices.ContainsFunc(perms, func(item *iamapi.AppPermission) bool {
 					return item.Permission == v.Permission
 				}) {
 					perms = append(perms, v)
 				}
+			} else {
+				slog.Warn("app update", "invalid-perm-name", v.Permission,
+					"err", err.Error())
 			}
 		}
 		sort.Slice(perms, func(i, j int) bool {
@@ -295,6 +298,7 @@ func AppAuth_Update(ctx httpsrv.Ctx) error {
 	}
 
 	app.Updated = time.Now().Unix()
+	slog.Info("app-auth update", "app", app)
 
 	if rs := data.Data.NewWriter(iamapi.NsAppInstance(app.ID), app).Exec(); !rs.OK() {
 		rsp.Status = inauth.NewServiceStatus("500", "Failed to update app")

@@ -9,6 +9,7 @@
     bindAccessKeyScope,
     unbindAccessKeyScope,
   } from "../../lib/api.js";
+  import { copyToClipboard } from "../../lib/clipboard.js";
 
   fetchSession();
 
@@ -139,23 +140,9 @@
   }
 
   async function copySecret() {
-    try {
-      await navigator.clipboard.writeText(newSecret);
-      secretCopied = true;
-      setTimeout(() => (secretCopied = false), 2000);
-    } catch {
-      // fallback for non-secure contexts
-      const ta = document.createElement("textarea");
-      ta.value = newSecret;
-      ta.style.position = "fixed";
-      ta.style.opacity = "0";
-      document.body.appendChild(ta);
-      ta.select();
-      document.execCommand("copy");
-      document.body.removeChild(ta);
-      secretCopied = true;
-      setTimeout(() => (secretCopied = false), 2000);
-    }
+    await copyToClipboard(newSecret);
+    secretCopied = true;
+    setTimeout(() => (secretCopied = false), 2000);
   }
 
   // -- Delete --
@@ -279,7 +266,7 @@
           </div>
         {:else}
           <div class="table-responsive">
-            <table class="table">
+            <table class="table table-last-row-borderless">
               <thead>
                 <tr>
                   <th>ID</th>
@@ -364,7 +351,7 @@
 <!-- Set Modal (Create/Edit) -->
 {#if showSetModal}
   <div class="modal d-block" tabindex="-1" style="background:rgba(0,0,0,0.5)" role="dialog">
-    <div class="modal-dialog modal-dialog-centered">
+    <div class="modal-dialog modal-dialog-centered modal-dialog-600">
       <div class="modal-content">
         <div class="modal-header">
           <h5 class="modal-title">{setModalTitle}</h5>
@@ -444,7 +431,7 @@
 <!-- Delete Confirm Modal -->
 {#if showDeleteModal}
   <div class="modal d-block" tabindex="-1" style="background:rgba(0,0,0,0.5)" role="dialog">
-    <div class="modal-dialog modal-dialog-centered modal-sm">
+    <div class="modal-dialog modal-dialog-centered modal-dialog-600">
       <div class="modal-content">
         <div class="modal-header">
           <h5 class="modal-title">Delete</h5>
@@ -489,7 +476,7 @@
 <!-- Bind Scope Modal -->
 {#if showBindModal}
   <div class="modal d-block" tabindex="-1" style="background:rgba(0,0,0,0.5)" role="dialog">
-    <div class="modal-dialog modal-dialog-centered">
+    <div class="modal-dialog modal-dialog-centered modal-dialog-600">
       <div class="modal-content">
         <div class="modal-header">
           <h5 class="modal-title">Add Scope</h5>
@@ -543,7 +530,7 @@
 <!-- Secret Display Modal -->
 {#if showSecretModal}
   <div class="modal d-block" tabindex="-1" style="background:rgba(0,0,0,0.5)" role="dialog">
-    <div class="modal-dialog modal-dialog-centered">
+    <div class="modal-dialog modal-dialog-centered modal-dialog-600">
       <div class="modal-content">
         <div class="modal-header">
           <h5 class="modal-title">Access Key Created</h5>
@@ -596,7 +583,7 @@
 <!-- Unbind Confirm Modal -->
 {#if showUnbindModal}
   <div class="modal d-block" tabindex="-1" style="background:rgba(0,0,0,0.5)" role="dialog">
-    <div class="modal-dialog modal-dialog-centered modal-sm">
+    <div class="modal-dialog modal-dialog-centered modal-dialog-600">
       <div class="modal-content">
         <div class="modal-header">
           <h5 class="modal-title">Remove Scope</h5>
@@ -637,9 +624,3 @@
     </div>
   </div>
 {/if}
-
-<style>
-  tbody tr:last-child td {
-    border-bottom: none;
-  }
-</style>

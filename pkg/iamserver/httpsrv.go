@@ -169,12 +169,19 @@ func (c UserAuth) CallbackAction() {
 		return
 	}
 
+	at, err := inauth.ParseAccessToken(rs.AccessToken)
+	if err != nil {
+		slog.Error("user-auth/callback: parse access-token failed", "error", err)
+		http.Error(c.Response.Out, "parse access-token failed", http.StatusInternalServerError)
+		return
+	}
+
 	http.SetCookie(c.Response.Out, &http.Cookie{
 		Name:     inauth.AppHttpHeaderKey,
 		Value:    rs.AccessToken,
 		Path:     "/",
 		HttpOnly: true,
-		Expires:  time.Now().Add(10 * 24 * time.Hour),
+		Expires:  time.Unix(at.Claims.Exp, 0),
 	})
 
 	if urlCookie, err := c.Request.Cookie(
@@ -221,14 +228,14 @@ func exchangeAuthCode(aac *AppAuthConfig, code string) (*AuthCodeResult, error) 
 
 // SignOutAction clears the session cookie and notifies IAM.
 //
-// For browser navigation requests (Sec-Fetch-Mode: navigate), it redirects
-// back to the Referer so the user lands on the page they signed out from.
-// Otherwise it returns a JSON status payload (e.g. for XHR/fetch callers).
+// For browser navigation requests, it redirects back to the Referer so the
+// user lands on the page they signed out from. Otherwise it returns a JSON
+// status payload (e.g. for XHR/fetch callers).
 func (c UserAuth) SignOutAction() {
 
 	deleteCookie(c.Response.Out, inauth.AppHttpHeaderKey)
 
-	if c.Request.Header.Get("Sec-Fetch-Mode") == "navigate" {
+	if isBrowserNavigation(c.Request.Request) {
 		c.AutoRender = false
 		target := "/"
 		if ref := c.Request.Referer(); ref != "" {

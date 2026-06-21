@@ -31,6 +31,15 @@ type Validator func(string) error
 // - must not start or end with a hyphen
 var dnsLabelRegexp = regexp.MustCompile(`^[a-z0-9]([a-z0-9-]{0,61}[a-z0-9])?$`)
 
+// permissionNameRegexp matches a permission name composed of one or more
+// RFC 1123 DNS labels separated by dots (e.g. "sys.user.read"):
+// - each segment follows dns_label rules (lowercase letters, digits, hyphens)
+// - segments are separated by a single dot
+// - no leading/trailing dots, no consecutive dots
+var permissionNameRegexp = regexp.MustCompile(
+	`^[a-z0-9]([a-z0-9-]*[a-z0-9])?(\.[a-z0-9]([a-z0-9-]*[a-z0-9])?)*$`,
+)
+
 var (
 	UsernameValid Validator
 
@@ -44,6 +53,9 @@ var (
 
 	// RFC 1123 DNS label
 	DNSLabelValid Validator
+
+	// Permission name: dot-separated DNS labels (e.g. sys.user.read)
+	PermissionNameValid Validator
 
 	validate = validator.New()
 
@@ -76,6 +88,13 @@ func init() {
 	})
 
 	DNSLabelValid = newValidator("required,dns_label,min=3,max=63")
+
+	// Register permission name validator: dot-separated DNS labels
+	validate.RegisterValidation("permission_name", func(fl validator.FieldLevel) bool {
+		return permissionNameRegexp.MatchString(fl.Field().String())
+	})
+
+	PermissionNameValid = newValidator("required,permission_name,min=3,max=253")
 }
 
 func newValidator(rule string) Validator {

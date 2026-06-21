@@ -167,6 +167,7 @@ func SignIn(ctx httpsrv.Ctx) error {
 	}
 
 	if app.ID != "" {
+		slog.Info("app", "st.IdentityToken", st.IdentityToken, "app", app.Permissions)
 		for _, perm := range app.Permissions {
 			if slices.Contains(st.IdentityToken.Permissions, perm.Permission) {
 				continue

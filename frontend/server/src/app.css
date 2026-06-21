@@ -3,3 +3,13 @@
 .bg-auth {
   background: linear-gradient(135deg, #0d6efd 0%, #0a58ca 100%);
 }
+
+/* Modal with 600px minimum width */
+.modal-dialog-600 {
+  min-width: 600px;
+}
+
+/* Table without bottom border on the last row */
+.table-last-row-borderless tbody tr:last-child td {
+  border-bottom: none;
+}
