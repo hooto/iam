@@ -21,7 +21,7 @@ import (
 	"time"
 
 	"github.com/hooto/iam/v2/pkg/iamapi"
-	"github.com/sysinner/incore/v2/pkg/inauth"
+	"github.com/sysinner/innerstack/v2/pkg/inauth"
 )
 
 type Verifier interface {

@@ -28,7 +28,7 @@ import (
 	"github.com/lynkdb/kvgo/v2/pkg/kvapi"
 	"github.com/lynkdb/kvgo/v2/pkg/kvrep"
 	"github.com/lynkdb/kvgo/v2/pkg/storage"
-	"github.com/sysinner/incore/v2/pkg/inauth"
+	"github.com/sysinner/innerstack/v2/pkg/inauth"
 
 	"github.com/hooto/iam/v2/internal/config"
 	"github.com/hooto/iam/v2/pkg/iamapi"

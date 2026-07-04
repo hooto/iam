@@ -16,7 +16,7 @@ package admin
 
 import (
 	"github.com/hooto/httpsrv"
-	"github.com/sysinner/incore/v2/pkg/inauth"
+	"github.com/sysinner/innerstack/v2/pkg/inauth"
 )
 
 const accessKeyLimit = 20

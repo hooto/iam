@@ -16,7 +16,7 @@ package user
 
 import (
 	"github.com/hooto/httpsrv"
-	"github.com/sysinner/incore/v2/pkg/inauth"
+	"github.com/sysinner/innerstack/v2/pkg/inauth"
 )
 
 // NewModule creates an httpsrv.Module for user, access-key and app-auth API endpoints.

@@ -18,7 +18,7 @@ import (
 	"errors"
 
 	"github.com/hooto/iam/v2/internal/util"
-	"github.com/sysinner/incore/v2/pkg/inauth"
+	"github.com/sysinner/innerstack/v2/pkg/inauth"
 )
 
 // UserSession defines the interface for managing user authentication

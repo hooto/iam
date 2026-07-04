@@ -2,7 +2,7 @@ module github.com/hooto/iam/v2
 
 go 1.26.0
 
-replace github.com/sysinner/incore/v2 v2.0.0-alpha.2 => /opt/workspace/src/github.com/sysinner/incore
+replace github.com/sysinner/innerstack/v2 v2.0.0-alpha.2 => /opt/workspace/src/github.com/sysinner/innerstack
 
 replace github.com/hooto/httpsrv v0.13.0 => /opt/workspace/src/github.com/hooto/httpsrv
 
@@ -17,8 +17,8 @@ require (
 	github.com/hooto/httpsrv v0.13.0
 	github.com/hooto/iam v1.0.4
 	github.com/lessos/lessgo v1.0.1
-	github.com/lynkdb/kvgo/v2 v2.0.15
-	github.com/sysinner/incore/v2 v2.0.0-alpha.2
+	github.com/lynkdb/kvgo/v2 v2.0.16
+	github.com/sysinner/innerstack/v2 v2.0.0-alpha.4
 	golang.org/x/mod v0.37.0
 )
 
@@ -42,8 +42,6 @@ require (
 	github.com/gogo/protobuf v1.3.2 // indirect
 	github.com/golang/protobuf v1.5.4 // indirect
 	github.com/golang/snappy v1.0.0 // indirect
-	github.com/hooto/hauth/go v0.1.5 // indirect
-	github.com/hooto/hauth/go/v2 v2.0.0-20260125120444-4cbf92d8d081 // indirect
 	github.com/hooto/hflag4g v0.10.1 // indirect
 	github.com/hooto/hlog4g v0.9.5 // indirect
 	github.com/hooto/hmetrics v0.0.2 // indirect
@@ -53,7 +51,7 @@ require (
 	github.com/leodido/go-urn v1.4.0 // indirect
 	github.com/lufia/plan9stats v0.0.0-20260330125221-c963978e514e // indirect
 	github.com/lynkdb/iomix v0.0.0-20210408130459-cc48edfc442f // indirect
-	github.com/lynkdb/lynkapi v0.0.11 // indirect
+	github.com/lynkdb/lynkapi v0.0.12 // indirect
 	github.com/munnerz/goautoneg v0.0.0-20191010083416-a7dc8b61c822 // indirect
 	github.com/pkg/errors v0.9.1 // indirect
 	github.com/power-devops/perfstat v0.0.0-20240221224432-82ca36839d55 // indirect

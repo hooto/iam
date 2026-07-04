@@ -22,8 +22,8 @@ import (
 	"time"
 
 	"github.com/hooto/httpsrv"
-	"github.com/sysinner/incore/v2/pkg/inapi"
-	"github.com/sysinner/incore/v2/pkg/inauth"
+	"github.com/sysinner/innerstack/v2/pkg/inapi"
+	"github.com/sysinner/innerstack/v2/pkg/inauth"
 	"golang.org/x/mod/semver"
 
 	"github.com/hooto/iam/v2/internal/data"

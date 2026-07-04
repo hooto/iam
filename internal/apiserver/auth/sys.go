@@ -17,7 +17,7 @@ package auth
 import (
 	"github.com/hooto/httpsrv"
 	"github.com/hooto/iam/v2/internal/config"
-	"github.com/sysinner/incore/v2/pkg/inauth"
+	"github.com/sysinner/innerstack/v2/pkg/inauth"
 )
 
 type Sys_InfoResponse struct {

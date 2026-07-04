@@ -17,7 +17,7 @@ package iamserver
 import (
 	"errors"
 
-	"github.com/sysinner/incore/v2/pkg/inauth"
+	"github.com/sysinner/innerstack/v2/pkg/inauth"
 )
 
 type AppAuthConfig struct {

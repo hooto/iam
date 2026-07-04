@@ -23,7 +23,7 @@ import (
 	"net/url"
 	"strings"
 
-	"github.com/sysinner/incore/v2/pkg/inauth"
+	"github.com/sysinner/innerstack/v2/pkg/inauth"
 )
 
 // iamPost sends a JSON POST to an IAM endpoint and decodes the response.

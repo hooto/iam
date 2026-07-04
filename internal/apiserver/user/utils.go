@@ -20,7 +20,7 @@ import (
 	"github.com/hooto/httpsrv"
 	"github.com/hooto/iam/v2/internal/data"
 	"github.com/hooto/iam/v2/pkg/iamapi"
-	"github.com/sysinner/incore/v2/pkg/inauth"
+	"github.com/sysinner/innerstack/v2/pkg/inauth"
 )
 
 // authCtx extracts and validates the access token from cookie or Authorization

@@ -26,7 +26,7 @@ import (
 
 	"github.com/hooto/htoml4g/htoml"
 	"github.com/hooto/httpsrv"
-	"github.com/sysinner/incore/v2/pkg/inlog"
+	"github.com/sysinner/innerstack/v2/pkg/inlog"
 
 	"github.com/hooto/iam/v2/pkg/iamapi"
 	"github.com/hooto/iam/v2/pkg/iamserver"

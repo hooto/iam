@@ -26,8 +26,8 @@ import (
 	"strings"
 
 	"github.com/hooto/httpsrv"
-	"github.com/sysinner/incore/v2/pkg/inlog"
-	"github.com/sysinner/incore/v2/pkg/signals"
+	"github.com/sysinner/innerstack/v2/pkg/inlog"
+	"github.com/sysinner/innerstack/v2/pkg/signals"
 
 	"github.com/hooto/iam/v2/internal/apiserver/admin"
 	"github.com/hooto/iam/v2/internal/apiserver/auth"
