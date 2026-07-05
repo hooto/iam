@@ -2,10 +2,6 @@ module github.com/hooto/iam/v2
 
 go 1.26.0
 
-replace github.com/sysinner/innerstack/v2 v2.0.0-alpha.2 => /opt/workspace/src/github.com/sysinner/innerstack
-
-replace github.com/hooto/httpsrv v0.13.0 => /opt/workspace/src/github.com/hooto/httpsrv
-
 require (
 	github.com/disintegration/imaging v1.6.2
 	github.com/go-playground/locales v0.14.1
@@ -14,11 +10,11 @@ require (
 	github.com/google/uuid v1.6.0
 	github.com/hooto/hmsg v0.1.0
 	github.com/hooto/htoml4g v0.9.5
-	github.com/hooto/httpsrv v0.13.0
+	github.com/hooto/httpsrv v0.13.1
 	github.com/hooto/iam v1.0.4
 	github.com/lessos/lessgo v1.0.1
 	github.com/lynkdb/kvgo/v2 v2.0.16
-	github.com/sysinner/innerstack/v2 v2.0.0-alpha.4
+	github.com/sysinner/innerstack/v2 v2.0.0-alpha.5
 	golang.org/x/mod v0.37.0
 )
 
