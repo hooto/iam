@@ -9,6 +9,11 @@
   min-width: 600px;
 }
 
+/* Modal with 900px minimum width (admin modals) */
+.modal-dialog-900 {
+  min-width: 900px;
+}
+
 /* Table without bottom border on the last row */
 .table-last-row-borderless tbody tr:last-child td {
   border-bottom: none;

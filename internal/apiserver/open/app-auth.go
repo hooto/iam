@@ -61,7 +61,7 @@ func appAuth(ctx httpsrv.Ctx) *inauth.AccessKey {
 	if err != nil || token.Header.Kid == "" {
 		ctx.JSON(struct {
 			Status inauth.ServiceStatus `json:"status"`
-		}{Status: inauth.NewServiceStatus("401", "Unauthorized #2")})
+		}{Status: inauth.NewServiceStatus("401", "Unauthorized #2 "+err.Error())})
 		return nil
 	}
 
@@ -69,7 +69,7 @@ func appAuth(ctx httpsrv.Ctx) *inauth.AccessKey {
 	if err != nil {
 		ctx.JSON(struct {
 			Status inauth.ServiceStatus `json:"status"`
-		}{Status: inauth.NewServiceStatus("401", "Unauthorized #3")})
+		}{Status: inauth.NewServiceStatus("401", "Unauthorized #3 "+err.Error())})
 		return nil
 	}
 
@@ -179,12 +179,12 @@ func AppAuth_TokenExchange(ctx httpsrv.Ctx) error {
 	// parse and verify the stored access token
 	token, err := inauth.ParseAccessToken(entry.AccessToken)
 	if err != nil {
-		rsp.Status = inauth.NewServiceStatus("401", "Invalid access token")
+		rsp.Status = inauth.NewServiceStatus("401", "Invalid access token : "+err.Error())
 		return nil
 	}
 
 	if _, err := token.Verify(data.KeyMgr); err != nil {
-		rsp.Status = inauth.NewServiceStatus("401", "Invalid access token")
+		rsp.Status = inauth.NewServiceStatus("401", "Invalid access token : "+err.Error())
 		return nil
 	}
 
@@ -356,13 +356,13 @@ func AppAuth_Session(ctx httpsrv.Ctx) error {
 
 	utoken, err := inauth.ParseAccessToken(req.AccessToken)
 	if err != nil {
-		rsp.Status = inauth.NewServiceStatus("401", "Invalid access token")
+		rsp.Status = inauth.NewServiceStatus("401", "Invalid access token : "+err.Error())
 		return nil
 	}
 
 	_, err = utoken.Verify(data.KeyMgr)
 	if err != nil {
-		rsp.Status = inauth.NewServiceStatus("401", "Invalid access token")
+		rsp.Status = inauth.NewServiceStatus("401", "Invalid access token : "+err.Error())
 		return nil
 	}
 

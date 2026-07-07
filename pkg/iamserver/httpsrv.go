@@ -42,6 +42,30 @@ type UserAuthSessionResponse struct {
 
 	AuthClaims    *inauth.AuthClaims    `json:"auth_claims,omitempty"`
 	IdentityToken *inauth.IdentityToken `json:"identity_token,omitempty"`
+
+	// Extras carries application-specific fields injected by the
+	// registered SessionResponseHook. It is namespaced under the
+	// "extras" key so the host app can extend /user-auth/session
+	// without colliding with IAM's own fields or requiring a custom
+	// marshaler.
+	Extras map[string]any `json:"extras,omitempty"`
+}
+
+// SessionResponseHook lets the host application extend the
+// /user-auth/session JSON response with its own business-logic fields
+// (e.g. ui_mgr_allow). It receives the resolved user session (whose
+// Allow/Profile methods are usable; AuthClaims/IdentityToken are nil
+// when the user is not authenticated or IAM is unreachable). The
+// returned map is flattened into the response as top-level keys.
+// Return nil to add nothing.
+type SessionResponseHook func(sess UserSession) map[string]any
+
+var sessionResponseHook SessionResponseHook
+
+// SetSessionResponseHook registers the application-specific session
+// response injector used by SessionAction.
+func SetSessionResponseHook(fn SessionResponseHook) {
+	sessionResponseHook = fn
 }
 
 // SessionAction returns the current app configuration.
@@ -84,6 +108,12 @@ func (c UserAuth) SessionAction() {
 				rsp.AuthClaims = &at.Claims
 			}
 		}
+	}
+
+	// Let the host application inject its own business-logic fields
+	// (e.g. ui_mgr_allow) into the response.
+	if sessionResponseHook != nil {
+		rsp.Extras = sessionResponseHook(AppVerifier.Session(c.Request.Request))
 	}
 
 	if req.CurrentUrl != "" {

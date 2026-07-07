@@ -16,9 +16,18 @@ package admin
 
 import "github.com/hooto/httpsrv"
 
-// NewModule creates an httpsrv.Module for the auth API endpoints.
+// NewModule creates an httpsrv.Module for the admin API endpoints.
 func NewModule() *httpsrv.Module {
 	mod := httpsrv.NewModule()
+
+	// user management (sysadmin only)
+	mod.RegisterAction("/user/list", UserList)
+	mod.RegisterAction("/user/entry", UserEntry)
+	mod.RegisterAction("/user/set", UserSet)
+	mod.RegisterAction("/role/list", RoleList)
+
+	// access key management (reserved)
 	mod.RegisterAction("/access-key/list", AccessKey_List)
+
 	return mod
 }

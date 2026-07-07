@@ -9,11 +9,18 @@
   import User_Keys from "./pages/user/AccessKey.svelte";
   import User_Apps from "./pages/user/Apps.svelte";
 
+  import Admin_Users from "./pages/admin/Users.svelte";
+
   import { routePath } from "./lib/config.js";
 
   let currentRoute = $state(window.location.pathname);
   let authChecked = $state(false);
   let isLoggedIn = $state(false);
+  let username = $state("");
+  let userRoles = $state([]);
+  let isAdmin = $derived(
+    username === "sysadmin" || userRoles.includes("sa"),
+  );
 
   // dynamic body background based on auth state
   $effect(() => {
@@ -42,6 +49,11 @@
     "/user/profile": User_Profile,
     "/user/keys": User_Keys,
     "/user/apps": User_Apps,
+  };
+
+  /** @type {Record<string, typeof Admin_Users>} */
+  const adminRoutes = {
+    "/admin/users": Admin_Users,
   };
 
   window.addEventListener("popstate", () => {
@@ -78,6 +90,21 @@
 
     if (userRoutes[relPath]) {
       return isLoggedIn ? userRoutes[relPath] : Auth_SignIn;
+    }
+
+    if (adminRoutes[relPath]) {
+      if (!isLoggedIn) return Auth_SignIn;
+      // non-admins are not allowed into the admin area
+      if (!isAdmin) return User_Profile;
+      return adminRoutes[relPath];
+    }
+
+    // /admin (and /admin/) is the admin entry; it resolves to the Users page.
+    // applyRedirect() normalizes the URL to /admin/users.
+    if (relPath === "/admin" || relPath === "/admin/") {
+      if (!isLoggedIn) return Auth_SignIn;
+      if (!isAdmin) return User_Profile;
+      return Admin_Users;
     }
 
     // default: show sign-in or profile based on auth state
@@ -145,6 +172,48 @@
       return true;
     }
 
+    // admin routes: require login + sysadmin role
+    if (adminRoutes[relPath]) {
+      if (!isLoggedIn) {
+        window.location.href = signInUrl;
+        return true;
+      }
+      if (!isAdmin) {
+        if (replace) {
+          window.history.replaceState({}, "", profilePath);
+          currentRoute = profilePath;
+        } else {
+          window.__navigate(profilePath);
+        }
+        return true;
+      }
+    }
+
+    // /admin entry -> default to the Users sub-module
+    if (relPath === "/admin" || relPath === "/admin/") {
+      if (!isLoggedIn) {
+        window.location.href = signInUrl;
+        return true;
+      }
+      if (!isAdmin) {
+        if (replace) {
+          window.history.replaceState({}, "", profilePath);
+          currentRoute = profilePath;
+        } else {
+          window.__navigate(profilePath);
+        }
+        return true;
+      }
+      const adminUsersUrl = routePath + "/admin/users";
+      if (replace) {
+        window.history.replaceState({}, "", adminUsersUrl);
+        currentRoute = adminUsersUrl;
+      } else {
+        window.__navigate(adminUsersUrl);
+      }
+      return true;
+    }
+
     return false;
   }
 
@@ -163,8 +232,12 @@
       });
       const data = await resp.json();
       isLoggedIn = data.status?.code === "200" && !!data.auth_claims;
+      username = data.auth_claims?.sub || "";
+      userRoles = data.identity_token?.roles || [];
     } catch {
       isLoggedIn = false;
+      username = "";
+      userRoles = [];
     }
 
     // Pre-correct the URL before the first render so the target page

@@ -131,3 +131,40 @@ export async function deleteApp(id) {
     body: JSON.stringify({ id }),
   }, "Failed to delete app");
 }
+
+// Admin User Management API (sysadmin only)
+
+export async function fetchUsers(qryText) {
+  const q = qryText ? "?qry_text=" + encodeURIComponent(qryText) : "";
+  const data = await request(
+    "/v2/admin/user/list" + q,
+    {},
+    "Failed to fetch users",
+  );
+  return data.items || [];
+}
+
+export async function fetchUserEntry(username) {
+  const data = await request(
+    "/v2/admin/user/entry?username=" + encodeURIComponent(username),
+    {},
+    "Failed to fetch user",
+  );
+  return data.item;
+}
+
+export async function adminSaveUser(params) {
+  return request("/v2/admin/user/set", {
+    method: "POST",
+    body: JSON.stringify(params),
+  }, "Failed to save user");
+}
+
+export async function fetchAdminRoles() {
+  const data = await request(
+    "/v2/admin/role/list",
+    {},
+    "Failed to fetch roles",
+  );
+  return data.items || [];
+}

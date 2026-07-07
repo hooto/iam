@@ -11,13 +11,6 @@
 
   const session = getSession();
 
-  // sysadmin-only entry into the admin area: the bootstrap sysadmin account
-  // or any account holding the "sa" role.
-  let isAdmin = $derived(
-    session.username === "sysadmin" ||
-      (Array.isArray(session.roles) && session.roles.includes("sa")),
-  );
-
   // derive current relative path for active nav highlighting
   let currentPath = $state(
     (() => {
@@ -50,61 +43,40 @@
     <div class="container" style="max-width:1100px">
       <a
         class="navbar-brand"
-        href="{routePath}/"
-        onclick={(e) => onNavClick(e, "/")}
+        href="{routePath}/admin/users"
+        onclick={(e) => onNavClick(e, "/admin/users")}
         style="display:flex; align-items:center; gap:1rem; margin-right:2rem;"
-        ><svg
+      >
+        <svg
           xmlns="http://www.w3.org/2000/svg"
           width="32"
           height="32"
           fill="currentColor"
-          class="bi bi-person-circle"
+          class="bi bi-gear-fill"
           viewBox="0 0 16 16"
         >
-          <path d="M11 6a3 3 0 1 1-6 0 3 3 0 0 1 6 0" />
           <path
-            fill-rule="evenodd"
-            d="M0 8a8 8 0 1 1 16 0A8 8 0 0 1 0 8m8-7a7 7 0 0 0-5.468 11.37C3.242 11.226 4.805 10 8 10s4.757 1.225 5.468 2.37A7 7 0 0 0 8 1"
+            d="M9.405 1.05c-.413-1.4-2.397-1.4-2.81 0l-.1.34a1.464 1.464 0 0 1-2.105.872l-.51-.212c-1.353-.56-2.66.907-1.95 2.03l.23.334c.264.356.246.85-.072 1.18l-.27.293a1.466 1.466 0 0 0 0 2.03l.27.293c.318.33.334.824.072 1.18l-.23.334c-.71 1.123.597 2.59 1.95 2.03l.51-.212a1.464 1.464 0 0 1 2.105.872l.1.34c.413 1.4 2.397 1.4 2.81 0l.1-.34a1.464 1.464 0 0 1 2.105-.872l.51.212c1.353.56 2.66-.907 1.95-2.03l-.23-.334a1.464 1.464 0 0 0-.072-1.18l.27-.293a1.466 1.466 0 0 0 0-2.03l-.27-.293a1.464 1.464 0 0 1 .072-1.18l.23-.334c.71-1.123-.597-2.59-1.95-2.03l-.51.212a1.464 1.464 0 0 1-2.105-.872zM8 5a3 3 0 1 1 0 6 3 3 0 0 1 0-6"
           />
-        </svg> <span>Account</span></a
-      >
+        </svg>
+        <span>Admin</span>
+      </a>
       <ul class="navbar-nav me-auto">
         <li class="nav-item">
           <a
             class="nav-link nav-dot"
-            class:active={currentPath === "/user/profile" ||
-              currentPath === "/"}
-            href="{routePath}/user/profile"
-            onclick={(e) => onNavClick(e, "/user/profile")}>Profile</a
-          >
-        </li>
-        <li class="nav-item">
-          <a
-            class="nav-link nav-dot"
-            class:active={currentPath === "/user/keys"}
-            href="{routePath}/user/keys"
-            onclick={(e) => onNavClick(e, "/user/keys")}
-            >Keys</a
-          >
-        </li>
-        <li class="nav-item">
-          <a
-            class="nav-link nav-dot"
-            class:active={currentPath === "/user/apps"}
-            href="{routePath}/user/apps"
-            onclick={(e) => onNavClick(e, "/user/apps")}
-            >Apps</a
+            class:active={currentPath === "/admin/users"}
+            href="{routePath}/admin/users"
+            onclick={(e) => onNavClick(e, "/admin/users")}>Users</a
           >
         </li>
       </ul>
       <div class="d-flex align-items-center gap-2">
-        {#if isAdmin}
-          <a
-            class="btn btn-outline-light btn-sm"
-            href="{routePath}/admin/users"
-            onclick={(e) => onNavClick(e, "/admin/users")}>Admin</a
-          >
-        {/if}
+        <a
+          class="btn btn-outline-light btn-sm"
+          href="{routePath}/user/profile"
+          onclick={(e) => onNavClick(e, "/user/profile")}>Account</a
+        >
         <button class="btn btn-outline-light btn-sm" onclick={() => signOut()}
           >Sign Out</button
         >

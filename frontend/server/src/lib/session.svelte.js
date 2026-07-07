@@ -6,16 +6,20 @@
  * importing from here gets reactive updates when session data changes.
  */
 import { routePath } from "./config.js";
-import { parseJwtPayload } from "./auth.js";
 
 const session = $state({
   username: "",
+  roles: [],
   loaded: false,
 });
 
 /**
  * Fetch the current user session from the server.
  * Safe to call multiple times; subsequent calls are no-ops once loaded.
+ *
+ * The /v2/auth/session response returns DECODED claims directly:
+ *   { status, auth_claims: { sub, ... }, identity_token: { roles, ... } }
+ * It does NOT return a raw access_token, so we read from those fields.
  */
 export async function fetchSession() {
   if (session.loaded) return;
@@ -24,11 +28,9 @@ export async function fetchSession() {
       credentials: "same-origin",
     });
     const data = await resp.json();
-    if (data.status?.code === "200" && data.access_token) {
-      const claims = parseJwtPayload(data.access_token);
-      if (claims?.sub) {
-        session.username = claims.sub;
-      }
+    if (data.status?.code === "200" && data.auth_claims) {
+      session.username = data.auth_claims.sub || "";
+      session.roles = data.identity_token?.roles || [];
     }
   } catch {
     // ignore network errors
@@ -38,10 +40,19 @@ export async function fetchSession() {
 
 /**
  * Return the reactive session object.
- * Access `getSession().username` in components for reactive binding.
+ * Access `getSession().username` or `getSession().roles` in components
+ * for reactive binding.
  */
 export function getSession() {
   return session;
+}
+
+/**
+ * Whether the current session holds the sysadmin role.
+ * Reads the reactive session state, so it stays current after fetch.
+ */
+export function isAdminSession() {
+  return Array.isArray(session.roles) && session.roles.includes("sa");
 }
 
 /**

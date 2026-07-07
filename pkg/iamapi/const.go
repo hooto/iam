@@ -34,6 +34,12 @@ const (
 	UserTypeGroup = "group"
 )
 
+// User status values stored in User.Status.
+const (
+	UserStatusActive = 1
+	UserStatusBanned = 2
+)
+
 var (
 	ErrCodeAccessDenied    = "AccessDenied"
 	ErrCodeUnauthorized    = "Unauthorized" // Need to login and fetch a new access-token

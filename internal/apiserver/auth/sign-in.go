@@ -123,6 +123,12 @@ func SignIn(ctx httpsrv.Ctx) error {
 		return nil
 	}
 
+	if user.Status == iamapi.UserStatusBanned {
+		rsp.Status = inauth.NewServiceStatus("403", "User is banned")
+		slog.Info("service/signin-auth fail", "user", req.Username, "reason", "banned")
+		return nil
+	}
+
 	denyCount, denyKey, err := apiserver.UserAuthDenyCheck(req.Username, ctx.Request())
 	if err != nil {
 		rsp.Status = inauth.NewServiceStatus("400", err.Error())
