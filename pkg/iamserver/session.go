@@ -76,7 +76,7 @@ func (it *userSession) RequireAuth() (string, error) {
 		return "", errors.New("user not authenticated")
 	}
 
-	u := urlJoinPath(it.cfg.BaseURL,
+	u := UrlJoinPath(it.cfg.BaseURL,
 		"/auth/sign-in") + "?app_id=" + it.cfg.AppId
 
 	return u, nil
@@ -99,7 +99,7 @@ func (it *userSession) Profile() (*UserProfile, error) {
 		return nil, errors.New("user not authenticated")
 	}
 
-	photoURL := urlJoinPath(it.cfg.BaseURL,
+	photoURL := UrlJoinPath(it.cfg.BaseURL,
 		"/auth/photo/"+it.AuthClaims.Sub)
 
 	return &UserProfile{

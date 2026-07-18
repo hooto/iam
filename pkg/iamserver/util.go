@@ -30,7 +30,7 @@ import (
 func iamPost(baseUrl string, endpoint string, auth string, reqBody interface{}, rspBody interface{}) error {
 
 	var (
-		iamURL  = urlJoinPath(baseUrl, endpoint)
+		iamURL  = UrlJoinPath(baseUrl, endpoint)
 		body, _ = json.Marshal(reqBody)
 	)
 
@@ -71,7 +71,7 @@ func iamPost(baseUrl string, endpoint string, auth string, reqBody interface{}, 
 	return nil
 }
 
-func urlJoinPath(basePath, addon string) string {
+func UrlJoinPath(basePath, addon string) string {
 	s, _ := url.JoinPath(basePath, addon)
 	return s
 }
