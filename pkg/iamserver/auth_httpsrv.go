@@ -20,31 +20,31 @@ import (
 	"net/url"
 	"time"
 
-	"github.com/hooto/httpsrv"
+	"github.com/hooto/httpsrv/v2"
 	"github.com/sysinner/innerstack/v2/pkg/inauth"
 )
 
-type UserAuth struct {
-	*httpsrv.Controller
+func RegisterRoutes(r httpsrv.Router) {
+	r.All("/user-auth/session", UserAuthSession)
+	r.All("/user-auth/sign-in", UserAuthSignIn)
+	r.All("/user-auth/callback", UserAuthCallback)
+	r.All("/user-auth/sign-out", UserAuthSignOut)
 }
 
-// SessionAction returns the current app configuration.
-func (c UserAuth) SessionAction() {
+// UserAuthSession returns the current app configuration.
+func UserAuthSession(ctx httpsrv.Ctx) error {
 	var (
 		req UserAuthSessionRequest
 		rsp UserAuthSessionResponse
 	)
-	defer c.RenderJson(&rsp)
+	defer ctx.JSON(&rsp)
 
-	if err := c.Request.JsonDecode(&req); err != nil {
-		// rsp.Status = inauth.NewServiceStatus("400", "Invalid request format")
-		// return
-	}
+	_ = ctx.Bind(&req)
 
 	if err := AppVerifier.Ping(); err != nil {
 		rsp.Status = inauth.NewServiceStatus("500", err.Error())
 		slog.Warn(err.Error())
-		return
+		return nil
 	}
 
 	cfg := AppVerifier.Config()
@@ -54,7 +54,7 @@ func (c UserAuth) SessionAction() {
 	rsp.AuthSignInURL = UrlJoinPath(cfg.BaseURL,
 		"/auth/sign-in") + "?app_id=" + cfg.AppId
 
-	token, err := AppVerifier.Auth(c.Request.Request)
+	token, err := AppVerifier.Auth(ctx.Request())
 	if err == nil {
 		rsp.AuthClaims = &token.AccessToken.Claims
 		rsp.IdentityToken = token.IdentityToken
@@ -63,7 +63,7 @@ func (c UserAuth) SessionAction() {
 
 		// Fallback: parse the access token locally to get basic user info
 		// even if the IAM session lookup fails
-		if cookie, cerr := c.Request.Cookie(inauth.AppHttpHeaderKey); cerr == nil {
+		if cookie, cerr := ctx.Request().Cookie(inauth.AppHttpHeaderKey); cerr == nil {
 			if at, perr := inauth.ParseAccessToken(cookie.Value); perr == nil {
 				rsp.AuthClaims = &at.Claims
 			}
@@ -73,11 +73,11 @@ func (c UserAuth) SessionAction() {
 	// Let the host application inject its own business-logic fields
 	// (e.g. ui_mgr_allow) into the response.
 	if sessionResponseHook != nil {
-		rsp.Extras = sessionResponseHook(AppVerifier.Session(c.Request.Request))
+		rsp.Extras = sessionResponseHook(AppVerifier.Session(ctx.Request()))
 	}
 
 	if req.CurrentUrl != "" {
-		http.SetCookie(c.Response.Out, &http.Cookie{
+		http.SetCookie(ctx.Response(), &http.Cookie{
 			Name:     inauth.AppHttpHeaderKey + "-current-url",
 			Value:    req.CurrentUrl,
 			Path:     "/",
@@ -87,32 +87,32 @@ func (c UserAuth) SessionAction() {
 	}
 
 	rsp.Status = inauth.NewServiceStatus("200", "ok")
+	return nil
 }
 
-// SignInAction redirects the user to the IAM sign-in page.
-func (c UserAuth) SignInAction() {
-	c.AutoRender = false
+// UserAuthSignIn redirects the user to the IAM sign-in page.
+func UserAuthSignIn(ctx httpsrv.Ctx) error {
 
 	if err := AppVerifier.Config().Valid(); err != nil {
-		http.Error(c.Response.Out, "App not configured : "+err.Error(), http.StatusBadRequest)
-		return
+		http.Error(ctx.Response(), "App not configured : "+err.Error(), http.StatusBadRequest)
+		return nil
 	}
 
 	cfg := AppVerifier.Config()
 
 	signInUrl := UrlJoinPath(cfg.BaseURL, "/auth/sign-in") + "?app_id=" + cfg.AppId
 
-	cu := c.Request.URL.Query().Get("current_url")
+	cu := ctx.Request().URL.Query().Get("current_url")
 
 	if cu == "" {
-		if ck, err := c.Request.Cookie(inauth.AppHttpHeaderKey + "-current-url"); err == nil {
+		if ck, err := ctx.Request().Cookie(inauth.AppHttpHeaderKey + "-current-url"); err == nil {
 			cu = ck.Value
 		}
 	}
 
 	if cu == "" {
-		if ref := c.Request.Referer(); ref != "" {
-			if u, err := url.Parse(ref); err == nil && isSameSite(u, c.Request.Request) {
+		if ref := ctx.Request().Referer(); ref != "" {
+			if u, err := url.Parse(ref); err == nil && isSameSite(u, ctx.Request()) {
 				cu = ref
 			}
 		}
@@ -120,7 +120,7 @@ func (c UserAuth) SignInAction() {
 
 	if cu != "" {
 		slog.Info("callback-url : " + cu)
-		http.SetCookie(c.Response.Out, &http.Cookie{
+		http.SetCookie(ctx.Response(), &http.Cookie{
 			Name:     inauth.AppHttpHeaderKey + "-current-url",
 			Value:    cu,
 			Path:     "/",
@@ -129,38 +129,38 @@ func (c UserAuth) SignInAction() {
 		})
 	}
 
-	http.Redirect(c.Response.Out, c.Request.Request, signInUrl, http.StatusFound)
+	return ctx.Redirect(http.StatusFound, signInUrl)
 }
 
-// CallbackAction handles the IAM redirect with auth code.
-func (c UserAuth) CallbackAction() {
-	c.AutoRender = false
-	code := c.Request.URL.Query().Get("code")
+// UserAuthCallback handles the IAM redirect with auth code.
+func UserAuthCallback(ctx httpsrv.Ctx) error {
+
+	code := ctx.Request().URL.Query().Get("code")
 	if code == "" {
-		http.Error(c.Response.Out, "missing code parameter", http.StatusBadRequest)
-		return
+		http.Error(ctx.Response(), "missing code parameter", http.StatusBadRequest)
+		return nil
 	}
 
 	if err := AppVerifier.Config().Valid(); err != nil {
-		http.Error(c.Response.Out, "App not configured : "+err.Error(), http.StatusBadRequest)
-		return
+		http.Error(ctx.Response(), "App not configured : "+err.Error(), http.StatusBadRequest)
+		return nil
 	}
 
 	rs, err := ExchangeAuthCode(AppVerifier.Config(), code)
 	if err != nil {
 		slog.Error("user-auth/callback: code exchange failed", "error", err)
-		http.Error(c.Response.Out, "code exchange failed", http.StatusInternalServerError)
-		return
+		http.Error(ctx.Response(), "code exchange failed", http.StatusInternalServerError)
+		return nil
 	}
 
 	at, err := inauth.ParseAccessToken(rs.AccessToken)
 	if err != nil {
 		slog.Error("user-auth/callback: parse access-token failed", "error", err)
-		http.Error(c.Response.Out, "parse access-token failed", http.StatusInternalServerError)
-		return
+		http.Error(ctx.Response(), "parse access-token failed", http.StatusInternalServerError)
+		return nil
 	}
 
-	http.SetCookie(c.Response.Out, &http.Cookie{
+	http.SetCookie(ctx.Response(), &http.Cookie{
 		Name:     inauth.AppHttpHeaderKey,
 		Value:    rs.AccessToken,
 		Path:     "/",
@@ -168,43 +168,41 @@ func (c UserAuth) CallbackAction() {
 		Expires:  time.Unix(at.Claims.Exp, 0),
 	})
 
-	if urlCookie, err := c.Request.Cookie(
+	if urlCookie, err := ctx.Request().Cookie(
 		inauth.AppHttpHeaderKey + "-current-url"); err == nil && urlCookie.Value != "" {
-		http.Redirect(c.Response.Out, c.Request.Request, urlCookie.Value, http.StatusFound)
-		deleteCookie(c.Response.Out, inauth.AppHttpHeaderKey+"-current-url")
-		return
+		deleteCookie(ctx.Response(), inauth.AppHttpHeaderKey+"-current-url")
+		return ctx.Redirect(http.StatusFound, urlCookie.Value)
 	}
 
-	http.Redirect(c.Response.Out, c.Request.Request, "/", http.StatusFound)
+	return ctx.Redirect(http.StatusFound, "/")
 }
 
-// SignOutAction clears the session cookie and notifies IAM.
+// UserAuthSignOut clears the session cookie and notifies IAM.
 //
 // For browser navigation requests, it redirects back to the Referer so the
 // user lands on the page they signed out from. Otherwise it returns a JSON
 // status payload (e.g. for XHR/fetch callers).
-func (c UserAuth) SignOutAction() {
+func UserAuthSignOut(ctx httpsrv.Ctx) error {
 
-	deleteCookie(c.Response.Out, inauth.AppHttpHeaderKey)
+	deleteCookie(ctx.Response(), inauth.AppHttpHeaderKey)
 
-	if isBrowserNavigation(c.Request.Request) {
-		c.AutoRender = false
+	if isBrowserNavigation(ctx.Request()) {
 		target := "/"
-		if ref := c.Request.Referer(); ref != "" {
-			if u, err := url.Parse(ref); err == nil && isSameSite(u, c.Request.Request) {
+		if ref := ctx.Request().Referer(); ref != "" {
+			if u, err := url.Parse(ref); err == nil && isSameSite(u, ctx.Request()) {
 				target = ref
 			}
 		}
-		http.Redirect(c.Response.Out, c.Request.Request, target, http.StatusFound)
-		return
+		return ctx.Redirect(http.StatusFound, target)
 	}
 
 	var rsp struct {
 		Status inauth.ServiceStatus `json:"status"`
 	}
-	defer c.RenderJson(&rsp)
+	defer ctx.JSON(&rsp)
 
 	rsp.Status = inauth.NewServiceStatus("200", "ok")
+	return nil
 }
 
 func deleteCookie(w http.ResponseWriter, name string) {

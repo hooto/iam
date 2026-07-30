@@ -23,7 +23,7 @@ import (
 	"time"
 
 	"github.com/disintegration/imaging"
-	"github.com/hooto/httpsrv"
+	"github.com/hooto/httpsrv/v2"
 	"github.com/sysinner/innerstack/v2/pkg/inauth"
 
 	"github.com/hooto/iam/v2/internal/data"
@@ -91,7 +91,7 @@ func ProfileSet(ctx httpsrv.Ctx) error {
 	)
 	defer ctx.JSON(&rsp)
 
-	if err := ctx.Request().JsonDecode(&req); err != nil {
+	if err := ctx.Bind(&req); err != nil {
 		rsp.Status = inauth.NewServiceStatus("400", "Bad Request")
 		return nil
 	}
@@ -156,7 +156,7 @@ func ProfilePhotoSet(ctx httpsrv.Ctx) error {
 	)
 	defer ctx.JSON(&rsp)
 
-	if err := ctx.Request().JsonDecode(&req); err != nil {
+	if err := ctx.Bind(&req); err != nil {
 		rsp.Status = inauth.NewServiceStatus("400", "Bad Request")
 		return nil
 	}

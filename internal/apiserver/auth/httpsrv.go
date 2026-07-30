@@ -14,18 +14,16 @@
 
 package auth
 
-import "github.com/hooto/httpsrv"
+import "github.com/hooto/httpsrv/v2"
 
-// NewModule creates an httpsrv.Module for the auth API endpoints.
-func NewModule() *httpsrv.Module {
-	mod := httpsrv.NewModule()
-	mod.RegisterAction("/sys/info", Sys_Info)
-	mod.RegisterAction("/sign-in", SignIn)
-	mod.RegisterAction("/sign-out", SignOut)
-	mod.RegisterAction("/sign-up", SignUp)
-	mod.RegisterAction("/session", Session)
-	mod.RegisterAction("/password/reset-ticket", Password_ResetTicket)
-	mod.RegisterAction("/password/reset-confirm", Password_ResetConfirm)
-	mod.RegisterAction("/photo/:username", Photo)
-	return mod
+// Register wires the auth API endpoints onto the given router.
+func Register(r httpsrv.Router) {
+	r.All("/sys/info", Sys_Info)
+	r.All("/sign-in", SignIn)
+	r.All("/sign-out", SignOut)
+	r.All("/sign-up", SignUp)
+	r.All("/session", Session)
+	r.All("/password/reset-ticket", Password_ResetTicket)
+	r.All("/password/reset-confirm", Password_ResetConfirm)
+	r.All("/photo/{username}", Photo)
 }

@@ -4,7 +4,7 @@
 // you may not use this file except in compliance with the License.
 // You may obtain a copy of the License at
 //
-//     http://www.apache.org/licenses-2.0
+//     http://www.apache.org/licenses/LICENSE-2.0
 //
 // Unless required by applicable law or agreed to in writing, software
 // distributed under the License is distributed on an "AS IS" BASIS,
@@ -15,17 +15,19 @@
 package main
 
 import (
+	"context"
 	"embed"
 	"flag"
+	"fmt"
 	"io/fs"
 	"log"
 	"log/slog"
-	"net/http"
 	"path/filepath"
 	"runtime"
 	"strings"
 
-	"github.com/hooto/httpsrv"
+	"github.com/hooto/httpsrv/v2"
+	"github.com/hooto/httpsrv/v2/middleware/static"
 	"github.com/sysinner/innerstack/v2/pkg/inlog"
 	"github.com/sysinner/innerstack/v2/pkg/signals"
 
@@ -59,19 +61,31 @@ func main() {
 		log.Fatal(err)
 	}
 
-	httpsrv.DefaultService.Config.HttpPort = config.Config.HttpPort
+	app := httpsrv.New()
 
-	httpsrv.DefaultService.HandleModule("/iam/v2/auth", auth.NewModule())
-	httpsrv.DefaultService.HandleModule("/iam/v2/user", user.NewModule())
-	httpsrv.DefaultService.HandleModule("/iam/v2/open", open.NewModule())
-	httpsrv.DefaultService.HandleModule("/iam/v2/admin", admin.NewModule())
+	auth.Register(app.Group("/iam/v2/auth"))
+	user.Register(app.Group("/iam/v2/user"))
+	open.Register(app.Group("/iam/v2/open"))
+	admin.Register(app.Group("/iam/v2/admin"))
 
-	httpsrv.DefaultService.HandleModule("/iam", newUIModule())
+	{
+		distFS, err := fs.Sub(embedDir, "dist")
+		if err != nil {
+			log.Fatal(err)
+		}
+
+		spa := static.New(".", static.Config{
+			FS: &spaFileSystem{fs: distFS},
+		})
+		app.Get("/iam{*}", spa)
+	}
 
 	signals.Go(func() {
-		httpsrv.DefaultService.Start()
+		if err := app.Run(fmt.Sprintf(":%d", config.Config.HttpPort)); err != nil {
+			slog.Error("httpsrv run error", "error", err)
+		}
 	}, func() {
-		httpsrv.DefaultService.Stop()
+		_ = app.Shutdown(context.Background())
 		data.Data.Close()
 		slog.Info("server kill done")
 	})
@@ -79,22 +93,9 @@ func main() {
 	signals.Wait()
 }
 
-func newUIModule() *httpsrv.Module {
-	mod := httpsrv.NewModule()
-
-	distFS, err := fs.Sub(embedDir, "dist")
-	if err != nil {
-		panic(err)
-	}
-
-	mod.RegisterFileServer("/", "/", &spaFileSystem{base: http.FS(distFS)})
-
-	return mod
-}
-
-// spaFileSystem 包装 http.FileSystem，增加 SPA fallback
+// spaFileSystem 包装 fs.FS，增加 SPA fallback
 type spaFileSystem struct {
-	base http.FileSystem
+	fs fs.FS
 }
 
 // 静态资源扩展名，这些文件 404 时不 fallback 到 index.html
@@ -106,18 +107,16 @@ var assetExts = map[string]bool{
 	".wasm": true,
 }
 
-func (sfs *spaFileSystem) Open(name string) (http.File, error) {
-
-	// slog.Info("fs open : " + name)
+func (sfs *spaFileSystem) Open(name string) (fs.File, error) {
 
 	name = strings.TrimPrefix(filepath.Clean(name), "/")
 
 	// 根路径返回 index.html
-	if name == "" || name == "/" {
+	if name == "" || name == "/" || name == "." {
 		name = "index.html"
 	}
 
-	f, err := sfs.base.Open(name)
+	f, err := sfs.fs.Open(name)
 	if err == nil {
 		return f, nil
 	}
@@ -125,7 +124,7 @@ func (sfs *spaFileSystem) Open(name string) (http.File, error) {
 	// SPA fallback: 非 assets 扩展名的路径返回 index.html
 	ext := strings.ToLower(filepath.Ext(name))
 	if !assetExts[ext] {
-		return sfs.base.Open("index.html")
+		return sfs.fs.Open("index.html")
 	}
 
 	return nil, err

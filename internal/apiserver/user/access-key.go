@@ -18,7 +18,7 @@ import (
 	"fmt"
 	"strings"
 
-	"github.com/hooto/httpsrv"
+	"github.com/hooto/httpsrv/v2"
 	"github.com/sysinner/innerstack/v2/pkg/inauth"
 
 	"github.com/hooto/iam/v2/internal/data"
@@ -43,7 +43,7 @@ func AccessKeyEntry(ctx httpsrv.Ctx) error {
 	var rsp AccessKeyEntryResponse
 	defer ctx.JSON(&rsp)
 
-	id := ctx.Params().Value("access_key_id")
+	id := ctx.Query("access_key_id")
 	if id == "" {
 		rsp.Status = inauth.NewServiceStatus("404", "Access Key Not Found")
 		return nil
@@ -126,7 +126,7 @@ func AccessKeySet(ctx httpsrv.Ctx) error {
 	)
 	defer ctx.JSON(&rsp)
 
-	if err := ctx.Request().JsonDecode(&req); err != nil {
+	if err := ctx.Bind(&req); err != nil {
 		rsp.Status = inauth.NewServiceStatus("400", "Bad Request")
 		return nil
 	}
@@ -204,7 +204,7 @@ func AccessKeyDelete(ctx httpsrv.Ctx) error {
 	var rsp AccessKeyDeleteResponse
 	defer ctx.JSON(&rsp)
 
-	id := ctx.Params().Value("access_key_id")
+	id := ctx.Query("access_key_id")
 	if id == "" {
 		rsp.Status = inauth.NewServiceStatus("404", "Access Key Not Found")
 		return nil
@@ -235,8 +235,8 @@ func AccessKeyBind(ctx httpsrv.Ctx) error {
 	defer ctx.JSON(&rsp)
 
 	var (
-		id    = ctx.Params().Value("access_key_id")
-		bname = ctx.Params().Value("scope_content")
+		id    = ctx.Query("access_key_id")
+		bname = ctx.Query("scope_content")
 	)
 	if id == "" || bname == "" {
 		rsp.Status = inauth.NewServiceStatus("404", "Access Key Not Found")
@@ -284,8 +284,8 @@ func AccessKeyUnbind(ctx httpsrv.Ctx) error {
 	defer ctx.JSON(&rsp)
 
 	var (
-		id    = ctx.Params().Value("access_key_id")
-		bname = ctx.Params().Value("scope_content")
+		id    = ctx.Query("access_key_id")
+		bname = ctx.Query("scope_content")
 	)
 	if id == "" || bname == "" {
 		rsp.Status = inauth.NewServiceStatus("404", "Access Key Not Found")

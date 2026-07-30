@@ -15,36 +15,34 @@
 package user
 
 import (
-	"github.com/hooto/httpsrv"
+	"github.com/hooto/httpsrv/v2"
 	"github.com/sysinner/innerstack/v2/pkg/inauth"
 )
 
-// NewModule creates an httpsrv.Module for user, access-key and app-auth API endpoints.
-func NewModule() *httpsrv.Module {
-	mod := httpsrv.NewModule()
+// Register wires the user, access-key and app-auth API endpoints onto the
+// given router.
+func Register(r httpsrv.Router) {
 
 	// user profile
-	mod.RegisterAction("/profile", ProfileEntry)
-	mod.RegisterAction("/profile-set", ProfileSet)
-	mod.RegisterAction("/pass-set", PassSet)
-	mod.RegisterAction("/email-set", EmailSet)
-	mod.RegisterAction("/photo-set", ProfilePhotoSet)
+	r.All("/profile", ProfileEntry)
+	r.All("/profile-set", ProfileSet)
+	r.All("/pass-set", PassSet)
+	r.All("/email-set", EmailSet)
+	r.All("/photo-set", ProfilePhotoSet)
 
 	// access key
-	mod.RegisterAction("/keys/list", AccessKeyList)
-	mod.RegisterAction("/keys/entry", AccessKeyEntry)
-	mod.RegisterAction("/keys/set", AccessKeySet)
-	mod.RegisterAction("/keys/delete", AccessKeyDelete)
-	mod.RegisterAction("/keys/bind", AccessKeyBind)
-	mod.RegisterAction("/keys/unbind", AccessKeyUnbind)
+	r.All("/keys/list", AccessKeyList)
+	r.All("/keys/entry", AccessKeyEntry)
+	r.All("/keys/set", AccessKeySet)
+	r.All("/keys/delete", AccessKeyDelete)
+	r.All("/keys/bind", AccessKeyBind)
+	r.All("/keys/unbind", AccessKeyUnbind)
 
 	// app auth
-	mod.RegisterAction("/apps/register", AppAuth_Register)
-	mod.RegisterAction("/apps/list", AppAuth_List)
-	mod.RegisterAction("/apps/update", AppAuth_Update)
-	mod.RegisterAction("/apps/delete", AppAuth_Delete)
-
-	return mod
+	r.All("/apps/register", AppAuth_Register)
+	r.All("/apps/list", AppAuth_List)
+	r.All("/apps/update", AppAuth_Update)
+	r.All("/apps/delete", AppAuth_Delete)
 }
 
 type StatusResponse struct {

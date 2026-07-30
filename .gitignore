@@ -5,7 +5,6 @@ var
 doc
 test.go
 # bindata
-go.sum
 app
 cmd/server/dist
 cmd/demoapp/dist

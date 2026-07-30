@@ -15,7 +15,7 @@
 package auth
 
 import (
-	"github.com/hooto/httpsrv"
+	"github.com/hooto/httpsrv/v2"
 	"github.com/hooto/iam/v2/internal/config"
 	"github.com/sysinner/innerstack/v2/pkg/inauth"
 )

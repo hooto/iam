@@ -21,7 +21,7 @@ import (
 	"time"
 
 	"github.com/google/uuid"
-	"github.com/hooto/httpsrv"
+	"github.com/hooto/httpsrv/v2"
 	"github.com/lessos/lessgo/net/email"
 	"github.com/lessos/lessgo/pass"
 	"github.com/sysinner/innerstack/v2/pkg/inauth"
@@ -47,7 +47,7 @@ func Password_ResetTicket(ctx httpsrv.Ctx) error {
 	)
 	defer ctx.JSON(&rsp)
 
-	if err := ctx.Request().JsonDecode(&req); err != nil {
+	if err := ctx.Bind(&req); err != nil {
 		rsp.Status = inauth.NewServiceStatus("400", "Invalid request format")
 		return nil
 	}
@@ -138,7 +138,7 @@ func Password_ResetConfirm(ctx httpsrv.Ctx) error {
 	)
 	defer ctx.JSON(&rsp)
 
-	if err := ctx.Request().JsonDecode(&req); err != nil {
+	if err := ctx.Bind(&req); err != nil {
 		rsp.Status = inauth.NewServiceStatus("400", "Invalid request format")
 		return nil
 	}

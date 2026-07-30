@@ -18,7 +18,7 @@ import (
 	"time"
 
 	"github.com/google/uuid"
-	"github.com/hooto/httpsrv"
+	"github.com/hooto/httpsrv/v2"
 	"github.com/sysinner/innerstack/v2/pkg/inauth"
 
 	"github.com/hooto/iam/v2/internal/data"
@@ -66,7 +66,7 @@ func AppAuth_Register(ctx httpsrv.Ctx) error {
 	)
 	defer ctx.JSON(&rsp)
 
-	if err := ctx.Request().JsonDecode(&req); err != nil {
+	if err := ctx.Bind(&req); err != nil {
 		rsp.Status = inauth.NewServiceStatus("400", "Bad Argument")
 		return nil
 	}
@@ -107,6 +107,14 @@ func AppAuth_Register(ctx httpsrv.Ctx) error {
 		return nil
 	}
 
+	{
+		ak := inauth.AccessKey{
+			Id:     app.ID,
+			Secret: app.SecretKey,
+		}
+		data.KeyMgr.Set(&ak)
+	}
+
 	rsp.App = &app
 	rsp.Status = inauth.NewServiceStatus("200", "ok")
 	return nil
@@ -129,7 +137,7 @@ func AppAuth_List(ctx httpsrv.Ctx) error {
 	)
 	defer ctx.JSON(&rsp)
 
-	ctx.Request().JsonDecode(&req)
+	ctx.Bind(&req)
 
 	accessToken := accessTokenFromRequest(ctx, req.AccessToken)
 	if accessToken == "" {
@@ -181,7 +189,7 @@ func AppAuth_Update(ctx httpsrv.Ctx) error {
 	)
 	defer ctx.JSON(&rsp)
 
-	if err := ctx.Request().JsonDecode(&req); err != nil {
+	if err := ctx.Bind(&req); err != nil {
 		rsp.Status = inauth.NewServiceStatus("400", "Bad Argument")
 		return nil
 	}
@@ -241,7 +249,7 @@ func AppAuth_Delete(ctx httpsrv.Ctx) error {
 	)
 	defer ctx.JSON(&rsp)
 
-	if err := ctx.Request().JsonDecode(&req); err != nil {
+	if err := ctx.Bind(&req); err != nil {
 		rsp.Status = inauth.NewServiceStatus("400", "Bad Argument")
 		return nil
 	}

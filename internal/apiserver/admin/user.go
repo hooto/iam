@@ -20,7 +20,7 @@ import (
 	"strings"
 	"time"
 
-	"github.com/hooto/httpsrv"
+	"github.com/hooto/httpsrv/v2"
 	"github.com/lessos/lessgo/pass"
 	"github.com/sysinner/innerstack/v2/pkg/inauth"
 
@@ -43,7 +43,7 @@ func UserList(ctx httpsrv.Ctx) error {
 	var rsp AdminUserListResponse
 	defer ctx.JSON(&rsp)
 
-	qry := strings.ToLower(strings.TrimSpace(ctx.Params().Value("qry_text")))
+	qry := strings.ToLower(strings.TrimSpace(ctx.Query("qry_text")))
 
 	users := data.UserList()
 	names := make([]string, 0, len(users))
@@ -92,7 +92,7 @@ func UserEntry(ctx httpsrv.Ctx) error {
 	var rsp AdminUserEntryResponse
 	defer ctx.JSON(&rsp)
 
-	username := strings.ToLower(strings.TrimSpace(ctx.Params().Value("username")))
+	username := strings.ToLower(strings.TrimSpace(ctx.Query("username")))
 	if username == "" {
 		rsp.Status = inauth.NewServiceStatus("404", "User Not Found")
 		return nil
@@ -150,7 +150,7 @@ func UserSet(ctx httpsrv.Ctx) error {
 	)
 	defer ctx.JSON(&rsp)
 
-	if err := ctx.Request().JsonDecode(&req); err != nil {
+	if err := ctx.Bind(&req); err != nil {
 		rsp.Status = inauth.NewServiceStatus("400", "Bad Request")
 		return nil
 	}

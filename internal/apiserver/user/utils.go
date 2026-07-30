@@ -17,7 +17,7 @@ package user
 import (
 	"strings"
 
-	"github.com/hooto/httpsrv"
+	"github.com/hooto/httpsrv/v2"
 	"github.com/hooto/iam/v2/internal/data"
 	"github.com/hooto/iam/v2/pkg/iamapi"
 	"github.com/sysinner/innerstack/v2/pkg/inauth"

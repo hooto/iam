@@ -16,9 +16,8 @@ package apiserver
 
 import (
 	"fmt"
+	"net/http"
 	"strings"
-
-	"github.com/hooto/httpsrv"
 
 	"github.com/hooto/iam/v2/internal/data"
 	"github.com/hooto/iam/v2/pkg/iamapi"
@@ -35,7 +34,7 @@ func RemoteAddr(ra string) string {
 // UserAuthDenyCheck checks if the user+IP combination has exceeded the auth
 // deny threshold. Returns (denyCount, denyKey, error) where error is non-nil
 // when the request should be rejected.
-func UserAuthDenyCheck(username string, req *httpsrv.Request) (int, []byte, error) {
+func UserAuthDenyCheck(username string, req *http.Request) (int, []byte, error) {
 	addr := RemoteAddr(req.RemoteAddr)
 	denyCount := 0
 	denyKey := iamapi.NsUserAuthDeny(username, addr)

@@ -21,7 +21,7 @@ import (
 	"strings"
 	"time"
 
-	"github.com/hooto/httpsrv"
+	"github.com/hooto/httpsrv/v2"
 	"github.com/sysinner/innerstack/v2/pkg/inapi"
 	"github.com/sysinner/innerstack/v2/pkg/inauth"
 	"golang.org/x/mod/semver"
@@ -96,7 +96,7 @@ func AppAuth_Verify(ctx httpsrv.Ctx) error {
 	)
 	defer ctx.JSON(&rsp)
 
-	if err := ctx.Request().JsonDecode(&req); err != nil {
+	if err := ctx.Bind(&req); err != nil {
 		rsp.Status = inauth.NewServiceStatus("400", "Bad Argument")
 		return nil
 	}
@@ -146,17 +146,17 @@ func AppAuth_TokenExchange(ctx httpsrv.Ctx) error {
 	)
 	defer ctx.JSON(&rsp)
 
-	if err := ctx.Request().JsonDecode(&req); err != nil {
+	if err := ctx.Bind(&req); err != nil {
 		// rsp.Status = inauth.NewServiceStatus("400", "Invalid request format")
 		// return nil
 	}
 
 	if req.Code == "" {
-		if ctx.Params().Value("code") == "" {
+		if ctx.Query("code") == "" {
 			rsp.Status = inauth.NewServiceStatus("400", "code required")
 			return nil
 		}
-		req.Code = ctx.Params().Value("code")
+		req.Code = ctx.Query("code")
 	}
 
 	// look up auth code
@@ -229,7 +229,7 @@ func AppAuth_Update(ctx httpsrv.Ctx) error {
 	)
 	defer ctx.JSON(&rsp)
 
-	if err := ctx.Request().JsonDecode(&req); err != nil {
+	if err := ctx.Bind(&req); err != nil {
 		rsp.Status = inauth.NewServiceStatus("400", "Invalid request format")
 		return nil
 	}
@@ -334,7 +334,7 @@ func AppAuth_Session(ctx httpsrv.Ctx) error {
 	)
 	defer ctx.JSON(&rsp)
 
-	if err := ctx.Request().JsonDecode(&req); err != nil {
+	if err := ctx.Bind(&req); err != nil {
 		rsp.Status = inauth.NewServiceStatus("400", "Invalid request format")
 		return nil
 	}

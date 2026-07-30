@@ -17,15 +17,16 @@ package main
 import (
 	"embed"
 	"flag"
+	"fmt"
 	"io/fs"
 	"log/slog"
-	"net/http"
 	"os"
 	"path/filepath"
 	"strings"
 
 	"github.com/hooto/htoml4g/htoml"
-	"github.com/hooto/httpsrv"
+	"github.com/hooto/httpsrv/v2"
+	"github.com/hooto/httpsrv/v2/middleware/static"
 	"github.com/sysinner/innerstack/v2/pkg/inlog"
 
 	"github.com/hooto/iam/v2/pkg/iamapi"
@@ -93,10 +94,25 @@ func main() {
 		slog.Error("app auth update failed", "error", err)
 	}
 
-	httpsrv.DefaultService.HandleModule("/demoapp", newUIModule())
-	httpsrv.DefaultService.HandleModule("/demoapp/api", newAPIModule())
+	app := httpsrv.New()
 
-	httpsrv.DefaultService.Start()
+	api := app.Group("/demoapp/api")
+	iamserver.RegisterRoutes(api)
+
+	{
+		distFS, err := fs.Sub(embedDir, "dist")
+		if err != nil {
+			slog.Error("fs setup failed", "error", err)
+		}
+		spa := static.New(".", static.Config{
+			FS: &spaFileSystem{fs: distFS},
+		})
+		app.Get("/demoapp{*}", spa)
+	}
+
+	if err := app.Run(fmt.Sprintf(":%d", cfg.HttpPort)); err != nil {
+		slog.Error("httpsrv run error", "error", err)
+	}
 }
 
 func loadConfig(prefix string) error {
@@ -128,44 +144,23 @@ func loadConfig(prefix string) error {
 		}
 	}
 
-	httpsrv.DefaultService.Config.HttpPort = cfg.HttpPort
-
 	return nil
 }
 
-func newUIModule() *httpsrv.Module {
-	mod := httpsrv.NewModule()
-
-	distFS, err := fs.Sub(embedDir, "dist")
-	if err != nil {
-		panic(err)
-	}
-
-	mod.RegisterFileServer("/", "/", &spaFileSystem{base: http.FS(distFS)})
-
-	return mod
-}
-
-func newAPIModule() *httpsrv.Module {
-	mod := httpsrv.NewModule()
-	mod.RegisterController(new(iamserver.UserAuth))
-	return mod
-}
-
 type spaFileSystem struct {
-	base http.FileSystem
+	fs fs.FS
 }
 
-func (sfs *spaFileSystem) Open(name string) (http.File, error) {
+func (sfs *spaFileSystem) Open(name string) (fs.File, error) {
 	name = strings.TrimPrefix(filepath.Clean(name), "/")
 
-	if name == "" {
+	if name == "" || name == "/" || name == "." {
 		name = "index.html"
 	}
 
-	f, err := sfs.base.Open(name)
+	f, err := sfs.fs.Open(name)
 	if err != nil {
-		return sfs.base.Open("index.html")
+		return sfs.fs.Open("index.html")
 	}
 	return f, nil
 }

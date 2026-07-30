@@ -85,6 +85,33 @@ func Setup() error {
 		slog.Info("iam/data connect ok")
 	}
 
+	if err := loadKeys(); err != nil {
+		return err
+	}
+
+	{
+		//
+		for _, v := range config.Config.AccessKeys {
+			KeyMgr.Set(v)
+		}
+
+		slog.Info("iam/access_key load from config", "count", len(config.Config.AccessKeys))
+	}
+
+	if err := loadAppKeys(); err != nil {
+		return err
+	}
+
+	if err := initData(); err != nil {
+		return err
+	}
+
+	inited = true
+
+	return nil
+}
+
+func loadKeys() error {
 	// AccessKey
 	var (
 		ak0 = iamapi.NsAccessKey("", "")
@@ -117,23 +144,6 @@ func Setup() error {
 		}
 	}
 	slog.Info("iam/access_key load from database", "count", akn)
-
-	//
-	for _, v := range config.Config.AccessKeys {
-		KeyMgr.Set(v)
-	}
-
-	slog.Info("iam/access_key load from config", "count", len(config.Config.AccessKeys))
-
-	if err := loadAppKeys(); err != nil {
-		return err
-	}
-
-	if err := initData(); err != nil {
-		return err
-	}
-
-	inited = true
 
 	return nil
 }

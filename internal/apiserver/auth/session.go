@@ -17,7 +17,7 @@ package auth
 import (
 	"log/slog"
 
-	"github.com/hooto/httpsrv"
+	"github.com/hooto/httpsrv/v2"
 	"github.com/sysinner/innerstack/v2/pkg/inauth"
 
 	"github.com/hooto/iam/v2/internal/data"
@@ -43,7 +43,7 @@ func Session(ctx httpsrv.Ctx) error {
 	)
 	defer ctx.JSON(&rsp)
 
-	ctx.Request().JsonDecode(&req)
+	ctx.Bind(&req)
 
 	if req.AccessToken == "" {
 		// fallback to http-only cookie

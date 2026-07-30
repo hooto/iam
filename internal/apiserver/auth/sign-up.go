@@ -19,7 +19,7 @@ import (
 	"strings"
 	"time"
 
-	"github.com/hooto/httpsrv"
+	"github.com/hooto/httpsrv/v2"
 	"github.com/lessos/lessgo/pass"
 	"github.com/sysinner/innerstack/v2/pkg/inauth"
 
@@ -52,7 +52,7 @@ func SignUp(ctx httpsrv.Ctx) error {
 	)
 	defer ctx.JSON(&rsp)
 
-	if err := ctx.Request().JsonDecode(&req); err != nil {
+	if err := ctx.Bind(&req); err != nil {
 		rsp.Status = inauth.NewServiceStatus("400", "Invalid request format")
 		return nil
 	}

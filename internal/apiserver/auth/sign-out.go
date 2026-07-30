@@ -17,7 +17,7 @@ package auth
 import (
 	"net/http"
 
-	"github.com/hooto/httpsrv"
+	"github.com/hooto/httpsrv/v2"
 	"github.com/sysinner/innerstack/v2/pkg/inauth"
 
 	"github.com/hooto/iam/v2/internal/data"
@@ -41,7 +41,7 @@ func SignOut(ctx httpsrv.Ctx) error {
 	)
 	defer ctx.JSON(&rsp)
 
-	ctx.Request().JsonDecode(&req)
+	ctx.Bind(&req)
 
 	if req.AccessToken == "" {
 		// fallback to http-only cookie
@@ -62,7 +62,7 @@ func SignOut(ctx httpsrv.Ctx) error {
 	data.Data.NewDeleter(iamapi.NsUserSession(token.Claims.Jti, uint32(token.Claims.Exp))).
 		Exec()
 
-	http.SetCookie(ctx.Response().Out, &http.Cookie{
+	http.SetCookie(ctx.Response(), &http.Cookie{
 		Name:   inauth.AppHttpHeaderKey,
 		Value:  "",
 		Path:   "/",
