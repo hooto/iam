@@ -1,0 +1,18 @@
+[metadata]
+name        = "hooto-iam"
+version     = "2.0.4"
+authors     = ["hooto"]
+description = "Identity and Access Management service built with Go and Svelte"
+homepage    = "https://github.com/hooto/iam"
+repository  = "https://github.com/hooto/iam"
+license     = "Apache-2.0"
+categories  = ["security"]
+
+[build]
+include = ["misc/config.template.toml"]
+script = """
+set -e
+make build_frontend
+mkdir -p ${ipk_build_dir}/bin
+CGO_ENABLED=0 GOOS=${ipk_release_os} GOARCH=${ipk_release_arch} go build -a -trimpath -ldflags "-w -s" -o ${ipk_build_dir}/bin/iam-server ./cmd/server/main.go
+"""

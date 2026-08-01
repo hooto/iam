@@ -1,0 +1,11 @@
+# 由 inagent 在 iam-server 首次启动前渲染(仅首次,后续保留已生成的 instance_id 等)。
+# 仅模板化部署期可配的 [database] 块;instance_id / http_port / service_name /
+# 顶层 access_keys 由 iam-server 首启自动生成并持久化。
+# scopes 为服务端(inglob)配置,kvgo 客户端省略。
+[database]
+addr     = "${self.cfg.db_addr}"
+database = "${self.cfg.db_name}"
+
+[database.access_key]
+id     = "${self.cfg.db_access_id}"
+secret = "${self.cfg.db_access_secret}"
