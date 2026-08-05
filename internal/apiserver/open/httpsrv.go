@@ -21,5 +21,6 @@ func Register(r httpsrv.Router) {
 	r.All("/app-auth/verify", AppAuth_Verify)
 	r.All("/app-auth/token-exchange", AppAuth_TokenExchange)
 	r.All("/app-auth/session", AppAuth_Session)
+	r.All("/app-auth/introspect", AppAuth_Introspect)
 	r.All("/app-auth/update", AppAuth_Update)
 }

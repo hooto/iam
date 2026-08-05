@@ -110,6 +110,10 @@ type AccessKeySetRequest struct {
 type AccessKeySetResponse struct {
 	Status inauth.ServiceStatus `json:"status"`
 	Item   *inauth.AccessKey    `json:"item,omitempty"`
+
+	// AccessKeyExport carries the one-time ak_<id>_<secret> string on key
+	// creation, for a CLI to store and use. It is never populated on update.
+	AccessKeyExport string `json:"access_key_export,omitempty"`
 }
 
 // AccessKeySet creates or updates an access key.
@@ -182,6 +186,10 @@ func AccessKeySet(ctx httpsrv.Ctx) error {
 		Exec(); rs.OK() {
 		rsp.Status = inauth.NewServiceStatus("200", "ok")
 		rsp.Item = &prev
+		// expose the ak_<id>_<secret> string once, only at creation time
+		if req.Id == "" {
+			rsp.AccessKeyExport = prev.Export()
+		}
 		data.KeyMgr.Set(&prev)
 	} else {
 		rsp.Status = inauth.NewServiceStatus("500", "IO Error "+rs.ErrorMessage())

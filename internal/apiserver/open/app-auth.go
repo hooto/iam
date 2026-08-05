@@ -27,6 +27,7 @@ import (
 	"golang.org/x/mod/semver"
 
 	"github.com/hooto/iam/v2/internal/data"
+	"github.com/hooto/iam/v2/internal/util"
 	"github.com/hooto/iam/v2/pkg/iamapi"
 )
 
@@ -383,6 +384,119 @@ func AppAuth_Session(ctx httpsrv.Ctx) error {
 	}
 
 	slog.Info("open/app-auth/session response", "body", rsp)
+
+	return nil
+}
+
+type AppAuth_IntrospectRequest struct {
+	AccessToken string `json:"access_token,omitempty"`
+}
+
+type AppAuth_IntrospectResponse struct {
+	Status        inauth.ServiceStatus  `json:"status"`
+	User          string                `json:"user,omitempty"`
+	IdentityToken *inauth.IdentityToken `json:"identity_token,omitempty"`
+}
+
+// AppAuth_Introspect verifies an access-key-signed token presented by a CLI to
+// a third-party app. The calling app authenticates with its own credential;
+// IAM verifies the user token via KeyMgr (the only holder of the secret) and
+// returns the caller's identity and scopes. The cross-app binding check
+// ensures a key minted for app A cannot be used against app B. On any
+// validation failure the response carries active=false with status 200, so
+// the app simply treats the caller as unauthenticated (RFC 7662 style).
+func AppAuth_Introspect(ctx httpsrv.Ctx) error {
+
+	// calling app authenticates with its own access-key credential
+	appAK := appAuth(ctx)
+	if appAK == nil {
+		return nil
+	}
+
+	var (
+		req AppAuth_IntrospectRequest
+		rsp AppAuth_IntrospectResponse
+
+		app iamapi.AppInstance
+	)
+	defer ctx.JSON(&rsp)
+
+	if err := ctx.Bind(&req); err != nil {
+		rsp.Status = inauth.NewServiceStatus("400", "Invalid request format")
+		return nil
+	}
+
+	{
+		if rs := data.Data.NewReader(iamapi.NsAppInstance(appAK.Id)).Exec(); !rs.OK() {
+			rsp.Status = inauth.NewServiceStatus("404", "App not found")
+			return nil
+		} else {
+			rs.Item().JsonDecode(&app)
+			if app.ID != appAK.Id {
+				rsp.Status = inauth.NewServiceStatus("404", "App not found")
+				return nil
+			}
+		}
+	}
+
+	if req.AccessToken == "" {
+		rsp.Status = inauth.NewServiceStatus("400", "access_token required")
+		return nil
+	}
+
+	utoken, err := inauth.ParseAccessToken(req.AccessToken)
+	if err != nil {
+		rsp.Status = inauth.NewServiceStatus("401", "Invalid access token : "+err.Error())
+		return nil
+	}
+
+	userAK, err := utoken.Verify(data.KeyMgr)
+	if err != nil {
+		rsp.Status = inauth.NewServiceStatus("401", "Invalid access token : "+err.Error())
+		return nil
+	}
+
+	if userAK == nil || userAK.Type != "User" {
+		rsp.Status = inauth.NewServiceStatus("401", "Invalid access token")
+		return nil
+	}
+
+	// cross-app binding: the key must be scoped to the calling app
+	if !userAK.Allow("app=" + appAK.Id) {
+		rsp.Status = inauth.NewServiceStatus("401", "Invalid access token")
+		return nil
+	}
+
+	u := data.UserGet(userAK.User)
+	if u == nil {
+		rsp.Status = inauth.NewServiceStatus("401", "Invalid access token")
+		return nil
+	}
+
+	rsp.User = userAK.User
+
+	rsp.IdentityToken = &inauth.IdentityToken{
+		Roles:  u.Roles,
+		Groups: data.UserGroups(userAK.User),
+		Scopes: userAK.Scopes,
+	}
+
+	for _, perm := range app.Permissions {
+		if slices.Contains(rsp.IdentityToken.Permissions, perm.Permission) {
+			continue
+		}
+		if app.User != userAK.User &&
+			!util.Contains(u.Roles, perm.Roles) {
+			continue
+		}
+		rsp.IdentityToken.Permissions = append(
+			rsp.IdentityToken.Permissions, perm.Permission)
+	}
+
+	rsp.Status = inauth.NewServiceStatus("200", "ok")
+
+	slog.Info("open/app-auth/introspect response",
+		"app_id", appAK.Id, "resp", rsp)
 
 	return nil
 }

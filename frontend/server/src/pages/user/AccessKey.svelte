@@ -48,10 +48,11 @@
   let unbindSaving = $state(false);
   let unbindAlert = $state("");
 
-  // Secret display modal
-  let showSecretModal = $state(false);
-  let newSecret = $state("");
-  let secretCopied = $state(false);
+  // Newly created access-key display modal. Holds the one-time
+  // ak_<id>_<secret> export string, shown only right after creation.
+  let showAccessKeyModal = $state(false);
+  let newAccessKey = $state("");
+  let accessKeyCopied = $state(false);
 
   /** @param {unknown} err @returns {string} */
   function toErrMsg(err) {
@@ -123,11 +124,12 @@
       });
       showSetModal = false;
 
-      // Show the secret only on creation (first time) in a dedicated modal
-      if (result.item?.secret) {
-        newSecret = result.item.secret;
-        secretCopied = false;
-        showSecretModal = true;
+      // access_key_export (ak_<id>_<secret>) is returned only on creation,
+      // so its presence is the reliable "just created" signal.
+      if (result.access_key_export) {
+        newAccessKey = result.access_key_export;
+        accessKeyCopied = false;
+        showAccessKeyModal = true;
       } else {
         showAlert("success", setFormId ? "Access key updated" : "Access key created");
       }
@@ -139,10 +141,10 @@
     }
   }
 
-  async function copySecret() {
-    await copyToClipboard(newSecret);
-    secretCopied = true;
-    setTimeout(() => (secretCopied = false), 2000);
+  async function copyAccessKey() {
+    await copyToClipboard(newAccessKey);
+    accessKeyCopied = true;
+    setTimeout(() => (accessKeyCopied = false), 2000);
   }
 
   // -- Delete --
@@ -224,7 +226,7 @@
   /** @param {KeyboardEvent} e */
   function onGlobalKeydown(e) {
     if (e.key !== "Escape") return;
-    if (showSecretModal) showSecretModal = false;
+    if (showAccessKeyModal) showAccessKeyModal = false;
     else if (showSetModal) showSetModal = false;
     else if (showDeleteModal) showDeleteModal = false;
     else if (showBindModal) showBindModal = false;
@@ -527,8 +529,8 @@
   </div>
 {/if}
 
-<!-- Secret Display Modal -->
-{#if showSecretModal}
+<!-- Access Key Display Modal (creation only) -->
+{#if showAccessKeyModal}
   <div class="modal d-block" tabindex="-1" style="background:rgba(0,0,0,0.5)" role="dialog">
     <div class="modal-dialog modal-dialog-centered modal-dialog-600">
       <div class="modal-content">
@@ -538,41 +540,46 @@
             type="button"
             class="btn-close"
             aria-label="Close"
-            onclick={() => (showSecretModal = false)}
+            onclick={() => (showAccessKeyModal = false)}
           ></button>
         </div>
         <div class="modal-body">
           <div class="alert alert-warning py-2 small">
-            Please save your Secret Key now. This is the only time it will be shown. You will not be able to view it again after closing this dialog.
+            Please copy and save your Access Key now. This is the only time the full key will be shown. You will not be able to view it again after closing this dialog.
           </div>
           <div class="mb-2">
-            <label class="form-label fw-semibold" for="newSecretInput">Secret Key</label>
+            <label class="form-label fw-semibold" for="newAccessKeyInput"
+              >Access Key</label
+            >
             <div class="input-group">
               <input
-                id="newSecretInput"
+                id="newAccessKeyInput"
                 type="text"
                 class="form-control font-monospace user-select-all"
                 readonly
-                value={newSecret}
+                value={newAccessKey}
               />
               <button
                 class="btn btn-outline-secondary"
                 type="button"
-                onclick={copySecret}
+                onclick={copyAccessKey}
               >
-                {#if secretCopied}
+                {#if accessKeyCopied}
                   Copied!
                 {:else}
                   Copy
                 {/if}
               </button>
             </div>
+            <div class="form-text">
+              Format: <code>ak_&lt;id&gt;_&lt;secret&gt;</code>
+            </div>
           </div>
         </div>
         <div class="modal-footer">
           <button
             class="btn btn-primary btn-sm"
-            onclick={() => (showSecretModal = false)}
+            onclick={() => (showAccessKeyModal = false)}
           >Close</button>
         </div>
       </div>

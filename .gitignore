@@ -3,6 +3,7 @@ etc
 bin
 var
 doc
+_doc/
 test.go
 # bindata
 app

@@ -54,6 +54,11 @@ type UserProfile struct {
 type userSession struct {
 	authError error
 
+	// accessKey marks a session resolved from a CLI access-key token via
+	// introspection. Such sessions must NOT take the "own user, allow all"
+	// shortcut in Allow, so the key's scopes stay enforced.
+	accessKey bool
+
 	cfg *AppAuthConfig
 
 	AuthClaims    *inauth.AuthClaims    `json:"auth_claims,omitempty"`
@@ -87,7 +92,9 @@ func (it *userSession) Allow(username string, permissions ...string) bool {
 		return false
 	}
 
-	if it.AuthClaims.Sub == username { // own user, allow all
+	// browser sessions: the resource owner gets full access to their own data.
+	// access-key sessions skip this shortcut so the key's scopes are enforced.
+	if !it.accessKey && it.AuthClaims.Sub == username {
 		return true
 	}
 
