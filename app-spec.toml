@@ -1,5 +1,5 @@
 name        = "hooto-iam"
-version     = "2.0.0"
+version     = "2.0.2"
 description = "Identity and Access Management service built with Go and Svelte"
 image       = "sysinner/innerstack-alpine:3.23"
 
@@ -21,8 +21,9 @@ name = "http"
 
 # 数据库连接配置
 [[configs]]
-name = "db_addr"
-type = "string"
+name   = "db_addr"
+type   = "string"
+prompt = "format: ip:port"
 
 [[configs]]
 name = "db_name"
@@ -35,13 +36,27 @@ type = "string"
 [[configs]]
 name = "db_access_secret"
 type = "string"
-auto_fill = "defval"
 
 [[tasks]]
 name = "run"
 script = """
-mkdir -p /opt/hooto/iam/etc /opt/hooto/iam/var
-[ -f /opt/hooto/iam/etc/iam_config.toml ] || /home/action/.innerstack/inagent config-render --in ${ipk.hooto_iam.path}/misc/config.template.toml --out /opt/hooto/iam/etc/iam_config.toml
-${ipk.hooto_iam.path}/bin/iam-server -prefix /opt/hooto/iam
+mkdir -p /opt/hooto/iam/etc /opt/hooto/iam/var/log
+/home/action/.innerstack/inagent config-render --in ${ipk.hooto_iam.path}/misc/config.template.toml --out /opt/hooto/iam/etc/iam_config.toml
+${ipk.hooto_iam.path}/bin/iam-server -prefix /opt/hooto/iam >> /opt/hooto/iam/var/log/iam-server.log 2>&1 &
 """
 on_startup = true
+
+[[tasks]]
+name = "keepalive"
+depends_on = ["run"]
+script = """
+NAME=iam-server
+
+if pidof ${NAME}; then
+  exit 0
+fi
+
+${ipk.hooto_iam.path}/bin/iam-server -prefix /opt/hooto/iam >> /opt/hooto/iam/var/log/iam-server.log 2>&1 &
+"""
+cron = "*/60 * * * * *"
+
